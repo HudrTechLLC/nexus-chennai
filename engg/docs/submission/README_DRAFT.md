@@ -4,6 +4,8 @@ tags: [nexus, deliverables]
 
 # README draft (WS5-03)
 
+> **Folded into the root `README.md` on 26 Oct (WS5-03).** Edit `README.md` from now on. This draft is kept only as history.
+
 This is the draft of the root `README.md`, for nexus-chief to review and fold in. Everything below the line is README text. Each claim comes from [EVIDENCE](EVIDENCE.md), which was verified against `origin/main` @ `c686f0c`. `[PENDING: id]` marks something that isn't on main yet: replace it when the task lands, or delete the sentence before submission.
 Related: [EVIDENCE](EVIDENCE.md) · [README_DRAFT_AGENTS](../README_DRAFT_AGENTS.md) · [DELIVERABLES](../DELIVERABLES.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md)
 
