@@ -30,6 +30,7 @@ def test_live_sql_reads_the_snapshot_with_a_literal_in_list_and_a_total_order():
     assert "array_contains" not in Q.lightning and "split(" not in Q.lightning
     assert "NULLIF(other_id, '') AS other_id" in Q.lightning  # '' in the table, NULL out, as before
     assert Q.lightning.rstrip().endswith("ORDER BY crime_id, rule, other_id")  # D-031, other_id is in the key
+    assert "concat(CAST(max(computed_at) AS STRING), ' UTC') FROM sb.dq_flags_snapshot" in Q.lightning  # marker row; Spark renders UTC
     assert Q.as_of_column and Q.timeout_s and Q.timeout_s <= 10
     assert Q.columns == dq_rules.COLUMNS
 
@@ -85,6 +86,16 @@ def test_live_call_strips_the_freshness_column_into_the_trace(tmp_path):
     assert "IN ('C2', 'C9', '', " in sent[0] and "dq_flags_snapshot" in sent[0]
     trace = (tmp_path / "trace-t.jsonl").read_text(encoding="utf-8")
     assert "as_of=2026-10-27 01:10:00" in trace
+
+
+def test_a_clean_answer_still_traces_the_snapshot_time(tmp_path):
+    marker = [[None, None, None, None, "2026-10-27 00:45:39"]]
+    c, _ = _client(lambda sql: httpx.Response(200, json={"data": marker}))
+    c.tracer = Tracer("e", tmp_path, echo=False)
+    r = c.named("q_dq_flags", agent="Planner", ids="CHN-AD-2026-001182")
+    assert r.rows == [] and r.source == "zetaris"  # the marker never reaches the caller
+    assert "rows=0" in (tmp_path / "trace-e.jsonl").read_text(encoding="utf-8")
+    assert "as_of=2026-10-27 00:45:39" in (tmp_path / "trace-e.jsonl").read_text(encoding="utf-8")
 
 
 def test_more_than_fifty_ids_run_as_several_calls_merged_in_order():

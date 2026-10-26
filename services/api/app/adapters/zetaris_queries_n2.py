@@ -83,11 +83,16 @@ def _dq_query() -> dict:
         # Spark JDBC pushes down to Postgres (the PK leads with crime_id). The rule views cannot take the id filter
         # (sorted UNION + duplicate self-join, 55-80 s per call; PATH2 §3). computed_at is the extra last column
         # the client strips into the trace (as_of_column). other_id '' means "none" and comes back NULL as before.
+        # One extra marker row (crime_id NULL) carries the snapshot time, so a clean answer (no flags) still says
+        # which snapshot it was checked against; the client drops it (as_of_column).
         lightning=(
+            "SELECT crime_id, rule, other_id, detail, computed_at FROM ("
             "SELECT crime_id, rule, NULLIF(other_id, '') AS other_id, detail, "
-            "CAST(computed_at AS STRING) AS computed_at FROM sb.dq_flags_snapshot "
+            "concat(CAST(computed_at AS STRING), ' UTC') AS computed_at FROM sb.dq_flags_snapshot "
             f"WHERE crime_id IN ({', '.join(':' + x for x in slots(DQ_IDS_PER_CALL))}) "
-            "ORDER BY crime_id, rule, other_id"  # ORDER BY: D-031; other_id is part of the key
+            "UNION ALL SELECT CAST(NULL AS STRING), CAST(NULL AS STRING), CAST(NULL AS STRING), CAST(NULL AS STRING), "
+            "concat(CAST(max(computed_at) AS STRING), ' UTC') FROM sb.dq_flags_snapshot"
+            ") s ORDER BY crime_id, rule, other_id"  # ORDER BY: D-031; other_id is part of the key
         ),
         # Files mode (WS1-19) has no snapshot table: it keeps reading the rule views, as before.
         lightning_files=(
