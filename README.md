@@ -216,11 +216,11 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 | Rules-only baseline | 0.09 | 0.30 | 0.13 |
 
 - 60 synthetic truth cases, 98 planted true pairs.
-- **HIGH-band alerts were correct 9 of 9 times.** MEDIUM-band alerts were correct 56% of the time (75 of 133 pairs; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
+- **HIGH-band alerts were correct 10 of 10 times.** MEDIUM-band alerts were correct 56% of the time (74 of 132 scored pairs; 138 medium alerts, including 6 flagged duplicates that are neither right nor wrong; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
 - Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
 - Two similar-MO variants were trialled and left off: a feature cosine without IDF (more false positives) and a fixed-IDF TF-IDF (no change on this set).
 
-Reproduce from a fresh clone (after Setup, about 2 minutes):
+Reproduce from a fresh clone (after Setup, a few minutes):
 
 ```bash
 cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample/_truth --mo-cosine all
