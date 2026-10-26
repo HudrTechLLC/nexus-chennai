@@ -9,6 +9,22 @@ This note lists every claim the submission drafts make, with the file, test or C
 **Verified against `origin/main` @ `c686f0c`** (26 Oct 2026). CI on that commit is green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`.
 Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [ENGINES](../ENGINES.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
+## Re-verify at freeze (about 2 minutes)
+
+Main keeps moving until 12:00 IST. Run this from a fresh checkout of `origin/main`. For each item that now exists, flip its row below, then the matching `[PENDING]` in the four drafts.
+
+```bash
+ls input_examples output_examples data/sample data/sample/model_fixtures 2>&1   # WS2-16, WS1-11
+ls output_examples/eval_report.json 2>&1                                        # WS2-14
+PYTHONPATH=services/api python -c "from app.adapters.zetaris import NAMED_QUERIES as N; print(sorted(N))"   # WS1-15 (13 + q_ping when done)
+ls zetaris/10_views.sql 2>&1; grep -ci 'file\|parquet\|csv' zetaris/00_sources.sql                       # WS1-13, WS1-12
+find apps/web/app/console -name page.tsx | sed 's#apps/web/app##' | sort                                 # WS3-06/10/11 (cases, search, fir, series, stations, memory, graph)
+grep -rn '"embed"\|embeddings' services/api/app --include=*.py | grep -v config.py                      # WS2-embed call site
+grep -rn "PENDING:" engg/docs/submission/                                                               # what's still open
+```
+
+Then check CI on the freeze commit (all five jobs green) and update the "Verified against" line above.
+
 ## Judge path
 
 | Claim | Evidence | Status |
@@ -67,7 +83,7 @@ Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVER
 | Nightshift is the only model path; pinned lanes; `meterless/auto` refused | `adapters/nightshift.py::model_for`, `config.FORBIDDEN_MODELS`; `tests/adapters/test_nightshift.py` | ✅ |
 | Lanes: `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b`, `reason` = `nvidia/nemotron-3-ultra-550b-a55b` (Super 120B is 404 for our key) | D-017; `.env.example` | ✅ |
 | `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: text calls work, image calls refused (`no_vision_model`) | D-021 | ⚠️ limitation, never claim visual extraction |
-| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; **no call site** in `services/api/app` | ❌ do not claim |
+| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; no call site on main. nexus-2 building similar-MO search per spec E2 (Nemotron embed lane if Nightshift `/v1/embeddings` works, which returned 404 for every model at the time; TF-IDF otherwise) | `[PENDING: WS2-embed]` |
 | NVIDIA key lives only in Nightshift; the app holds the Nightshift URL + runtime token | `adapters/nightshift.py` docstring; `.env.example` | ✅ |
 
 ## Web (Vercel)
