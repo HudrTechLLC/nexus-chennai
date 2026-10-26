@@ -115,3 +115,26 @@ def test_candidates_are_prefetched_in_batches_not_one_by_one(tmp_path):
     assert [c[0] for c in evals].count("q_case") == 1  # the case itself
     assert [c[0] for c in evals].count("q_cases") == 1  # both candidates in one call
     assert {b, h} <= set(next(c[2] for c in evals if c[0] == "q_cases").values())
+
+
+def test_report_counts_case_features_by_extractor_version(tmp_path):
+    a, b, h = ADYAR["crime_id"], VELACHERY["crime_id"], HOUSEBREAK["crime_id"]
+    truth = Truth({key(a, b): "series"}, [{"series_id": "S1", "crime_ids": [a, b]}])
+    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(eval_handlers()),
+                     nightshift=FakeNightshift(lambda *x: "{}"))
+    report = Evaluator(deps, truth).run([a, b, h])
+    versions = report["features"]["extractor_versions"]
+    assert sum(versions.values()) == 3 - len(report["features"]["without_features"])
+
+
+def test_provenance_block_states_the_source():
+    from types import SimpleNamespace
+
+    from app.eval.__main__ import provenance
+
+    rep = {"truth_dir": "data/sample/_truth", "cases_evaluated": 60, "weights_version": "w1",
+           "features": {"extractor_versions": {"mo-v3": 13}}}
+    p = provenance(rep, SimpleNamespace(sample_mode=True), {"X"})
+    assert p["data"].startswith("sample bundle") and p["model_calls"] == 0 and p["console_firs_excluded"] == 1
+    assert p["case_features_by_extractor"] == {"mo-v3": 13} and p["cases_evaluated"] == 60
+    assert provenance(rep, SimpleNamespace(sample_mode=False), set())["data"].startswith("live")

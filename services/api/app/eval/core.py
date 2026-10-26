@@ -21,7 +21,7 @@ import csv
 import json
 import statistics
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -248,6 +248,9 @@ class Evaluator:
                 "without_features": sorted(c for c, f in feats_by_case.items() if not f),
                 "features_without_receipt": sorted(c for c, f in feats_by_case.items()
                                                    if f and not (f.get("model") and f.get("receipt_id"))),
+                # Which extractor wrote each evaluated case's MO record (mixed provenance is stated, not hidden).
+                "extractor_versions": dict(sorted(Counter(str(f.get("extractor_version") or "unknown")
+                                                          for f in feats_by_case.values() if f).items())),
             },
             "excluded_non_generated": sorted(self.exclude),
             "truth_positive_pairs": len(positives),
