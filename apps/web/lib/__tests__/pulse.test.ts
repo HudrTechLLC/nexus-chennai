@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   arcPath, binDaily, binHours, catKey, cone, convexHull, decodeCrimes, DAY_MS, hhmm, inClockArc, km, localDay,
-  boundsOf, decodeFacets, facetIds, monthWindows, padRing, passes, UNKNOWN_ZONE, zoneStations, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
+  boundsOf, byCount, decodeFacets, facetIds, monthWindows, padRing, passes, UNKNOWN_ZONE, zoneStations, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
 } from "../pulse";
 
 describe("catKey", () => {
@@ -223,5 +223,13 @@ describe("passes with DASH-04 filters", () => {
     expect(passes(c, { ...base, statuses: new Set(["closed_undetected"]) })).toBe(false);
     expect(passes(c, { ...base, ids: new Set(["B"]) })).toBe(false);
     expect(passes(c, { ...base, stations: new Set(["PS-ADYAR-J2"]), statuses: new Set(["registered"]), ids: new Set(["A"]) })).toBe(true);
+  });
+});
+
+describe("byCount", () => {
+  it("orders facet values by crime count, ties alphabetical", () => {
+    const m = new Map([["6th_street", new Set(["A"])], ["two_wheeler_from_behind", new Set(["A", "B", "C"])], ["night", new Set(["A", "B"])], ["gold_chain", new Set(["C", "D"])]]);
+    expect(byCount(m)).toEqual(["two_wheeler_from_behind", "gold_chain", "night", "6th_street"]);
+    expect(byCount(new Map())).toEqual([]);
   });
 });

@@ -9,7 +9,7 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  boundsOf, cone, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  boundsOf, byCount, cone, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
@@ -436,7 +436,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
                 <span className="text-[11px] text-muted">MO tag{facets ? ` · ${facets.mo.size} tags from extracted MOs` : ""}</span>
                 <input list="mo-tags" value={fMo} onChange={(e) => setFMo(e.target.value.trim().toLowerCase())} placeholder="type to search, e.g. black helmet"
                   className="mt-0.5 w-full rounded border border-line bg-surface px-2 py-1 text-xs" />
-                <datalist id="mo-tags">{Array.from(facets?.mo.keys() ?? []).sort().map((t) => <option key={t} value={t} />)}</datalist>
+                <datalist id="mo-tags">{(facets ? byCount(facets.mo) : []).map((t) => <option key={t} value={t} />)}</datalist>
               </label>
               {(fWeapon || fVehicle) && role === "station_officer" && (
                 <p className="text-[11px] leading-snug text-muted">Weapon and vehicle are known only for cases you can read, so other stations&apos; dots are hidden.</p>
