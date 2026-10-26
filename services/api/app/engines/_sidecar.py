@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import httpx
@@ -21,7 +22,8 @@ _client = httpx.Client(trust_env=False)
 def call(path: str, payload: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
     url = f"{sidecar_url()}/{path.lstrip('/')}"
     try:
-        resp = _client.post(url, json=payload, timeout=timeout)
+        resp = _client.post(url, json=payload, timeout=timeout,
+                            headers={"x-engines-ns": os.environ.get("ENGINES_SIDECAR_NS", "default")})
     except httpx.HTTPError as exc:
         raise SidecarError(f"engines sidecar unreachable at {url}: {exc}") from exc
     if resp.status_code != 200:
