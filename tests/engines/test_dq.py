@@ -1,0 +1,91 @@
+"""WS1-14 data-quality views: q_dq_flags (DuckDB twin run for real) and zetaris/20_dq.sql (generated, same rules)."""
+
+from pathlib import Path
+
+import duckdb
+import pytest
+
+from app.adapters import dq_rules
+from app.adapters.zetaris import NAMED_QUERIES, ZetarisClient
+from app.config import Settings, load_city
+from app.tracing import Tracer
+
+ROOT = Path(__file__).resolve().parents[2]
+
+ROWS = [
+    # crime_id, source, station, category, occurred_from, occurred_to, reported_at, lat, lon, h3_r9, sections_raw
+    ("C1", "sb.crimes", "PS-A", "chain_snatching", "2026-10-01 19:00", "2026-10-01 19:10", "2026-10-01 21:00",
+     13.00, 80.25, "89a", None),
+    ("C2", "sb.crimes", "PS-B", "chain_snatching", "2026-10-01 19:45", None, "2026-10-02 09:00",
+     13.00, 80.25, "89a", None),                                             # duplicate of C1 at another station
+    ("C3", "sb.crimes", "PS-A", "chain_snatching", "2026-10-03 19:00", None, "2026-10-03 20:00",
+     13.00, 80.25, "89a", None),                                             # same cell, 2 days later: clean
+    ("C4", "s3csv.cctns", "PS-A", "theft", "2026-10-04 10:00", None, "2026-10-04 09:00",
+     12.50, 80.25, "89b", "IPC 379 r/w 34"),                                 # bad geo + time + unmapped
+    ("C5", "sb.crimes", "PS-C", "theft", "2026-10-05 10:00", None, "2026-10-05 11:00",
+     None, None, None, None),                                                # no coordinates
+    ("C6", "s3pq.archive", "PS-A", "theft", "2026-10-06 10:00", "2026-10-06 09:00", "2026-10-06 12:00",
+     13.05, 80.20, "89c", None),                                             # ends before it starts
+]
+
+
+@pytest.fixture
+def client(tmp_path):
+    c = ZetarisClient(Settings(_env_file=None, sample_mode=True, zetaris_api_key=""),
+                      tracer=Tracer("t", tmp_path, echo=False))
+    c._duck = duckdb.connect(":memory:")
+    c._duck.execute("CREATE TABLE v_crime_unified (crime_id VARCHAR, source VARCHAR, station_id VARCHAR, "
+                    "category VARCHAR, occurred_from TIMESTAMP, occurred_to TIMESTAMP, reported_at TIMESTAMP, "
+                    "lat DOUBLE, lon DOUBLE, h3_r9 VARCHAR, sections_raw VARCHAR)")
+    c._duck.executemany("INSERT INTO v_crime_unified VALUES (?,?,?,?,?,?,?,?,?,?,?)", ROWS)
+    return c
+
+
+def _flags(client, ids):
+    res = client.named("q_dq_flags", agent="Planner", ids=",".join(ids))
+    assert res.source == "sample" and res.columns == dq_rules.COLUMNS
+    return sorted((r["crime_id"], r["rule"], r["other_id"]) for r in res.dicts())
+
+
+def test_each_planted_defect_is_flagged_and_clean_rows_are_not(client):
+    got = _flags(client, ["C1", "C2", "C3", "C4", "C5", "C6"])
+    assert got == [
+        ("C1", "duplicate_fir", "C2"), ("C2", "duplicate_fir", "C1"),
+        ("C4", "bad_geo", None), ("C4", "time_inconsistent", None), ("C4", "unmapped_section", None),
+        ("C5", "bad_geo", None),
+        ("C6", "time_inconsistent", None),
+    ]
+
+
+def test_only_requested_ids_are_returned(client):
+    assert _flags(client, ["C3"]) == []
+    assert {r[0] for r in _flags(client, ["C2", "C5"])} == {"C2", "C5"}
+
+
+def test_details_are_written_in_code(client):
+    rows = client.named("q_dq_flags", agent="Planner", ids="C1,C4").dicts()
+    dup = next(r for r in rows if r["rule"] == "duplicate_fir")
+    assert dup["detail"] == "same chain_snatching in cell 89a within 45 min, filed at PS-B via sb.crimes"
+    geo = next(r for r in rows if r["rule"] == "bad_geo")
+    assert geo["detail"].startswith("outside city bounds: 12.5")
+
+
+def test_bounds_come_from_the_city_pack_not_code():
+    bounds = dq_rules.city_bounds(load_city("chennai"))
+    sample = NAMED_QUERIES["q_dq_flags"].sample
+    assert f"lon < {bounds['west']}" in sample and f"lat > {bounds['north']}" in sample
+    code = (ROOT / "services/api/app/adapters/dq_rules.py").read_text(encoding="utf-8")
+    assert str(bounds["west"]) not in code and str(bounds["north"]) not in code
+
+
+def test_zetaris_file_is_generated_from_the_same_rules():
+    committed = (ROOT / "zetaris" / "20_dq.sql").read_text(encoding="utf-8").replace("\r\n", "\n")
+    assert committed == dq_rules.dq_file(), "regenerate: cd services/api && python -m app.adapters.dq_rules"
+    for view in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections", "dq_flags",
+                 "dq_orphan_evidence", "dq_tip_without_incident"):
+        assert f"CREATE OR REPLACE SCHEMASTORE VIEW {view} WITH CONTAINER nexus AS" in committed
+    assert "{{city:map.bounds.west}}" in committed and "80.05" not in committed
+    # Same rule text in both dialects, modulo the dialect substitutions.
+    spark = dq_rules.rule_sql("time_inconsistent", dq_rules.SPARK, dq_rules.BOUND_PLACEHOLDERS)
+    duck = dq_rules.rule_sql("time_inconsistent", dq_rules.DUCK, dq_rules.BOUND_PLACEHOLDERS)
+    assert spark.replace("STRING", "VARCHAR").replace("nexus.v_crime_unified", "v_crime_unified") == duck
