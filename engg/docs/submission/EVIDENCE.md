@@ -11,7 +11,7 @@ Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVER
 
 ## Re-verify at freeze (about 2 minutes)
 
-Main keeps moving until the 14:00 IST freeze (in-flight cut-off 11:00 IST; moved from 12:00 on 27 Oct). Run this from a fresh checkout of `origin/main`. For each item that now exists, flip its row below, then the matching `[PENDING]` in the four drafts.
+Main keeps moving until the hard freeze at 19:00 IST. On-camera UI freezes at 14:00 (UI cut-off 11:00); evidence and docs may land until 19:00 (split by Ravee, 27 Oct). Run this from a fresh checkout of `origin/main`. For each item that now exists, flip its row below, then the matching `[PENDING]` in the four drafts.
 
 ```bash
 ls input_examples output_examples data/sample data/sample/model_fixtures 2>&1   # WS2-16, WS1-11

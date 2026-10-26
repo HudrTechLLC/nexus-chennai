@@ -53,6 +53,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
 8. **Segment 3 needs a real vision step in the trace.** File the live FIR with a CCTV still, and check the trace. A vision `model_call` (lane `vision`, Super VL, a receipt) means narrate **variant A**; `vision_unavailable` means **variant B**. The free route is rate-limited and can refuse during recording, so check the trace of the take you use. Variant A is planned: live run `reextract_vis_1793040194` shows the vision `model_call` (seq 3, receipt `chatcmpl-5dfe68c6-…`).
 9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. There is only one series in the database (SER-B687C36CFC), so **rehearse without writing**: in dry run #2, walk up to the *Propose task force* dialog and stop (cancel; nothing is created). The first real creation happens on camera. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
+10. **Refresh the live DQ flags first:** `python -m app.dq_status --only snapshot` (about 90 s; reads Zetaris only and replaces the live DQ flags snapshot, so FIRs filed since the last pass get their flags; nexus-2). Run it before the live FIR of segment 3, so the trace's `as_of` is fresh.
 
 ## Script
 
