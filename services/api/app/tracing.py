@@ -41,6 +41,21 @@ def new_run_id(prefix: str = "run") -> str:
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 
+def _echo(line: str, event: dict[str, Any], stream: Any) -> None:
+    """Echo is a convenience; the trace file is the record. It never fails the step that emitted:
+    a console that cannot encode a character (Windows cp1252 when stdout is a file) gets the same
+    event ASCII-escaped, and a closed or broken stream is skipped."""
+    try:
+        print(line, file=stream, flush=True)
+    except UnicodeEncodeError:
+        try:
+            print(json.dumps(event, ensure_ascii=True, default=str), file=stream, flush=True)
+        except (OSError, ValueError):
+            pass
+    except (OSError, ValueError):
+        pass
+
+
 class Tracer:
     """Appends trace events for one run. Thread-safe; cheap to create."""
 
@@ -72,7 +87,7 @@ class Tracer:
             if self.echo:
                 # run.py --once sets NEXUS_TRACE_STREAM=stderr so stdout carries only the JSON result.
                 stream = sys.stderr if os.environ.get("NEXUS_TRACE_STREAM") == "stderr" else sys.stdout
-                print(line, file=stream, flush=True)
+                _echo(line, event, stream)
         return event
 
     def read(self) -> list[dict[str, Any]]:
