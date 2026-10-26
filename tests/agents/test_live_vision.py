@@ -96,3 +96,43 @@ def test_a_working_vision_lane_reads_the_still(tmp_path):
     assert not f["degraded"]
     assert not [e for e in events if e["action"] in ("vision_unavailable", "vision_fallback")]
     assert any(e["action"] == "model_call" and e["input_summary"].startswith("lane=vision") for e in events)
+
+
+# ----- Nightshift cloud vision lane (chief, 2026-10-27): an empty response needs more room, not a refusal -------
+
+EMPTY = "provider returned no content: upstream_empty_response"
+
+
+def test_the_vision_call_asks_for_enough_room(tmp_path):
+    seen = []
+
+    def reply(body):
+        seen.append(body.get("max_tokens"))
+        return httpx.Response(200, json={"id": "v1", "model": "nvidia/vl",
+                                         "choices": [{"message": {"content": json.dumps({"tags": ["red"]})}}]})
+    run_extract(tmp_path, reply, stills=1)
+    assert seen and seen[0] >= 1000  # max_tokens=20 came back 502 _empty_response on the live route
+
+
+def test_an_empty_response_is_retried_once_with_more_room_then_reads_the_still(tmp_path):
+    seen = []
+
+    def reply(body):
+        seen.append(body.get("max_tokens"))
+        if len(seen) == 1:
+            return httpx.Response(502, json={"error": {"message": EMPTY}})
+        return httpx.Response(200, json={"id": "v2", "model": "nvidia/vl",
+                                         "choices": [{"message": {"content": json.dumps({"tags": ["crowbar"]})}}]})
+    f, events, calls = run_extract(tmp_path, reply, stills=1)
+    assert len(seen) == 2 and seen[1] == 2 * seen[0]  # one retry (no identical transport retries), double room
+    assert "crowbar" in f["visual_tags"] and not f["degraded"]
+    assert not [e for e in events if e["action"] in ("vision_unavailable", "vision_fallback")]
+    assert any(e["action"] == "model_empty_response" and e["status"] == "retry" for e in events)
+
+
+def test_an_empty_response_twice_falls_back_without_marking_vision_down(tmp_path):
+    f, events, calls = run_extract(tmp_path, lambda body: httpx.Response(502, json={"error": {"message": EMPTY}}),
+                                   stills=2)
+    assert calls.count("nvidia/vl") == 4  # 2 stills x (call + one retry): not a refusal, so still 2 asks
+    assert [e["action"] for e in events if e["action"].startswith("vision_")].count("vision_failed") == 2
+    assert not [e for e in events if e["action"] == "vision_unavailable"]
