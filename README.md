@@ -100,7 +100,7 @@ docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission     # no credent
 curl http://localhost:8000/health
 ```
 
-For live mode, copy `.env.example` to `.env`, fill it in, and run `docker compose up`. Compose points the API at Zetaris (`:8888`) and Nightshift (`:8088`) on your machine through `host.docker.internal`.
+For live mode, copy `.env.example` to `.env`, fill it in, and run `docker compose up`. That starts the API on `:8000` and the web app on `:3001` (the same Next.js app as the Vercel deployment; server secrets stay out of the web container). Compose points the API at Zetaris (`:8888`) and Nightshift (`:8088`) on your machine through `host.docker.internal`.
 
 ### Option B: Python virtual environment
 
