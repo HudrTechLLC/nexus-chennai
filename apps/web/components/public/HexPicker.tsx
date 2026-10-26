@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import { cellToBoundary, latLngToCell } from "h3-js";
+import { cellToBoundary, cellToLatLng, latLngToCell } from "h3-js";
 import { CITY } from "@/lib/city";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -25,8 +25,11 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
 
   useEffect(() => {
     if (!el.current) return;
+    // A prefilled area (WS4-12) opens centred on its hexagon, close enough to see it.
+    const [lat, lng] = cell ? cellToLatLng(cell) : [0, 0];
     const m = new maplibregl.Map({
-      container: el.current, style: "/map/light.json", center: CITY.map.center, zoom: CITY.map.zoom,
+      container: el.current, style: "/map/light.json",
+      center: cell ? [lng, lat] : CITY.map.center, zoom: cell ? Math.max(CITY.map.zoom, 13) : CITY.map.zoom,
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.on("load", () => {
