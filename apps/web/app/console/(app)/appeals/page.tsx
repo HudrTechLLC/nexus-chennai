@@ -2,12 +2,14 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { allows } from "@/lib/roles";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { STATUS_LABEL, type Appeal, type AppealRequest } from "@/lib/appeals";
+import { STATUS_LABEL, tipCounts, type Appeal, type AppealRequest } from "@/lib/appeals";
 import { RequestDraftForm } from "@/components/console/appeals/AppealForms";
 
 export const dynamic = "force-dynamic";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "—");
+/** PostgREST returns at most 1,000 rows; at the cap, counts are shown as a lower bound. */
+const TIP_CAP = 1000;
 const TONE = { draft: "border-accent text-accent", published: "border-signal text-signal", withdrawn: "border-line text-muted" } as const;
 
 /** Public appeals (spec G2 / WS4-07): Sanitiser drafts, officer approval, publish to the public site. */
@@ -22,6 +24,12 @@ export default async function AppealsPage() {
       .order("requested_at", { ascending: false }).limit(20),
   ]);
   const rows = (appeals.data ?? []) as Appeal[];
+  const ids = rows.map((a) => a.public_incident_id);
+  const tipRows = ids.length
+    ? (await sb.from("tips").select("public_incident_id").in("public_incident_id", ids).limit(TIP_CAP)).data ?? []
+    : [];
+  const tips = tipCounts(tipRows as { public_incident_id: string | null }[]);
+  const tipsCapped = tipRows.length >= TIP_CAP;
   const reqs = (requests.data ?? []) as AppealRequest[];
   const canWrite = allows(officer.role, ["station_officer", "supervisor", "admin"]);
 
@@ -74,7 +82,12 @@ export default async function AppealsPage() {
                   {a.published_at && <> · published {when(a.published_at)} by {a.approved_by}</>}
                 </div>
               </div>
-              <span className={`rounded-full border px-2 py-0.5 text-xs ${TONE[a.status]}`}>{STATUS_LABEL[a.status]}</span>
+              <span className="flex items-center gap-2">
+                <span className="text-xs text-muted">
+                  {tips.get(a.public_incident_id) ?? 0}{tipsCapped ? "+" : ""} tip{(tips.get(a.public_incident_id) ?? 0) === 1 ? "" : "s"}
+                </span>
+                <span className={`rounded-full border px-2 py-0.5 text-xs ${TONE[a.status]}`}>{STATUS_LABEL[a.status]}</span>
+              </span>
             </li>
           ))}
         </ul>

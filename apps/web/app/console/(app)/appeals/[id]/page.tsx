@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { STATUS_LABEL, type Appeal } from "@/lib/appeals";
+import { canWriteCase } from "@/lib/cases";
 import { AppealEditor } from "@/components/console/appeals/AppealForms";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +17,14 @@ export default async function AppealPage({ params }: { params: { id: string } })
   const { data } = await sb.from("public_incidents").select("*").eq("public_incident_id", id).maybeSingle();
   if (!data) notFound();
   const a = data as Appeal;
-  // can_write_crime (0002): own station for station officers; supervisor and admin everywhere. RLS enforces it.
-  const canWrite = officer.role !== "station_officer" || (!!a.crime_id && !!officer.stationId);
+  // Mirrors can_write_crime (0002): own station for station officers; supervisor and admin everywhere.
+  // RLS enforces it on save; this only decides whether to show the form (an other-station officer sees it read-only).
+  const { data: crime } = a.crime_id
+    ? await sb.from("crimes_citywide").select("station_id").eq("crime_id", a.crime_id).maybeSingle()
+    : { data: null };
+  const crimeStation = (crime as { station_id: string } | null)?.station_id ?? null;
+  // No linked case: only supervisor and admin may write (can_write_crime needs a station to match).
+  const canWrite = crimeStation ? canWriteCase(officer.role, officer.stationId, crimeStation) : officer.role !== "station_officer";
 
   return (
     <div className="space-y-5">

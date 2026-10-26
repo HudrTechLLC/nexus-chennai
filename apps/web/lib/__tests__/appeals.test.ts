@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { isCrimeId, leakKind, parseLookingFor, validateAppeal } from "../appeals";
+import { isCrimeId, leakKind, parseLookingFor, tipCounts, validateAppeal } from "../appeals";
 
 // The same fixture pytest and the SQL check use, so the three leak lists cannot drift apart.
 const fixture = JSON.parse(
@@ -35,5 +35,12 @@ describe("helpers", () => {
     expect(isCrimeId("CHN-AD-2026-001182")).toBe(true);
     expect(isCrimeId("CHN-AD-2026-001182,x")).toBe(false);
     expect(isCrimeId("")).toBe(false);
+  });
+});
+
+describe("tipCounts", () => {
+  it("counts tips per appeal and ignores general tips", () => {
+    const m = tipCounts([{ public_incident_id: "PI-1" }, { public_incident_id: "PI-1" }, { public_incident_id: null }, { public_incident_id: "PI-2" }]);
+    expect(Object.fromEntries(m)).toEqual({ "PI-1": 2, "PI-2": 1 });
   });
 });
