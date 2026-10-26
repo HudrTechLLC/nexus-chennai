@@ -43,7 +43,7 @@ export async function PublicTipsBlock({ crimeIds, label }: { crimeIds: string[];
       {(feed.quarantined > 0 || feed.unreadableCrimes > 0) && (
         <p className="mt-3 text-xs text-muted">
           {feed.quarantined > 0 && <>{feed.quarantined} tip{feed.quarantined === 1 ? "" : "s"} quarantined by Tip Guard, not shown (see the tips queue). </>}
-          {feed.unreadableCrimes > 0 && <>Tips on {feed.unreadableCrimes} case{feed.unreadableCrimes === 1 ? "" : "s"} at other stations are not shown to you.</>}
+          {feed.unreadableCrimes > 0 && <>{feed.unreadableCrimes} case{feed.unreadableCrimes === 1 ? "" : "s"} at other stations {feed.unreadableCrimes === 1 ? "is" : "are"} not checked for tips.</>}
         </p>
       )}
     </section>

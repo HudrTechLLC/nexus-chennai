@@ -30,7 +30,7 @@ export type PublicTip = PublicTipRow & { links: PublicTipLink[] };
 export type PublicTipsFeed = {
   tips: PublicTip[];
   quarantined: number; // tied tips Tip Guard quarantined: counted, never listed (untrusted, not evidence)
-  unreadableCrimes: number; // members the viewer cannot read in full: their tips are not looked up
+  unreadableCrimes: number; // members the viewer cannot read in full (counted whether or not they have tips): not checked for tips
 };
 
 export const SOURCE_LABEL: Record<TipCrimeSource, string> = {
