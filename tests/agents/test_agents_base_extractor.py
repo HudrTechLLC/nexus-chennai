@@ -426,3 +426,55 @@ def test_extractor_grounds_the_prompt_with_the_recorded_category(make_deps):
     for label in ("two_wheeler_from_behind", "rear_window_grille_cut", "posed_as_ride_hailing_cab"):
         assert label in MO_SYSTEM_PROMPT  # examples span crime types, not one
     assert "does not support" in MO_SYSTEM_PROMPT
+
+
+# ----- label support check (live: Lightning copies example labels onto texts that don't support them) ------
+
+from app.agents.extractor import label_supported  # noqa: E402
+
+DOOR_BREAK = ("Three unknown persons of medium build broke the front door lock. Lost: gold jewellery "
+              "weighing 106 g. Lost: cash.")
+AUTO_SNATCH = "Two unknown persons came in an autorickshaw and the passenger reached out. Lost: mobile phone."
+
+
+def test_label_supported_rules():
+    chain = "Two men on a red Pulsar rode up from behind and snatched her gold chain, then sped away."
+    assert label_supported("two_wheeler_from_behind", chain) and label_supported("gold_chain", chain)
+    assert not label_supported("two_wheeler_from_behind", AUTO_SNATCH)  # a vehicle label needs a vehicle
+    assert not label_supported("rear_window_grille_cut", DOOR_BREAK)
+    assert label_supported("broke_front_door_lock", DOOR_BREAK)
+    assert label_supported("ran", "One person walked up on foot, snatched it and ran.")  # short words, whole word
+    assert label_supported(None, DOOR_BREAK) and label_supported("gold_jewellery_and_cash", DOOR_BREAK)
+
+
+def _house(narrative):
+    return crime_from_row(as_row({**ADYAR, "category": "house_break", "sub_type": "night_house_break",
+                                  "narrative": narrative, "vehicles": []}))
+
+
+def test_unsupported_label_gets_one_corrective_retry(make_deps):
+    seen = []
+
+    def reply(lane, m, p):
+        seen.append(m)
+        approach = "rear_window_grille_cut" if len(seen) == 1 else "broke_front_door_lock"
+        return json.dumps({"mo": {"approach": approach, "target": "locked_house", "target_item": "gold_jewellery"}})
+
+    deps = make_deps(responder=reply)
+    f = Extractor(deps).extract_case(_house(DOOR_BREAK), write=False)
+    assert f["mo"]["approach"] == "broke_front_door_lock" and len(seen) == 2
+    assert "rear_window_grille_cut" in seen[1][-1]["content"] and "not supported" in seen[1][-1]["content"]
+
+
+def test_label_still_unsupported_after_retry_is_dropped_and_traced(make_deps):
+    deps = make_deps(responder=lambda lane, m, p: json.dumps(
+        {"mo": {"approach": "two_wheeler_from_behind", "target": "woman", "target_item": "mobile_phone"}}))
+    f = Extractor(deps).extract_case(crime_from_row(as_row({**ADYAR, "sub_type": "mobile_snatching",
+                                                            "narrative": AUTO_SNATCH, "vehicles": []})), write=False)
+    assert f["mo"]["approach"] is None and f["mo"]["target_item"] == "mobile_phone"
+    ev = [e for e in deps.tracer.read() if e["action"] == "label_unsupported"]
+    assert ev and "approach" in ev[0]["output_summary"] and ev[0]["status"] == "degraded"
+
+
+def test_clean_mo_joins_a_list_given_for_a_single_value_field():
+    assert clean_mo({"target_item": ["gold jewellery", "cash"]})["target_item"] == "gold_jewellery_and_cash"

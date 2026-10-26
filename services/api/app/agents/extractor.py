@@ -65,8 +65,42 @@ MediaLoader = Callable[[str], bytes]
 def _slug(v: Any) -> str | None:
     if v is None:
         return None
+    if isinstance(v, (list, tuple)):  # a list for a single-value field: one label, not "['a',_'b']"
+        parts = [p for p in (_slug(x) for x in v) if p]
+        return "_and_".join(parts) or None
     s = str(v).strip().lower().replace(" ", "_").replace("-", "_")
     return s or None
+
+
+# ----- label support (live: Lightning, thinking off, copies example labels onto texts that don't support
+# them: "broke the front door lock" -> rear_window_grille_cut; an autorickshaw snatching -> two_wheeler_...).
+CHECKED_FIELDS = ("approach", "escape", "target_item")
+_STOPWORDS = frozenset({"and", "the", "from", "with", "into", "near", "behind", "on", "in", "of", "to", "a", "an",
+                        "by", "at", "through", "towards", "two", "one", "three", "away", "via", "off", "out", "up",
+                        "unknown"})
+_VEHICLE_TOKENS = frozenset({"two_wheeler", "wheeler", "bike", "motorcycle", "motorbike", "scooter", "pulsar",
+                             "activa", "moped", "splendor"})
+_VEHICLE_WORDS = ("bike", "motorcycle", "motorbike", "scooter", "pulsar", "activa", "moped", "two-wheeler",
+                  "two wheeler", "wheeler", "splendor", "rider", "pillion")
+
+
+def label_supported(label: Any, text: str) -> bool:
+    """Does the text support this MO label? A vehicle label needs a vehicle word in the text; otherwise one
+    content word of the label must appear (prefix of 5 for long words, whole word for short ones)."""
+    if not label:
+        return True
+    toks = [t for t in re.split(r"[_\s]+", str(label).lower()) if t and t not in _STOPWORDS and not t.isdigit()]
+    if not toks:
+        return True
+    low = (text or "").lower()
+    if any(t in _VEHICLE_TOKENS for t in toks):
+        return any(w in low for w in _VEHICLE_WORDS)
+    for t in toks:
+        if len(t) >= 4 and t[:5] in low:
+            return True
+        if len(t) < 4 and re.search(rf"\b{re.escape(t)}\b", low):
+            return True
+    return False
 
 
 def clean_mo(raw: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -113,12 +147,17 @@ class Extractor:
 
     # ----- text --------------------------------------------------------
 
-    def _extract_text(self, text: str, purpose: str) -> tuple[dict[str, Any], Any]:
+    def _extract_text(self, text: str, purpose: str,
+                      followup: list[dict[str, Any]] | None = None) -> tuple[dict[str, Any], Any]:
         messages = [
             {"role": "system", "content": MO_SYSTEM_PROMPT},
             {"role": "user", "content": text},
+            *(followup or []),
         ]
         return chat_json(self.deps, "fast", messages, agent=AGENT, purpose=purpose, temperature=0, thinking=False)
+
+    def _unsupported(self, mo: Mapping[str, Any], evidence_text: str) -> list[str]:
+        return [k for k in CHECKED_FIELDS if not label_supported(mo.get(k), evidence_text)]
 
     # ----- vision ------------------------------------------------------
 
@@ -202,8 +241,29 @@ class Extractor:
         if recorded:  # grounding: Lightning (thinking off) otherwise copies example labels across crime types
             text_in = f"Recorded as: {recorded}\n\n{text_in}"
 
+        evidence_text = "\n".join(parts)  # what the labels must be backed by (not the "Recorded as" line)
         out, result = self._extract_text(text_in, f"mo {crime_id}")
         mo = clean_mo(out.get("mo"))
+        bad = self._unsupported(mo, evidence_text)
+        if bad:  # one corrective retry naming the unsupported labels
+            note = "; ".join(f"{k} '{mo[k]}' is not supported by the text" for k in bad)
+            followup = [{"role": "assistant", "content": result.content},
+                        {"role": "user", "content": f"{note}. Use the text's own words for those fields (null if the "
+                                                    "text gives no clue). Reply with the full JSON object again."}]
+            try:
+                out2, result2 = self._extract_text(text_in, f"mo {crime_id} label check", followup)
+                mo2 = clean_mo(out2.get("mo"))
+                if any(v not in (None, [], "") for v in mo2.values()):
+                    out, result, mo = out2, result2, mo2
+            except AgentError as exc:
+                self.deps.tracer.emit(AGENT, "label_retry_failed", input_summary=crime_id,
+                                      output_summary=short(str(exc)), status="degraded")
+            still = self._unsupported(mo, evidence_text)
+            for k in still:
+                mo[k] = None
+            if still:
+                self.deps.tracer.emit(AGENT, "label_unsupported", input_summary=crime_id, status="degraded",
+                                      output_summary=short(f"dropped {still}: labels the text does not support"))
         if not any(v not in (None, [], "") for v in mo.values()):
             # Text exists but nothing was extracted: a failed extraction, never a silent success.
             self.deps.tracer.emit(AGENT, "extract_empty", input_summary=crime_id, model=result.model,
