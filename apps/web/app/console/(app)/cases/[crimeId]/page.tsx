@@ -17,6 +17,8 @@ import { AppealButton } from "../_components/AppealButton";
 import { EvidenceUpload } from "../_components/EvidenceUpload";
 import { MoReview } from "../_components/MoReview";
 import { DiaryForm, StatusForm } from "../_components/CaseWrites";
+import { PersonLink } from "../_components/PersonLink";
+import { personLabel } from "@/lib/persons";
 
 export const dynamic = "force-dynamic";
 
@@ -218,10 +220,11 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
               <ul className="space-y-1">
                 {file.persons.map((p) => (
                   <li key={`${p.person_id}-${p.role}`}><span className="font-semibold">{humanise(p.role)}</span> · <span className="font-mono text-xs">{p.person_id}</span>
-                    {p.persons?.aliases?.length ? ` · aka ${p.persons.aliases.join(", ")}` : ""} · {describe(p.persons?.descriptors)}</li>
+                    {" · "}{personLabel(p.role, p.persons)} · {describe(p.persons?.descriptors)}</li>
                 ))}
               </ul>
             )}
+            {canWrite && <div className="mt-3"><PersonLink crimeId={crime.crime_id} /></div>}
           </Card>
 
           <Card title="Case diary" count={file.diary.length}>
