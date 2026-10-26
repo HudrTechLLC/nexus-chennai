@@ -210,6 +210,8 @@ Each run also writes `logs/trace-<run_id>.jsonl`. In sample mode every model ste
 
 Every run writes `logs/trace-<run_id>.jsonl` and echoes each line to stdout. Each line records the agent, the action, the model lane, the pinned model, the model Nightshift reports, the receipt id, the Zetaris query ids, the engine, confidence, retries and status. Receipt id means a `meterless-receipt` header if Nightshift sends one, otherwise a receipt field, otherwise the response id. The same events are copied (with redaction) to Supabase `trace_events`, and the console trace viewer at `/console/system/trace/<run_id>` shows them. Engine evidence is under `logs/`: `conformance_*.txt` and `feature_scout_intent.txt`.
 
+**Receipts verified.** 190 of 193 traced model calls carry a Nightshift receipt, and all 190 signatures verify (Ed25519, one key, fingerprint `c9f71fd6…`); the other 3 calls failed with no reply. 30/30 replayed fixture receipts also verify. Signatures verify against the receipt's embedded Ed25519 key, and every receipt uses the same key (sha256 fingerprint `c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865`; the runtime's `/v1/meterless/receipts` serves the same key). The replayed fixtures keep synthetic prompt previews inside their signed bodies. Re-run: `python scripts/verify_receipts.py` (needs the Supabase URL and a service-role key file; result in `logs/receipts_verification.json`, #363).
+
 ## Tests
 
 ```bash
