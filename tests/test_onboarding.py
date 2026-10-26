@@ -214,10 +214,12 @@ class FakeSb:
         return rows[: int((params or {}).get("limit", 10**6))]
 
     def update(self, table, match, values):
+        changed = []
         for r in self.tables.setdefault(table, []):
             if self._match(r, match):
                 r.update(values)
-        return []
+                changed.append(dict(r))
+        return changed
 
     def insert(self, table, rows):
         self.tables.setdefault(table, []).extend(rows if isinstance(rows, list) else [rows])
@@ -362,3 +364,41 @@ def test_a_column_the_model_leaves_out_is_ignored_and_says_so():
     out = ob.validate_mapping(_model(items), COLS)
     assert out[-1] == {"source_col": "Remarks", "unified_field": None, "transform": "none", "confidence": 0.0,
                        "reason": "not mapped by the model: ignored"}
+
+
+def test_a_run_another_worker_claimed_first_is_skipped(tmp_path):
+    """Two workers read the same uploaded run; only the one whose conditional update lands does the work."""
+    headers = ob.read_headers(SAMPLE.read_bytes())
+
+    class RacingSb(FakeSb):
+        def select(self, table, params=None):
+            rows = super().select(table, params)
+            if table == "onboarding_runs" and rows:  # the other worker claims it right after our read
+                for r in self.tables[table]:
+                    r["status"] = "profiling"
+            return rows
+
+    sb, z, ns, staged = RacingSb([_run()]), FakeZetaris(headers), FakeNightshift("{}"), []
+    assert _onboarder(sb, z, ns, tmp_path, staged).process() == 0
+    assert staged == [] and z.calls == [] and ns.calls == 0
+    assert sb.tables["onboarding_runs"][0]["status"] == "profiling"
+
+
+def test_the_claim_is_a_conditional_update_on_the_expected_status(tmp_path):
+    seen = []
+
+    class Spy(FakeSb):
+        def update(self, table, match, values):
+            seen.append((dict(match), dict(values)))
+            return super().update(table, match, values)
+
+    headers = ob.read_headers(SAMPLE.read_bytes())
+    sb = Spy([_run()])
+    _onboarder(sb, FakeZetaris(headers), FakeNightshift("not json"), tmp_path, []).process()
+    assert seen[0] == ({"run_id": "eq.11111111-1111-4111-8111-111111111111", "status": "eq.uploaded"},
+                       {"status": "profiling", "error": None})
+    sb.tables["onboarding_runs"][0]["status"] = "approved"
+    seen.clear()
+    _onboarder(sb, FakeZetaris(headers), FakeNightshift("{}"), tmp_path, []).process()
+    assert seen[0] == ({"run_id": "eq.11111111-1111-4111-8111-111111111111", "status": "eq.approved"},
+                       {"status": "registering", "error": None})

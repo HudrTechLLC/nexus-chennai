@@ -190,3 +190,16 @@ unreachable. It contains:
 - the full legacy CCTNS and archive.
 
 `data/sample/README.md` explains what is in it and how to rebuild it.
+
+
+## New source onboarding (WS1-23)
+
+The console's "Onboard a source" flow (`/console/system/sources/onboard`) is carried out by the main worker
+(`python -m app.worker`, step `process_onboarding`). That worker must run **on the host**, not in the compose
+`--profile worker` container: it stages each export with `docker cp` / `docker exec` into the Zetaris driver
+container (`ZETARIS_DRIVER_CONTAINER`, default `zetaris-driver-1`), and the compose worker has no docker CLI or socket.
+It also needs a live Zetaris key, and the Nightshift fast lane for the mapping (without it, header rules map the
+columns and the run says `mapping_source = rules`). Run exactly one worker. The bundled sample is
+`data/onboarding/sample_new_station.csv` (synthetic, from `cities/<city>/onboarding_sample.yaml`; regenerate with
+`python -m data.onboarding.generate_sample`). A registered source is a Zetaris view `onboard_<key>`: registered,
+not linked (it is not part of `v_crime_unified`).
