@@ -11,6 +11,9 @@ const KIND_TONE: Record<SkepticStep["kind"], string> = {
   critique_missing: "bg-bg text-muted border border-line",
 };
 
+/** The trace keeps a critique's first few hundred characters; mark a cut-off one with an ellipsis. */
+const finished = (t: string) => (/[.!?…)"'\]]$/.test(t) ? t : `${t}…`);
+
 function when(ts: string) {
   return new Date(ts).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
 }
@@ -47,7 +50,7 @@ export function SkepticPanel({ skeptic, steps, traceVisible }: {
                 {s.struck.length > 0 && <span className="text-muted">struck {s.struck.join(", ")}</span>}
                 <span className="text-muted">{when(s.ts)}</span>
               </div>
-              {s.text && <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">{s.text}</p>}
+              {s.text && <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">{finished(s.text)}</p>}
             </li>
           ))}
         </ol>
