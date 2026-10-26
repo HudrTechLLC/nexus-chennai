@@ -7,9 +7,10 @@ schema from the response (zetaris/40_feeds.sql).
 What it writes, for a given set of "grounded" crimes:
 - one local news report per grounded crime (most of them), published 2-90 h after it and naming a place
   alias of the crime's station, as written locally ("LB Road", "Adayar"), so q_news must resolve aliases;
-- (ROUNDUPS, off by default) a roundup when two crimes of one series fall within ROUNDUP_DAYS ("second snatching this week"), naming
-  both places and published inside the q_news window of both. This is the only kind of item that ties
-  two incidents together (Linker corroboration);
+- (ROUNDUPS, off by default) a roundup when two crimes of one series fall within ROUNDUP_DAYS ("second
+  snatching this week"), naming both places, inside the q_news window of both: it corroborates that pair;
+- every other article is placed so it matches at most one crime (same station or ward, inside its window),
+  so with roundups off no item ties two incidents together;
 - noise: civic stories that name a known place but no crime (category_hint false), stories about places
   outside the alias list, and stories outside every window;
 - social posts: a witness post near each grounded crime, plus chatter.
@@ -39,6 +40,8 @@ ROUNDUP_DAYS = 3             # two series crimes this close get a roundup articl
 # Off by default: a roundup corroborates a pair, and with today's renormalisation one corroborating item
 # (0.39) LOWERS a strong pair's score (hero sample 0.787 -> 0.752). Scoring owners decide before this is on.
 ROUNDUPS = False
+NEWS_WINDOW = timedelta(days=4)  # q_news looks this far after a crime (zetaris_queries_n2.NEWS_DAYS)
+TRIES = 20                   # placement attempts before an item is dropped
 NOISE_ARTICLES = 24
 CHATTER_POSTS = 30
 
@@ -92,11 +95,18 @@ def generate(
     *,
     seed: int = SEED,
     roundups: bool = ROUNDUPS,
+    always: Iterable[str] = (),
 ) -> tuple[list[dict], list[dict]]:
     """Articles and posts for the grounded crime ids. `crimes` rows need crime_id, station_id, sub_type and
-    an aware `occurred_from`; `series` lists crime ids per series (for roundups)."""
-    rnd = random.Random(seed)
+    an aware `occurred_from` (ward_no optional); `series` lists crime ids per series (for roundups);
+    `always` crimes get a report whenever one can be placed (the judge cases)."""
+    # One random stream per item, keyed by what it is about: adding or dropping a crime (or an alias for
+    # its station) changes only that crime's items, never the rest of the slice or its ids.
+    def rng(key: str) -> random.Random:
+        return random.Random(f"{seed}:{key}")
+
     by_id = {c["crime_id"]: c for c in crimes}
+    must = set(always)
     ids = sorted(i for i in set(grounded) if i in by_id)
     if not ids:
         return [], []
@@ -104,15 +114,27 @@ def generate(
     articles: list[dict] = []
     posts: list[dict] = []
 
-    def article(headline: str, places: list[str], at: datetime, body: str) -> None:
-        n = len(articles) + 1
-        articles.append({"article_id": f"NEWS-{n:05d}", "outlet": rnd.choice(OUTLETS), "published_at": _iso(at),
+    def article(key: str, rnd: random.Random, headline: str, places: list[str], at: datetime, body: str) -> None:
+        aid = f"NEWS-{key}"
+        articles.append({"article_id": aid, "outlet": rnd.choice(OUTLETS), "published_at": _iso(at),
                          "headline": headline, "body": body, "places_mentioned": places,
-                         "url": f"https://news.example.invalid/{n:05d}", "synthetic": True})
+                         "url": f"https://news.example.invalid/{aid.lower()}", "synthetic": True})
 
-    def post(text: str, places: list[str], at: datetime, tags: list[str]) -> None:
-        n = len(posts) + 1
-        posts.append({"post_id": f"POST-{n:05d}", "platform": rnd.choice(PLATFORMS), "posted_at": _iso(at),
+    # q_news matches an article to a crime when one of its places is an alias of the crime's station or ward and
+    # it is published within NEWS_WINDOW after the crime. An article inside two crimes' windows would corroborate
+    # that pair (Linker), so reports and noise are only placed where they match at most one crime.
+    by_alias = {a["alias"]: a for a in aliases}
+
+    def matches(place: str, at: datetime) -> int:
+        a = by_alias.get(place)
+        if a is None:
+            return 0
+        st, ward = a.get("station_id") or None, str(a.get("ward_no") or "") or None
+        return sum(1 for c in crimes if (st and c.get("station_id") == st or ward and str(c.get("ward_no") or "") == ward)
+                   and c["occurred_from"] <= at < c["occurred_from"] + NEWS_WINDOW)
+
+    def post(key: str, rnd: random.Random, text: str, places: list[str], at: datetime, tags: list[str]) -> None:
+        posts.append({"post_id": f"POST-{key}", "platform": rnd.choice(PLATFORMS), "posted_at": _iso(at),
                       "handle": f"@resident{rnd.randrange(100, 999)}", "text": text, "places_mentioned": places,
                       "hashtags": tags or ["#Local"], "synthetic": True})
 
@@ -122,15 +144,19 @@ def generate(
         opts = _places(aliases, c)
         if not opts:
             continue  # no alias for this station: the feed cannot name it
+        rnd = rng(cid)
         a = rnd.choice(opts)
         t0 = c["occurred_from"]
-        if rnd.random() < REPORT_SHARE:
-            at = t0 + timedelta(minutes=rnd.randrange(REPORT_HOURS[0] * 60, REPORT_HOURS[1] * 60))
+        if rnd.random() < REPORT_SHARE or cid in must:
             head = rnd.choice(HEADLINES.get(c.get("sub_type") or "", ("Crime reported near {place}",)))
-            article(head.format(place=a["alias"]), [a["alias"]], at,
-                    f"Police at {a['canonical']} are investigating. No arrests yet.")
+            for _ in range(TRIES):
+                at = t0 + timedelta(minutes=rnd.randrange(REPORT_HOURS[0] * 60, REPORT_HOURS[1] * 60))
+                if matches(a["alias"], at) <= 1:
+                    article(cid, rnd, head.format(place=a["alias"]), [a["alias"]], at,
+                            f"Police at {a['canonical']} are investigating. No arrests yet.")
+                    break
         at = t0 + timedelta(minutes=rnd.randrange(10, 180))
-        post(rnd.choice(WITNESS).format(place=a["alias"]), [a["alias"]], at, _tags(a["canonical"], "Alert"))
+        post(cid, rnd, rnd.choice(WITNESS).format(place=a["alias"]), [a["alias"]], at, _tags(a["canonical"], "Alert"))
 
     # Roundups: consecutive crimes of one series close in time.
     if roundups:
@@ -141,12 +167,13 @@ def generate(
                 px, py = _places(aliases, x), _places(aliases, y)
                 if gap > timedelta(days=ROUNDUP_DAYS) or not px or not py or x["station_id"] == y["station_id"]:
                     continue
+                rnd = rng(f"{x['crime_id']}+{y['crime_id']}")
                 at = y["occurred_from"] + timedelta(hours=rnd.randrange(3, 20))
                 if at >= x["occurred_from"] + timedelta(days=4):
                     continue
                 pa, pb = rnd.choice(px), rnd.choice(py)
                 what = ROUNDUP_WHAT.get(y.get("sub_type") or "", "robbery")
-                article(rnd.choice(ROUNDUP).format(what=what, a=pa["alias"], b=pb["alias"]),
+                article(f"R-{x['crime_id']}-{y['crime_id']}", rnd, rnd.choice(ROUNDUP).format(what=what, a=pa["alias"], b=pb["alias"]),
                         sorted({pa["alias"], pb["alias"]}), at, "Police are checking whether the cases are linked.")
 
     # Noise across the grounded period.
@@ -154,17 +181,23 @@ def generate(
     span = int((max(by_id[i]["occurred_from"] for i in ids) - start).total_seconds() // 60) + 14 * 24 * 60
     known = sorted({a["alias"] for a in aliases})
     for k in range(NOISE_ARTICLES):
-        at = (start + timedelta(minutes=rnd.randrange(span))).astimezone(tz)
+        rnd = rng(f"noise{k}")
         if k % 3 == 2:
             place = rnd.choice(ELSEWHERE)
-            article(f"Crowds gather at {place} for weekend event", [place], at, "Civic news.")
-        else:
-            place = rnd.choice(known)
-            article(rnd.choice(CIVIC).format(place=place), [place], at, "Civic news.")
-    for _ in range(CHATTER_POSTS):
+            at = (start + timedelta(minutes=rnd.randrange(span))).astimezone(tz)
+            article(f"N{k:03d}", rnd, f"Crowds gather at {place} for weekend event", [place], at, "Civic news.")
+            continue
+        place, head = rnd.choice(known), rnd.choice(CIVIC)
+        for _ in range(TRIES):
+            at = (start + timedelta(minutes=rnd.randrange(span))).astimezone(tz)
+            if matches(place, at) <= 1:
+                article(f"N{k:03d}", rnd, head.format(place=place), [place], at, "Civic news.")
+                break
+    for k in range(CHATTER_POSTS):
+        rnd = rng(f"chatter{k}")
         at = (start + timedelta(minutes=rnd.randrange(span))).astimezone(tz)
         place = rnd.choice(known)
-        post(rnd.choice(CHATTER).format(place=place), [place], at, _tags(place))
+        post(f"C{k:03d}", rnd, rnd.choice(CHATTER).format(place=place), [place], at, _tags(place))
 
     articles.sort(key=lambda r: (r["published_at"], r["article_id"]))
     posts.sort(key=lambda r: (r["posted_at"], r["post_id"]))
@@ -187,7 +220,7 @@ def sample_inputs(sample_dir: Path) -> dict[str, Any]:
 
     con = duckdb.connect()
     con.execute("SET TimeZone = 'UTC'")
-    cols = ["crime_id", "station_id", "sub_type", "occurred_from"]
+    cols = ["crime_id", "station_id", "ward_no", "sub_type", "occurred_from"]
     rows = con.execute(f"SELECT {', '.join(cols)} FROM read_parquet(?)",
                        [str(sample_dir / "sb" / "crimes.parquet")]).fetchall()
     manifest = json.loads((sample_dir / "MANIFEST.json").read_text(encoding="utf-8"))
@@ -205,7 +238,7 @@ def sample_inputs(sample_dir: Path) -> dict[str, Any]:
         grounded |= set(d["crime_ids"])
     with open(sample_dir / "ref" / "place_aliases.csv", encoding="utf-8", newline="") as fh:
         aliases = list(csv.DictReader(fh))
-    return {"crimes": crimes, "aliases": aliases, "grounded": sorted(grounded),
+    return {"crimes": crimes, "aliases": aliases, "grounded": sorted(grounded), "always": manifest["judge_ids"],
             "series": [s["crime_ids"] for s in judge]}
 
 

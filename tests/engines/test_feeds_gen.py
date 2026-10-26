@@ -49,17 +49,28 @@ def test_judge_cases_get_their_news_in_sample_mode():
     # Written with a local alias, resolved to the canonical place through ref/place_aliases.csv.
     assert row["matched_place"] == "Lattice Bridge Road" and 0 <= row["hours_after"] < 96
     (cab,) = z.named("q_news", agent="t", crime_id="CHN-GU-2025-000945").dicts()
-    assert cab["category_hint"] is True and cab["matched_place"] == "Guindy"
+    assert cab["matched_place"] == "Guindy" and cab["category_hint"] == ("robbery" in cab["headline"].lower())
 
 
 def test_default_slice_never_ties_two_incidents_together():
-    # Roundups are off (feeds_gen.ROUNDUPS): no committed article names two different stations' places.
-    import csv
+    # Roundups are off (feeds_gen.ROUNDUPS), and every other article is placed so the q_news join (alias of the
+    # crime's station or ward, inside its window) matches it to at most one crime: no Linker corroboration.
+    import duckdb
 
-    with open(SAMPLE / "ref" / "place_aliases.csv", encoding="utf-8", newline="") as fh:
-        station = {r["alias"]: r["station_id"] for r in csv.DictReader(fh)}
-    for a in _jsonl(SAMPLE / "news" / "articles.jsonl"):
-        assert len({station.get(p, p) for p in a["places_mentioned"]}) == 1
+    from app.adapters.zetaris_queries_n2 import NEWS_DAYS
+
+    con = duckdb.connect()
+    con.execute(f"SET file_search_path = '{SAMPLE.as_posix()}'")
+    worst = con.execute(f"""
+        WITH n AS (SELECT article_id, CAST(published_at AS TIMESTAMPTZ) AS at, unnest(places_mentioned) AS place
+                   FROM read_json_auto('news/articles.jsonl')),
+        a AS (SELECT alias, station_id, ward_no FROM read_csv_auto('ref/place_aliases.csv'))
+        SELECT n.article_id, count(DISTINCT c.crime_id) AS crimes
+        FROM n JOIN a ON lower(trim(n.place)) = lower(trim(a.alias))
+               JOIN 'sb/crimes.parquet' c ON (a.station_id = c.station_id OR a.ward_no = c.ward_no)
+        WHERE n.at >= c.occurred_from AND n.at < c.occurred_from + INTERVAL {NEWS_DAYS} DAY
+        GROUP BY n.article_id ORDER BY crimes DESC LIMIT 1""").fetchone()
+    assert worst is None or worst[1] <= 1, worst
 
 
 def test_roundups_name_both_places_inside_both_windows():
