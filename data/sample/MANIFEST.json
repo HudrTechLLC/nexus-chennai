@@ -1,0 +1,34 @@
+{
+ "core": 30,
+ "counts": {
+  "calendar": 45,
+  "crime_feature_reviews": 0,
+  "crime_features": 172,
+  "crime_vehicles": 373,
+  "crimes": 759,
+  "evidence_media": 0,
+  "forensics": 0,
+  "place_aliases": 48,
+  "statements": 1108,
+  "stations": 70,
+  "tips": 40
+ },
+ "dq": 4,
+ "duplicates": 5,
+ "judge_ids": [
+  "CHN-AD-2026-001182",
+  "CHN-KU-2025-000078",
+  "CHN-GU-2025-000945"
+ ],
+ "judge_series": [
+  "SER-GRILLE-CUTTERS",
+  "SER-NIGHT-CAB",
+  "SER-RED-PULSAR"
+ ],
+ "seed": 42,
+ "synthetic": true,
+ "window": {
+  "days": 45,
+  "ring_km": 6.0
+ }
+}

@@ -1,0 +1,27 @@
+[
+ {
+  "crime_ids": [
+   "CHN-AD-2026-001084",
+   "CHN-VL-2026-001035"
+  ],
+  "decoy_id": "DEC-01",
+  "shadows_series_id": "SER-RED-PULSAR"
+ },
+ {
+  "crime_ids": [
+   "CHN-GU-2025-000055",
+   "CHN-MM-2025-000040"
+  ],
+  "decoy_id": "DEC-02",
+  "shadows_series_id": "SER-GRILLE-CUTTERS"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-001062",
+   "CHN-MI-2025-001070",
+   "CHN-ST-2025-001032"
+  ],
+  "decoy_id": "DEC-03",
+  "shadows_series_id": "SER-NIGHT-CAB"
+ }
+]

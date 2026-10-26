@@ -1,0 +1,49 @@
+alias,canonical,station_code,station_id,ward_no,note
+LB Road,Lattice Bridge Road,J2,PS-ADYAR-J2,175,Adyar
+L.B. Road,Lattice Bridge Road,J2,PS-ADYAR-J2,175,Adyar
+Lattice Bridge Road,Lattice Bridge Road,J2,PS-ADYAR-J2,175,Adyar
+Adayar,Adyar,J2,PS-ADYAR-J2,175,common misspelling
+Adyar,Adyar,J2,PS-ADYAR-J2,175,
+Velacheri,Velachery,J7,PS-VELACHERY-J7,178,common misspelling
+Velachery,Velachery,J7,PS-VELACHERY-J7,178,
+Vijaya Nagar,Vijayanagar,J7,PS-VELACHERY-J7,178,Velachery
+Thiruvanmiyur,Thiruvanmiyur,J6,PS-THIRUVANMIYUR-J6,182,
+Tiruvanmiyur,Thiruvanmiyur,J6,PS-THIRUVANMIYUR-J6,182,spelling variant
+T. Nagar,T. Nagar,R1,PS-MAMBALAM-R1,141,
+T Nagar,T. Nagar,R1,PS-MAMBALAM-R1,141,
+Thyagaraya Nagar,T. Nagar,R1,PS-MAMBALAM-R1,141,official name
+Mambalam,Mambalam,R1,PS-MAMBALAM-R1,141,
+West Mambalam,Mambalam,R1,PS-MAMBALAM-R1,141,
+Kodambakkam,Kodambakkam,R2,PS-KODAMBAKKAM-R2,134,
+Ashok Nagar,Ashok Nagar,R3,PS-ASHOKNAGAR-R3,133,
+Ashoknagar,Ashok Nagar,R3,PS-ASHOKNAGAR-R3,133,spelling variant
+Vadapalani,Vadapalani,R8,PS-VADAPALANI-R8,130,
+Meenambakkam,St. Thomas Mount,S1,PS-STTHOMASMOUNT-S1,0,airport road
+Airport Road,St. Thomas Mount,S1,PS-STTHOMASMOUNT-S1,0,GST Road near the airport
+GST Road,St. Thomas Mount,S1,PS-STTHOMASMOUNT-S1,0,
+St Thomas Mount,St. Thomas Mount,S1,PS-STTHOMASMOUNT-S1,0,
+Parangimalai,St. Thomas Mount,S1,PS-STTHOMASMOUNT-S1,0,Tamil name
+Guindy,Guindy,J3,PS-GUINDY-J3,170,
+Kindi,Guindy,J3,PS-GUINDY-J3,170,Tamil spelling
+Saidapet,Saidapet,J1,PS-SAIDAPET-J1,142,
+Mylapore,Mylapore,E1,PS-MYLAPORE-E1,124,
+Mylai,Mylapore,E1,PS-MYLAPORE-E1,124,short form
+Triplicane,Triplicane,D1,PS-TRIPLICANE-D1,59,
+Thiruvallikeni,Triplicane,D1,PS-TRIPLICANE-D1,59,Tamil name
+Egmore,Egmore,F2,PS-EGMORE-F2,61,
+Ezhumbur,Egmore,F2,PS-EGMORE-F2,61,Tamil name
+Anna Nagar,Anna Nagar,K4,PS-ANNANAGAR-K4,101,
+Koyambedu,Koyambedu,K10,PS-KOYAMBEDU-K10,127,
+Tambaram,Tambaram,S11,PS-TAMBARAM-S11,,
+Pallavaram,Pallavaram,T3,PS-PALLAVARAM-T3,,
+Sowcarpet,Sowcarpet,C1,PS-FLOWERBAZAAR-C1,59,jewellery and pawn market
+Sowkarpet,Sowcarpet,C1,PS-FLOWERBAZAAR-C1,59,spelling variant
+Flower Bazaar,Flower Bazaar,C1,PS-FLOWERBAZAAR-C1,59,
+Washermanpet,Washermanpet,H1,PS-WASHERMANPET-H1,52,
+Old Washermanpet,Washermanpet,H1,PS-WASHERMANPET-H1,52,
+Royapettah,Royapettah,E2,PS-ROYAPETTAH-E2,119,
+Nungambakkam,Nungambakkam,F3,PS-NUNGAMBAKKAM-F3,113,
+Porur,SRMC Porur,T15,PS-SRMCPORUR-T15,153,
+Ambattur,Ambattur,T1,PS-AMBATTUR-T1,85,
+Avadi,Avadi,T4,PS-AVADI-T4,,
+Kundrathur,Kundrathur,T13,PS-KUNDRATHUR-T13,,

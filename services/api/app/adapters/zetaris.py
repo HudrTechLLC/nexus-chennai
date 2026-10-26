@@ -93,6 +93,20 @@ NAMED_QUERIES.update({n: NamedQuery(**s) for n, s in _n1_specs().items()})
 _PARAM = re.compile(r":([a-z_][a-z0-9_]*)")
 
 
+def load_sample_views(con: duckdb.DuckDBPyConnection, sample_dir) -> None:
+    """Create the bundle's views (data/sample/views.sql, e.g. v_crime_unified) on a sample connection.
+    Missing file = no views (an older bundle); statements run in order, one per `;`."""
+    from pathlib import Path
+
+    path = Path(sample_dir) / "views.sql"
+    if not path.is_file():
+        return
+    body = "\n".join(ln for ln in path.read_text(encoding="utf-8").splitlines() if not ln.lstrip().startswith("--"))
+    for stmt in body.split(";"):
+        if stmt.strip():
+            con.execute(stmt)
+
+
 def _is_retryable(exc: BaseException) -> bool:
     if isinstance(exc, httpx.TransportError):
         return True
@@ -174,6 +188,7 @@ class ZetarisClient:
         if self._duck is None:
             self._duck = duckdb.connect(":memory:")
             self._duck.execute(f"SET file_search_path = '{self.settings.sample_dir.as_posix()}'")
+            load_sample_views(self._duck, self.settings.sample_dir)
         return [list(r) for r in self._duck.execute(sql).fetchall()]
 
     def named(self, name: str, *, agent: str, limit: int = 1000, **params: Any) -> QueryResult:
