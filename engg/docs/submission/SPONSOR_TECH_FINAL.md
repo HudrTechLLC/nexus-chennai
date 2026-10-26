@@ -20,14 +20,14 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 
 - **Sources federated today:**
   - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 4 datasource views where JDBC can't map a type.
-  - **REST feeds served by the Nexus API**, registered as Lightning REST tables: weather is live (`weather_hourly`); the news and social feeds (`news_items`, `social_posts`, `v_news_mentions`) are written but not registered yet `[PENDING: WS1-16]`.
+  - **REST feeds served by the Nexus API**, registered as Lightning REST tables: weather (`weather_hourly`), news (`news_items`) and social (`social_posts`), with `v_news_mentions` over news and social.
   - **CSV and Parquet file sources** in Zetaris's internal file store: 8 CSV tables (legacy CCTNS exports, CCTV and ANPR camera lists, vehicles, prison releases, history sheets, place aliases, calendar) and 4 Parquet tables (ANPR reads, 112 calls, the legacy archive, map POIs).
 - **Governed access.** Agents can run only registered *named queries*, through one adapter (`services/api/app/adapters/zetaris.py`). Every query id goes into the trace and into the alert's evidence. Live today, each with Lightning SQL and a DuckDB twin for sample mode:
   - `q_case`: one case with its vehicles, statements, evidence and forensics;
   - `q_candidates`: blocking, i.e. same-category cases within a distance and time window;
   - `q_features`: extracted MO features;
   - `q_dq_flags`: data-quality flags;
-  - `q_news`: news that mentions a case's place (returns rows only in sample mode until the news feed is registered);
+  - `q_news`: news that mentions a case's place;
   - `q_hex_counts`: counts per H3 cell, for the hotspot test;
   - `q_search`: text and filter search over crimes and statements, for the console search box;
   - `q_station_matrix`: approved alerts station × station;
@@ -37,8 +37,8 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_vehicle_trail`: ANPR reads of a plate pattern in a time window, each tied to the nearest crime scene within 1.5 km and 2 h;
   - `q_offender_return`: offenders released in the last 60 days whose earlier MO shares the case's MO tags, home ward first;
   - `q_calls_near`: 112 emergency calls within a set distance and time of a crime.
-  - Live check: 13 of these 14 return rows live on Zetaris (live parity run, 26 Oct); all 14 run on DuckDB twins in sample mode.
-  - Still to come: `q_news` returns rows live once the news feed is registered `[PENDING: WS1-16]`. Semantic view live: `v_crime_unified`, one view over every crime record shape; the other semantic views are `[PENDING: WS1-13]`.
+  - Live check: all 14 return rows live on Zetaris (26 Oct); all 14 run on DuckDB twins in sample mode.
+  - Semantic view live: `v_crime_unified`, one view over every crime record shape; the other semantic views are `[PENDING: WS1-13]`.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
