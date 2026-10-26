@@ -90,10 +90,10 @@ def test_zetaris_file_is_generated_from_the_same_rules():
     duck = dq_rules.rule_sql("time_inconsistent", dq_rules.DUCK, dq_rules.BOUND_PLACEHOLDERS)
     live_view = dq_rules.SPARK_VIEW.replace("STRING", "VARCHAR")
     assert spark.replace("STRING", "VARCHAR").replace(live_view, "v_crime_unified") == duck
-    # Registers without 10_views: creates the container itself and reads registered sb.* sources only.
+    # Creates the container itself (repeats are skipped) and reads the unified crime view.
     assert committed.index("CREATE SCHEMASTORE CONTAINER nexus;") < committed.index("SCHEMASTORE VIEW")
     sql_only = "\n".join(line for line in committed.splitlines() if not line.startswith("--"))
-    assert "nexus.v_crime_unified" not in sql_only
+    assert "FROM nexus.v_crime_unified" in sql_only
 
 
 @pytest.mark.parametrize("name", ["20_dq.sql", "40_feeds.sql"])

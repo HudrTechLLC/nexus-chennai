@@ -3,7 +3,7 @@
 -- Zetaris registers them as REST tables in Lightning database nexus_feeds and flattens them into views in
 -- container `nexus` (created by 20_dq.sql and repeated here, so this file also runs alone; register.py skips
 -- "already exists"). Syntax: zetaris/getting-started @6a2fbaa, sections 5.2, 6.2, 12.1.
--- v_news_mentions reads sb.crimes until nexus.v_crime_unified (10_views.sql) is registered.
+-- v_news_mentions reads nexus.v_crime_unified (10_views.sql).
 -- One statement per call; register.py strips the trailing semicolons and fills {{since}} / {{until}}.
 -- v_news_mentions must stay in step with the q_news DuckDB twin in services/api/app/adapters/zetaris_queries_n2.py
 -- (NEWS_DAYS = 4; alias -> station or ward; category_hint reported, not required).
@@ -45,7 +45,7 @@ SELECT c.crime_id, n.article_id, first(n.headline) AS headline, first(n.outlet) 
        first(n.published_at) AS published_at, first(n.url) AS url, min(a.canonical) AS matched_place,
        CAST(floor((unix_timestamp(first(n.published_at)) - unix_timestamp(c.occurred_from)) / 3600) AS INT) AS hours_after,
        max(instr(lower(n.headline), split(c.category, '_')[0]) > 0) AS category_hint
-FROM sb.crimes c
+FROM nexus.v_crime_unified c
 JOIN s3csv.place_aliases a ON (a.station_id = c.station_id OR a.ward_no = c.ward_no)
 JOIN (SELECT article_id, headline, outlet, published_at, url, place
       FROM nexus.news_items LATERAL VIEW explode(places_mentioned) p AS place) n
