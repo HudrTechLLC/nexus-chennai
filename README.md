@@ -4,9 +4,18 @@
 
 Each police station in a city sees only its own cases. A gang that snatches chains near one station on Monday and another on Friday looks like two unrelated robberies. Nexus is a set of agents that read the city's fragmented records through **Zetaris**, think with **NVIDIA Nemotron** through **Meterless Nightshift**, and raise *link alerts* for crimes that are probably related across stations. Each alert shows its score, the evidence for each reason and the Zetaris query behind it. A Skeptic agent re-checks every link against fresh rows before a human decides, and the human's decision teaches the system through the Meterless **H-MEM** engine.
 
-> **All data in this repository is synthetic** (`synthetic: true` on every row). No real people, cases or police systems are involved.
+> **All crime, person, case and tip data in this repository is synthetic** (`synthetic: true` on every such row). Map, ward, police-station and weather reference data is real public open data ([data/README.md](data/README.md)). No real people, cases or police systems are involved.
 
 Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.app> (see [Live app](#live-app))
+
+**What linking finds.** In the live demo data, Nexus proposes one series that no single station's register shows: **"Red two-wheeler chain snatchings · 3 stations"**, 9 chain snatchings across Adyar, Thiruvanmiyur and Velachery. Its strongest cross-station pair, Adyar ↔ Velachery two days apart, shares a partial plate and the same red Bajaj Pulsar 150 and scores **high (0.789)**. The series and every alert in it are proposals: each waits for an analyst's decision. On the judge path (a fresh clone, sample data) the same series shows 4 cases (see [Examples](#examples)). All of it is planted synthetic data.
+
+**What's new compared with established crime linkage.** Established linkage systems rely on structured case forms and analysts comparing cases by hand. Nexus instead:
+- reads every source where it already lives (case files, legacy station exports, ANPR, 112 calls, tips, feeds) through Zetaris, with no central copy;
+- has agents cite the Zetaris query and row behind every factor in an alert;
+- has a Skeptic that re-queries the data itself and sends a pair back or drops it before a person sees it;
+- feeds screened public tips back in as corroborating evidence on a link (the corroboration factor);
+- learns from each analyst decision within a capped ±0.08 (H-MEM).
 
 ## Contents
 [What it does](#what-it-does) · [Architecture](#architecture) · [Agents](#agents) · [Meterless engines](#meterless-engines) · [Sponsor technology](#sponsor-technology) · [Setup](#setup) · [Run](#run) · [Sample mode vs live](#sample-mode-vs-live) · [Examples](#examples) · [Traces and logs](#traces-and-logs) · [Tests](#tests) · [Evaluation](#evaluation) · [Limitations](#limitations) · [Responsible AI](#responsible-ai) · [Live app](#live-app) · [Third-party code and pre-existing work](#third-party-code-and-pre-existing-work) · [Licences](#licences) · [AI and model usage](#ai-and-model-usage)
@@ -134,7 +143,7 @@ Copy `.env.example` to `.env` and set these:
 - **Zetaris:** `ZETARIS_REST_URL` (default `http://localhost:8888/api/v1.0`) and `ZETARIS_ORG_ID`. For the API key, set either `ZETARIS_API_KEY` or `ZETARIS_API_KEY_FILE` (a path to a file holding it; preferred).
 - **Nightshift:** `METERLESS_BASE_URL` (default `http://127.0.0.1:8088/v1`). For the runtime token, **either** export `METERLESS_RUNTIME_TOKEN` in your shell (a `.env` file doesn't export it for other tools) **or** set `METERLESS_RUNTIME_TOKEN_FILE` to the token file Nightshift writes itself (on Windows, `%LOCALAPPDATA%/ai.meterless.runtime/proxy-token`). Lanes: `LANE_FAST`, `LANE_REASON` (and `LANE_VISION`, see [Limitations](#limitations)). Pin exact `nvidia/*` ids; `meterless/auto` is refused.
 - **Supabase:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY_FILE` for the worker.
-- **Your own Zetaris, no Supabase:** `python -m data.setup_live` generates the dataset and loads it into your local Zetaris, then run the API with `ZETARIS_DATA=files`. Steps and options: [data/README.md §5](data/README.md#5-live-mode-on-your-own-zetaris-no-supabase). Agent reads then need only Zetaris and Nightshift; the police console and the worker still use Supabase (WS2-22 is in progress).
+- **Your own Zetaris, no Supabase:** `python -m data.setup_live` generates the dataset and loads it into your local Zetaris, then run the API with `ZETARIS_DATA=files`. Steps and options: [data/README.md §5](data/README.md#5-live-mode-on-your-own-zetaris-no-supabase). Agent reads then need only Zetaris and Nightshift, and `/run` can keep its results in local files (`NEXUS_STORE=local`, #273). The police console and the worker still use Supabase.
 - **REST feeds:** Zetaris fetches its REST feeds (`/mock-feeds/*`: weather, news, social) from the Nexus API, so start the API (`python run.py`) before a live run. If the API is down, runs still complete, just without feed evidence.
 - **Engines:** `ENGINES_BACKEND=sample` (default, in-process) or `sidecar` (the TypeScript references: `cd engines-ts && npm ci && npm run install:references && npm run sidecar`).
 
@@ -232,6 +241,19 @@ cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample
 
 
 ## Limitations
+
+**Known limitations, in numbers:**
+
+| Limitation | Number | Source |
+|---|---|---|
+| Synthetic data, no trial with real officers | about 14,000 synthetic crimes (14,040 in the QA database on 26 Oct); 0 real cases; no field trial | `data/README.md`; [Evaluation](#evaluation) is on planted truth |
+| Medium alerts are leads, not answers | MEDIUM band correct **56%** (74 of 132 scored pairs); HIGH 10 of 10 | `output_examples/eval_report.json` |
+| Live runs are slow on the reasoning model | **4–17 min** per recorded example (236 / 1,046 / 315 s); a 4-case live batch took ~59 min, and one case hit the 60-min run deadline in its own planning round. The judge path replays the same calls in **7–12 s** | `output_examples/*.json` `execution_time_seconds`; nexus-3's `run_866f913f`; fresh-clone run |
+| Images are not read by a model | 0 vision tags: Nightshift 1.2.7 refuses images (`no_vision_model`); the officer's caption is used, and each is traced `vision_unavailable` | trace steps; D-021 |
+| The worker needs Supabase | `/run` can store results locally (`NEXUS_STORE=local`, #273); the worker and the police console use Supabase only | `services/api/app/graph/local_store.py`; [PATH2](engg/docs/PATH2.md) |
+| A Zetaris query-pushdown bug is worked around, not fixed | Every named query and data-quality view orders rows before the limit; a `zetaris_result_truncated` event fires whenever rows = limit | D-031 (`engg/docs/DECISIONS.md`) |
+
+Details:
 
 - **Synthetic data.** All crime, person, vehicle, call, tip, statement, evidence, news and social data is generated for this hackathon. Any quality number is measured on planted structure, not on real police data. The only real data is public reference data: map places, ward boundaries, the station list and weather (see [data/README.md](data/README.md)).
 - **Audio statements and evidence photos are not read by a model yet.** The Extractor has both paths wired: an audio lane would transcribe recordings, and the vision lane (Nemotron Super VL, pinned by default) would tag what a photo shows.

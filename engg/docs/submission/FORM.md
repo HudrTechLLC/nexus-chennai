@@ -49,7 +49,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 - **Meterless Nightshift** is the only model path, on pinned NVIDIA Nemotron lanes, with the model logged on every call.
 - **All four Meterless engines** run in features. World Model, H-MEM and Markovian pass their official conformance suites unchanged (8/8, 13/13, 8/8). Scout Intent scores 0.950 route accuracy on a held-out set it was never tuned on, and on 40 live seeded tips it falsely quarantined none of the 30 genuine tips. It first missed 1 of 4 injections and 3 of 4 spam tips. We fixed the rules for those shapes, and they now catch all 8, but that figure isn't independent, because those misses shaped the fix.
 
-**Built to be checked.** Judges can run it with Docker or a Python virtual environment, post an input to `POST /run`, and read a JSONL trace of every agent step, Zetaris query, engine call and model. `SAMPLE_MODE=true` runs the same agent logic without credentials, on a committed synthetic sample `[PENDING: WS1-11]`. All data is synthetic.
+**Built to be checked.** Judges can run it with Docker or a Python virtual environment, post an input to `POST /run`, and read a JSONL trace of every agent step, Zetaris query, engine call and model. `SAMPLE_MODE=true` runs the same agent logic without credentials, on the committed synthetic sample in `data/sample/`, and the container answers all three examples with no network at all (CI job `judge-offline`). All crime, person, case and tip data is synthetic.
 
 ## Links
 
@@ -94,4 +94,4 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 ## Responsible AI (if the form asks)
 
-Nexus suggests and people decide. An analyst decides every link, and an officer publishes every public appeal. Each alert shows its evidence and the query behind it. Numbers come from code, never from a model. Public tips are screened before any agent reads them. The public map uses coarse cells with a minimum-count cutoff. Protected attributes are never used. All data is synthetic.
+Nexus suggests and people decide. An analyst decides every link, and an officer publishes every public appeal. Each alert shows its evidence and the query behind it. Numbers come from code, never from a model. Public tips are screened before any agent reads them. The public map uses coarse cells with a minimum-count cutoff. Protected attributes are never used. All crime, person, case and tip data is synthetic; only public reference data (map, wards, stations, weather) is real.
