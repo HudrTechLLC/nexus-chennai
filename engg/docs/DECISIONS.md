@@ -289,3 +289,9 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
   - Before upsert, summaries go through redaction: no secrets, no tip passphrases, and no raw tip text.
   - The worker writes a heartbeat into `system_status` on every pass. A failed heartbeat never fails the pass.
 - **Ownership:** the `0006` migration range is assigned to nexus-3.
+
+## D-022a · Amendment: Zetaris reads its files from its own internal file store (2026-10-26)
+- **What happened:** Zetaris could not read Supabase Storage over S3. The driver log shows `SdkClientException ... Received fatal alert: handshake_failure` from `S3AFileSystem` (hadoop-aws 3.3.5). The JVM inside the Zetaris container cannot complete a TLS handshake with `*.storage.supabase.co`. This is a container TLS/cipher problem, not a signing problem; the boto3 SigV4 check against the same key works.
+- **The decision:** CSV and Parquet files go into **Zetaris's internal file store** and are still registered as file sources, so Zetaris still federates them alongside Supabase Postgres. The Supabase bucket stays as a backup copy.
+- **Not done:** we will not change the Zetaris container's JVM/TLS settings during the build, because restarting Zetaris would put every lane at risk. The fix (a newer JDK or `-Djdk.tls.client.protocols`) plus a one-line endpoint switch is documented in `zetaris/README` as a future option and stated as a limitation.
+- **Still true:** no AWS, no spend.

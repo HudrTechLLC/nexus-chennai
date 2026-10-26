@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:40:03+05:30",
+  "updated": "2026-10-26T12:44:34+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -90,7 +90,9 @@
           "phase": "P1",
           "title": "Seeded generator: 14k FIRs, 70 stations, 30 planted series, decoys, duplicates, vehicle chains, offender returns",
           "status": "in_progress",
-          "owner": "nexus-1"
+          "owner": "nexus-1",
+          "note": "Slice 1 merged + seeded (14k crimes, 30 series, 25 decoys, 15 dup FIRs); slice 2 next",
+          "ref": "#30"
         },
         {
           "id": "WS1-09",
@@ -103,14 +105,16 @@
           "id": "WS1-10",
           "phase": "P1",
           "title": "Upload to S3 (or Zetaris-readable store) and seed Supabase",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "Supabase seeded; Zetaris file side via internal store (D-022a)",
+          "ref": "#30"
         },
         {
           "id": "WS1-11",
           "phase": "P1",
           "title": "Sample bundle for SAMPLE_MODE (600 crimes, 3 series, 40 tips)",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-1"
         },
         {
@@ -152,9 +156,9 @@
           "id": "WS1-17",
           "phase": "P2",
           "title": "Storage Zetaris can read for CSV/Parquet (test Supabase Storage S3 endpoint; AWS only with approval)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "Supabase Storage S3 endpoint approved (D-022); bucket + Zetaris read check in progress"
+          "note": "Zetaris internal file store (D-022a); Supabase S3 blocked by container TLS - documented"
         },
         {
           "id": "WS1-18",
