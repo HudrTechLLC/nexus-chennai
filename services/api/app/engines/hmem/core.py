@@ -21,6 +21,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+import os
 import re
 import time
 from pathlib import Path
@@ -146,8 +147,17 @@ class HMEM:
         if not self.state_file:
             return
         records = sorted(self.records.values(), key=lambda r: r["id"])
-        self.state_file.write_text(json.dumps({"seq": self.seq, "records": records}, indent=2) + "\n",
-                                   encoding="utf-8")
+        # Atomic replace: another process may be reading state.json at this moment.
+        tmp = self.state_file.with_name(f"{self.state_file.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps({"seq": self.seq, "records": records}, indent=2) + "\n", encoding="utf-8")
+        for attempt in range(20):
+            try:
+                os.replace(tmp, self.state_file)
+                break
+            except PermissionError:  # Windows: a reader has the file open for a moment
+                if attempt == 19:
+                    raise
+                time.sleep(0.02)
 
     def classify_domain(self, content: str, tags: list[str], type_: str) -> str:
         for t in tags:
