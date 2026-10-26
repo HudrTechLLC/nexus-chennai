@@ -85,10 +85,13 @@ class AlertWriter:
     def __init__(self, deps: AgentDeps) -> None:
         self.deps = deps
 
-    def write(self, results: Sequence[SkepticResult]) -> list[dict[str, Any]]:
+    def write(self, results: Sequence[SkepticResult], *, unresolved: bool = False) -> list[dict[str, Any]]:
+        """Write approved pairs. `unresolved=True` (run deadline only) writes pairs the Skeptic sent back and no
+        later round resolved: their skeptic verdict stays needs_revision, never approved."""
         written: list[dict[str, Any]] = []
+        want = "send_back" if unresolved else "approve"
         for res in results:
-            if res.verdict != "approve" or not res.pair.score.alert or res.pair.score.band is None:
+            if res.verdict != want or not res.pair.score.alert or res.pair.score.band is None:
                 continue
             alert = build_alert(res, self.deps.tracer.run_id)
             row = alert.model_dump(mode="json")
@@ -96,7 +99,9 @@ class AlertWriter:
             row["weights_version"] = res.pair.score.weights_version  # link_alerts.weights_version (0007_07)
             stored = self.deps.store.write_alert(row)
             self.deps.store.notify([
-                {"station_id": st, "kind": "link_alert", "title": f"New {alert.band} link alert {alert.alert_id}",
+                {"station_id": st, "kind": "link_alert",
+                 "title": f"New {alert.band} link alert {alert.alert_id}"
+                          + (" (Skeptic review unresolved)" if unresolved else ""),
                  "body": alert.rationale, "link": f"/console/alerts/{alert.alert_id}"}
                 for st in alert.stations
             ])

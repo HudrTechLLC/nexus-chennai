@@ -280,3 +280,36 @@ def test_planner_falls_back_to_q_case_when_the_batch_read_fails(tmp_path, monkey
     assert [name for name, agent, _ in z.calls if agent == "Planner"].count("q_case") >= 1
     trace = (tmp_path / "logs" / f"trace-{out['run_id']}.jsonl").read_text(encoding="utf-8")
     assert '"cases_batch_failed"' in trace
+
+
+def test_deadline_in_round_two_writes_the_sent_back_link_as_needs_revision(tmp_path):
+    # run_3d845f76 (CHN-VL-2026-001221, live): round 1 scored a medium link, the Skeptic sent it back, and the
+    # deadline passed while round 2 was planning. Nothing was written. Chief: write the last fully scored round's
+    # links as needs_revision, traced deadline_partial_write; never approved.
+    box = {}
+    base = responder("send_back")
+
+    def reply(lane, messages, purpose):
+        if purpose.startswith("plan round 2"):
+            box["deps"].deadline = time.monotonic() - 1
+        return base(lane, messages, purpose)
+
+    g, deps = graph(tmp_path, reply=reply, deadline=time.monotonic() + 600)
+    box["deps"] = deps
+    state = g.run("case", {"crime_id": ADYAR["crime_id"]})
+    assert state["status"] == "deadline"
+    assert len(state["alerts"]) == 1
+    alert = state["alerts"][0]
+    assert alert["skeptic"]["verdict"] == "needs_revision" and alert["status"] == "pending"
+    ev = [e for e in deps.tracer.read() if e["action"] == "deadline_partial_write"]
+    assert len(ev) == 1 and ev[0]["status"] == "degraded"
+    assert "send-back" in ev[0]["output_summary"] and alert["alert_id"] in ev[0]["output_summary"]
+    assert not [e for e in deps.tracer.read() if e["action"] == "write_alert" and "approved" in (e["output_summary"] or "")]
+    assert any("unresolved" in n["title"] for n in deps.store.notifications)
+
+
+def test_deadline_before_any_scoring_still_writes_nothing(tmp_path):
+    g, deps = graph(tmp_path, deadline=time.monotonic() - 1)
+    state = g.run("case", {"crime_id": ADYAR["crime_id"]})
+    assert state.get("alerts", []) == []
+    assert not [e for e in deps.tracer.read() if e["action"] == "deadline_partial_write"]

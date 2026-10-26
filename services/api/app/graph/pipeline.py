@@ -9,8 +9,9 @@
 Caps (C4): Planner at most 3 query rounds; Skeptic -> Planner send-backs at most 2 per
 run; a hard run deadline (5 min by default, settings.run_deadline_seconds). When less than
 MODEL_RESERVE_SECONDS remain, the reason-lane rationale and critique calls are skipped and
-the code results stand. If the deadline passes, only pairs the Skeptic already approved are
-written. Every step is traced.
+the code results stand. If the deadline passes, pairs the Skeptic already approved are written, and pairs it
+sent back that no later round resolved are written as needs_revision (traced deadline_partial_write). Every
+step is traced.
 """
 
 from __future__ import annotations
@@ -332,6 +333,16 @@ class AgentGraph:
     def write(self, state: RunState) -> dict[str, Any]:
         alerts = self.writer.write(state.get("approved", []))
         status = state.get("status")
+        if status == "deadline" and state.get("pending"):
+            # The deadline passed before a send-back round finished: keep the last fully scored round's links
+            # instead of dropping them, marked needs_revision (chief, 2026-10-27; run_3d845f76).
+            partial = self.writer.write(state["pending"], unresolved=True)
+            for a in partial:
+                self._trace("Graph", "deadline_partial_write", input_summary="|".join(sorted(a["crimes"])),
+                            status="degraded", confidence=a.get("score"),
+                            output_summary=f"{a['alert_id']} written as needs_revision: the Skeptic's send-back "
+                                           "was not resolved before the run deadline")
+            alerts = [*alerts, *partial]
         return {"alerts": alerts, "status": status if status in ("deadline", "error") else "success"}
 
     # ----- edges ------------------------------------------------------------------------
