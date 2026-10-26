@@ -122,7 +122,8 @@ class Worker:
         for t in tips:
             screened = guard.screen(t)
             g = screened["guard"]
-            stored_guard = {k: g.get(k) for k in ("verdict", "intent", "risk", "injection", "threat", "emergency")}
+            stored_guard = {k: g.get(k) for k in ("verdict", "intent", "risk", "injection", "threat", "emergency",
+                                                     "summary", "tags")}
             self.sb.update("tips", {"tip_id": f"eq.{t['tip_id']}"},
                            {"guard": stored_guard, "status": TIP_STATUS[g["verdict"]]})
         return len(tips)
