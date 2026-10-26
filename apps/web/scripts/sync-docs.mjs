@@ -53,6 +53,7 @@ const NOTES = [
   ["DECISIONS", "Decisions"], ["DELIVERABLES", "Deliverables checklist"], ["SETUP", "Setup"],
   ["CITY_PACKS", "City packs"], ["SPONSOR_TECH", "Sponsor tech (draft)"], ["TOOLING", "Tooling"],
   ["hackathon/DIGEST", "Hackathon digest"], ["hackathon/RULES_CHECK", "Rules check"], ["ENGINES", "Meterless engines"], ["AGENTS", "Agents and graph"], ["submission/EVIDENCE", "Submission evidence"], ["submission/README_DRAFT", "README draft"],
+  ["submission/SPONSOR_TECH_FINAL", "Sponsor tech (final)"], ["submission/FORM", "Submission form"], ["submission/DECK", "Deck content"], ["submission/VIDEO_SCRIPT", "Video script"],
 ];
 const notes = [];
 for (const [file, label] of NOTES) {
