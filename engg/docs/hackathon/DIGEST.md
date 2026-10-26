@@ -4,8 +4,8 @@ tags: [nexus, research]
 
 # Hackathon digest
 
-Copied from [SPEC O5](../SPEC.md#claude-code) on 2026-10-26. **Official Rules win** over this digest and the spec; save official PDFs from the HackOS Resource Center into this folder and log any conflict in [DECISIONS](../DECISIONS.md).
-Related: [DELIVERABLES](../DELIVERABLES.md) · [00-INDEX](../00-INDEX.md)
+Copied from [SPEC O5](../SPEC.md#claude-code) on 2026-10-26. **Official Rules win** over this digest and the spec; the official PDFs were saved locally on 2026-10-26 and checked in [RULES_CHECK](RULES_CHECK.md); log any conflict in [DECISIONS](../DECISIONS.md).
+Related: [RULES_CHECK](RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [00-INDEX](../00-INDEX.md)
 
 
 

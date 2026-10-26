@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T11:42:28+05:30",
+  "updated": "2026-10-26T12:01:03+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -206,25 +206,27 @@
           "id": "WS2-05",
           "phase": "P0",
           "title": "Verify Nightshift model ids and pin the three Nemotron lanes",
-          "status": "in_progress",
-          "note": "fast=Lightning 30B ✓, reason=Ultra 550B ✓ (Super 120B not served to key), vision=Super VL excluded by Nightshift - opt-in pending",
+          "status": "blocked",
+          "note": "Lightning/Ultra/Embed pinned + verified. Super VL gate enabled (engine-kv), text OK, but Nightshift refuses every image request (no_vision_model) - reported to Meterless",
           "owner": "nexus-chief"
         },
         {
           "id": "WS2-06",
           "phase": "P3",
           "title": "World Model engine (Python port) + tests",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "facade + E4 tests on sample backend (#12); sidecar CI pending"
+          "note": "facade + E4 tests on sample backend (#12); sidecar CI pending",
+          "ref": "#19"
         },
         {
           "id": "WS2-07",
           "phase": "P3",
           "title": "Extractor agent: text and vision lanes",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-3",
-          "note": "nexus-3: agents PR in progress"
+          "note": "Extractor + Tip Guard. Vision: Nightshift refuses image requests (no_vision_model); honest trace + caption fallback",
+          "ref": "#20"
         },
         {
           "id": "WS2-08",
@@ -254,23 +256,26 @@
           "id": "WS2-11",
           "phase": "P4",
           "title": "Skeptic: re-query, strike, send back, drop",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "ref": "#20"
         },
         {
           "id": "WS2-12",
           "phase": "P4",
           "title": "H-MEM engine (Python port) + three-session changed-score test",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "facade + 3-session test on sample backend (#12); sidecar CI pending"
+          "note": "facade + 3-session test on sample backend (#12); sidecar CI pending",
+          "ref": "#19"
         },
         {
           "id": "WS2-13",
           "phase": "P4",
           "title": "Alert writer + series detection",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "ref": "#20"
         },
         {
           "id": "WS2-14",
@@ -283,9 +288,10 @@
           "id": "WS2-15",
           "phase": "P4",
           "title": "Markovian engine + series dossier",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "facade + limits test on sample backend (#12); sidecar CI pending"
+          "note": "facade + limits test on sample backend (#12); sidecar CI pending",
+          "ref": "#19"
         },
         {
           "id": "WS2-16",
@@ -298,9 +304,10 @@
           "id": "WS2-17",
           "phase": "P3",
           "title": "Engines TypeScript sidecar + official conformance runs (World Model, H-MEM, Markovian)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "official conformance passes locally: WM 8/8, H-MEM 13/13, Markovian 8/8; logs + CI job next"
+          "note": "official conformance passes locally: WM 8/8, H-MEM 13/13, Markovian 8/8; logs + CI job next",
+          "ref": "#19"
         },
         {
           "id": "WS2-18",
@@ -360,15 +367,19 @@
           "id": "WS3-04",
           "phase": "P5",
           "title": "Link-alert inbox incl. Rejected tab",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-4",
+          "note": "Built + merged; live check pending seed data",
+          "ref": "#18"
         },
         {
           "id": "WS3-05",
           "phase": "P5",
           "title": "Alert detail: factors, evidence, Zetaris query ids, approve/reject",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-4",
+          "note": "Built + merged; live check pending seed data",
+          "ref": "#18"
         },
         {
           "id": "WS3-06",
@@ -381,8 +392,10 @@
           "id": "WS3-07",
           "phase": "P5",
           "title": "Realtime alert notifications",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-4",
+          "note": "Built + merged; live check pending seed data",
+          "ref": "#18"
         },
         {
           "id": "WS3-08",
@@ -551,6 +564,13 @@
           "id": "WS5-10",
           "phase": "P10",
           "title": "Submit on HackOS at least 6 hours before the deadline",
+          "status": "todo",
+          "owner": "nexus-chief"
+        },
+        {
+          "id": "WS5-11",
+          "phase": "P6",
+          "title": "Early clean-clone dry run (Mon): root Dockerfile, docker run via host.docker.internal, curl /run x3, SAMPLE_MODE with empty .env and services stopped",
           "status": "todo",
           "owner": "nexus-chief"
         }

@@ -24,3 +24,6 @@ data/out/
 data/_truth/
 *.duckdb
 .DS_Store
+
+# organiser PDFs stay local (repo goes public)
+engg/docs/hackathon/*.pdf

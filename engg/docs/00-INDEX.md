@@ -20,6 +20,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [ARCHITECTURE](ARCHITECTURE.md): what runs where (Vercel + laptop + Supabase), diagrams, tip path
 - [DECISIONS](DECISIONS.md): every decision and verification (D-001…)
 - [CITY_PACKS](CITY_PACKS.md): how another city is added without code changes
+- [ENGINES](ENGINES.md): the four Meterless engines, what each powers, how they run and how they're tested
 
 ## Plan and status
 - [LANES](LANES.md): the 4 build lanes, what each owns, interfaces between them, merge rules
@@ -34,6 +35,7 @@ Entry point for every project document. **Start here, then read the note for you
 
 ## Hackathon
 - [DIGEST](hackathon/DIGEST.md): rules, scoring, disqualifiers, resource links
+- [RULES_CHECK](hackathon/RULES_CHECK.md): our plan checked against the four official documents, with gaps and owners
 - [SPONSOR_TECH](SPONSOR_TECH.md): sponsor technology text for the form (draft, evidence-backed only)
 
 ## Diagrams
