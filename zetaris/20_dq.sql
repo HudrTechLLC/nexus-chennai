@@ -6,36 +6,36 @@
 -- first here; there is no IF NOT EXISTS, and register.py skips "already exists", so other files may repeat it.
 -- Crime-level rules read nexus.v_crime_unified (SPARK_VIEW in dq_rules.py).
 
-CREATE SCHEMASTORE CONTAINER nexus;
+CREATE SCHEMASTORE CONTAINER {{src:nexus}};
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_duplicate_firs WITH CONTAINER nexus AS
-SELECT a.crime_id AS crime_id, 'duplicate_fir' AS rule, b.b_id AS other_id, concat('same ', a.category, ' within ', CAST(CAST(abs(unix_timestamp(a.occurred_from) - unix_timestamp(b.b_from)) / 60 AS INT) AS STRING), ' min and ', CAST(CAST(greatest(abs(a.lat - b.b_lat), abs(a.lon - b.b_lon)) * 111000 AS INT) AS STRING), ' m, filed at ', coalesce(b.b_station, '?'), ' via ', b.b_source) AS detail FROM nexus.v_crime_unified a JOIN (SELECT crime_id AS b_id, source AS b_source, station_id AS b_station, category AS b_category, occurred_from AS b_from, lat AS b_lat, lon AS b_lon FROM sb.crimes) b ON a.category = b.b_category AND a.crime_id <> b.b_id AND abs(unix_timestamp(a.occurred_from) - unix_timestamp(b.b_from)) <= 1800 AND abs(a.lat - b.b_lat) <= 0.0025 AND abs(a.lon - b.b_lon) <= 0.0025 AND (coalesce(a.station_id, '') <> coalesce(b.b_station, '') OR a.source <> b.b_source)
+CREATE OR REPLACE SCHEMASTORE VIEW dq_duplicate_firs WITH CONTAINER {{src:nexus}} AS
+SELECT a.crime_id AS crime_id, 'duplicate_fir' AS rule, b.b_id AS other_id, concat('same ', a.category, ' within ', CAST(CAST(abs(unix_timestamp(a.occurred_from) - unix_timestamp(b.b_from)) / 60 AS INT) AS STRING), ' min and ', CAST(CAST(greatest(abs(a.lat - b.b_lat), abs(a.lon - b.b_lon)) * 111000 AS INT) AS STRING), ' m, filed at ', coalesce(b.b_station, '?'), ' via ', b.b_source) AS detail FROM {{src:nexus}}.v_crime_unified a JOIN (SELECT crime_id AS b_id, source AS b_source, station_id AS b_station, category AS b_category, occurred_from AS b_from, lat AS b_lat, lon AS b_lon FROM {{src:sb}}.crimes) b ON a.category = b.b_category AND a.crime_id <> b.b_id AND abs(unix_timestamp(a.occurred_from) - unix_timestamp(b.b_from)) <= 1800 AND abs(a.lat - b.b_lat) <= 0.0025 AND abs(a.lon - b.b_lon) <= 0.0025 AND (coalesce(a.station_id, '') <> coalesce(b.b_station, '') OR a.source <> b.b_source)
 ORDER BY crime_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_bad_geo WITH CONTAINER nexus AS
-SELECT crime_id, 'bad_geo' AS rule, CAST(NULL AS STRING) AS other_id, CASE WHEN lat IS NULL OR lon IS NULL THEN 'no coordinates' ELSE concat('outside city bounds: ', CAST(lat AS STRING), ', ', CAST(lon AS STRING)) END AS detail FROM nexus.v_crime_unified c WHERE lat IS NULL OR lon IS NULL OR lon < {{city:map.bounds.0}} OR lon > {{city:map.bounds.2}} OR lat < {{city:map.bounds.1}} OR lat > {{city:map.bounds.3}}
+CREATE OR REPLACE SCHEMASTORE VIEW dq_bad_geo WITH CONTAINER {{src:nexus}} AS
+SELECT crime_id, 'bad_geo' AS rule, CAST(NULL AS STRING) AS other_id, CASE WHEN lat IS NULL OR lon IS NULL THEN 'no coordinates' ELSE concat('outside city bounds: ', CAST(lat AS STRING), ', ', CAST(lon AS STRING)) END AS detail FROM {{src:nexus}}.v_crime_unified c WHERE lat IS NULL OR lon IS NULL OR lon < {{city:map.bounds.0}} OR lon > {{city:map.bounds.2}} OR lat < {{city:map.bounds.1}} OR lat > {{city:map.bounds.3}}
 ORDER BY crime_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_time_inconsistent WITH CONTAINER nexus AS
-SELECT crime_id, 'time_inconsistent' AS rule, CAST(NULL AS STRING) AS other_id, CASE WHEN occurred_from > reported_at THEN 'occurred after it was reported' ELSE 'occurrence ends before it starts' END AS detail FROM nexus.v_crime_unified c WHERE occurred_from > reported_at OR occurred_to < occurred_from
+CREATE OR REPLACE SCHEMASTORE VIEW dq_time_inconsistent WITH CONTAINER {{src:nexus}} AS
+SELECT crime_id, 'time_inconsistent' AS rule, CAST(NULL AS STRING) AS other_id, CASE WHEN occurred_from > reported_at THEN 'occurred after it was reported' ELSE 'occurrence ends before it starts' END AS detail FROM {{src:nexus}}.v_crime_unified c WHERE occurred_from > reported_at OR occurred_to < occurred_from
 ORDER BY crime_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_unmapped_sections WITH CONTAINER nexus AS
-SELECT crime_id, 'unmapped_section' AS rule, CAST(NULL AS STRING) AS other_id, concat('legacy sections not mapped: ', sections_raw) AS detail FROM nexus.v_crime_unified c WHERE sections_raw IS NOT NULL
+CREATE OR REPLACE SCHEMASTORE VIEW dq_unmapped_sections WITH CONTAINER {{src:nexus}} AS
+SELECT crime_id, 'unmapped_section' AS rule, CAST(NULL AS STRING) AS other_id, concat('legacy sections not mapped: ', sections_raw) AS detail FROM {{src:nexus}}.v_crime_unified c WHERE sections_raw IS NOT NULL
 ORDER BY crime_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_flags WITH CONTAINER nexus AS
-SELECT crime_id, rule, other_id, detail FROM nexus.dq_duplicate_firs UNION ALL SELECT crime_id, rule, other_id, detail FROM nexus.dq_bad_geo UNION ALL SELECT crime_id, rule, other_id, detail FROM nexus.dq_time_inconsistent UNION ALL SELECT crime_id, rule, other_id, detail FROM nexus.dq_unmapped_sections
+CREATE OR REPLACE SCHEMASTORE VIEW dq_flags WITH CONTAINER {{src:nexus}} AS
+SELECT crime_id, rule, other_id, detail FROM {{src:nexus}}.dq_duplicate_firs UNION ALL SELECT crime_id, rule, other_id, detail FROM {{src:nexus}}.dq_bad_geo UNION ALL SELECT crime_id, rule, other_id, detail FROM {{src:nexus}}.dq_time_inconsistent UNION ALL SELECT crime_id, rule, other_id, detail FROM {{src:nexus}}.dq_unmapped_sections
 ORDER BY crime_id, rule;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_orphan_evidence WITH CONTAINER nexus AS
-SELECT e.evidence_id, e.crime_id, 'evidence for a crime that does not exist' AS detail FROM sb.evidence_media e LEFT JOIN nexus.v_crime_unified c ON c.crime_id = e.crime_id WHERE c.crime_id IS NULL
+CREATE OR REPLACE SCHEMASTORE VIEW dq_orphan_evidence WITH CONTAINER {{src:nexus}} AS
+SELECT e.evidence_id, e.crime_id, 'evidence for a crime that does not exist' AS detail FROM {{src:sb}}.evidence_media e LEFT JOIN {{src:nexus}}.v_crime_unified c ON c.crime_id = e.crime_id WHERE c.crime_id IS NULL
 ORDER BY evidence_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_tip_without_incident WITH CONTAINER nexus AS
-SELECT t.tip_id, t.category, t.received_week, 'tip not tied to a public incident' AS detail FROM sb.tips_v t WHERE t.public_incident_id IS NULL AND t.status NOT IN ('quarantined', 'closed')
+CREATE OR REPLACE SCHEMASTORE VIEW dq_tip_without_incident WITH CONTAINER {{src:nexus}} AS
+SELECT t.tip_id, t.category, t.received_week, 'tip not tied to a public incident' AS detail FROM {{src:sb}}.tips_v t WHERE t.public_incident_id IS NULL AND t.status NOT IN ('quarantined', 'closed')
 ORDER BY tip_id;
 
-CREATE OR REPLACE SCHEMASTORE VIEW dq_stale_cameras WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW dq_stale_cameras WITH CONTAINER {{src:nexus}} AS
 SELECT camera_id, owner_type, contact_station, last_updated, concat('camera registry not updated for ', CAST(datediff(current_date(), CAST(last_updated AS DATE)) AS STRING), ' days') AS detail FROM s3csv.cctv_cameras WHERE datediff(current_date(), CAST(last_updated AS DATE)) > 180
 ORDER BY camera_id;
