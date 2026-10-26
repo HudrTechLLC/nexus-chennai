@@ -1,6 +1,6 @@
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { DEFAULT_WEIGHTS, SCORING_RULES, WEIGHTS_VERSION, factorUsage, nonDefaultAlerts, type FactorRow } from "@/lib/weights";
+import { DEFAULT_WEIGHTS, SCORING_RULES, WEIGHTS_VERSION, factorUsage, nonDefaultAlerts, versionCounts, type FactorRow } from "@/lib/weights";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +24,13 @@ export default async function AdminPage() {
     sb.from("profiles").select("user_id, name, role, station_id").order("role").order("name"),
     sb.from("stations").select("station_id, name, type, zone, district").order("zone").order("name"),
     sb.from("link_factors").select("alert_id, factor, weight").limit(ROW_CAP),
-    sb.from("link_alerts").select("alert_id, created_at").limit(ROW_CAP),
+    sb.from("link_alerts").select("alert_id, created_at, weights_version").limit(ROW_CAP),
   ]);
   const users = (profiles.data ?? []) as Profile[];
   const stationRows = (stations.data ?? []) as Station[];
-  const alertAt = new Map(((alerts.data ?? []) as { alert_id: string; created_at: string | null }[]).map((a) => [a.alert_id, a.created_at]));
+  const alertRows = (alerts.data ?? []) as { alert_id: string; created_at: string | null; weights_version: string | null }[];
+  const alertAt = new Map(alertRows.map((a) => [a.alert_id, a.created_at]));
+  const versions = versionCounts(alertRows);
   const rows: FactorRow[] = ((factors.data ?? []) as Omit<FactorRow, "created_at">[]).map((f) => ({ ...f, created_at: alertAt.get(f.alert_id) ?? null }));
   const usage = factorUsage(rows);
   const custom = nonDefaultAlerts(rows);
@@ -56,11 +58,21 @@ export default async function AdminPage() {
           {pct(SCORING_RULES.MIN_COVERAGE_FOR_HIGH)} evidence coverage the band is capped at medium, and fewer than{" "}
           {SCORING_RULES.MIN_FACTORS_FOR_ALERT} factors with data raise no alert.
         </p>
+        <h3 className="mb-1 text-sm font-semibold">Versions recorded on stored alerts</h3>
+        <ul className="mb-3 flex flex-wrap gap-2 text-xs">
+          {versions.length === 0 && <li className="text-muted">No stored alerts yet.</li>}
+          {versions.map((v) => (
+            <li key={v.version} className="rounded-full border border-line px-2 py-0.5">
+              <span className="font-mono">{v.version}</span>
+              {v.current ? " (current)" : ""} · {v.alerts} alert{v.alerts === 1 ? "" : "s"}
+            </li>
+          ))}
+        </ul>
         <h3 className="mb-1 text-sm font-semibold">Weights used by stored alerts</h3>
         <p className="mb-2 text-xs text-muted">
           The weight each stored alert was actually scored with, per factor. Only factors that had data are stored, so a factor with no
-          alerts here was not missing a weight: no stored alert had data for it. Alerts do not yet record a version name, so this shows
-          the weights themselves, checked against the current defaults.
+          alerts here was not missing a weight: no stored alert had data for it. Alerts scored before version names were recorded show as
+          pre-versioning above; for those, the weights themselves are the record, checked here against the current defaults.
         </p>
         {(factors.error || alerts.error) && (
           <p role="alert" className="text-sm text-red-600">Could not load stored alerts: {(factors.error ?? alerts.error)?.message}</p>
