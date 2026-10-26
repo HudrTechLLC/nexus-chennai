@@ -21,8 +21,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <span className="hidden truncate font-mono text-xs text-muted md:inline">
             Crime-linking spec · Open Agent Hackathon 2026 · Track 1
           </span>
-          <Link href="/" className="ml-auto rounded-md border border-line px-3 py-1 text-sm text-muted hover:text-ink">
-            Open app
+          <Link
+            href="/"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-signal px-4 py-1.5 text-sm font-semibold text-surface shadow-sm transition hover:brightness-110 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+          >
+            Open app <span aria-hidden="true">→</span>
           </Link>
         </div>
       </header>
