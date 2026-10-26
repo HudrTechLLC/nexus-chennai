@@ -52,3 +52,45 @@ def test_evaluator_beats_baseline_on_planted_pair(tmp_path):
     assert "correct 100%" in band_precision_note(report)["high"]
     assert report["synthetic"] is True and nightshift.calls == []
     assert any(c[1] == "Skeptic" for c in deps.zetaris.calls)  # strikes are part of what is measured
+
+
+def test_evaluator_excludes_non_generated_crimes(tmp_path):
+    """A console-filed FIR copying a planted MO must not count as a false positive (nexus-5)."""
+    a, b, h = ADYAR["crime_id"], VELACHERY["crime_id"], HOUSEBREAK["crime_id"]
+    truth = Truth({key(a, h): "decoy"}, [])  # truth knows nothing about VELACHERY: treat it as the console FIR
+    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(default_handlers()),
+                     nightshift=FakeNightshift(lambda *x: "{}"))
+    with_fir = Evaluator(deps, truth).run([a, h])
+    assert with_fir["agent"]["fp"] == 1  # the a<->b link would be a false positive
+    clean = Evaluator(deps, truth, exclude={b}).run([a, b, h])
+    assert clean["agent"]["fp"] == 0 and clean["cases_evaluated"] == 2
+    assert clean["excluded_non_generated"] == [b]
+    assert clean["features"]["with_live_model_features"] + len(clean["features"]["without_features"]) \
+        + len(clean["features"]["features_without_receipt"]) == 2
+
+
+def test_non_generated_ids_uses_generator_namespace(monkeypatch):
+    import uuid
+
+    from app.eval import __main__ as cli
+
+    gen = "CHN-AD-2026-001182"
+    rows = [{"crime_id": gen, "source_row_id": str(uuid.uuid5(cli.GEN_NS, gen))},
+            {"crime_id": "CHN-AD-2026-001231", "source_row_id": str(uuid.uuid4())}]
+
+    class SB:
+        configured = True
+
+        def __init__(self, s):
+            pass
+
+        def select(self, table, params):
+            return rows
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(cli, "SupabaseClient", SB)
+    assert cli.non_generated_ids(None) == ["CHN-AD-2026-001231"]
+    seed = (Path(__file__).resolve().parents[2] / "data" / "seed.py").read_text(encoding="utf-8")
+    assert str(cli.GEN_NS) in seed  # one namespace: the generator's (data/seed.py GEN_NS)
