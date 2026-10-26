@@ -133,3 +133,43 @@ TWINS: dict[str, tuple[str, tuple[str, ...]]] = {
     "q_case": (_CASE_SAMPLE, CASE_COLUMNS),
     "q_features": (_FEATURES_SAMPLE, FEATURES_COLUMNS),
 }
+
+
+# News mentions for a crime (WS1-16). An article mentions a crime when one of its places_mentioned is an
+# alias (cities/<city>/place_aliases.csv -> ref/place_aliases.csv) of the crime's station or ward, and it
+# was published within NEWS_DAYS days after the crime. category_hint = the headline names the category's
+# first word (e.g. "chain" for chain_snatching); it is reported, not required. One row per article.
+NEWS_DAYS = 4
+NEWS_COLUMNS = ("crime_id", "article_id", "headline", "outlet", "published_at", "url", "matched_place",
+                "hours_after", "category_hint")
+
+Q_NEWS = dict(
+    name="q_news",
+    lightning=(
+        "SELECT crime_id, article_id, headline, outlet, published_at, url, matched_place, hours_after, category_hint "
+        "FROM nexus.v_news_mentions WHERE crime_id = :crime_id ORDER BY published_at, article_id"
+    ),
+    sample=f"""
+WITH c AS (
+  SELECT crime_id, station_id, ward_no, category, CAST(occurred_from AS TIMESTAMPTZ) AS occurred_from
+  FROM 'sb/crimes.parquet' WHERE crime_id = :crime_id),
+n AS (
+  SELECT article_id, headline, outlet, CAST(published_at AS TIMESTAMPTZ) AS published_at, url,
+         unnest(places_mentioned) AS place
+  FROM read_json_auto('news/articles.jsonl') WHERE synthetic),
+a AS (SELECT alias, canonical, station_id, ward_no FROM read_csv_auto('ref/place_aliases.csv'))
+SELECT c.crime_id, n.article_id, any_value(n.headline) AS headline, any_value(n.outlet) AS outlet,
+       CAST(any_value(n.published_at) AS VARCHAR) AS published_at, any_value(n.url) AS url,
+       min(a.canonical) AS matched_place,
+       CAST(floor(epoch(any_value(n.published_at) - c.occurred_from) / 3600) AS INTEGER) AS hours_after,
+       bool_or(contains(lower(n.headline), split_part(c.category, '_', 1))) AS category_hint
+FROM c JOIN a ON (a.station_id = c.station_id OR a.ward_no = c.ward_no)
+       JOIN n ON lower(trim(n.place)) = lower(trim(a.alias))
+WHERE n.published_at >= c.occurred_from AND n.published_at < c.occurred_from + INTERVAL {NEWS_DAYS} DAY
+GROUP BY c.crime_id, n.article_id, c.occurred_from
+ORDER BY any_value(n.published_at), n.article_id
+""".strip(),
+    description="News articles that mention a crime's place within a few days of it",
+    columns=NEWS_COLUMNS,
+)
+N2_SPECS[Q_NEWS["name"]] = Q_NEWS
