@@ -9,6 +9,9 @@ import { canPropose } from "@/lib/taskforces";
 import { BandPill, FactorBars, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { DecisionForm } from "@/components/console/alerts/DecisionForm";
 import { AlertsLive } from "@/components/console/alerts/AlertsLive";
+import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
+import { describeGap, sceneGap, trailOf, type Scene, type TrailRead } from "@/lib/alertMap";
+import { memberLonLat } from "@/lib/series";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +59,23 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
   const rows = factorRows(alert.link_factors);
   const qids = queryIds(alert.link_factors);
   const last = latestDecision(decisions);
+  // Map of both scenes + vehicle trail (G2): exact points only where the officer may read the crime.
+  const scenes = alert.crimes.flatMap((id) => {
+    const c = crimes[id];
+    const ll = c ? memberLonLat(c) : null;
+    return c && ll ? [{ id, p: ll.p, exact: ll.exact, at: c.full ? c.occurred_from : null, week: c.week, label: crimeTitle(c, id) } as Scene & { label: string }] : [];
+  });
+  const gap = scenes.length === 2 ? sceneGap(scenes[0], scenes[1]) : null;
+  const { data: nearReads } = await sb.from("map_anpr_reads").select("plate_text").in("crime_id", alert.crimes).limit(50);
+  const plates = Array.from(new Set((nearReads ?? []).map((r) => r.plate_text as string)));
+  const { data: plateReads } = plates.length
+    ? await sb.from("map_anpr_reads").select("read_id, camera_id, read_at, plate_text, crime_id, lat, lon").in("plate_text", plates).order("read_at").limit(200)
+    : { data: [] };
+  const trail = trailOf(
+    ((plateReads ?? []) as { read_id: string; camera_id: string; read_at: string; plate_text: string; crime_id: string | null; lat: number; lon: number }[])
+      .map((r): TrailRead => ({ read_id: r.read_id, camera_id: r.camera_id, read_at: r.read_at, plate_text: r.plate_text, crime_id: r.crime_id, p: [r.lon, r.lat] })),
+    alert.crimes,
+  );
   const stationsLabel = alert.crimes.map((id) => crimes[id]?.station_name.replace(/^PS-/, "") ?? id).filter((v, i, a) => a.indexOf(v) === i).join(" and ");
 
   return (
@@ -85,6 +105,28 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
 
       <section className="grid gap-3 md:grid-cols-2">
         {alert.crimes.map((id) => <CrimeColumn key={id} c={crimes[id]} id={id} />)}
+      </section>
+
+      <section className="rounded-xl border border-line bg-surface p-5">
+        <h2 className="text-lg font-bold">Scenes and vehicle trail</h2>
+        <p className="mb-3 text-sm text-muted">
+          {gap ? `The two scenes are ${describeGap(gap)}.` : "Only one scene can be placed, so there is no distance to show."}
+          {trail.length > 0
+            ? ` ANPR cameras read ${trail.map((t) => t.plate).join(", ")} near ${trail.length === 1 ? "a scene" : "the scenes"}; the gold line joins every read of that plate in time order.`
+            : " No ANPR camera read a plate near either scene."}
+        </p>
+        <AlertMapLoader scenes={scenes} trail={trail} />
+        {trail.length > 0 && (
+          <ol className="mt-3 space-y-1 text-xs">
+            {trail.flatMap((t) => t.reads).map((r) => (
+              <li key={r.read_id}>
+                <span className="font-mono">{r.plate_text}</span> · camera <span className="font-mono">{r.camera_id}</span> · {fmt(r.read_at)}
+                {r.crime_id && alert.crimes.includes(r.crime_id) && <span className="text-muted"> · near {crimeTitle(crimes[r.crime_id], r.crime_id)}</span>}
+              </li>
+            ))}
+          </ol>
+        )}
+        <p className="mt-2 text-xs text-muted">A camera read is a sighting, not proof of involvement. Sources: crimes (your access), crimes_citywide, map_anpr_reads.</p>
       </section>
 
       <section className="rounded-xl border border-line bg-surface p-5">
