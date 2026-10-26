@@ -183,3 +183,68 @@ def test_supabase_store_writes_weights_version_never_status(tmp_path):
                     "status": "pending", "run_id": "run_1", "weights_version": "f2-default-v1", "factors": []})
     alert = sb.tables["link_alerts"][0]
     assert alert["weights_version"] == "f2-default-v1" and alert["status"] == "approved"
+
+# ----- stale-run sweep (0006_04) ---------------------------------------------------
+
+def _trace_file(logs_dir, run_id, last_ts):
+    import json as _json
+    p = logs_dir / f"trace-{run_id}.jsonl"
+    p.write_text("\n".join(_json.dumps({"timestamp": ts, "run_id": run_id, "agent_name": "Linker", "action": "step",
+                                        "status": "ok"}) for ts in ("2026-10-26T15:00:00+05:30", last_ts)) + "\n",
+                 encoding="utf-8")
+
+
+def _sweep_worker(tmp_path, sb):
+    w = worker(tmp_path, sb)
+    w.logs_dir = tmp_path
+    return w
+
+
+NOW = "2026-10-26T17:00:00+05:30"
+
+
+def test_sweep_marks_stale_running_run_interrupted_and_copies_its_trace(tmp_path):
+    sb = FakeSB({"runs": [{"run_id": "run_old", "kind": "batch", "status": "running", "started": "2026-10-26T09:30:00+00:00"},
+                          {"run_id": "run_done", "kind": "case", "status": "success", "started": "2026-10-26T09:00:00+00:00"}]})
+    _trace_file(tmp_path, "run_old", "2026-10-26T16:29:23+05:30")  # 31 min before NOW
+    w = _sweep_worker(tmp_path, sb)
+    assert w.sweep_stale_runs(now=NOW) == 1
+    runs = {r["run_id"]: r for r in sb.tables["runs"]}
+    assert runs["run_old"]["status"] == "interrupted" and runs["run_old"]["finished"]
+    assert runs["run_done"]["status"] == "success"
+    events = [r for r in sb.tables["trace_events"] if r["run_id"] == "run_old"]
+    assert events[-1]["action"] == "run_interrupted"
+    assert "2026-10-26T16:29:23+05:30" in events[-1]["output_summary"]  # last_event_at
+    assert len(events) == 3  # the two live lines + run_interrupted, now visible in the console
+
+
+def test_sweep_leaves_a_run_that_is_still_writing_its_trace(tmp_path):
+    # Trace events reach the DB only at finish_run, so a 40-minute batch has none there while it runs;
+    # its local trace file is the liveness signal.
+    sb = FakeSB({"runs": [{"run_id": "run_live", "kind": "batch", "status": "running", "started": "2026-10-26T09:00:00+00:00"}]})
+    _trace_file(tmp_path, "run_live", "2026-10-26T16:55:00+05:30")
+    assert _sweep_worker(tmp_path, sb).sweep_stale_runs(now=NOW) == 0
+    assert sb.tables["runs"][0]["status"] == "running"
+
+
+def test_sweep_without_trace_file_waits_hours_not_minutes(tmp_path):
+    """No local trace file = a run from another checkout: it shows no live events here, so the
+    15-minute rule would kill a healthy batch. It is only interrupted after STALE_UNSEEN_RUN_HOURS."""
+    sb = FakeSB({"runs": [{"run_id": "run_other", "kind": "batch", "status": "running", "started": "2026-10-26T11:00:00+00:00"},
+                          {"run_id": "run_orphan", "kind": "batch", "status": "running", "started": "2026-10-26T04:00:00+00:00"},
+                          {"run_id": "run_b", "kind": "batch", "status": "running", "started": "2026-10-26T04:00:00+00:00"}],
+                 "trace_events": [{"run_id": "run_b", "seq": 0, "ts": "2026-10-26T16:58:00+05:30"}]})
+    assert _sweep_worker(tmp_path, sb).sweep_stale_runs(now=NOW) == 1
+    runs = {r["run_id"]: r["status"] for r in sb.tables["runs"]}
+    assert runs == {"run_other": "running", "run_orphan": "interrupted", "run_b": "running"}
+
+
+def test_sweep_failure_never_fails_the_pass(tmp_path):
+    class Boom(FakeSB):
+        def update(self, *a, **k):
+            raise RuntimeError('violates check constraint "runs_status_check"')
+
+    sb = Boom({"runs": [{"run_id": "run_old", "kind": "batch", "status": "running", "started": "2026-10-26T04:00:00+00:00"}]})
+    w = _sweep_worker(tmp_path, sb)
+    assert w.sweep_stale_runs(now=NOW) == 0
+    assert any(e["action"] == "sweep_failed" for e in w.tracer.read())
