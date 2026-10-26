@@ -15,12 +15,22 @@ Rules:
   opposite: not_helpful), all written to the trust ledger;
 - adjust() sums polarity x relevance x STEP over the retrieved memories and clamps the
   result to +-MAX_DELTA (0.08). The clamp is applied in code, always.
+
+Shared memory across processes: the API scores pairs while the worker records analyst decisions, both
+over the same directory (logs/hmem). Each backend reopens the store whenever state.json or ledger.jsonl
+changed since it last loaded (one stat per call), so a decision written by the worker shapes the API's
+very next score with no restart. record_decision holds a lock file for its read-modify-write, so two
+writers never overwrite each other's records.
 """
 
 from __future__ import annotations
 
+import json
+import os
+import time
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 from app.engines import _runtime
 from app.engines.hmem.core import HMEM
@@ -37,52 +47,160 @@ POLARITY = {"approve": 1, "approved": 1, "confirm": 1, "reject": -1, "rejected":
 _IGNORED_KEY_PARTS = ("id", "_at", "date", "time_utc", "lat", "lon", "lng", "h3", "text", "narrative",
                       "summary", "note", "url", "synthetic", "score")
 
-class _Local:
+STORE_FILES = ("state.json", "ledger.jsonl")
+LOCK_FILE = ".write.lock"
+LOCK_WAIT_S = 10.0
+LOCK_STALE_S = 30.0
+
+
+def _fingerprint(persist_dir: Path | None) -> tuple:
+    """(mtime_ns, size) of the store files; changes whenever another process writes them."""
+    if persist_dir is None:
+        return ()
+    out: list[tuple[int, int] | None] = []
+    for name in STORE_FILES:
+        try:
+            st = os.stat(persist_dir / name)
+            out.append((st.st_mtime_ns, st.st_size))
+        except FileNotFoundError:
+            out.append(None)
+    return tuple(out)
+
+
+@contextmanager
+def _write_lock(persist_dir: Path | None) -> Iterator[None]:
+    """Cross-process lock for a read-modify-write of the store (O_EXCL lock file; stale locks expire)."""
+    if persist_dir is None:
+        yield
+        return
+    persist_dir.mkdir(parents=True, exist_ok=True)
+    lock = persist_dir / LOCK_FILE
+    deadline = time.monotonic() + LOCK_WAIT_S
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            break
+        except FileExistsError:
+            try:
+                if time.time() - os.stat(lock).st_mtime > LOCK_STALE_S:
+                    os.remove(lock)
+                    continue
+            except FileNotFoundError:
+                continue
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"H-MEM store {persist_dir} is locked by another writer")
+            time.sleep(0.02)
+    try:
+        yield
+    finally:
+        try:
+            os.remove(lock)
+        except FileNotFoundError:
+            pass
+
+
+class _Shared:
+    """Reopens the backend when another process changed the store files."""
+
+    dir: Path | None
+    _seen: tuple = ()
+
+    def _open(self) -> None:  # pragma: no cover - each backend implements it
+        raise NotImplementedError
+
+    def _load(self) -> None:
+        # A writer may be mid-append on the ledger: retry a half-written file briefly.
+        for attempt in range(5):
+            seen = _fingerprint(self.dir)
+            try:
+                self._open()
+            except (json.JSONDecodeError, ValueError, KeyError, PermissionError):
+                if attempt == 4:
+                    raise
+                time.sleep(0.05)
+                continue
+            self._seen = seen
+            return
+
+    def refresh(self) -> None:
+        if _fingerprint(self.dir) != self._seen:
+            self._load()
+
+    def wrote(self) -> None:
+        self._seen = _fingerprint(self.dir)
+
+
+class _Local(_Shared):
     """Sample backend: the Python port in core.py."""
 
     def __init__(self, persist_dir, clock):
-        self.mem = HMEM(persist_dir=persist_dir, clock=clock, actor="analyst")
+        self.dir = Path(persist_dir) if persist_dir else None
+        self.clock = clock
+        self._load()
+
+    def _open(self) -> None:
+        self.mem = HMEM(persist_dir=self.dir, clock=self.clock, actor="analyst")
 
     def query(self, text: str) -> list[tuple[str, list[str], float]]:
+        self.refresh()
         return [(m["id"], list(m["tags"]), s) for m, s in self.mem.query(text)]
 
     def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
-        return self.mem.add(content, source=source, tags=tags, confidence=confidence, provenance=provenance)["id"]
+        out = self.mem.add(content, source=source, tags=tags, confidence=confidence, provenance=provenance)["id"]
+        self.wrote()
+        return out
 
     def feedback(self, memory_id: str, kind: str) -> None:
         self.mem.feedback(memory_id, kind)
+        self.wrote()
 
     def ledger_entries(self) -> list[dict]:
+        self.refresh()
         return list(self.mem.ledger.entries)
 
     def records(self) -> list[dict]:
+        self.refresh()
         return [{k: v for k, v in r.items() if k != "embedding"} for r in self.mem.records.values()]
 
 
-class _Sidecar:
+class _Sidecar(_Shared):
     """Sidecar backend: the vendored TypeScript HMEM (engines-ts/hmem/reference)."""
 
     def __init__(self, persist_dir, clock):
         from app.engines import _sidecar
 
         self.call = _sidecar.call
-        self.call("hmem/open", {"dir": str(persist_dir) if persist_dir else None,
-                                "now_ms": clock() if clock else None})
+        self.dir = Path(persist_dir) if persist_dir else None
+        self.clock = clock
+        self._load()
+
+    def _open(self) -> None:
+        # hmem/open builds a new HMEM over the directory, which re-reads state.json and the ledger.
+        self.call("hmem/open", {"dir": str(self.dir) if self.dir else None,
+                                "now_ms": self.clock() if self.clock else None})
 
     def query(self, text: str) -> list[tuple[str, list[str], float]]:
+        self.refresh()
         return [(h["id"], h["tags"], float(h["relevance"])) for h in self.call("hmem/query", {"text": text})["hits"]]
 
     def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
-        return self.call("hmem/add", {"content": content, "source": source, "tags": tags,
-                                      "confidence": confidence, "provenance": provenance})["id"]
+        out = self.call("hmem/add", {"content": content, "source": source, "tags": tags,
+                                     "confidence": confidence, "provenance": provenance})["id"]
+        self.wrote()
+        return out
 
     def feedback(self, memory_id: str, kind: str) -> None:
         self.call("hmem/feedback", {"id": memory_id, "kind": kind})
+        self.wrote()
 
     def ledger_entries(self) -> list[dict]:
+        self.refresh()
         return self.call("hmem/ledger", {})["entries"]
 
     def records(self) -> list[dict]:
+        self.refresh()
         return self.call("hmem/records", {})["records"]
 
 
@@ -185,15 +303,18 @@ def record_decision(alert_id: str, decision: str, reason_code: str | None, note:
         tags.append(f"reason:{reason_code}")
     mem = instance()
     reinforced = []
-    if polarity:
-        for mem_id, prior_tags, _ in mem.query(content):
-            prior = int(_tag(prior_tags, "polarity", "0"))
-            if prior:
-                mem.feedback(mem_id, "helpful" if prior == polarity else "not_helpful")
-                reinforced.append(mem_id)
-    mem_id = mem.add(content, source=f"analyst-decision:{alert_id}", tags=tags, confidence=DECISION_CONFIDENCE,
-                     provenance={"origin": "analyst_decision", "alert_id": alert_id, "decision": decision,
-                                 "reason_code": reason_code, "note": note})
+    with _write_lock(mem.dir):
+        mem.refresh()  # inside the lock: build on every decision written so far, by any process
+        if polarity:
+            for mem_id, prior_tags, _ in mem.query(content):
+                prior = int(_tag(prior_tags, "polarity", "0"))
+                if prior:
+                    mem.feedback(mem_id, "helpful" if prior == polarity else "not_helpful")
+                    reinforced.append(mem_id)
+        mem_id = mem.add(content, source=f"analyst-decision:{alert_id}", tags=tags,
+                         confidence=DECISION_CONFIDENCE,
+                         provenance={"origin": "analyst_decision", "alert_id": alert_id, "decision": decision,
+                                     "reason_code": reason_code, "note": note})
     _runtime.emit(ENGINE, "record_decision", f"{alert_id} {decision} {reason_code or ''}".strip(),
                   f"memory {mem_id}; reinforced {len(reinforced)}")
     from app.engines import _persist
