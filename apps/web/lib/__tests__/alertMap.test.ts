@@ -2,6 +2,7 @@
  * Unit tests for the alert map helpers (lib/alertMap.ts): distance and time between the two scenes,
  * and the ANPR trail of the matched vehicle.
  */
+import { cellToLatLng, latLngToCell } from "h3-js";
 import { describe, expect, it } from "vitest";
 import { describeGap, haversineKm, sceneGap, trailOf, type Scene, type TrailRead } from "../alertMap";
 
@@ -29,6 +30,17 @@ describe("sceneGap", () => {
     expect(g.approx).toBe(true);
     expect(g.hours).toBeNull();
     expect(g.weeks).toBe(2);
+  });
+  it("gives every viewer who lacks an exact scene the same figure: both cell centres (nexus-4)", () => {
+    // Adyar sees its own scene exactly and Velachery as a cell; Velachery sees the reverse. Same number for both.
+    const cellA = latLngToCell(13.0012, 80.2565, 8), cellV = latLngToCell(12.9791, 80.2209, 8);
+    const centre = (c: string): [number, number] => { const [lat, lon] = cellToLatLng(c); return [lon, lat]; };
+    // A hidden scene is drawn at its cell centre (memberLonLat), so the two viewers hold different point pairs.
+    const asAdyar = sceneGap({ ...adyar, cell: cellA }, { ...velachery, cell: cellV, p: centre(cellV), exact: false, at: null })!;
+    const asVelachery = sceneGap({ ...adyar, cell: cellA, p: centre(cellA), exact: false, at: null }, { ...velachery, cell: cellV })!;
+    expect(asAdyar.approx).toBe(true);
+    expect(asAdyar.km).toBeCloseTo(asVelachery.km, 6);
+    expect(asAdyar.km).toBeCloseTo(haversineKm(centre(cellA), centre(cellV)), 6);
   });
   it("needs two placed scenes", () => {
     expect(sceneGap(adyar, null)).toBeNull();

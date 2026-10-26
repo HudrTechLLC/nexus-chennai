@@ -2,10 +2,14 @@
  * Alert map (spec G2 /console/alerts/[alertId]: "map of both scenes + vehicle trail").
  * Pure helpers: distance and time between the two scenes, and the ANPR trail of the plates seen near them.
  */
+import { cellToLatLng } from "h3-js";
 import type { LonLat } from "@/lib/pulse";
 
-/** A scene: the exact point and time where the officer may read the crime, else its H3 cell centre and ISO week. */
-export type Scene = { id: string; p: LonLat; exact: boolean; at: string | null; week: string | null };
+/**
+ * A scene: the exact point and time where the officer may read the crime, else its H3 cell centre and ISO week.
+ * `cell` is the scene's H3 cell (always known), so an approximate distance is the same for every viewer.
+ */
+export type Scene = { id: string; p: LonLat; exact: boolean; at: string | null; week: string | null; cell?: string | null };
 
 export type TrailRead = {
   read_id: string;
@@ -37,11 +41,26 @@ function isoWeekStart(label: string | null): number | null {
   return jan4 - (dow - 1) * 86_400_000 + (Number(m[2]) - 1) * 7 * 86_400_000;
 }
 
-/** Distance and time between two scenes. Exact only when both are readable; otherwise cell centres and weeks. */
+/** H3 cell centre as [lon, lat], or null when there is no valid cell. */
+function cellCentre(cell: string | null | undefined): LonLat | null {
+  if (!cell) return null;
+  try {
+    const [lat, lon] = cellToLatLng(cell);
+    return [lon, lat];
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Distance and time between two scenes. Exact only when both are readable. Otherwise the distance is between
+ * both cell centres (not one exact point and one centre), so every viewer without both scenes sees one figure.
+ */
 export function sceneGap(a: Scene | null, b: Scene | null): Gap | null {
   if (!a || !b) return null;
   const exact = a.exact && b.exact;
-  const km = haversineKm(a.p, b.p);
+  const ca = exact ? null : cellCentre(a.cell), cb = exact ? null : cellCentre(b.cell);
+  const km = ca && cb ? haversineKm(ca, cb) : haversineKm(a.p, b.p);
   if (exact && a.at && b.at) {
     return { km, approx: false, hours: Math.abs(Date.parse(b.at) - Date.parse(a.at)) / 3_600_000, weeks: null };
   }
