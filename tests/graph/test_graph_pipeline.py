@@ -67,8 +67,19 @@ def test_case_run_writes_cross_station_alert(tmp_path):
     assert skeptic_reads, "Skeptic must re-query Zetaris itself"
 
 
+class DriftingHmem:
+    """New evidence every round: each re-score moves by 0.01, so the send-back loop runs to its caps."""
+
+    def __init__(self):
+        self.n = 0
+
+    def adjust(self, pair):
+        self.n += 1
+        return {"delta": 0.01 * self.n, "memory_ids": [f"HM-{self.n}"], "reason": "new memory"}
+
+
 def test_send_back_loop_respects_caps(tmp_path):
-    g, deps = graph(tmp_path, reply=responder("send_back"))
+    g, deps = graph(tmp_path, reply=responder("send_back"), eng=FakeEngines(hmem=DriftingHmem()))
     state = g.run("case", {"crime_id": ADYAR["crime_id"]})
     assert state["plan_round"] <= MAX_PLAN_ROUNDS and state["send_backs"] <= MAX_SEND_BACKS
     assert state["send_backs"] == MAX_SEND_BACKS
@@ -313,3 +324,19 @@ def test_deadline_before_any_scoring_still_writes_nothing(tmp_path):
     state = g.run("case", {"crime_id": ADYAR["crime_id"]})
     assert state.get("alerts", []) == []
     assert not [e for e in deps.tracer.read() if e["action"] == "deadline_partial_write"]
+
+
+def test_an_identical_rescore_ends_the_send_back_loop_with_the_cap_verdict(tmp_path):
+    # run_e18df7ca (CHN-VL-2026-001221, live): rounds 2 and 3 re-scored the identical 0.603 and the Skeptic sent the
+    # same critique back, about 4 of 7 minutes for nothing. Chief, 2026-10-27: no new evidence -> the revision-cap
+    # verdict now, traced sendback_no_new_evidence, without another critique call.
+    g, deps = graph(tmp_path, reply=responder("send_back"))
+    state = g.run("case", {"crime_id": ADYAR["crime_id"]})
+    critiques = [c for c in deps.nightshift.calls if c[2].startswith("critique")]
+    assert len(critiques) == 1  # round 1 only
+    assert state["send_backs"] == 1 and state["status"] == "success"
+    assert len(state["alerts"]) == 1 and state["alerts"][0]["skeptic"]["verdict"] == "approved"
+    ev = [e for e in deps.tracer.read() if e["action"] == "sendback_no_new_evidence"]
+    assert len(ev) == 1 and ev[0]["agent_name"] == "Skeptic"
+    assert ev[0]["input_summary"].startswith("pair ") and "round 2" in ev[0]["input_summary"]
+    assert "identical" in ev[0]["output_summary"] and "revision cap" in ev[0]["output_summary"]

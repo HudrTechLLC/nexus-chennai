@@ -27,13 +27,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-000945",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-NA-2025-000990",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               }
             ],
             "reason": "1.6 km between near Hilton Chennai Guindy (00:11) and near Amma Unavagam Nandambakkam (23:20), 11 days apart, both night-time",
@@ -48,13 +48,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-000945",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-NA-2025-000990",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               }
             ],
             "reason": "Both used white Maruti Swift Dzire; plates TN22??7312 and TN22C?73?? share TN22 prefix and 73 digits",
@@ -69,13 +69,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-000945",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-NA-2025-000990",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               }
             ],
             "reason": "Identical: 3 offenders, heavy build, age 25-35",
@@ -90,13 +90,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-000945",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-NA-2025-000990",
                 "query": "q_case",
-                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+                "query_id": "f214b5ac-776c-4851-becf-919420222e25"
               }
             ],
             "reason": "Both involved knife",
@@ -138,13 +138,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-001149",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-ST-2025-001108",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               }
             ],
             "reason": "2.3 km between near Hilton Chennai Guindy (01:09) and near Saint Thomas Mount (00:30), 10 days apart, both night-time",
@@ -159,19 +159,19 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-001149",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-ST-2025-001108",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               },
               {
                 "view": "v_vehicle_trail",
                 "row": "ANPR-R0285340",
                 "query": "q_vehicle_trail",
-                "query_id": "20042e55-ee39-4c5b-8945-05588e687485"
+                "query_id": "d5b216bd-aa6a-459b-8709-aef01b5c0241"
               }
             ],
             "reason": "Both used white Maruti Swift Dzire; plates not recorded for either crime, ANPR-R0285340 provides trail evidence",
@@ -186,13 +186,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-001149",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-ST-2025-001108",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               }
             ],
             "reason": "Identical: 3 offenders, heavy build, age 25-35",
@@ -207,13 +207,13 @@
                 "view": "v_crime_unified",
                 "row": "CHN-GU-2025-001149",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               },
               {
                 "view": "v_crime_unified",
                 "row": "CHN-ST-2025-001108",
                 "query": "q_case",
-                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+                "query_id": "32c1a9f8-f67c-4046-927e-11b9f0cc557f"
               }
             ],
             "reason": "Both involved knife",
@@ -222,7 +222,7 @@
         ],
         "memory_applied": [],
         "skeptic": {
-          "rounds": 3,
+          "rounds": 1,
           "struck": [],
           "verdict": "approved",
           "model_critique": "applied"
@@ -279,5 +279,5 @@
   ],
   "trace_id": "trace-demo-003",
   "log_file": "logs/trace-demo-003.jsonl",
-  "execution_time_seconds": 315.21
+  "execution_time_seconds": 2.68
 }
