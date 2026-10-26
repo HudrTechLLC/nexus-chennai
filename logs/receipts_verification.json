@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-10-26T20:01:46+00:00",
+  "method": "Ed25519 signature over the receipt body as compact key-sorted UTF-8 JSON, checked with the public key carried in each receipt. No private key is read.",
+  "claim": "Signatures verify against the receipt's embedded Ed25519 public key, and every receipt uses the same key (fingerprint below): each verified receipt was signed by the holder of its key and is unaltered since. The key ships inside the receipts; we found no separately published copy (meterless.ai docs unreachable when written), so this does not by itself prove whose key it is.",
+  "note": "The replayed fixtures (data/sample/model_fixtures, committed) carry the synthetic prompt previews inside their signed receipt bodies; they are kept as recorded, since removing them would break the signatures. This report itself holds no receipt body or prompt text.",
+  "public_keys": [
+    {
+      "pubkey_b64": "4QtJ0bdprDo+qYz5/C0Ngb7B9VSyrLlFWznE/WlIliU=",
+      "sha256": "c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865",
+      "receipts": 1023
+    }
+  ],
+  "replayed_fixtures": {
+    "receipts": 30,
+    "signature_valid": 30,
+    "bad_signature": [],
+    "malformed": [],
+    "also_in_local_log": 30
+  },
+  "nightshift_log": {
+    "lines": 993,
+    "all_valid": 993,
+    "canonical_equals_raw": 993,
+    "nexus": 986,
+    "other_app": 7,
+    "nexus_distinct_request_ids": 986,
+    "nexus_request_ids_with_several_receipts": 0
+  },
+  "trace_model_calls": {
+    "rows": 193,
+    "rows_with_receipt": 190,
+    "distinct_receipt_ids": 190,
+    "rows_repeating_an_id": 0
+  },
+  "live": {
+    "ids": 190,
+    "verified": 190,
+    "not_in_log": [],
+    "bad_signature": [],
+    "malformed": [],
+    "nightshift_receipt_status": {
+      "ok": 190
+    }
+  },
+  "degraded": {
+    "ids": 0,
+    "verified": 0,
+    "not_in_log": [],
+    "bad_signature": [],
+    "malformed": [],
+    "nightshift_receipt_status": {}
+  },
+  "replayed_trace": {
+    "ids": 0,
+    "verified": 0,
+    "not_in_log": [],
+    "bad_signature": [],
+    "malformed": [],
+    "nightshift_receipt_status": {}
+  },
+  "model_calls_without_receipt": {
+    "error": 3
+  },
+  "other_events_citing_receipts": {
+    "ids": 7,
+    "verified": 7,
+    "not_in_log": [],
+    "bad_signature": [],
+    "malformed": [],
+    "nightshift_receipt_status": {
+      "ok": 7
+    },
+    "also_a_live_model_call": 7
+  },
+  "overlap_fixture_and_live_ids": [],
+  "overlap_live_and_degraded_ids": [],
+  "runtime_feed": {
+    "endpoint": "/v1/meterless/receipts",
+    "receipts_read": 50,
+    "signature_valid": 50,
+    "keys": [
+      {
+        "sha256": "c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865",
+        "receipts": 50
+      }
+    ],
+    "same_key_as_log": true
+  }
+}
