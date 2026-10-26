@@ -11,8 +11,10 @@ export type MapView = { center: [number, number]; zoom: number; bounds?: [number
  * MapLibre basemap (self-hosted style JSON, OSM-derived OpenFreeMap tiles) with a deck.gl overlay.
  * Layers are passed in; the canvas only owns the map and the overlay.
  */
-export function MapCanvas({ view, layers, theme, onClick, onHover }: {
+export function MapCanvas({ view, layers, theme, onClick, onHover, focus }: {
   view: MapView;
+  /** [west, south, east, north]: when set (or changed), the camera eases to fit it, clear of the overlay panels */
+  focus?: [number, number, number, number] | null;
   layers: Layer[];
   theme: "dark" | "light";
   onClick?: (info: PickingInfo) => void;
@@ -63,6 +65,16 @@ export function MapCanvas({ view, layers, theme, onClick, onHover }: {
   useEffect(() => {
     overlay.current?.setProps({ layers });
   }, [layers]);
+
+  const focusKey = focus ? focus.map((v) => v.toFixed(5)).join(",") : "";
+  useEffect(() => {
+    if (!focus || !map.current) return;
+    const w = el.current?.clientWidth ?? 0;
+    // keep the fitted area clear of the clock dial (left), layer panel (right) and time scrubber (bottom)
+    const padding = w >= 900 ? { top: 70, bottom: 170, left: 240, right: 320 } : { top: 60, bottom: 140, left: 30, right: 30 };
+    map.current.fitBounds([[focus[0], focus[1]], [focus[2], focus[3]]], { padding, maxZoom: 14, duration: 1200 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKey]);
 
   return <div ref={el} className="h-full w-full" />;
 }

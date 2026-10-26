@@ -26,6 +26,8 @@ export type PulseData = {
   extent: { min: number; max: number; n: number } | null;
   loadedMonths: number;
   totalMonths: number;
+  /** true once the first round trip (extent, links, layers) has returned; until then nothing is known */
+  ready: boolean;
   links: Links;
   hexes: HexRow[];
   boundaries: { stations: FeatureCollection; wards: FeatureCollection } | null;
@@ -41,7 +43,7 @@ const EMPTY_LINKS: Links = { alerts: [], series: [], points: {} };
  */
 export function usePulseData(): PulseData {
   const [state, setState] = useState<PulseData>({
-    crimes: [], extent: null, loadedMonths: 0, totalMonths: 0, links: EMPTY_LINKS, hexes: [], boundaries: null, layers: EMPTY_LAYERS, error: null,
+    crimes: [], extent: null, loadedMonths: 0, totalMonths: 0, ready: false, links: EMPTY_LINKS, hexes: [], boundaries: null, layers: EMPTY_LAYERS, error: null,
   });
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function usePulseData(): PulseData {
       const extent = ext.data && ext.data.n > 0 ? (ext.data as PulseData["extent"]) : null;
       const windows = extent ? monthWindows(extent.min, extent.max) : [];
       setState((s) => ({
-        ...s, extent, totalMonths: windows.length,
+        ...s, extent, totalMonths: windows.length, ready: true,
         links: (links.data as Links) ?? EMPTY_LINKS,
         hexes: (hexes.data as HexRow[]) ?? [],
         boundaries: (bounds.data as PulseData["boundaries"]) ?? null,

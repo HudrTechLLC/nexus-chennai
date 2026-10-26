@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   arcPath, binDaily, binHours, catKey, cone, convexHull, decodeCrimes, DAY_MS, hhmm, inClockArc, km, localDay,
-  monthWindows, padRing, passes, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
+  boundsOf, monthWindows, padRing, passes, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
 } from "../pulse";
 
 describe("catKey", () => {
@@ -150,5 +150,17 @@ describe("isoWeek", () => {
   it("compares week labels", () => {
     expect(weekInRange("2026-W43", "2026-W40", "2026-W44")).toBe(true);
     expect(weekInRange("2026-W39", "2026-W40", "2026-W44")).toBe(false);
+  });
+});
+
+describe("boundsOf", () => {
+  it("wraps the points with padding", () => {
+    const b = boundsOf([[80.25, 13.0], [80.22, 12.98]], 0.01)!;
+    [80.21, 12.97, 80.26, 13.01].forEach((v, i) => expect(b[i]).toBeCloseTo(v, 6));
+  });
+  it("gives a single point an area and nothing for no points", () => {
+    const b = boundsOf([[80.25, 13.0]], 0.02)!;
+    [80.23, 12.98, 80.27, 13.02].forEach((v, i) => expect(b[i]).toBeCloseTo(v, 6));
+    expect(boundsOf([])).toBeNull();
   });
 });
