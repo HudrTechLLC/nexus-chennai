@@ -9,6 +9,7 @@
 -- (confirmed series only, no series id), an MO sentence built ONLY from allow-listed phrases, and links to
 -- published appeals for that crime. Never: narrative, persons, points, address, plates, evidence, statements.
 --
+-- Every function here pins search_path = public, pg_temp; extension calls are schema-qualified (chief).
 -- Public id = 'PC-' + 12 hex chars of HMAC-SHA256(crime_id, secret). The secret lives in a table no API role
 -- can read, and the id helper is not executable by anon, so a guessed crime id cannot be confirmed.
 -- Eligibility mirrors public_map_cells exactly: occurred in the last p_days (clamped 7..90), the hex has >=3
@@ -88,7 +89,7 @@ create index if not exists idx_tips_about_crime on public.tips (about_crime_id);
 
 -- ---------- private helpers (never executable by API roles) ----------
 create or replace function public.crime_public_id(p_crime_id text) returns text
-language sql stable security definer set search_path = public, extensions as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   select 'PC-' || upper(substr(encode(extensions.hmac(convert_to(p_crime_id, 'UTF8'),
                                                       (select secret from public.public_id_secret), 'sha256'), 'hex'), 1, 12))
 $$;
@@ -96,7 +97,7 @@ $$;
 -- Crimes a public card may show for a window: same predicate and cutoff as public_map_cells.
 create or replace function public.public_card_pool(p_days integer)
 returns table (crime_id text, cell text, category text)
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   with d as (select least(greatest(coalesce(p_days, 30), 7), 90) as days, 3 as min_n),
   w as (
     select c.crime_id, c.h3_r8 as cell, c.category
@@ -114,20 +115,20 @@ $$;
 
 -- Area label of a hex: the station nearest the centre of all crimes in it, without the "(E4)" code.
 create or replace function public.public_area_label(p_cell text) returns text
-language sql stable security definer set search_path = public, extensions as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   with ctr as (
-    select st_setsrid(st_makepoint(avg(lon), avg(lat)), 4326) as g from public.crimes where h3_r8 = p_cell
+    select extensions.st_setsrid(extensions.st_makepoint(avg(lon), avg(lat)), 4326) as g from public.crimes where h3_r8 = p_cell
   )
   select btrim(regexp_replace(s.name, '\s*\(.*\)\s*$', ''))
   from public.stations s, ctr
   where ctr.g is not null and s.centroid is not null
-  order by st_distance(s.centroid, ctr.g), s.station_id
+  order by extensions.st_distance(s.centroid, ctr.g), s.station_id
   limit 1
 $$;
 
 -- One plain-English MO sentence from allow-listed phrases only, or null when none apply.
 create or replace function public.public_mo_summary(p_crime_id text) returns text
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   with mo as (select cf.mo from public.crime_features cf where cf.crime_id = p_crime_id),
   ph as (
     select f.ord, coalesce(case when f.field = 'target_item' then 'took ' || p.phrase else p.phrase end, null) as phrase
@@ -154,7 +155,7 @@ $$;
 
 -- The public card for one crime (caller has already checked eligibility).
 create or replace function public.public_crime_card(p_crime_id text, p_cell text) returns jsonb
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   select jsonb_build_object(
     'public_id', public.crime_public_id(c.crime_id),
     'category', c.category,
@@ -182,7 +183,7 @@ $$;
 -- ---------- the two public reads ----------
 create or replace function public.public_hex_crimes(p_cell text, p_days integer default 30, p_category text default null)
 returns jsonb
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   with cards as (
     select public.public_crime_card(pool.crime_id, pool.cell) as card
     from public.public_card_pool(p_days) pool
@@ -197,7 +198,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create or replace function public.public_crime(p_public_id text) returns jsonb
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   select public.public_crime_card(pool.crime_id, pool.cell)
   from public.public_card_pool(90) pool
   where p_public_id ~ '^PC-[0-9A-F]{12}$' and public.crime_public_id(pool.crime_id) = p_public_id
@@ -210,7 +211,7 @@ create or replace function public.submit_tip(
   p_appeal text, p_category text, p_text text, p_cell text, p_follow_up boolean,
   p_code text, p_passphrase text, p_media jsonb, p_tz text, p_about text default null
 ) returns jsonb
-language plpgsql volatile security definer set search_path = public, extensions as $$
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
   v_week  text := public.iso_week(now(), p_tz);
   v_id    text;
@@ -255,9 +256,9 @@ begin
       raise exception 'passphrase must be 8 to 128 characters' using errcode = '22023';
     end if;
     v_id := 'TIP-' || p_code;
-    v_hash := crypt(p_passphrase, gen_salt('bf', 12));
+    v_hash := extensions.crypt(p_passphrase, extensions.gen_salt('bf', 12));
   else
-    v_id := 'TIP-' || upper(encode(gen_random_bytes(5), 'hex'));
+    v_id := 'TIP-' || upper(encode(extensions.gen_random_bytes(5), 'hex'));
     v_hash := null;
   end if;
 
@@ -287,7 +288,7 @@ $$;
 -- ---------- triage: the crime a tip was sent about comes first ----------
 create or replace function public.tip_nearby_crimes(p_tip_id text)
 returns jsonb
-language sql stable security invoker set search_path = public as $$
+language sql stable security invoker set search_path = public, pg_temp as $$
   with t as (
     select approx_cell, to_date(received_week, 'IYYY-"W"IW') as wk, public_incident_id, about_crime_id
     from public.tips where tip_id = p_tip_id

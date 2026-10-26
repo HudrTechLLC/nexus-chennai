@@ -75,6 +75,21 @@ with db_migrate.connect() as conn:
             cur.execute("select has_table_privilege('anon', %s, 'select'), has_table_privilege('authenticated', %s, 'select')",
                         (f"public.{t}", f"public.{t}"))
             check(f"RLS-NEGATIVE {t} unreadable by API roles", cur.fetchone() == (False, False))
+        fns = ("crime_public_id", "public_card_pool", "public_area_label", "public_mo_summary", "public_crime_card",
+               "public_hex_crimes", "public_crime", "submit_tip", "tip_nearby_crimes")
+        cur.execute("""select proname, prosecdef, coalesce(array_to_string(proconfig, ';'), '') from pg_proc
+                       where pronamespace = 'public'::regnamespace and proname = any(%s)""", (list(fns),))
+        procs = cur.fetchall()
+        check("search_path: every 0007_11 function pins public, pg_temp",
+              len(procs) == len(fns) and all("search_path=public, pg_temp" in cfg for _, _, cfg in procs),
+              str([(n, c) for n, _, c in procs if "search_path=public, pg_temp" not in c]))
+        cur.execute("""select c.relrowsecurity, (select count(*) from pg_policies where schemaname = 'public'
+                       and tablename = 'public_id_secret') from pg_class c where c.oid = 'public.public_id_secret'::regclass""")
+        check("RLS-NEGATIVE public_id_secret: RLS on, no policies", cur.fetchone() == (True, 0))
+        for role in ("anon", "authenticated"):
+            cur.execute("""select bool_or(has_table_privilege(%s, 'public.public_id_secret', p))
+                           from unnest(array['select', 'insert', 'update', 'delete', 'truncate', 'references']) p""", (role,))
+            check(f"RLS-NEGATIVE public_id_secret: no privilege at all for {role}", cur.fetchone()[0] is False)
         cur.execute("select count(*) from pg_proc where proname = 'submit_tip' and pronamespace = 'public'::regnamespace")
         check("submit_tip: one overload only (no ambiguous calls)", cur.fetchone()[0] == 1)
 
@@ -157,6 +172,10 @@ with db_migrate.connect() as conn:
                        p_tz => 'Asia/Kolkata')""")
         old = cur.fetchone()[0]
         check("submit_tip: old-style call (no p_about) still works", bool(old.get("tip_id")))
+        cur.execute("""select submit_tip(p_appeal => null, p_category => 'something_else', p_text => 'test 0711 follow-up',
+                       p_cell => null, p_follow_up => true, p_code => 'TESTAB23', p_passphrase => 'correct horse 0711',
+                       p_media => '[]'::jsonb, p_tz => 'Asia/Kolkata')""")
+        check("submit_tip: follow-up tip (bcrypt via extensions.crypt) works", cur.fetchone()[0]["tip_id"] == "TIP-TESTAB23")
         cur.execute("""select submit_tip(p_appeal => null, p_category => 'something_else', p_text => 'test 0711 about',
                        p_cell => %s, p_follow_up => false, p_code => null, p_passphrase => null, p_media => '[]'::jsonb,
                        p_tz => 'Asia/Kolkata', p_about => %s)""", (cell, about_pid))
