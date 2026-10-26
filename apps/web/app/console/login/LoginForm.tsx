@@ -2,13 +2,25 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { consoleBrowserClient } from "@/lib/supabase/browser";
+import { DemoPanel } from "@/components/console/login/DemoPanel";
+import { fillFrom, type DemoLogin } from "@/lib/demoLogins";
 
-export function LoginForm() {
+export function LoginForm({ demos = [] }: { demos?: DemoLogin[] }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+
+  /** Demo account picked: fill both fields; the user still presses Sign in. */
+  function pick(d: DemoLogin) {
+    const f = fillFrom(d);
+    setEmail(f.email);
+    setPassword(f.password);
+    setError(null);
+    setPicked(d.email);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,6 +37,7 @@ export function LoginForm() {
   }
 
   return (
+    <>
     <form onSubmit={submit} className="mt-6 space-y-3 rounded-xl border border-line bg-surface p-5">
       <label className="block text-sm">
         <span className="text-muted">Email</span>
@@ -45,5 +58,7 @@ export function LoginForm() {
         {busy ? "Signing in…" : "Sign in"}
       </button>
     </form>
+    <DemoPanel demos={demos} picked={picked} onPick={pick} />
+    </>
   );
 }
