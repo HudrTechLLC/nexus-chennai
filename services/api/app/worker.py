@@ -244,11 +244,15 @@ class Worker:
             return 0
 
     def run_once(self) -> dict[str, int]:
+        """One pass. New cases (a just-filed FIR) run before dossiers, and a pass that ran a case skips the
+        dossier step, so a FIR never waits behind up to DOSSIER_SECONDS of reason-lane chunks."""
         self.heartbeat()
         with engines.use_tracer(self.tracer):
             out = {"decisions": self.process_decisions(), "tips": self.process_tips(),
-                   "appeals": self.process_appeal_requests(), "dossiers": self.process_dossiers()}
+                   "appeals": self.process_appeal_requests()}
         out["cases"] = self.process_new_cases()
+        with engines.use_tracer(self.tracer):
+            out["dossiers"] = 0 if out["cases"] else self.process_dossiers()
         return out
 
 
