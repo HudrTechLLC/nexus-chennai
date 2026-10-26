@@ -54,8 +54,8 @@ export const RECENT_LIMIT = 5;
 
 export const SAMPLE_QUESTIONS = [
   "Chain snatchings by two men on a red Pulsar in the last 90 days",
-  "House breaks in Adyar station after 7 pm this month",
-  "Robberies near Velachery that are still undetected since 1 September",
+  "Chain snatchings in Adyar after 7 pm in the last 90 days",
+  "Robberies in Velachery that are still undetected since 1 September",
 ] as const;
 
 /** The trimmed question, or the reason it cannot be sent. */

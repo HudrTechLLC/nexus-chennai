@@ -14,7 +14,7 @@ const istDate = (iso: string | null) =>
 type Phase =
   | { kind: "idle" }
   | { kind: "asking"; q: AskQuestion | null; startedAt: number }
-  | { kind: "settled"; q: AskQuestion; rows: AskResultRow[]; hidden: number }
+  | { kind: "settled"; q: AskQuestion; rows: AskResultRow[]; hidden: number; detailsFailed: boolean }
   | { kind: "gave_up"; q: AskQuestion | null }
   | { kind: "error"; message: string };
 
@@ -57,13 +57,15 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
   async function finish(q: AskQuestion) {
     const ids = (q.answer?.rows ?? []).map((r) => r.crime_id);
     let readable: AskCrime[] = [];
+    let detailsFailed = false;
     if (ids.length) {
       // display fields through crimes RLS: an id this officer may not read never becomes a row
-      const { data } = await consoleBrowserClient().from("crimes").select(ASK_CRIME_COLUMNS).in("crime_id", ids);
+      const { data, error } = await consoleBrowserClient().from("crimes").select(ASK_CRIME_COLUMNS).in("crime_id", ids);
       readable = (data ?? []) as AskCrime[];
+      detailsFailed = !!error;
     }
     const { rows, hidden } = visibleResults(q.answer?.rows ?? [], readable);
-    setPhase({ kind: "settled", q, rows, hidden });
+    setPhase({ kind: "settled", q, rows, hidden: detailsFailed ? 0 : hidden, detailsFailed });
     void loadRecent();
     requestAnimationFrame(() => resultsRef.current?.focus());
   }
@@ -183,7 +185,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
                 {phase.q.answer.total} {phase.q.answer.total === 1 ? "case" : "cases"} found
                 {phase.q.answer.truncated ? `, showing the newest ${phase.q.answer.rows.length}` : ""}
                 {phase.hidden > 0 ? ` · ${phase.hidden} more not visible to your access` : ""}
-                {phase.q.answer.excluded_test_filings ? ` · ${phase.q.answer.excluded_test_filings} test filings excluded` : ""}
+                {phase.detailsFailed ? " · couldn't load the case details, please ask again" : ""}
               </p>
             )}
           </section>
@@ -199,7 +201,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
                   <tbody>
                     {phase.rows.map((r) => (
                       <tr key={r.crime_id} className="border-t border-line align-top">
-                        <td className="py-2 pr-3"><Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`} className="font-mono text-xs text-signal hover:underline">{r.crime_id}</Link></td>
+                        <td className="whitespace-nowrap py-2 pr-3"><Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`} className="font-mono text-xs text-signal hover:underline">{r.crime_id}</Link></td>
                         <td className="py-2 pr-3">
                           {crimeLabel(r)}
                           <div className="text-xs text-muted">{(r.station_id ?? "").replace(/^PS-/, "")}{r.address ? ` · ${r.address}` : ""}</div>
@@ -211,7 +213,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
                   </tbody>
                 </table>
               </section>
-              <section className="rounded-xl border border-line bg-surface p-5 lg:col-span-2">
+              <section className="self-start rounded-xl border border-line bg-surface p-5 lg:sticky lg:top-4 lg:col-span-2">
                 <h2 className="mb-2 font-semibold">Where</h2>
                 <AlertMapLoader scenes={hitScenes(phase.rows)} trail={[]} />
               </section>
