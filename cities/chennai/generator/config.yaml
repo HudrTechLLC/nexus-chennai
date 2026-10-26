@@ -1,0 +1,168 @@
+# Synthetic Chennai generator settings (spec D2). Everything city-specific lives here.
+id_prefix: CHN
+utc_offset: "+05:30"          # IST has no DST, so a fixed offset is exact
+end_date: "2026-10-25"         # the run is pinned: no wall-clock time anywhere
+months: 24
+total_firs: 14000              # D1 #1
+fir_numbers_per_year: 1500     # station registers also hold non-focus FIRs, so numbers have gaps
+station_short_codes:           # CHN-<short>-<year>-<fir>; others are derived from the name, unique
+  J2: AD                       # spec examples: CHN-AD-2026-001182 (Adyar)
+  J7: VL                       #                CHN-VL-2026-000877 (Velachery)
+
+# Background crime mix (shares sum to 1). anchors = POI types to place near (weights);
+# "residential" = a random point inside a ward. hours = [start, end, weight] bands (local time).
+crime_types:
+  chain_snatching:
+    category: robbery
+    share: 0.13
+    sections: ["BNS 304(2)"]
+    severity: 3
+    anchors: {bus_stop: 4, temple: 3, metro_station: 1, market: 1, residential: 2}
+    hours: [[6, 9, 3], [9, 18, 1], [18, 22, 4], [22, 24, 0.5]]
+    duration_min: [2, 10]
+    report_delay_min: [20, 180]
+  mobile_snatching:
+    category: robbery
+    share: 0.11
+    sections: ["BNS 304(2)"]
+    severity: 2
+    anchors: {bus_stop: 3, metro_station: 2, railway_station: 2, restaurant: 1, residential: 1}
+    hours: [[7, 11, 2], [11, 17, 1], [17, 23, 4], [23, 24, 1]]
+    duration_min: [1, 5]
+    report_delay_min: [30, 300]
+  street_robbery:
+    category: robbery
+    share: 0.05
+    sections: ["BNS 309(4)"]
+    severity: 3
+    anchors: {atm: 2, bus_stop: 1, residential: 2, bar: 1}
+    hours: [[20, 24, 3], [0, 3, 2], [3, 20, 0.5]]
+    duration_min: [3, 15]
+    report_delay_min: [30, 240]
+  cab_robbery:
+    category: robbery
+    share: 0.01
+    sections: ["BNS 309(4)", "BNS 3(5)"]
+    severity: 4
+    anchors: {hotel: 2, railway_station: 2, metro_station: 1}
+    hours: [[22, 24, 3], [0, 4, 3], [4, 22, 0.2]]
+    duration_min: [20, 60]
+    report_delay_min: [60, 600]
+  night_house_break:
+    category: house_break
+    share: 0.12
+    sections: ["BNS 331(4)", "BNS 305(a)"]
+    severity: 3
+    anchors: {residential: 6, temple: 1, school: 1}
+    hours: [[1, 4, 5], [0, 1, 1], [4, 5, 1]]
+    duration_min: [30, 300]
+    report_delay_min: [240, 1800]
+    festival_boost: 3.0
+  day_house_break:
+    category: house_break
+    share: 0.06
+    sections: ["BNS 331(3)", "BNS 305(a)"]
+    severity: 3
+    anchors: {residential: 6, school: 1}
+    hours: [[10, 16, 4], [8, 10, 1], [16, 18, 1]]
+    duration_min: [60, 360]
+    report_delay_min: [60, 600]
+    festival_boost: 1.5
+  two_wheeler_theft:
+    category: theft
+    share: 0.14
+    sections: ["BNS 303(2)"]
+    severity: 2
+    anchors: {hospital: 3, railway_station: 3, mall: 1, cinema: 1, parking: 2, residential: 2}
+    hours: [[8, 22, 3], [22, 24, 1], [0, 8, 1]]
+    duration_min: [30, 600]
+    report_delay_min: [60, 1440]
+  car_theft:
+    category: theft
+    share: 0.03
+    sections: ["BNS 303(2)"]
+    severity: 3
+    anchors: {residential: 3, parking: 2, hotel: 1}
+    hours: [[0, 5, 3], [5, 24, 1]]
+    duration_min: [60, 480]
+    report_delay_min: [120, 1440]
+  shop_theft:
+    category: theft
+    share: 0.06
+    sections: ["BNS 303(2)"]
+    severity: 1
+    anchors: {supermarket: 3, mall: 2, jeweller: 2, mobile_shop: 2, electronics: 1}
+    hours: [[10, 21, 4], [21, 24, 1]]
+    duration_min: [5, 30]
+    report_delay_min: [30, 600]
+  pickpocket:
+    category: theft
+    share: 0.06
+    sections: ["BNS 303(2)"]
+    severity: 1
+    anchors: {bus_stop: 3, bus_station: 2, market: 2, railway_station: 2, temple: 1}
+    hours: [[7, 11, 3], [11, 17, 1], [17, 21, 3]]
+    duration_min: [1, 20]
+    report_delay_min: [30, 600]
+  assault:
+    category: hurt
+    share: 0.09
+    sections: ["BNS 115(2)", "BNS 351(2)"]
+    severity: 2
+    anchors: {bar: 2, market: 2, residential: 4, bus_stop: 1}
+    hours: [[18, 24, 4], [0, 2, 2], [2, 18, 1]]
+    duration_min: [5, 30]
+    report_delay_min: [30, 720]
+  cheating:
+    category: cheating
+    share: 0.08
+    sections: ["BNS 318(4)"]
+    severity: 2
+    anchors: {bank: 3, atm: 3, residential: 2}
+    hours: [[9, 19, 4], [19, 22, 1]]
+    duration_min: [10, 120]
+    report_delay_min: [240, 4320]
+  stalking:
+    category: crimes_against_women
+    share: 0.03
+    sections: ["BNS 78"]
+    severity: 2
+    anchors: {college: 2, bus_stop: 2, metro_station: 1, residential: 1}
+    hours: [[7, 10, 3], [16, 21, 3], [10, 16, 1]]
+    duration_min: [5, 30]
+    report_delay_min: [120, 2880]
+  murder:
+    category: homicide
+    share: 0.01
+    sections: ["BNS 103(1)"]
+    severity: 5
+    anchors: {residential: 4, bar: 1}
+    hours: [[20, 24, 3], [0, 4, 3], [4, 20, 1]]
+    duration_min: [10, 120]
+    report_delay_min: [60, 1440]
+  attempt_murder:
+    category: hurt
+    share: 0.01
+    sections: ["BNS 109"]
+    severity: 4
+    anchors: {residential: 3, bar: 1, market: 1}
+    hours: [[19, 24, 3], [0, 3, 2], [3, 19, 1]]
+    duration_min: [5, 30]
+    report_delay_min: [30, 300]
+  kidnapping:
+    category: kidnapping
+    share: 0.01
+    sections: ["BNS 137(2)"]
+    severity: 4
+    anchors: {school: 2, residential: 2, bus_stop: 1}
+    hours: [[7, 19, 3], [19, 24, 1]]
+    duration_min: [10, 120]
+    report_delay_min: [120, 2880]
+
+status_weights:               # by age of the case: [recent < 60 days, older]
+  registered: [0.25, 0.02]
+  under_investigation: [0.6, 0.35]
+  charge_sheeted: [0.05, 0.25]
+  undetected: [0.08, 0.30]
+  closed: [0.02, 0.08]
+statements_per_crime: 1.5      # D1 #5: ~21,000
