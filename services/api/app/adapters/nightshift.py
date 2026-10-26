@@ -89,11 +89,11 @@ class NightshiftClient:
     # ----- helpers -------------------------------------------------------
 
     def _headers(self) -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self.settings.meterless_runtime_token}",
-            "meterless-app": self.settings.meterless_app,
-            "meterless-scope": "user",
-        }
+        headers = {"meterless-app": self.settings.meterless_app, "meterless-scope": "user"}
+        token = (self.settings.meterless_runtime_token or "").strip()
+        if token:  # never send an empty "Bearer " (an illegal header value)
+            headers["Authorization"] = f"Bearer {token}"
+        return headers
 
     def model_for(self, lane: str) -> str:
         model = self.settings.lanes.get(lane)
@@ -137,6 +137,10 @@ class NightshiftClient:
         """One chat completion on a pinned lane. Every call emits a trace event."""
         model = self.model_for(lane)
         started = time.perf_counter()
+        if self.settings.sample_mode and not (self.settings.meterless_runtime_token or "").strip():
+            # Sample mode with no Nightshift credentials: there is nothing live to call,
+            # so go straight to the recorded output (labelled `replayed`, rule R6).
+            return self._replay(lane, model, messages, agent, purpose, started)
         try:
             resp = self._post("/chat/completions", {"model": model, "messages": messages, **params})
         except (httpx.TransportError, NightshiftError, httpx.HTTPStatusError) as exc:

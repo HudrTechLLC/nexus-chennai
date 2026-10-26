@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -21,6 +22,10 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=None)
     ap.add_argument("--once", type=Path, help="run one input JSON through /run and print the result")
     args = ap.parse_args()
+
+    if args.once:
+        # Keep stdout = the JSON result only (pipe-friendly); trace lines go to stderr and logs/.
+        os.environ.setdefault("NEXUS_TRACE_STREAM", "stderr")
 
     from app.config import get_settings
 

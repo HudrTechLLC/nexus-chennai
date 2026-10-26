@@ -6,6 +6,7 @@ Traces are written only by code as events happen. Rule R3: never hand-write or e
 from __future__ import annotations
 
 import json
+import os
 import sys
 import threading
 import uuid
@@ -69,7 +70,9 @@ class Tracer:
             with self.path.open("a", encoding="utf-8") as fh:
                 fh.write(line + "\n")
             if self.echo:
-                print(line, file=sys.stdout, flush=True)
+                # run.py --once sets NEXUS_TRACE_STREAM=stderr so stdout carries only the JSON result.
+                stream = sys.stderr if os.environ.get("NEXUS_TRACE_STREAM") == "stderr" else sys.stdout
+                print(line, file=stream, flush=True)
         return event
 
     def read(self) -> list[dict[str, Any]]:

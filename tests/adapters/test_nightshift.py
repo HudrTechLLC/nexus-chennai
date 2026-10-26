@@ -74,7 +74,7 @@ def test_meterless_auto_is_refused():
 
 
 def test_unconfigured_lane_is_refused():
-    c = NightshiftClient(settings(), transport=httpx.MockTransport(ok_handler([])))
+    c = NightshiftClient(settings(lane_vision=""), transport=httpx.MockTransport(ok_handler([])))
     with pytest.raises(LaneNotConfigured):
         c.chat("vision", [{"role": "user", "content": "x"}], agent="t")
 
@@ -115,3 +115,32 @@ def test_sample_mode_without_fixture_fails_instead_of_inventing(tmp_path):
     c = NightshiftClient(settings(sample_mode=True), transport=httpx.MockTransport(down), fixtures_dir=tmp_path)
     with pytest.raises(NightshiftError):
         c.chat("fast", [{"role": "user", "content": "never recorded"}], agent="t")
+
+
+def test_default_lanes_are_the_pinned_d017_models():
+    s = Settings(_env_file=None)
+    assert s.lanes["fast"] == "nvidia/nemotron-3.5-lightning-30b-a3b"
+    assert s.lanes["reason"] == "nvidia/nemotron-3-ultra-550b-a55b"
+    assert "meterless/auto" not in s.lanes.values()
+
+
+def test_no_token_sends_no_authorization_header():
+    seen = []
+    c = NightshiftClient(settings(meterless_runtime_token=""), transport=httpx.MockTransport(ok_handler(seen)))
+    c.chat("fast", [{"role": "user", "content": "x"}], agent="t")
+    assert "authorization" not in {k.lower() for k in seen[0].headers}
+
+
+def test_sample_mode_without_token_replays_without_calling(tmp_path):
+    calls = []
+    msgs = [{"role": "user", "content": "x"}]
+    rec = NightshiftClient(settings(), transport=httpx.MockTransport(ok_handler([])), fixtures_dir=tmp_path, record_fixtures=True)
+    rec.chat("fast", msgs, agent="t")  # records a fixture
+    c = NightshiftClient(
+        settings(meterless_runtime_token="", sample_mode=True),
+        transport=httpx.MockTransport(ok_handler(calls)),
+        fixtures_dir=tmp_path,
+    )
+    result = c.chat("fast", msgs, agent="t")
+    assert result.replayed is True and result.content == "OK"
+    assert calls == []  # nothing was sent

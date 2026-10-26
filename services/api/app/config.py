@@ -37,9 +37,11 @@ class Settings(BaseSettings):
     meterless_runtime_token: str = ""
     meterless_app: str = "nexus-chennai"
     nightshift_timeout_seconds: float = 180.0
-    lane_fast: str = ""
-    lane_vision: str = ""
-    lane_reason: str = ""
+    # Pinned defaults = the verified D-017 lanes, so a judge with no .env still
+    # names the right model (and sample-mode replay can find its fixtures).
+    lane_fast: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
+    lane_vision: str = "nvidia/nemotron-3.5-super-vl-120b-a12b"
+    lane_reason: str = "nvidia/nemotron-3-ultra-550b-a55b"
     lane_audio: str = ""
     lane_guard: str = ""
     lane_tiny: str = ""
