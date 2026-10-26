@@ -10,9 +10,11 @@
  *   NEXT_PUBLIC_SUPABASE_ANON_KEY="$(tr -d '\r\n' < <publishable key file>)" \
  *     node apps/web/scripts/evidence-check.mjs <crime_id of an Adyar case>
  *
- * It writes one small synthetic JPEG + one evidence_media row to the given case. Passwords are never printed.
+ * It writes one small synthetic PNG (a valid, viewable 8x8 image) + one evidence_media row to the given case.
+ * Uploaded evidence cannot be deleted through the API (custody), so point it at a test case. Passwords are never printed.
  */
 import { createHash, randomUUID } from "node:crypto";
+import { crc32, deflateSync } from "node:zlib";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { createClient } from "@supabase/supabase-js";
@@ -36,19 +38,39 @@ async function as(email) {
 let fails = 0;
 const report = (ok, label, detail = "") => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"} ${label} ${detail}`); };
 
-// A tiny valid JPEG (SOI, APP0, EOI) plus random bytes so every run hashes differently.
-const bytes = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]), Buffer.from("JFIF\0"), Buffer.from(randomUUID()), Buffer.from([0xff, 0xd9])]);
+// A valid 8x8 grey PNG with a random tEXt chunk, so every run hashes differently and the gallery can show it.
+const chunk = (type, data) => {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body) >>> 0);
+  return Buffer.concat([len, body, crc]);
+};
+const ihdr = Buffer.alloc(13);
+ihdr.writeUInt32BE(8, 0);
+ihdr.writeUInt32BE(8, 4);
+ihdr[8] = 8; // 8-bit greyscale (colour type 0)
+const pixels = Buffer.alloc(8 * 9, 0x80);
+for (let r = 0; r < 8; r++) pixels[r * 9] = 0; // filter byte per row
+const bytes = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  chunk("IHDR", ihdr),
+  chunk("tEXt", Buffer.from(`Comment\0nexus evidence-check ${randomUUID()}`)),
+  chunk("IDAT", deflateSync(pixels)),
+  chunk("IEND", Buffer.alloc(0)),
+]);
 const sha = createHash("sha256").update(bytes).digest("hex");
 const id = randomUUID();
-const path = `${crimeId}/${id}.jpg`;
+const path = `${crimeId}/${id}.png`;
 
 const own = await as("officer.adyar@nexus.demo");
-const up = await own.sb.storage.from("evidence").upload(path, bytes, { contentType: "image/jpeg", upsert: false });
+const up = await own.sb.storage.from("evidence").upload(path, bytes, { contentType: "image/png", upsert: false });
 report(!up.error, "own-station officer uploads", up.error?.message ?? "");
 const evidenceId = `EV-${id}`;
 const ins = await own.sb.from("evidence_media").insert({
   evidence_id: evidenceId, crime_id: crimeId, kind: "photo", storage_path: path, sha256: sha, uploaded_by: own.user.id,
-  custody: [{ at: new Date().toISOString(), by: own.user.id, action: "uploaded", sha256: sha, bytes: bytes.length, mime: "image/jpeg" }], synthetic: true,
+  custody: [{ at: new Date().toISOString(), by: own.user.id, action: "uploaded", sha256: sha, bytes: bytes.length, mime: "image/png" }], synthetic: true,
 });
 report(!ins.error, "evidence_media row recorded", ins.error?.message ?? "");
 
@@ -57,13 +79,13 @@ const stored = dl.data ? createHash("sha256").update(Buffer.from(await dl.data.a
 const { data: row } = await own.sb.from("evidence_media").select("sha256, custody").eq("evidence_id", evidenceId).maybeSingle();
 report(stored === sha && row?.sha256 === sha && row?.custody?.[0]?.sha256 === sha, "stored object sha256 = recorded sha256 = custody sha256", stored ? stored.slice(0, 16) : "no download");
 
-const over = await own.sb.storage.from("evidence").upload(path, Buffer.from("tampered"), { contentType: "image/jpeg", upsert: true });
+const over = await own.sb.storage.from("evidence").upload(path, Buffer.from("tampered"), { contentType: "image/png", upsert: true });
 report(!!over.error, "object cannot be overwritten", over.error ? "" : "(overwrite succeeded!)");
 
 const other = await as("officer.velachery@nexus.demo");
 const r2 = await other.sb.storage.from("evidence").download(path);
 report(!!r2.error || !r2.data, "other-station officer cannot read it");
-const u2 = await other.sb.storage.from("evidence").upload(`${crimeId}/${randomUUID()}.jpg`, bytes, { contentType: "image/jpeg" });
+const u2 = await other.sb.storage.from("evidence").upload(`${crimeId}/${randomUUID()}.png`, bytes, { contentType: "image/png" });
 report(!!u2.error, "other-station officer cannot upload to it");
 
 const anon = client();

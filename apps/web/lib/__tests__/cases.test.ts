@@ -38,6 +38,8 @@ describe("FIR and plate normalising", () => {
     expect(normalisePlate("tn-09 ab.4471")).toBe("TN09AB4471");
     expect(normalisePlate("TN 09 ** 4471")).toBe("TN09??4471");
     expect(normalisePlate("4%71")).toBeNull();
+    expect(normalisePlate("TN")).toBeNull(); // too broad to narrow anything
+    expect(normalisePlate("TN0")).toBe("TN0");
   });
 });
 
