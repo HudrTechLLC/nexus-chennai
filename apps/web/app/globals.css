@@ -55,7 +55,6 @@ table, .tabular-nums, [data-numeric] { font-variant-numeric: tabular-nums; }
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 .on-brand :where(a, button, summary):focus-visible { outline-color: var(--accent-bright); }
 
