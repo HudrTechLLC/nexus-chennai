@@ -15,6 +15,8 @@ worker picks the work up:
 2c. `series` with no dossier -> Series analyst (Markovian), stored in `series.dossier`.
 3. New crimes (reported_at <= now) without `crime_features` -> the agent graph (extract -> link ->
    Skeptic -> alerts); the run row carries subject = crime_id so the console can link its trace.
+3b. `onboarding_runs` (WS1-23, 0007_15): a new source's export uploaded -> profiled through Zetaris, mapped by
+   the fast lane, DQ-checked -> proposed; approved -> registered as a Zetaris view (not linked). See onboarding.py.
 4. Stale runs: a run still 'running' with no trace event for STALE_RUN_MINUTES (its process was
    stopped) becomes 'interrupted' (0006_04), with a run_interrupted event and its trace copied.
 
@@ -205,6 +207,17 @@ class Worker:
 
     # ----- 3. new cases -> agent graph ---------------------------------------------------------
 
+    def process_onboarding(self) -> int:
+        """WS1-23: one uploaded and one approved onboarding run per pass. Never fails a worker pass."""
+        from .onboarding import Onboarder
+
+        try:
+            return Onboarder(self.settings, self.sb, self.zetaris, self.nightshift, self.logs_dir).process()
+        except Exception as exc:  # e.g. 0007_15 not applied yet
+            self.tracer.emit("Worker", "onboarding_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300],
+                             status="error")
+            return 0
+
     def process_new_cases(self) -> int:
         # reported_at <= now: seed rows dated in the future must not crowd a just-filed FIR out of the batch.
         params = {"select": "crime_id", "reported_at": f"lte.{_now()}", "order": "reported_at.desc",
@@ -319,6 +332,7 @@ class Worker:
         with engines.use_tracer(self.tracer):
             out = {"decisions": self.process_decisions(), "tips": self.process_tips(),
                    "appeals": self.process_appeal_requests()}
+        out["onboarding"] = self.process_onboarding()
         out["cases"] = self.process_new_cases()
         with engines.use_tracer(self.tracer):
             out["dossiers"] = 0 if out["cases"] else self.process_dossiers()
