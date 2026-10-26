@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T17:01:29+05:30",
+  "updated": "2026-10-26T18:23:28+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -98,9 +98,9 @@
           "id": "WS1-09",
           "phase": "P1",
           "title": "Synthetic CCTV stills and tips",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "nexus-1 · synthetic CCTV stills for hero/series/judge cases; tips seeded (40)"
+          "note": "nexus-1 · 49 synthetic CCTV stills on 23 series cases (#203); vision null (Nightshift refuses images)"
         },
         {
           "id": "WS1-10",
@@ -158,10 +158,10 @@
           "id": "WS1-16",
           "phase": "P9",
           "title": "News and social REST feeds in Zetaris",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
           "ref": "#54",
-          "note": "40_feeds.sql merged (#54). Live in Zetaris: nexus_feeds db + rest_weather/weather_hourly (744 rows). NOT yet registered: rest_news, rest_social, news_items, social_posts, v_news_mentions (statements #3-#7), so live q_news returns no rows (nexus-2, 26 Oct)"
+          "note": "nexus-2 · rest_news/rest_social/news_items/social_posts/v_news_mentions live (47/61/68); q_news live (#180, #210)"
         },
         {
           "id": "WS1-17",
@@ -472,8 +472,8 @@
           "id": "WS3-12",
           "phase": "P7",
           "title": "Notifications page and mock outbox (NOT-01)",
-          "status": "in_progress",
-          "note": "nexus-4 · /console/notifications; tables in 0002; nav link hidden until it lands"
+          "status": "done",
+          "note": "nexus-4 · /console/notifications + mock outbox, 0004_10 (#193, #208)"
         },
         {
           "id": "WS3-13",
@@ -578,8 +578,8 @@
           "id": "WS4-09",
           "phase": "P8",
           "title": "Blurred stills on public appeals (PUB-02)",
-          "status": "in_progress",
-          "note": "nexus-6 · evidence stills → server-side blur + EXIF strip → public bucket; audit per attach"
+          "status": "done",
+          "note": "nexus-6 · blurred stills on appeals, 0004_06_05 + 0004_11 (#197, #199)"
         }
       ]
     },

@@ -343,3 +343,15 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Why:** a lane deleted an audit row during testing. An audit trail that can be edited is not evidence.
 - **Tests clean up by recording, not deleting:** the e2e suite inserts a `cleanup_test_record` entry instead of removing its audit rows (#126). The final pre-freeze cleanup never touches `audit_log`.
 - **Related:** [D-029](#d-029--fir-capture-evidence-and-search-details-nexus-5-2026-10-26) · [LANES](LANES.md)
+
+## D-031 · Zetaris applies the REST limit before non-pushable filters (nexus-2, nexus-1) (2026-10-26)
+- **Bug (Zetaris platform):** when a filter cannot be pushed down to Postgres (column-vs-column, `rlike`, distance maths, `unix_timestamp`, a CASE flag), Zetaris pushes the REST `limit` into the JDBC scan first and Spark filters only those N rows. Rows go missing silently and `count(*)` returns the unfiltered total. Repro: `occurred_from > reported_at` returned 0 rows at limit 1000 and the correct 5 at 20000.
+- **Mitigation (no platform setting changed):** every named query and dq view puts a deterministic `ORDER BY` before the limit, which fixes rows and counts (#170, #174). `ZetarisClient` emits `zetaris_result_truncated` whenever rows == limit, and a live parity test checks every named query at its caller's limit against ≥ 50k, with the hero pair present (#174).
+- **Related:** D-032 · [LANES](LANES.md)
+
+## D-032 · Corroborating news does not change scores for the freeze (Ravee, 2026-10-26)
+- **Finding (nexus-2):** one corroborating news item scores ~0.39 on the corroboration factor, and the renormalised mean over present factors then **lowers** a strong pair (hero 0.787 → 0.752 with one linking article).
+- **Evaluated (nexus-3, full sample eval, roundups on):** a "positive-only" rule (corroboration counts only when above the mean of the other present factors) restores the hero to 0.787 and adds one correct HIGH, but adds one medium false positive (precision 0.5915 → 0.5874) and changes what coverage means on an alert.
+- **Decision (Ravee):** leave scoring as is. Corroborating roundups stay **off**, so news is shown as context and never moves a score. The rule stays on branch `feat/corroboration-positive-only` (flag `NEXUS_CORROB_POSITIVE_ONLY`, default off) for after the hackathon, along with two untested alternatives (count only when ≥ 2 items agree; raise the per-item scale).
+- **Known live limit:** with the full live crime set, 5 sample articles match more than one same-category crime; fixed by the post-freeze full generator.
+- **Related:** D-017 · [LANES](LANES.md)
