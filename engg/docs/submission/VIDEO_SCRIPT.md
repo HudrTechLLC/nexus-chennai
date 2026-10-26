@@ -58,14 +58,14 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   > Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 - **Check no secrets visible:** console header shows the demo user only. No other tabs in frame.
 
-### 2 · How it's built · 0:18–0:38 (20 s, ~48 words)
+### 2 · How it's built · 0:18–0:40 (22 s, ~52 words)
 
 - **Screen:** architecture diagram (`engg/docs/diagrams/c1-layers.svg`), with each layer highlighted as named.
 - **Narration:**
-  > Case files live in Supabase, news and social posts arrive as live feeds, and Zetaris federates them in place. Our agents read only through Zetaris named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+  > Case files live in Supabase, legacy exports and ANPR reads in files, news in live feeds. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
 - **Check no secrets visible:** a static diagram. Nothing to check beyond desktop notifications.
 
-### 3 · A new case arrives · 0:38–1:05 (27 s, ~62 words)
+### 3 · A new case arrives · 0:40–1:05 (25 s, ~60 words)
 
 - **Screen:**
   - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
@@ -142,7 +142,7 @@ Paste each block into `demo/script.md` for `demo/narrate.py` (SPEC M1). Settings
 Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 
 [seg_02]
-Case files live in Supabase, news and social posts arrive as live feeds, and Zetaris federates them in place. Our agents read only through Zetaris named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+Case files live in Supabase, legacy exports and ANPR reads in files, news in live feeds. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
 
 [seg_03]
 An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
@@ -172,10 +172,11 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 |---|---|---|
 | "Adyar on a Wednesday evening… Velachery two days later" | hero pair in `series.yaml`: CHN-AD-2026-001182 on Wed 14 Oct 19:40 IST, CHN-VL-2026-000877 on Fri 16 Oct 19:55 IST (checked) | Change the weekday words to match the dates on screen |
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
+| Hero alert is Adyar ↔ Velachery, high | judge path @ `7534e9e`: CHN-AD-2026-001182 ↔ CHN-VL-2026-000877, high 0.787, cross-station; live demo alert id LA-2026-E38C6B38B865 (nexus-3) | Read the score shown on screen; never the number from this table |
 | "five stations" | `SER-RED-PULSAR` `stations: [J2, J7, J6, J3, J5]`; only true if all members are linked | Say "across stations" |
 | "strikes a factor… dropped" | a real `strike_factor` + drop in the recorded run | Narrate exactly what the trace shows (send-back, or a strike without a drop) |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
-| Zetaris "across every station" | the federated `sb` source; ANPR/file sources are `[PENDING: WS1-12]` | Don't mention ANPR or CSV files |
+| Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
 
 ## After export
 

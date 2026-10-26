@@ -21,7 +21,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 - **Sources federated today:**
   - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 4 datasource views where JDBC can't map a type.
   - **Live REST feeds** for news and social posts, registered as Lightning REST tables, with the views `news_items`, `social_posts` and `v_news_mentions` over them.
-  - **CSV and Parquet file sources** (legacy station exports, ANPR reads, 112 calls) in Zetaris's internal file store: `[PENDING: WS1-12]`.
+  - **CSV and Parquet file sources** in Zetaris's internal file store: 8 CSV tables (legacy CCTNS exports, CCTV and ANPR camera lists, vehicles, prison releases, history sheets, place aliases, calendar) and 4 Parquet tables (ANPR reads, 112 calls, the legacy archive, map POIs).
 - **Governed access.** Agents can run only registered *named queries*, through one adapter (`services/api/app/adapters/zetaris.py`). Every query id goes into the trace and into the alert's evidence. Live today, each with Lightning SQL and a DuckDB twin for sample mode:
   - `q_case`: one case with its vehicles, statements, evidence and forensics;
   - `q_candidates`: blocking, i.e. same-category cases within a distance and time window;
@@ -30,8 +30,10 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_news`: news that mentions a case's place;
   - `q_hex_counts`: counts per H3 cell, for the hotspot test;
   - `q_search`: text and filter search over crimes and statements, for the console search box;
-  - `q_station_matrix`: approved alerts station × station.
-  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
+  - `q_station_matrix`: approved alerts station × station;
+  - `q_tip_corroboration`: screened public tips in a crime's area and time window;
+  - `q_context`: calendar, nearby place types and hourly weather for one crime.
+  - Still to come: `q_vehicle_trail`, `q_offender_return` and `q_calls_near` `[PENDING: WS1-15]`. Semantic view live: `v_crime_unified`, one view over every crime record shape. The other semantic views are `[PENDING: WS1-13]`.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.

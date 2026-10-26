@@ -6,7 +6,7 @@ tags: [nexus, deliverables]
 
 This note lists every claim the submission drafts make, with the file, test or CI job that proves it. The four drafts ([README_DRAFT](README_DRAFT.md), [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), [DECK](DECK.md), [VIDEO_SCRIPT](VIDEO_SCRIPT.md)) take their claims only from here. When a `[PENDING: id]` task lands, flip its row here first, then the drafts. `grep -rn "PENDING:" engg/docs/submission/` lists everything still open.
 
-**Verified against `origin/main` @ `4c2f686`** (26 Oct 2026; first pass @ `c686f0c`, where CI was green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`). Re-check CI on the freeze commit.
+**Verified against `origin/main` @ `54013e3`** (26 Oct 2026; first pass @ `c686f0c`, where CI was green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`). Re-check CI on the freeze commit.
 Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [ENGINES](../ENGINES.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
 ## Re-verify at freeze (about 2 minutes)
@@ -34,6 +34,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | `python run.py` serves on :8000; `python run.py --once <file>` posts one input to `/run` | `run.py` (sets its own import path; no `PYTHONPATH` needed) | ✅ |
 | `docker-compose.yml`: API on :8000, reaches Zetaris and Nightshift on the host through `host.docker.internal`; optional `worker` profile | `docker-compose.yml` | ✅ (live compose run: `[PENDING: WS5-11]`) |
 | `POST /run` returns `run_id, status, output{alerts, series, hotspots, summary}, agents, engines, trace_id, log_file, execution_time_seconds` | `services/api/app/main.py`; `tests/graph/test_graph_pipeline.py`; bad input → 422 in `tests/test_tracing_and_api.py` | ✅ |
+| Judge path (fresh clone @ `7534e9e`, `SAMPLE_MODE=true`, no `.env`, Nightshift unreachable): Red Pulsar **CHN-AD-2026-001182 ↔ CHN-VL-2026-000877, high 0.787, cross-station** (3 links); Grille Cutters 7 links (6 cross-station); Night Cab 2 links; run time 20.6 / 5.1 / 3.0 s. No model text yet (fixtures `[PENDING: WS2-16]`), 0 Skeptic strikes (`q_vehicle_trail` `[PENDING: WS1-15]`). | nexus-7 judge's-eye re-run, 26 Oct (traces in a local clone, not committed) | ✅ |
 | 3 inputs in `input_examples/` + real outputs in `output_examples/` | not on main | `[PENDING: WS2-16]` |
 | Sample bundle in `data/sample/` (≈600 crimes, 3 series, 40 tips, recorded model fixtures) | only `data/sample/README.md` is on main | `[PENDING: WS1-11]` |
 | Sample mode with Zetaris + Nightshift stopped and no `.env` runs example 1 end to end | depends on the two rows above | `[PENDING: WS5-08]` |
@@ -65,10 +66,11 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Tips reach Zetaris only through `tips_v` (safe columns; no passphrase hash, no raw text) | `zetaris/README.md`; migration `0003_zetaris_reader_tips.sql` | ✅ |
 | REST feeds: `rest_news`, `rest_social` (Lightning REST tables) + views `news_items`, `social_posts`, `v_news_mentions` | `zetaris/40_feeds.sql` | ✅ |
 | Data-quality views (8): `dq_duplicate_firs`, `dq_bad_geo`, `dq_time_inconsistent`, `dq_unmapped_sections`, `dq_flags`, `dq_orphan_evidence`, `dq_tip_without_incident`, `dq_stale_cameras` | `zetaris/20_dq.sql`; `tests/engines/test_dq.py` | ✅ |
-| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/`, `tests/engines/test_search.py` (`q_search`: #84; `q_station_matrix`: #93) | ✅ (8 of 13) |
-| `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
-| Semantic views `v_crime_unified`, `v_vehicle_trail`, `v_offender_return`, `v_tip_corroboration` (`10_views.sql`) | file not on main | `[PENDING: WS1-13]` |
-| CSV / Parquet file sources (legacy exports, ANPR, 112 calls) in Zetaris's internal file store | not in `00_sources.sql` on main; D-022a explains the store | `[PENDING: WS1-12]` |
+| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`, `q_tip_corroboration`, `q_context` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/`, `tests/engines/test_search.py` (`q_search` #84, `q_station_matrix` #93, `q_tip_corroboration` #121) | ✅ (10 of 13) |
+| `q_vehicle_trail`, `q_offender_return`, `q_calls_near` | named by the Planner but not registered on main; `q_vehicle_trail` blocks the Skeptic's vehicle re-check (`recheck_unavailable` in every judge run) | `[PENDING: WS1-15]` |
+| Semantic view `v_crime_unified` in the `nexus` container (`zetaris/10_views.sql`, #121; DQ and news views read it since #129); one-trip case view `case_bundle_v` (`zetaris/30_case.sql`, #125) | files on main | ✅ |
+| Semantic views `v_vehicle_trail`, `v_offender_return`, `v_tip_corroboration` | not in `10_views.sql` | `[PENDING: WS1-13]` |
+| File sources in Zetaris's internal file store (D-022a): 8 CSV tables (`cctv_cameras`, `anpr_cameras`, `vehicles`, `releases`, `history_sheets`, `place_aliases`, `calendar`, `cctns`) + 4 Parquet tables (`anpr_reads`, `calls`, `archive`, `osm_pois`) | `zetaris/01_files.sql`, `stage_files.py` (#140); `zetaris/README.md`: "12 tables, live 2026-10-26, counts in the PR" | ✅ |
 | Live `SELECT count(*) AS n FROM sb.crimes` through Zetaris = **14,039** (14,038 generated + 1 console-filed FIR), matching the Postgres count after the additive re-seed | run by nexus-1 on Lightning REST `POST /api/v1.0/sql-editor/sqls/run`, 2026-10-26 08:59:09–08:59:22 UTC (~13 s), source `sb` via `zetaris_reader` | ✅ (recorded, not CI) |
 
 ## Meterless engines and Nightshift
