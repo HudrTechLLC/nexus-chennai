@@ -19,7 +19,7 @@ from ..adapters.nightshift import NightshiftClient
 from ..adapters.supabase import SupabaseClient
 from ..adapters.zetaris import ZetarisClient
 from ..agents import AgentDeps, DeadlineExceeded, MemoryStore, Store, detect_series
-from ..agents.series import find_test_firs
+from ..agents.series import describe_series, find_test_firs, flag_test_firs, read_member_cases
 from ..config import Settings
 from ..tracing import Tracer, new_run_id
 from .pipeline import AgentGraph
@@ -202,11 +202,18 @@ def _detect_series(graph: AgentGraph, alerts: list[dict[str, Any]]) -> tuple[lis
     series = detect_series(alerts)
     if not series:
         return series, {}
-    excluded = find_test_firs(graph.deps, [cid for s in series for cid in s["crime_ids"]])
+    rows = read_member_cases(graph.deps, [cid for s in series for cid in s["crime_ids"]]) or {}
+    excluded = flag_test_firs(rows)
     for cid, why in sorted(excluded.items()):
         graph.deps.tracer.emit("Series analyst", "series_member_excluded", input_summary=cid, output_summary=why,
                                status="ok", extra={"crime_id": cid, "reason": why})
-    return (detect_series(alerts, excluded=set(excluded)) if excluded else series), excluded
+    if excluded:
+        series = detect_series(alerts, excluded=set(excluded))
+    for ser in series:  # a descriptive name from the members' dominant MO (code, no model)
+        name = describe_series([rows[cid] for cid in ser["crime_ids"] if cid in rows])
+        if name:
+            ser["name"] = name
+    return series, excluded
 
 
 def _save_series(graph: AgentGraph, series: list[dict[str, Any]], excluded: Mapping[str, str] | None = None

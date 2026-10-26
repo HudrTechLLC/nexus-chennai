@@ -49,6 +49,9 @@ class Store(Protocol):
 
 
 def series_name(series: Mapping[str, Any]) -> str:
+    """The detected series' descriptive name (agents.series.describe_series), else "N linked cases (stations)"."""
+    if series.get("name"):
+        return str(series["name"])
     stations = list(series.get("stations") or [])
     where = ", ".join(stations[:3]) + (f" +{len(stations) - 3}" if len(stations) > 3 else "")
     return f"{len(series.get('crime_ids') or [])} linked cases" + (f" ({where})" if where else "")
