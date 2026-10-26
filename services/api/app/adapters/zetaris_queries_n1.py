@@ -151,6 +151,92 @@ def _q_tip_corroboration_sample(tz: str) -> str:
     )
 
 
+TRAIL_COLUMNS = ("read_id", "camera_id", "read_at", "plate_text", "plate_confidence", "direction", "lat", "lon",
+                 "h3_r9", "crime_id", "km_from_scene", "minutes_from_scene")
+SCENE_KM, SCENE_MINUTES = 1.5, 120  # a read is "near a scene" within this distance and time of a crime
+
+
+def _q_vehicle_trail(tz: str, off: str, *, sample: bool) -> str:
+    """ANPR reads of a plate (pattern: '?' = any one character, spaces ignored) from :pad_days before
+    min(:t0, :t1) to :pad_days after max(:t0, :t1). Each read carries the nearest crime scene within
+    SCENE_KM / SCENE_MINUTES (crime_id, else null), which is what the vehicle factor scores on."""
+    if sample:
+        reads, crimes = "'anpr/reads.parquet'", "'sb/crimes.parquet'"
+        pat = "replace(upper(regexp_replace(:plate_pattern, '[^A-Za-z0-9?]', '', 'g')), '?', '_')"
+        ts = lambda x: f"CAST({x} AS TIMESTAMPTZ)"  # noqa: E731
+        lo, hi = f"least({ts(':t0')}, {ts(':t1')})", f"greatest({ts(':t0')}, {ts(':t1')})"
+        win = lambda e, sign, d: f"{e} {sign} to_days(CAST({d} AS INTEGER))"  # noqa: E731
+        secs = lambda x: f"epoch({x})"  # noqa: E731
+        out_ts = (f"strftime(r.read_at AT TIME ZONE '{tz}', '%Y-%m-%dT%H:%M:%S') || '{off}'")
+    else:
+        reads, crimes = "s3pq.anpr_reads", "sb.crimes"
+        pat = "replace(upper(regexp_replace(:plate_pattern, '[^A-Za-z0-9?]', '')), '?', '_')"
+        ts = lambda x: f"CAST({x} AS TIMESTAMP)"  # noqa: E731
+        lo, hi = f"least({ts(':t0')}, {ts(':t1')})", f"greatest({ts(':t0')}, {ts(':t1')})"
+        win = lambda e, sign, d: f"{e} {sign} make_interval(0, 0, 0, CAST({d} AS INT), 0, 0, 0)"  # noqa: E731
+        secs = lambda x: f"unix_timestamp({x})"  # noqa: E731
+        out_ts = _ts("r.read_at", tz, off)
+    deg = SCENE_KM / 108.0
+    km = ("2 * 6371 * asin(sqrt(pow(sin(radians(s.lat - r.lat) / 2), 2) + cos(radians(r.lat)) * cos(radians(s.lat)) "
+          "* pow(sin(radians(s.lon - r.lon) / 2), 2)))")
+    return (
+        f"WITH r AS (SELECT read_id, camera_id, read_at, plate_text, plate_confidence, direction, lat, lon, h3_r9 "
+        f"FROM {reads} WHERE plate_text LIKE {pat} "
+        f"AND read_at BETWEEN {win(lo, '-', ':pad_days')} AND {win(hi, '+', ':pad_days')}), "
+        f"s AS (SELECT crime_id, occurred_from, lat, lon FROM {crimes} "
+        f"WHERE occurred_from BETWEEN {win(lo, '-', ':pad_days + 1')} AND {win(hi, '+', ':pad_days + 1')}), "
+        f"j AS (SELECT r.read_id, s.crime_id, {km} AS km, "
+        f"abs({secs('r.read_at')} - {secs('s.occurred_from')}) / 60.0 AS mins FROM r JOIN s "
+        f"ON abs(s.lat - r.lat) <= {deg:.6f} AND abs(s.lon - r.lon) <= {deg:.6f} "
+        f"AND abs({secs('r.read_at')} - {secs('s.occurred_from')}) <= {SCENE_MINUTES * 60}), "
+        f"n AS (SELECT read_id, crime_id, km, mins, row_number() OVER (PARTITION BY read_id ORDER BY km, crime_id) AS k "
+        f"FROM j WHERE km <= {SCENE_KM}) "
+        f"SELECT r.read_id, r.camera_id, {out_ts} AS read_at, r.plate_text, r.plate_confidence, r.direction, r.lat, "
+        f"r.lon, r.h3_r9, n.crime_id, round(n.km, 3) AS km_from_scene, CAST(round(n.mins) AS INT) AS minutes_from_scene "
+        f"FROM r LEFT JOIN n ON n.read_id = r.read_id AND n.k = 1 ORDER BY r.read_at, r.read_id"
+    )
+
+
+RETURN_COLUMNS = ("person_ref", "release_id", "released_on", "release_type", "residence_ward", "near_home",
+                  "prior_mo_tags", "matched_tags", "mo_overlap", "days_since_release", "sheet_id", "sheet_category",
+                  "sheet_active")
+RETURN_DAYS = 60  # spec D2: an offender's MO reappears within 60 days of release
+
+
+def _q_offender_return(tz: str, *, sample: bool) -> str:
+    """Offenders released within RETURN_DAYS before :since whose prior MO shares a tag with :mo_tags
+    (comma-joined), days counted on the city's calendar. City-wide, ranked: home ward (= :ward) first, then MO overlap, then most recent.
+    mo_overlap = shared tags / prior tags (0-1), the value the offender_return factor reads."""
+    if sample:
+        rel, hs = "'ref/releases.csv'", "'ref/history_sheets.csv'"
+        split = "string_split({x}, '{sep}')"
+        inter, size = "list_intersect({a}, {b})", "len({x})"
+        days = f"date_diff('day', CAST(r.released_on AS DATE), CAST(timezone('{tz}', CAST(:since AS TIMESTAMPTZ)) AS DATE))"
+        join = "array_to_string({x}, ',')"
+    else:
+        rel, hs = "s3csv.releases", "s3csv.history_sheets"
+        split = "split({x}, '{sep}')"
+        inter, size = "array_intersect({a}, {b})", "size({x})"
+        days = f"datediff(CAST(from_utc_timestamp(CAST(:since AS TIMESTAMP), '{tz}') AS DATE), CAST(r.released_on AS DATE))"
+        join = "concat_ws(',', {x})"
+    prior = split.format(x="r.prior_mo_tags", sep=";")
+    asked = split.format(x=":mo_tags", sep=",")
+    shared = inter.format(a=prior, b=asked)
+    return (
+        "SELECT person_ref, release_id, released_on, release_type, residence_ward, near_home, prior_mo_tags, "
+        "matched_tags, mo_overlap, days_since_release, sheet_id, sheet_category, sheet_active FROM ("
+        "SELECT r.person_ref, r.release_id, CAST(CAST(r.released_on AS DATE) AS VARCHAR(10)) AS released_on, "
+        "r.release_type, CAST(r.residence_ward AS INT) AS residence_ward, "
+        "CAST(r.residence_ward AS INT) = CAST(:ward AS INT) AS near_home, r.prior_mo_tags, "
+        f"{join.format(x=shared)} AS matched_tags, "
+        f"round({size.format(x=shared)} / CAST({size.format(x=prior)} AS DOUBLE), 3) AS mo_overlap, "
+        f"{days} AS days_since_release, h.sheet_id, h.category AS sheet_category, h.active AS sheet_active "
+        f"FROM {rel} r LEFT JOIN {hs} h ON h.person_ref = r.person_ref) t "
+        f"WHERE days_since_release BETWEEN 0 AND {RETURN_DAYS} AND mo_overlap > 0 "
+        "ORDER BY near_home DESC, mo_overlap DESC, released_on DESC, person_ref LIMIT 50"
+    )
+
+
 def _twin(name: str, columns: tuple[str, ...]) -> str:
     """The DuckDB twin from nexus-2 when available; otherwise a stub that fails the width check loudly."""
     try:
@@ -183,4 +269,14 @@ def specs() -> dict[str, dict[str, Any]]:
                                 "sample": _q_tip_corroboration_sample(tz), "defaults": {"days": 30},
                                 "description": "Screened public tips in a crime's H3 r8 cell within :days (default 30)",
                                 "columns": TIP_COLUMNS},
+        "q_vehicle_trail": {"name": "q_vehicle_trail", "lightning": _q_vehicle_trail(tz, off, sample=False),
+                            "sample": _q_vehicle_trail(tz, off, sample=True), "defaults": {"pad_days": 7},
+                            "description": "ANPR reads of a plate pattern around :t0..:t1, each tied to the nearest "
+                                           "crime scene within 1.5 km / 2 h",
+                            "columns": TRAIL_COLUMNS},
+        "q_offender_return": {"name": "q_offender_return", "lightning": _q_offender_return(tz, sample=False),
+                              "sample": _q_offender_return(tz, sample=True),
+                              "description": "Offenders released within 60 days of :since whose prior MO shares "
+                                             ":mo_tags; home ward (:ward) first",
+                              "columns": RETURN_COLUMNS},
     }

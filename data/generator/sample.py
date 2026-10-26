@@ -180,6 +180,45 @@ def live_features(ids: list[str]) -> list[dict]:
         return [dict(zip(names, r)) for r in cur.fetchall()]
 
 
+ANPR_BACKGROUND = 3000  # unrelated reads kept so a trail query has noise to cut through
+
+
+def write_anpr(con, src: Path, out: Path, subset: list[dict]) -> int:
+    """ANPR reads for the bundle: every read within 1.5 km / 2 h of a bundle crime, every read of a planted
+    plate (series vehicles, vehicle chains), and a fixed background sample. Same columns as live."""
+    plates = set()
+    truth = src / "_truth"
+    for s in json.loads((truth / "series.json").read_text(encoding="utf-8")):
+        v = (s.get("true_mo") or {}).get("vehicle") or {}
+        if v.get("plate"):
+            plates.add(v["plate"].replace(" ", "").upper())
+    if (truth / "vehicle_chains.json").is_file():
+        for c in json.loads((truth / "vehicle_chains.json").read_text(encoding="utf-8")):
+            if c.get("plate"):
+                plates.add(c["plate"].replace(" ", "").upper())
+    con.execute("CREATE OR REPLACE TEMP TABLE scenes (lat DOUBLE, lon DOUBLE, t TIMESTAMPTZ)")
+    con.executemany("INSERT INTO scenes VALUES (?, ?, CAST(? AS TIMESTAMPTZ))",
+                    [[c["lat"], c["lon"], c["occurred_from"]] for c in subset if c.get("lat") is not None])
+    glob = (src / "anpr" / "reads_*.parquet").as_posix()
+    path = out / "anpr" / "reads.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    plate_list = ", ".join("'" + p.replace("'", "") + "'" for p in sorted(plates)) or "''"
+    con.execute(f"""
+        COPY (
+          WITH r AS (SELECT read_id, camera_id, read_at, plate_text, plate_confidence, direction, lat, lon, h3_r9,
+                            synthetic FROM read_parquet('{glob}')),
+          near AS (SELECT DISTINCT r.read_id FROM r JOIN scenes s
+                   ON abs(r.lat - s.lat) <= 0.014 AND abs(r.lon - s.lon) <= 0.014
+                  AND abs(epoch(r.read_at) - epoch(s.t)) <= 7200),
+          keep AS (SELECT read_id FROM near
+                   UNION SELECT read_id FROM r WHERE plate_text IN ({plate_list})
+                   UNION SELECT read_id FROM (SELECT read_id FROM r ORDER BY hash(read_id), read_id
+                                              LIMIT {ANPR_BACKGROUND}))
+          SELECT r.* FROM r JOIN keep USING (read_id) ORDER BY r.read_id
+        ) TO '{path.as_posix()}' (FORMAT PARQUET)""")
+    return con.execute(f"SELECT count(*) FROM '{path.as_posix()}'").fetchone()[0]
+
+
 def live_tip_guard(tips: list[dict]) -> list[dict]:
     """The generated tips with the live Tip Guard's recorded verdict (guard, status) where it has
     screened them, so sample mode corroborates like live. Never the passphrase hash."""
@@ -236,9 +275,12 @@ def build(src: Path, out: Path) -> dict:
         stations.append({k: s.get(k) for k, _ in SCHEMAS["stations"]} | {"lat": lat, "lon": lon})
     counts["stations"] = write_table(con, out, "stations", stations, ["station_id"])
 
+    counts["anpr_reads"] = write_anpr(con, src, out, [crimes[i] for i in ids])
     ref = out / "ref"
     counts["place_aliases"] = _csv_subset(src / "ref" / "place_aliases.csv", ref / "place_aliases.csv")
     counts["calendar"] = _csv_subset(src / "ref" / "calendar.csv", ref / "calendar.csv")
+    counts["releases"] = _csv_subset(src / "ref" / "releases.csv", ref / "releases.csv")
+    counts["history_sheets"] = _csv_subset(src / "ref" / "history_sheets.csv", ref / "history_sheets.csv")
     ref.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src / "ref" / "osm_pois.parquet", ref / "osm_pois.parquet")
 

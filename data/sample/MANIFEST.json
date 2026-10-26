@@ -1,6 +1,7 @@
 {
  "core": 30,
  "counts": {
+  "anpr_reads": 6501,
   "calendar": 45,
   "crime_feature_reviews": 0,
   "crime_features": 276,
@@ -8,7 +9,9 @@
   "crimes": 1275,
   "evidence_media": 0,
   "forensics": 0,
+  "history_sheets": 1200,
   "place_aliases": 48,
+  "releases": 1800,
   "statements": 1895,
   "stations": 70,
   "tips": 40
