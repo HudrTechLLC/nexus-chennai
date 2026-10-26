@@ -22,6 +22,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [CITY_PACKS](CITY_PACKS.md): how another city is added without code changes
 
 ## Plan and status
+- [LANES](LANES.md): the 4 build lanes, what each owns, interfaces between them, merge rules
 - **[workstreams.json](workstreams.json)**: every workstream and task with its status; rendered as the live progress chart at `/docs/progress` in the web app
 - [PROGRESS](PROGRESS.md): phase status, blockers, session log
 - [DELIVERABLES](DELIVERABLES.md): submission and eligibility checklist

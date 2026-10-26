@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T10:43:29+05:30",
+  "updated": "2026-10-26T11:16:38+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -7,7 +7,7 @@
     "in_progress": "In progress",
     "blocked": "Blocked",
     "todo": "To do",
-    "cut": "Cut (future work)"
+    "cut": "Cut"
   },
   "phases": {
     "P0": "Foundations",
@@ -33,102 +33,132 @@
           "phase": "P0",
           "title": "Repo skeleton and engineering docs",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-02",
           "phase": "P0",
           "title": "Supabase migration 0001 (stations, wards, profiles, runs; RLS on)",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-03",
           "phase": "P0",
           "title": "Create Supabase project nexus-chennai (Mumbai, free)",
           "status": "done",
-          "note": "nexus-qa, Singapore (D-014)"
+          "note": "nexus-qa, Singapore (D-014)",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-04",
           "phase": "P0",
           "title": "Apply migration 0001 to Supabase",
           "status": "done",
-          "note": "RLS verified; anon denied on every table"
+          "note": "RLS verified; anon denied on every table",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-05",
           "phase": "P0",
           "title": "Install Zetaris platform locally",
           "status": "done",
-          "note": "Running locally; verify.sh 8/9 (bootstrap sample load in progress)"
+          "note": "Running locally; verify.sh 8/9 (bootstrap sample load in progress)",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-06",
           "phase": "P0",
           "title": "Zetaris API token + organisation ID; live SELECT 1",
           "status": "done",
-          "note": "Org ID 1; token in ~/.secrets/nexus-zetaris.key; live SELECT 1 PASS"
+          "note": "Org ID 1; token in ~/.secrets/nexus-zetaris.key; live SELECT 1 PASS",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS1-07",
           "phase": "P1",
           "title": "Chennai reference data: stations, wards, POIs, IPC-BNS map, calendar",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-08",
           "phase": "P1",
           "title": "Seeded generator: 14k FIRs, 70 stations, 30 planted series, decoys, duplicates, vehicle chains, offender returns",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-09",
           "phase": "P1",
           "title": "Synthetic CCTV stills and tips",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-10",
           "phase": "P1",
           "title": "Upload to S3 (or Zetaris-readable store) and seed Supabase",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-11",
           "phase": "P1",
           "title": "Sample bundle for SAMPLE_MODE (600 crimes, 3 series, 40 tips)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-12",
           "phase": "P2",
           "title": "Register sources in Zetaris (Supabase, S3 CSV, S3 Parquet, REST)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-13",
           "phase": "P2",
           "title": "Semantic views: v_crime_unified, v_vehicle_trail, v_offender_return, v_tip_corroboration",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-14",
           "phase": "P2",
           "title": "Data-quality views: duplicate FIRs, bad geo, unmapped sections",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-15",
           "phase": "P2",
           "title": "12 named queries + DuckDB sample equivalents",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-1"
         },
         {
           "id": "WS1-16",
           "phase": "P9",
           "title": "News and social REST feeds in Zetaris",
-          "status": "cut"
+          "status": "todo",
+          "owner": "nexus-1"
+        },
+        {
+          "id": "WS1-17",
+          "phase": "P2",
+          "title": "Storage Zetaris can read for CSV/Parquet (test Supabase Storage S3 endpoint; AWS only with approval)",
+          "status": "todo",
+          "owner": "nexus-1"
+        },
+        {
+          "id": "WS1-18",
+          "phase": "P1",
+          "title": "Domain models (Pydantic, spec D3) + core schema 0002 with RLS (all Part I tables)",
+          "status": "todo",
+          "owner": "nexus-1"
         }
       ]
     },
@@ -142,103 +172,146 @@
           "phase": "P0",
           "title": "Nightshift adapter: pinned lanes, model + routed model + receipt in every trace",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS2-02",
           "phase": "P0",
           "title": "Zetaris adapter: named queries only, query ids traced, sample fallback",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS2-03",
           "phase": "P0",
           "title": "Tracing (JSONL), run.py, smoke test, Docker",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS2-04",
           "phase": "P0",
           "title": "Install Nightshift and add the NVIDIA provider",
           "status": "blocked",
-          "note": "meterless.ai download unreachable; asked in HackOS Help Meterless"
+          "note": "meterless.ai download unreachable; asked in HackOS Help Meterless",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS2-05",
           "phase": "P0",
           "title": "Verify Nightshift model ids and pin the three Nemotron lanes",
           "status": "blocked",
-          "note": "Needs Nightshift running"
+          "note": "Needs Nightshift running",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS2-06",
           "phase": "P3",
           "title": "World Model engine (Python port) + tests",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-2"
         },
         {
           "id": "WS2-07",
           "phase": "P3",
           "title": "Extractor agent: text and vision lanes",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-08",
           "phase": "P3",
           "title": "Scout Intent + Tip Guard + fixtures",
           "status": "todo",
-          "note": "Optional engine; claim only if tested"
+          "note": "Optional engine; claim only if tested",
+          "owner": "nexus-2"
         },
         {
           "id": "WS2-09",
           "phase": "P4",
           "title": "LangGraph graph: router, Planner loop, Skeptic loop, human gate",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-10",
           "phase": "P4",
           "title": "Scoring in code (9 weighted factors) + Linker rationale",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-11",
           "phase": "P4",
           "title": "Skeptic: re-query, strike, send back, drop",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-12",
           "phase": "P4",
           "title": "H-MEM engine (Python port) + three-session changed-score test",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-2"
         },
         {
           "id": "WS2-13",
           "phase": "P4",
           "title": "Alert writer + series detection",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-14",
           "phase": "P4",
           "title": "Evaluation vs rules-only baseline (eval_report.json)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
         },
         {
           "id": "WS2-15",
           "phase": "P4",
           "title": "Markovian engine + series dossier",
-          "status": "cut",
-          "note": "Only if time allows"
+          "status": "todo",
+          "owner": "nexus-2"
         },
         {
           "id": "WS2-16",
           "phase": "P6",
           "title": "Judge path: real /run, 3 input examples, real outputs, sample mode end to end",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-3"
+        },
+        {
+          "id": "WS2-17",
+          "phase": "P3",
+          "title": "Engines TypeScript sidecar + official conformance runs (World Model, H-MEM, Markovian)",
+          "status": "todo",
+          "owner": "nexus-2"
+        },
+        {
+          "id": "WS2-18",
+          "phase": "P4",
+          "title": "Hotspot detector (statistical, no model)",
+          "status": "todo",
+          "owner": "nexus-3"
+        },
+        {
+          "id": "WS2-19",
+          "phase": "P8",
+          "title": "Sanitiser agent: draft public appeal (fast lane + code redaction)",
+          "status": "todo",
+          "owner": "nexus-3"
+        },
+        {
+          "id": "WS2-20",
+          "phase": "P9",
+          "title": "Briefer agent: daily zone briefing",
+          "status": "todo",
+          "owner": "nexus-3"
         }
       ]
     },
@@ -252,7 +325,8 @@
           "phase": "P0",
           "title": "Web app shell (Next.js 14) on Vercel",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS3-02",
@@ -260,55 +334,71 @@
           "title": "Engg Docs (16 spec tabs + notes) and this progress tracker in the app",
           "status": "done",
           "note": "https://nexus-chennai.vercel.app/docs",
-          "ref": "#2"
+          "ref": "#2",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS3-03",
           "phase": "P5",
           "title": "Sign-in and roles (officer, analyst, supervisor, admin)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-04",
           "phase": "P5",
           "title": "Link-alert inbox incl. Rejected tab",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-05",
           "phase": "P5",
           "title": "Alert detail: factors, evidence, Zetaris query ids, approve/reject",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-06",
           "phase": "P5",
           "title": "Case file page and search",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-07",
           "phase": "P5",
           "title": "Realtime alert notifications",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-08",
           "phase": "P6",
           "title": "System status + trace viewer",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-09",
           "phase": "P7",
           "title": "Pulse Map (lean): hex layer, crime-type filter, time scrubber",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS3-10",
           "phase": "P9",
           "title": "FIR capture form",
-          "status": "cut"
+          "status": "todo",
+          "owner": "nexus-4"
+        },
+        {
+          "id": "WS3-11",
+          "phase": "P7",
+          "title": "Series pages, station link matrix, memory page, case graph explorer",
+          "status": "todo",
+          "owner": "nexus-4"
         }
       ]
     },
@@ -322,49 +412,57 @@
           "phase": "P0",
           "title": "Portal shell: home, appeals, map, tip",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS4-02",
           "phase": "P8",
           "title": "Public RPCs: submit_tip, tip_status, public incidents, map cells",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-03",
           "phase": "P8",
           "title": "Appeals list and detail",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-04",
           "phase": "P8",
           "title": "Public hex map (fuzzed, min-count cutoff)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-05",
           "phase": "P8",
           "title": "Anonymous tip form with metadata (EXIF) stripping and tip code",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-06",
           "phase": "P8",
           "title": "Tip status and police replies",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-07",
           "phase": "P8",
           "title": "Sanitiser draft + officer publish flow",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         },
         {
           "id": "WS4-08",
           "phase": "P8",
           "title": "Tip triage in console (quarantined tips visible)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-4"
         }
       ]
     },
@@ -378,61 +476,71 @@
           "phase": "P0",
           "title": "GitHub repo + CI (tests, build, secret scan)",
           "status": "done",
-          "ref": "#1"
+          "ref": "#1",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-02",
           "phase": "P0",
           "title": "Vercel project linked (HUDR team, Mumbai region)",
-          "status": "done"
+          "status": "done",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-03",
           "phase": "P6",
           "title": "README with all required sections",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-04",
           "phase": "P10",
           "title": "Sponsor technology text (evidence-backed)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-05",
           "phase": "P10",
           "title": "metadata.json final (claims only what passes)",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-06",
           "phase": "P10",
           "title": "12-slide deck",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-07",
           "phase": "P10",
           "title": "ElevenLabs narration + 3:40 demo video",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-08",
           "phase": "P10",
           "title": "Fresh-clone validation (L3), incl. sample mode with services stopped",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-09",
           "phase": "P10",
           "title": "Make repo public; declare pre-existing components",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         },
         {
           "id": "WS5-10",
           "phase": "P10",
           "title": "Submit on HackOS at least 6 hours before the deadline",
-          "status": "todo"
+          "status": "todo",
+          "owner": "nexus-chief"
         }
       ]
     }
