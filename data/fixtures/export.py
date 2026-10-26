@@ -63,6 +63,7 @@ def _write(rows: list[tuple], cols: list[tuple[str, str]], path: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", default=str(HERE))
+    ap.add_argument("--note", default="", help="provenance recorded in MANIFEST.json (e.g. which re-clean ran)")
     ap.add_argument("--gen", default=str(ROOT / "data" / "generated"), help="generator output: which tips are ours")
     a = ap.parse_args()
     from db_migrate import connect
@@ -85,7 +86,7 @@ def main() -> None:
     manifest = {"exported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "commit": commit,
                 "crime_features": len(feats), "extractor_versions": dict(sorted(versions.items())),
                 "tips": len(tips), "tip_status": {s: sum(1 for t in tips if t[2] == s) for s in sorted({t[2] for t in tips})},
-                "synthetic": True}
+                "note": a.note, "synthetic": True}
     (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
     print(json.dumps(manifest))
 
