@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  STATUS_LABEL, cardTitle, crimeHref, isPublicId, mapHref, mapStateQuery, parseMapState, weekLabel, type CrimeCard,
+  STATUS_LABEL, framePadding, cardTitle, crimeHref, isPublicId, mapHref, mapStateQuery, parseMapState, weekLabel, type CrimeCard,
 } from "../publicCards";
 
 const HEX = "8861892b3ffffff";
@@ -73,5 +73,23 @@ describe("labels", () => {
     expect(isPublicId("PC-3F9A0C12B7E4")).toBe(true);
     expect(isPublicId("CHN-AD-2026-001182")).toBe(false);
     expect(isPublicId("pc-3f9a0c12b7e4")).toBe(false);
+  });
+});
+
+describe("framePadding", () => {
+  it("keeps a framed hex clear of the desktop panel on the left (md+, panel 24rem)", () => {
+    const p = framePadding(990, 560);
+    expect(p.left).toBeGreaterThanOrEqual(384 + 24);
+    expect(p.right).toBeLessThan(p.left);
+  });
+  it("keeps it above the mobile bottom sheet", () => {
+    const p = framePadding(375, 527);
+    expect(p.bottom).toBeGreaterThanOrEqual(Math.round(527 * 0.5));
+    expect(p.left).toBeLessThan(60);
+  });
+  it("never pads more than the map can hold", () => {
+    const p = framePadding(800, 420);
+    expect(p.left + p.right).toBeLessThan(800 - 60);
+    expect(p.top + p.bottom).toBeLessThan(420 - 60);
   });
 });
