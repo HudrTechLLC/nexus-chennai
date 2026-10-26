@@ -1,0 +1,168 @@
+---
+tags: [nexus, deliverables]
+---
+
+# Slide deck content (WS5-06)
+
+Thirteen slides: the spec's 12 (L2) plus one on responsible AI. Each slide gives the title, the on-slide text (short; the speaker notes carry the rest), the screenshot or visual it needs, and a fallback screen if the planned one isn't on `main` by freeze. Claims come from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `c686f0c` (rechecked at `0177339`).
+Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [VIDEO_SCRIPT](VIDEO_SCRIPT.md) · [README_DRAFT](README_DRAFT.md) · [DELIVERABLES](../DELIVERABLES.md)
+
+## The 8 required points → slides
+
+The Submission Requirements ask the deck to cover 8 points ([DIGEST](../hackathon/DIGEST.md)):
+
+| # | Required point | Slides |
+|---|---|---|
+| 1 | Problem and target users | 2 |
+| 2 | Solution | 3 |
+| 3 | Agent workflow / architecture | 4, 5 |
+| 4 | Technical stack | 5 |
+| 5 | How Zetaris and Meterless were used | 6, 7, 8 |
+| 6 | What was unique about the sponsor tech use | 9 |
+| 7 | Product visuals | 10 |
+| 8 | Future enhancements | 13 |
+
+Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 · Technical 20 · Innovation 15 · Demo 15 · Product & UX 10 · Sponsor Tech 10.
+
+## Screenshot rules (every slide)
+
+- **Check no secrets are visible.** Before a screenshot goes in, look for:
+  - Nightshift's Providers and Console tabs (they show the NVIDIA key and tokens);
+  - terminals (`env`, `echo`, `.env` contents, the token-file path is fine but never its contents);
+  - the Supabase dashboard (API keys page, connection strings);
+  - Zetaris settings pages (API token);
+  - browser address bars with tokens in the URL.
+- Use synthetic data only (all data is). Use browser zoom 110–125%.
+- Crop out bookmarks, other tabs and OS notifications.
+
+---
+
+## Slide 1 · Title
+
+- **On slide:** "Nexus Chennai: city-wide crime linking agents" · Track 1, Solving Fragmented Intelligence · team Heisenbugs · Open Agent Hackathon 2026
+- **Sponsor strip:** Zetaris · Meterless (Nightshift + engines) · NVIDIA Nemotron
+- **Visual:** Pulse Map of Chennai, darkened, as background (`/console/map`).
+- **Check no secrets visible:** console header shows the signed-in user. Use a synthetic demo account.
+
+## Slide 2 · Problem and users (point 1)
+
+- **On slide:**
+  - "Every station sees only its own cases."
+  - A chain-snatching gang works Adyar on Monday and Velachery on Friday: two stations each file one robbery, and nobody connects them.
+  - The evidence is fragmented too: case files, legacy station exports, ANPR cameras, 112 calls, tips, news.
+- **Users:** crime analysts (find and decide links), station officers (capture cases, act on alerts), supervisors, and the public (send tips safely).
+- **Numbers (synthetic city):** 14,000 FIRs over 24 months across 70 stations, with 30 planted series, decoys and duplicates (`cities/chennai/generator/`). Say "synthetic" on the slide.
+- **Visual:** two station icons with the same red motorcycle, no line between them.
+
+## Slide 3 · The solution in one picture (point 2)
+
+- **On slide:** "Agents read every source through Zetaris, think with Nemotron through Nightshift, and raise link alerts that a Skeptic re-checks and a human decides."
+- **Three outputs:** a link alert (score, per-factor evidence, Zetaris query id) → a series with a dossier → a public appeal an officer publishes.
+- **Visual:** alert detail page (`/console/alerts/[alertId]`) showing the factor bars and evidence.
+- **Check no secrets visible:** none on this page beyond the user menu.
+
+## Slide 4 · Agent workflow (point 3)
+
+- **On slide:** the LangGraph graph with its loops highlighted:
+  - router → **tip** (Tip Guard → extract) | **search** | **case**;
+  - case: load → extract → **plan** → link → **skeptic** → write;
+  - loops: Planner ≤ 3 rounds; Skeptic **sends back** to the Planner ≤ 2 times or **drops** a pair; a human approves or rejects; H-MEM feeds that back.
+- **Callout:** "Not a fixed chain: routing, re-planning, critique and a human gate."
+- **Visual:** `engg/docs/diagrams/c4-agent-graph.svg` (check it matches `services/api/app/graph/pipeline.py`; edit labels if not).
+
+## Slide 5 · Architecture and stack (points 3 + 4)
+
+- **On slide:**
+  - **Web (Vercel):** Next.js 14, MapLibre GL + deck.gl, H3 hex cells; reads Supabase under row-level security.
+  - **Laptop:** FastAPI + LangGraph agents; Meterless engines (TypeScript references in a sidecar, Python ports in process); Zetaris; Nightshift.
+  - **Cloud:** Supabase (system of record, RLS per role, realtime); NVIDIA Nemotron behind Nightshift.
+  - **Judge path:** `docker build` + `docker run -e SAMPLE_MODE=true`, `POST /run`, JSONL traces.
+- **Visual:** `engg/docs/diagrams/c1-layers.svg`.
+
+## Slide 6 · How Zetaris is used (point 5)
+
+- **On slide:**
+  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role) and live REST news/social feeds. CSV/Parquet file sources `[PENDING: WS1-12]`.
+  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`. More `[PENDING: WS1-15]`.
+  - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
+  - **Trust boundary:** tips reach Zetaris only through a safe-column view.
+  - **The Skeptic re-runs Zetaris queries itself** before any alert reaches a human.
+- **Visual:** the Zetaris UI (`localhost:3000`) running a live `q_candidates` or `q_case` query, with the result grid.
+- **Check no secrets visible:** Zetaris UI must not show a settings/API-token page; crop the URL bar.
+
+## Slide 7 · How Meterless is used (point 5)
+
+- **On slide (engines):**
+  - World Model: one entity per plate, person, place. **8/8** official conformance.
+  - H-MEM: human decisions shift the next similar score (±0.08 max) with a trust ledger. **13/13**.
+  - Markovian: bounded-chunk series dossier. **8/8**.
+  - Scout Intent: search routing + Tip Guard. 120 fixtures, route accuracy **1.000**, injections **18/18** quarantined; held-out **0.950**, **7/7**.
+  - Official references vendored unmodified; suites re-run in CI on every PR.
+- **On slide (Nightshift):** the only model path; pinned lanes, never `meterless/auto`; model and receipt logged per call; NVIDIA key only inside Nightshift.
+- **Visual:** a terminal crop of `logs/conformance_hmem.txt` ("13/13 checks passed") next to a trace viewer crop.
+- **Check no secrets visible:** terminal shows only the log file; no prompt with env vars.
+
+## Slide 8 · NVIDIA Nemotron (point 5)
+
+- **On slide:**
+
+| Lane | Model | Job |
+|---|---|---|
+| fast | Nemotron 3.5 Lightning 30B | MO extraction, appeal drafts, briefings |
+| reason | Nemotron 3 Ultra 550B | query planning, per-factor reasons, the Skeptic |
+
+  "Every trace line names the model that handled the request." Footnote: "Vision (Super VL) is configured; Nightshift currently refuses image input, so the Extractor falls back to the officer's caption, traced as `vision_unavailable`."
+- **Visual:** trace viewer (`/console/system/trace/[runId]`) with the model column showing `nvidia/nemotron-3-ultra-550b-a55b` on a Skeptic line.
+- **Check no secrets visible:** trace summaries are redacted (D-025), but scan for any token-like string anyway.
+
+## Slide 9 · What was unique (point 6)
+
+- **On slide (three lines, big):**
+  1. "The data layer is the fact-checker: the Skeptic re-queries Zetaris and strikes links the data doesn't support."
+  2. "Rejected links stay visible and teach the system through H-MEM."
+  3. "The public can help without steering it: Scout Intent screens every tip first."
+- **Visual:** trace crop showing a `strike_factor` event, next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`, on main). It needs an alert that a recorded decision actually affected: run a decision through the worker first. If none exists by capture time, use the trace crop alone; never mock the section.
+
+## Slide 10 · Product visuals (point 7)
+
+- **Four tiles:**
+  - **Pulse Map** (`/console/map`): hex layer, crime-type filter, time scrubber.
+  - **Alert card** (`/console/alerts/[alertId]`): factors, evidence, Zetaris query ids, approve/reject.
+  - **Tip flow** (`/tip/new` → `/tip/sent` → `/tip/status`): anonymous, EXIF stripped, tip code.
+  - **Tip triage** (`/console/tips`): quarantined tips visible to police.
+- **Optional fifth tile:** series page with dossier `[PENDING: WS3-11]`; fallback: public appeal page (`/appeals/[publicId]`).
+- **Check no secrets visible:** tip status page shows a tip code. Use a throwaway synthetic tip, never a real passphrase you reuse.
+
+## Slide 11 · Results
+
+- **On slide:** precision and recall, Nexus vs rules-only baseline (same category, ≤ 2 km, ≤ 14 days) on the planted truth `[PENDING: WS2-14]`. Fill from `output_examples/eval_report.json` only; if it doesn't land, drop the table and keep the test evidence.
+- **Also:** typical `/run` execution time from `output_examples/` `[PENDING: WS2-16]`; tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
+- **Visual:** the eval page or a clean table. No chart without real numbers.
+
+## Slide 12 · Responsible AI (extra)
+
+- **On slide:**
+  - **Human gate:** Nexus suggests, people decide. An analyst decides every link; an officer publishes every appeal.
+  - **Explanations:** every alert shows each factor's score, a plain reason, and the Zetaris query and row behind it, plus the Skeptic's verdict.
+  - **Numbers from code, not models:** a model can't set a score; any number it returns is ignored.
+  - **Tips screened:** Tip Guard fails closed; agents read only the redacted text of clean tips.
+  - **Public privacy:** the public map is fuzzed (coarse H3 cells, no points, a minimum-count cutoff, and rare crime types hidden per cell); tip photos have EXIF stripped; passphrases are hashed inside the database.
+  - **Synthetic data only;** protected attributes (religion, caste, community) are never used or written.
+- **Visual:** public map (`/map`) showing coarse cells, next to a quarantined tip in `/console/tips`.
+- **Check no secrets visible:** the quarantined tip may contain a synthetic injection string. That's fine, but make sure it isn't a key-shaped string.
+
+## Slide 13 · Future enhancements + limitations (point 8)
+
+- **Next:**
+  - vision on CCTV stills once Nightshift accepts image input;
+  - Zetaris reading files straight from object storage (fix the S3 TLS handshake);
+  - more named queries and semantic views across sources `[drop the ones that land before freeze]`;
+  - a pilot on real, consented data with police oversight;
+  - multilingual FIRs (Tamil).
+- **Limitations (stated plainly):**
+  - synthetic data;
+  - vision refused by Nightshift today;
+  - the reasoning lane is Ultra 550B because Super 120B isn't served to our key;
+  - bcrypt instead of Argon2id for tip passphrases;
+  - model-written explanations can be imperfect, but the numbers can't (code computes them).
+- **Visual:** none, or the team photo.
