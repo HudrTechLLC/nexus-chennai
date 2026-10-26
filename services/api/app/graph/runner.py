@@ -8,6 +8,8 @@ only the adapters switch to DuckDB over data/sample and recorded model fixtures 
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -15,7 +17,7 @@ from .. import engines
 from ..adapters.nightshift import NightshiftClient
 from ..adapters.supabase import SupabaseClient
 from ..adapters.zetaris import ZetarisClient
-from ..agents import AgentDeps, MemoryStore, Store
+from ..agents import AgentDeps, MemoryStore, Store, detect_series
 from ..config import Settings
 from ..tracing import Tracer, new_run_id
 from .pipeline import AgentGraph
@@ -29,6 +31,7 @@ AGENTS = [
     {"name": "Linker", "role": "scores pairs in code and explains them"},
     {"name": "Skeptic", "role": "re-queries Zetaris and challenges links"},
     {"name": "Alert writer", "role": "writes approved link alerts"},
+    {"name": "Series analyst", "role": "groups linked cases into series and builds dossiers"},
 ]
 ENGINES = ["world_model", "hmem", "scout_intent", "markovian"]
 MAX_BATCH = 50
@@ -46,6 +49,24 @@ def summarise(alerts: list[dict[str, Any]], struck_pairs: int, dropped: int, ext
     s = f"{len(alerts)} new links ({high} high, {med} medium; {cross} cross-station)"
     s += f"; {struck_pairs} with factors struck by Skeptic; {dropped} dropped"
     return s + (f"; {extra}" if extra else "")
+
+
+@contextmanager
+def agent_deps(settings: Settings, run_id: str, *, zetaris: Any = None, nightshift: Any = None
+               ) -> Iterator[AgentDeps]:
+    """Deps for one API call outside /run (drafts, dossiers, briefings): real adapters, traced, deadline."""
+    tracer = Tracer(run_id, settings.logs_dir)
+    z = zetaris or ZetarisClient(settings, tracer)
+    n = nightshift or NightshiftClient(settings, tracer)
+    try:
+        with engines.use_tracer(tracer):
+            yield AgentDeps(tracer=tracer, zetaris=z, nightshift=n, engines=engines,
+                            deadline=time.monotonic() + settings.run_deadline_seconds)
+    finally:
+        if zetaris is None:
+            z.close()
+        if nightshift is None:
+            n.close()
 
 
 def default_store(settings: Settings, tracer: Tracer) -> Store:
@@ -140,7 +161,8 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
                 break
         status = "success" if all(s == "success" for s in statuses) and len(statuses) == len(ids) else (
             "deadline" if "deadline" in statuses else "partial")
-        return ({"alerts": alerts, "series": [], "hotspots": [], "errors": errors,
+        series = detect_series(alerts)  # 3+ connected cases among this run's links (LNK-05)
+        return ({"alerts": alerts, "series": series, "hotspots": [], "errors": errors,
                  "summary": summarise(alerts, struck, dropped, f"{len(statuses)}/{len(ids)} cases processed")},
                 status)
     if kind == "tip":
