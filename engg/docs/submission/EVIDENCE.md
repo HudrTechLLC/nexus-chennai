@@ -19,7 +19,7 @@ ls output_examples/eval_report.json 2>&1                                        
 PYTHONPATH=services/api python -c "from app.adapters.zetaris import NAMED_QUERIES as N; print(sorted(N))"   # WS1-15 (13 + q_ping when done)
 ls zetaris/10_views.sql 2>&1; grep -ci 'file\|parquet\|csv' zetaris/00_sources.sql                       # WS1-13, WS1-12
 find apps/web/app/console -name page.tsx | sed 's#apps/web/app##' | sort                                 # WS3-06/10/11 (cases, search, fir, series, stations, memory, graph)
-grep -rn '"embed"\|embeddings' services/api/app --include=*.py | grep -v config.py                      # WS2-embed call site
+ls services/api/app/engines/similarity.py 2>&1; grep -rn embed_fallback services/api/app                      # WS2-21: similarity.py present?
 grep -rn "PENDING:" engg/docs/submission/                                                               # what's still open
 ```
 
@@ -83,7 +83,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Nightshift is the only model path; pinned lanes; `meterless/auto` refused | `adapters/nightshift.py::model_for`, `config.FORBIDDEN_MODELS`; `tests/adapters/test_nightshift.py` | ✅ |
 | Lanes: `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b`, `reason` = `nvidia/nemotron-3-ultra-550b-a55b` (Super 120B is 404 for our key) | D-017; `.env.example` | ✅ |
 | `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: text calls work, image calls refused (`no_vision_model`) | D-021 | ⚠️ limitation, never claim visual extraction |
-| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; no call site on main. nexus-2 building similar-MO search per spec E2 (Nemotron embed lane if Nightshift `/v1/embeddings` works, which returned 404 for every model at the time; TF-IDF otherwise) | `[PENDING: WS2-embed]` |
+| Embed lane `nvidia/nemotron-3.5-embed-1b` | **Not claimed** (D-027): Nightshift 1.2.7 has no `/v1/embeddings` route (404 for every model). Similar-MO and text search use TF-IDF + feature vectors in code (spec E2 fallback), traced `embed_fallback`, in `services/api/app/engines/similarity.py` | ❌ model not claimed; fallback code `[PENDING: WS2-21]` |
 | NVIDIA key lives only in Nightshift; the app holds the Nightshift URL + runtime token | `adapters/nightshift.py` docstring; `.env.example` | ✅ |
 
 ## Web (Vercel)

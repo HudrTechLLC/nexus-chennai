@@ -8,7 +8,7 @@ This is the text for the HackOS form's sponsor-technology field. Paste everythin
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
-> - **NVIDIA Embed is not claimed yet.** `LANE_EMBED=nvidia/nemotron-3.5-embed-1b` is configured, but nothing on main calls it. nexus-2 is building similar-MO search per spec E2 (`[PENDING: WS2-embed]`). It is listed in the NVIDIA table below as pending, and it says which backend runs. When it lands, state the backend that actually ran: Nightshift's `/v1/embeddings` returned 404 for every model at the time of writing.
+> - **NVIDIA Embed is not claimed** (D-027). Nightshift 1.2.7 exposes no embeddings route (`/v1/embeddings` returns 404 for every model), so similar-MO and text search use TF-IDF plus feature vectors in code, the spec E2 fallback. The code (`services/api/app/engines/similarity.py`) is `[PENDING: WS2-21]`. Until it is on main, drop the sentence about it below.
 > - **Vision is a limitation, not a claim.** Super VL is listed as configured, and the image refusal is stated.
 > - **The form may have a length limit.** If it does, keep the first paragraph of each section and the evidence lines, and drop the rest.
 
@@ -64,8 +64,8 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 | `fast` | `nvidia/nemotron-3.5-lightning-30b-a3b` | Extractor: modus operandi labels from FIR narratives, statements, tips and news; Sanitiser: public appeal drafts; Briefer: zone briefing prose |
 | `reason` | `nvidia/nemotron-3-ultra-550b-a55b` | Planner: picks and orders Zetaris queries; Linker: one plain reason per factor; Skeptic: the critique that can downgrade or drop a link; Series analyst: dossier notes |
 | `vision` | `nvidia/nemotron-3.5-super-vl-120b-a12b` (configured) | CCTV stills. Nightshift currently refuses image requests (`no_vision_model`). Reported to Meterless. The Extractor falls back to the officer's caption and traces it. No visual result is faked |
-| `embed` | `nvidia/nemotron-3.5-embed-1b` (configured) | Similar-MO search: Nemotron embed lane if available, TF-IDF otherwise `[PENDING: WS2-embed]` |
 
+- **No embedding model is claimed.** Nightshift 1.2.7 exposes no embeddings route, so similar-MO search and text search use TF-IDF and feature vectors computed in code (the spec's fallback), traced as `embed_fallback` `[PENDING: WS2-21]`. The Nemotron embed model is not claimed.
 - **Every trace line names the Nemotron model** that handled the request, and the model Nightshift reports back.
 - **Why Ultra:** the spec planned Nemotron Super 120B for reasoning, but it isn't served to our key, so the reasoning lane runs Ultra 550B.
 - **Numbers come from code.** Models write labels, plans and reasons; any number a model returns is ignored.
