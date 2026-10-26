@@ -11,7 +11,8 @@ export type Appeal = {
   summary: string; looking_for: string[]; images: AppealImage[]; tip_count: number; published_at: string | null;
 };
 
-export type PublicCell = { cell: string; n: number; by_category: Record<string, number>; appeal: boolean };
+/** area: the card panel's label for the hex, only on cells that have cards (0007_13). */
+export type PublicCell = { cell: string; n: number; by_category: Record<string, number>; appeal: boolean; area?: string | null };
 export type PublicMap = { days: number; min_count: number; cells: PublicCell[] };
 
 /** Server-side reads through the anon RPCs; the visitor's browser never contacts Supabase. */

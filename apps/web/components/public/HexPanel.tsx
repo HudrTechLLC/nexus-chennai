@@ -11,6 +11,8 @@ export function HexPanel({ state, hex, error, minCount }: { state: MapState; hex
   const cards = hex?.cards ?? [];
   return (
     <aside
+      id="hex-panel"
+      tabIndex={-1}
       aria-label="Crimes in the selected area"
       className="fixed inset-x-0 bottom-0 z-20 max-h-[60vh] overflow-y-auto rounded-t-2xl border-t border-line bg-surface p-4 shadow-lg
                  md:absolute md:inset-auto md:bottom-3 md:left-3 md:top-3 md:max-h-none md:w-96 md:rounded-xl md:border"
