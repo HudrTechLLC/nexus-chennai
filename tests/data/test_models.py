@@ -197,7 +197,7 @@ def test_evidence_ref_carries_query_and_alert_coverage():
     for f in raw["factors"]:
         if f["factor"] == "weapon":
             f["factor"] = "weapon_tool"
-        for ev in f["evidence"]:
+        for ev in f.get("evidence", []):
             ev.update(query="q_vehicle_trail", query_id="q_8812")
     raw["coverage"] = 0.63
     a = m.LinkAlert.model_validate(raw)
