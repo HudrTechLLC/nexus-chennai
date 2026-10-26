@@ -26,6 +26,19 @@ The source is github.com/Meterless/Meterless at commit `1742dec5`, under Apache-
 | Markovian | Reads a whole crime series in bounded chunks. Only a capped carryover passes between chunks. Logs projected vs actual tokens. | "Build series dossier" on `/console/series/[id]` | `markovian.dossier` |
 | Scout Intent | Routes analyst searches to the right tool. Tip Guard quarantines injection, threats, abuse and spam in public tips, and flags emergencies. | Console search box; tip intake (`/api/public/tips`) | `scout_intent.classify` |
 
+## Stores in Supabase (migration 0005, D-020)
+
+The console reads the engines' state from Supabase under RLS, because the website can't reach the laptop API.
+
+- **Tables:** `wm_entities`, `wm_edges`, `wm_observations`, `hmem_memories` and `hmem_ledger`, all in `public`.
+- **Who reads what:**
+  - analysts, supervisors and admins read the whole graph;
+  - a station officer reads only crimes they can read (`can_read_crime`), plus the edges and entities attached to those crimes;
+  - every police role reads the `hmem_*` tables.
+- **Append-only:** `wm_observations` and `hmem_ledger` refuse UPDATE and DELETE through a trigger, even for the service role.
+- **Writes:** the API writes with the service role through the engines write-through, which is enabled by `ENGINES_PERSIST=supabase`. It is off by default and always off in tests.
+- **Live RLS test:** `tests/engines/test_engines_rls_live.py`, which needs `NEXUS_DB_PASSWORD` read from its file.
+
 ## Tests and evidence
 
 | What | Command | Result |

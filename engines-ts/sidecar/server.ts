@@ -215,8 +215,35 @@ const routes: Record<string, Handler> = {
   },
   "/hmem/feedback": ({ id, kind }) => { hmem.feedback(id, kind); return { ok: true }; },
   "/hmem/ledger": () => ({ entries: hmem.ledger.all() }),
+  "/hmem/records": () => ({
+    records: hmem.store.all().map(({ embedding: _e, ...rest }) => rest),
+  }),
   "/markovian/run": (body) => markovianRun(body),
 };
+
+// Namespaces: each client (x-engines-ns header, default "default") gets its own World Model
+// and H-MEM, so concurrent users (e.g. two lanes' test runs) never see each other's state.
+// Requests are handled one at a time: handlers await, and the active state is swapped per request.
+type NsState = { wm: WorldGlue; hmem: HMEM; lastUsed: number };
+const namespaces = new Map<string, NsState>();
+const MAX_NAMESPACES = 64;
+let queue: Promise<unknown> = Promise.resolve();
+
+function activate(ns: string): NsState {
+  let st = namespaces.get(ns);
+  if (!st) {
+    st = { wm: new WorldGlue(), hmem: new HMEM({ actor: "analyst" }), lastUsed: 0 };
+    namespaces.set(ns, st);
+    if (namespaces.size > MAX_NAMESPACES) {
+      const oldest = [...namespaces.entries()].filter(([k]) => k !== ns).sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
+      if (oldest) namespaces.delete(oldest[0]);
+    }
+  }
+  st.lastUsed = Date.now();
+  wm = st.wm;
+  hmem = st.hmem;
+  return st;
+}
 
 const server = http.createServer(async (req, res) => {
   const send = (code: number, obj: unknown) => {
@@ -228,11 +255,21 @@ const server = http.createServer(async (req, res) => {
   if (!handler) return send(404, { error: `no route ${req.method} ${req.url}` });
   let raw = "";
   for await (const chunk of req) raw += chunk;
-  try {
-    send(200, await handler(raw ? JSON.parse(raw) : {}));
-  } catch (err) {
-    send(400, { error: (err as Error).message });
-  }
+  const ns = String(req.headers["x-engines-ns"] ?? "default").slice(0, 128);
+  const run = queue.then(async () => {
+    const st = activate(ns);
+    try {
+      return { code: 200, body: await handler(raw ? JSON.parse(raw) : {}) };
+    } catch (err) {
+      return { code: 400, body: { error: (err as Error).message } };
+    } finally {
+      st.wm = wm; // reset/open replace the instances; keep them with this namespace
+      st.hmem = hmem;
+    }
+  });
+  queue = run.catch(() => undefined);
+  const out = await run;
+  send(out.code, out.body);
 });
 
 server.listen(PORT, "127.0.0.1", () => console.log(`engines sidecar listening on http://127.0.0.1:${PORT} (${SOURCE})`));

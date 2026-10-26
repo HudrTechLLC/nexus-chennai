@@ -80,3 +80,11 @@ def test_context_returns_shared_entities_first_with_reasons_and_respects_budget(
 def test_write_without_provenance_is_rejected():
     with pytest.raises(ValueError):
         world_model.ingest([{"type": "vehicle", "key": "TN09AB1234"}], source="")
+
+
+def test_sidecar_namespaces_do_not_share_state(engine_backend, monkeypatch):
+    if engine_backend != "sidecar":
+        pytest.skip("sidecar namespaces only")
+    world_model.ingest([{"type": "vehicle", "key": "TN09AB1234"}], "Extractor")
+    monkeypatch.setenv("ENGINES_SIDECAR_NS", "other-client-" + engine_backend + str(id(monkeypatch)))
+    assert world_model.store().entities == {}
