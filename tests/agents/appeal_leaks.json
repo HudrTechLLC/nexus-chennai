@@ -1,12 +1,30 @@
 {
-  "_note": "Shared leak fixture for public appeal text. Checked by app/agents/sanitiser.py (pytest), public.appeal_text_leaks (SQL, 0006_02) and apps/web/lib/appeals.ts (vitest). Keep the three in step.",
+  "_note": "Shared leak fixture for public appeal text. Checked by app/agents/sanitiser.py (pytest), public.appeal_text_leaks (SQL, 0006_02) and apps/web/lib/appeals.ts (vitest). Keep the three in step. The case_leaks block covers per-case checks (0007_08): names and aliases of persons linked to the case, and the case address.",
   "leaky": [
-    {"text": "Bike TN 09 BX 4471 seen near the stop", "kind": "plate"},
-    {"text": "Partial plate TN09??4471", "kind": "plate"},
-    {"text": "Call 9840012345 with information", "kind": "phone or long number"},
-    {"text": "Reported under FIR 1182/2026", "kind": "FIR number"},
-    {"text": "Linked to CHN-AD-2026-001182", "kind": "internal id"},
-    {"text": "Contact PS-ADYAR-J2 directly", "kind": "internal id"}
+    {
+      "text": "Bike TN 09 BX 4471 seen near the stop",
+      "kind": "plate"
+    },
+    {
+      "text": "Partial plate TN09??4471",
+      "kind": "plate"
+    },
+    {
+      "text": "Call 9840012345 with information",
+      "kind": "phone or long number"
+    },
+    {
+      "text": "Reported under FIR 1182/2026",
+      "kind": "FIR number"
+    },
+    {
+      "text": "Linked to CHN-AD-2026-001182",
+      "kind": "internal id"
+    },
+    {
+      "text": "Contact PS-ADYAR-J2 directly",
+      "kind": "internal id"
+    }
   ],
   "clean": [
     "Chain snatching by two riders on a red motorcycle",
@@ -15,5 +33,92 @@
     "Shop CCTV on LB Road between 7:30 and 8:00 pm",
     "Adyar (LB Road area), week 2026-W42, evening",
     "A white Swift Dzire used as a fake cab on the airport road"
-  ]
+  ],
+  "case_leaks": {
+    "_note": "Terms come from the case: each linked person's name, the name without leading initials, each part around ' alias ', and each alias (3+ characters); from the address, the landmark after near/opp/opposite/behind/next to (up to the next comma) and, when the address starts with a door number, the door number plus the street after it (6+ characters). A plain road or locality is NOT a term: the area label names the road on purpose. Whole-word, case-insensitive, whitespace-insensitive.",
+    "persons": [
+      {
+        "name": "B. Karthik",
+        "aliases": [
+          "Sathish"
+        ]
+      },
+      {
+        "name": "Raju alias Pulsar Raju",
+        "aliases": []
+      },
+      {
+        "name": null,
+        "aliases": [
+          "Ox"
+        ]
+      }
+    ],
+    "address": "near Saligramam Bus Depot, Vadapalani",
+    "leaky": [
+      {
+        "text": "Suspect B. Karthik was seen near the stop",
+        "kind": "person name from the case"
+      },
+      {
+        "text": "A man called karthik may have seen it",
+        "kind": "person name from the case"
+      },
+      {
+        "text": "Known locally as SATHISH",
+        "kind": "person name from the case"
+      },
+      {
+        "text": "Raju was riding",
+        "kind": "person name from the case"
+      },
+      {
+        "text": "Ask about Pulsar Raju",
+        "kind": "person name from the case"
+      },
+      {
+        "text": "It happened near Saligramam Bus Depot, Vadapalani",
+        "kind": "place from the case address"
+      },
+      {
+        "text": "CCTV from the Saligramam   bus depot",
+        "kind": "place from the case address"
+      }
+    ],
+    "clean": [
+      "Two riders on a red Pulsar motorcycle",
+      "Karthikeyan Street shop owners may have CCTV",
+      "Vadapalani area, week 2026-W42, evening",
+      "A white ox cart was parked nearby",
+      "Shop CCTV between 7:30 and 8:00 pm"
+    ],
+    "more_addresses": [
+      {
+        "address": "12/4, 1st Cross Street, Kodungaiyur",
+        "leaky": [
+          "Seen outside 12/4, 1st Cross Street"
+        ],
+        "clean": [
+          "Shops on 1st Cross Street, Kodungaiyur may have CCTV"
+        ]
+      },
+      {
+        "address": "LB Road, Adyar",
+        "leaky": [],
+        "clean": [
+          "Adyar (LB Road area)",
+          "Two riders on LB Road, Adyar"
+        ]
+      },
+      {
+        "address": "Velachery Main Road opp. Grand Mall, Velachery",
+        "leaky": [
+          "CCTV at grand mall"
+        ],
+        "clean": [
+          "Velachery (Velachery Main Road area)"
+        ]
+      }
+    ]
+  }
 }
