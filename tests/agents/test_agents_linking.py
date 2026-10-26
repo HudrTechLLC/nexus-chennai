@@ -316,3 +316,18 @@ def test_agents_read_only_through_named_queries():
 
 
 _ = CRIMES  # data shared with fixtures
+
+
+def test_mo_cosine_flag_default_off(monkeypatch):
+    """D-027 trial: engines.similarity.mo_cosine replaces the text cosine only when NEXUS_MO_COSINE is on."""
+    from app.agents.linker import mo_text_cosine
+    from app.engines.similarity import mo_cosine
+    from app.scoring import factors as F
+    monkeypatch.delenv("NEXUS_MO_COSINE", raising=False)
+    assert mo_text_cosine() is None
+    monkeypatch.setenv("NEXUS_MO_COSINE", "1")
+    assert mo_text_cosine() is mo_cosine
+    fa, fb = FEATURES[ADYAR["crime_id"]], FEATURES[VELACHERY["crime_id"]]
+    from app.agents.base import features_from_row
+    a, b = features_from_row(as_row(fa)), features_from_row(as_row(fb))
+    assert F.mo_similarity(a, b, text_cosine=mo_cosine) != F.mo_similarity(a, b)
