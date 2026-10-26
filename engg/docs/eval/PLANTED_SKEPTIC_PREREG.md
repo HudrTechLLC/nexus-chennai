@@ -242,6 +242,9 @@ Owner's hand reading of the stored (400-character) critiques; a single reader. *
 is asked to check these labels.**
 - In **19 of 24** the visible critique names the planted discrepancy.
 - In 5 it doesn't, within the visible text: PS-01c, PS-02b, PS-02c, PS-05a and PS-05b. Some may have been cut off.
+- Borderline: in PS-04a, "Offender count" are the last words before the 400-character cut. It counts as named, but what the model said about it is not visible.
+- Naming a fact is not the same as it causing the verdict. The PS-06 and PS-08 send-backs also cite the 17–18 day gap. PS-08's twin has the same gap and was approved, so there the plant plausibly tipped it.
+- nexus-5 checked the 24 labels independently and agrees with all of them.
 - Of the 19 that name it, **9 were approved anyway** and 10 were sent back. The approvals usually **explain the fact
   away as witness or reporting noise**:
 
