@@ -60,6 +60,93 @@ def chunk_problem(text: str, result: Any, chunk_ids: set[str]) -> str | None:
     return None
 
 
+# ----- dossier display merge (code, no model) ------------------------------------------------------------------
+
+_MONTHS = {m: i for i, m in enumerate("jan feb mar apr may jun jul aug sep oct nov dec".split(), 1)}
+_DATED = re.compile(r"^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\b")
+_YEAR = re.compile(r"\b(20\d\d)\b")
+_TRAILING_CITES = re.compile(r"((?:\s*\[[A-Za-z0-9][A-Za-z0-9_./:-]*\])+)\s*$")
+_MO_LINE = re.compile(r"^(consistent\s+mo|recurring\s+mo|mo)\b", re.IGNORECASE)
+_PSEUDO_HEADING = re.compile(r"^\*\*[^*]+\*\*:?$")
+
+
+def _date_key(body: str) -> tuple[int, int, int] | None:
+    m = _DATED.match(body)
+    if not m or m.group(2).lower() not in _MONTHS:
+        return None
+    year = _YEAR.search(body.split(":", 1)[0]) or _YEAR.search(body)
+    return (int(year.group(1)) if year else 0, _MONTHS[m.group(2).lower()], int(m.group(1)))
+
+
+def merge_dossier_text(text: str) -> str:
+    """One readable dossier from the Markovian chunks' concatenated notes, in code (no model).
+
+    Live (SER-B687C36CFC): each chunk's "Timeline & MO Notes" / "Open Leads" headings repeated, some empty, and dated
+    lines were out of order. The bullets under "## Timeline" are regrouped: dated lines into a date-sorted Timeline,
+    MO statements into "Consistent MO", everything else into "Open leads". A bullet repeated across chunks is kept once
+    with the union of its [id] citations, so every citation survives. Empty sections are dropped. Idempotent.
+    """
+    lines = text.splitlines()
+    if "## Timeline" not in lines:
+        return text
+    start = lines.index("## Timeline")
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    buckets: dict[str, dict[str, tuple[str, list[str]]]] = {"timeline": {}, "mo": {}, "leads": {}}
+
+    def add(bucket: str, body: str) -> None:
+        m = _TRAILING_CITES.search(body)
+        cites = _CITED.findall(m.group(1)) if m else []
+        core = body[: m.start()].rstrip() if m else body.strip()
+        key = re.sub(r"\s+", " ", core).strip().lower()
+        if key in buckets[bucket]:
+            have = buckets[bucket][key][1]
+            have.extend(c for c in cites if c not in have)
+        else:
+            buckets[bucket][key] = (core, list(dict.fromkeys(cites)))
+
+    for raw in lines[start + 1:end]:
+        s = raw.strip()
+        if not s or _PSEUDO_HEADING.match(s):
+            continue
+        body = s[2:].strip() if s[:2] in ("- ", "* ") else s
+        add("timeline" if _date_key(body) else "mo" if _MO_LINE.match(body) else "leads", body)
+
+    def render(bucket: str) -> list[str]:
+        items = list(buckets[bucket].values())
+        if bucket == "timeline":
+            items.sort(key=lambda it: _date_key(it[0]) or (0, 0, 0))
+        return [f"- {core}" + "".join(f" [{c}]" for c in cites) for core, cites in items]
+
+    tail: list[tuple[str, list[str]]] = []
+    for line in lines[end:]:
+        if line.startswith("## "):
+            tail.append((line, []))
+        elif tail and line.strip():
+            tail[-1][1].append(line)
+    # The chunks' own MO statements and leads replace the engine's summary lines for those sections (its MO line is
+    # a tag count, "no recurring MO terms"; its leads are uncited carry-over phrases). Engine lines that cite a
+    # record are kept, so no citation is lost.
+    filled = {"## Consistent MO": render("mo"), "## Open leads": render("leads")}
+    out_tail: list[tuple[str, list[str]]] = []
+    for head, body in tail:
+        mine = filled.pop(head, None)
+        if mine:
+            body = mine + [b for b in body if _CITED.search(b)]
+        out_tail.append((head, body))
+    if filled.get("## Consistent MO"):  # sections the engine did not write at all
+        out_tail.insert(0, ("## Consistent MO", filled["## Consistent MO"]))
+    if filled.get("## Open leads"):
+        out_tail.append(("## Open leads", filled["## Open leads"]))
+
+    out = lines[:start]
+    if buckets["timeline"]:
+        out += ["## Timeline", *render("timeline")]
+    for head, body in out_tail:
+        if body:
+            out += [head, *body]
+    return "\n".join(out)
+
+
 def series_id_for(crime_ids: Sequence[str]) -> str:
     return "SER-" + hashlib.sha1("|".join(sorted(crime_ids)).encode("utf-8")).hexdigest()[:10].upper()
 
@@ -347,6 +434,7 @@ class SeriesAnalyst:
                               engine="markovian", status="ok")
         # model = None when every chunk fell back to the extractive generator (no model wrote any of it).
         model = self.receipts[-1][0] if self.receipts else None
-        return {**out, "series_id": series_id, "record_count": len(recs), "model": model,
+        return {**out, "text": merge_dossier_text(out.get("text") or ""),
+                "series_id": series_id, "record_count": len(recs), "model": model,
                 "receipt_id": self.receipts[-1][1] if self.receipts else None,
                 "receipt_ids": [r for _, r in self.receipts]}
