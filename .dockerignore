@@ -1,0 +1,22 @@
+# Build context for the judge image (Dockerfile) and the compose api/worker services.
+# The Dockerfile copies an explicit list; this keeps secrets and bulky local state out of the context.
+.git
+**/.env
+**/.env.*
+!.env.example
+.secrets
+**/.secrets
+*.pem
+*.key
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+logs
+data/local
+data/generated
+data/out
+data/_truth
+*.duckdb

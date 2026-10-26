@@ -308,7 +308,7 @@ Versions are pinned in `services/api/requirements*.txt` and `apps/web/package.js
 | pytz | 2024.2 | MIT |
 | tzdata | 2025.2 | Apache-2.0 |
 
-**Python, development and tests** (`services/api/requirements-dev.txt`): pytest 8.3.4 (MIT), ruff 0.8.4 (MIT), psycopg 3.2.3 (LGPL-3.0), shapely 2.2.0 (BSD-3-Clause).
+**Python, development and tests** (`services/api/requirements-dev.txt`): pytest 8.3.4 (MIT), ruff 0.8.4 (MIT), psycopg 3.2.3 (LGPL-3.0), shapely 2.2.0 (BSD-3-Clause), pillow 10.4.0 (HPND).
 
 **Web, runtime** (`apps/web/package.json`)
 
@@ -326,10 +326,12 @@ Versions are pinned in `services/api/requirements*.txt` and `apps/web/package.js
 | rehype-slug | 6.0.0 | MIT |
 | github-slugger | 2.0.0 | ISC |
 | yaml | 2.6.1 | ISC |
+| jpeg-js | 0.4.4 | BSD-3-Clause |
+| pngjs | 7.0.0 | MIT |
 | @tailwindcss/typography | 0.5.15 | MIT |
 | server-only | 0.0.1 | MIT |
 
-**Web, development:** typescript 5 (Apache-2.0), eslint 8 and eslint-config-next 14.2.35, tailwindcss 3.4, postcss 8, vitest 2.1.9, @types/node, @types/react, @types/react-dom (all MIT).
+**Web, development:** typescript 5 (Apache-2.0), eslint 8 and eslint-config-next 14.2.35, tailwindcss 3.4, postcss 8, vitest 2.1.9, @types/node, @types/react, @types/react-dom, @types/pngjs 6.0.5 (all MIT).
 
 **Engines sidecar** (`engines-ts/package.json`, development): tsx 4.20.6 (MIT).
 
