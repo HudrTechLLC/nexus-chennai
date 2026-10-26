@@ -23,6 +23,10 @@ export type EvalReport = {
   types: TypeRow[];
   modes: ModeRow[];
   moCosine: string | null;
+  /** From mo_tfidf_trial.table (WS2-21): where the TF-IDF vocabulary came from. */
+  tfidfTable: Record<string, string> | null;
+  /** The report's own "provenance" block (WS2-21), shown as given. */
+  extraProvenance: [string, string][];
   duplicates: { truth_pairs: number; flagged_by_agent: number; flagged_by_baseline: number } | null;
   medianSecondsPerCase: number | null;
   bandText: Record<string, string>;
@@ -74,10 +78,10 @@ export function parseEvalReport(raw: unknown): EvalReport | null {
     types: entries(a.by_crime_type)
       .map(([type, m]) => ({ type, tp: int(m.tp), fp: int(m.fp), fn: int(m.fn), precision: num(m.precision), recall: num(m.recall), f1: num(m.f1) }))
       .sort((x, y) => y.tp + y.fp - (x.tp + x.fp) || x.type.localeCompare(y.type)),
-    modes: entries(raw.mo_cosine_trial).map(([mode, m]) => ({
-      mode, precision: num(m.precision), recall: num(m.recall), tp: num(m.tp), fp: num(m.fp), fn: num(m.fn), alerts: num(m.alerts),
-    })),
+    modes: modeRows(raw),
     moCosine: str(raw.mo_cosine),
+    tfidfTable: isObj(raw.mo_tfidf_trial) && isObj(raw.mo_tfidf_trial.table) ? flat(raw.mo_tfidf_trial.table) : null,
+    extraProvenance: isObj(raw.provenance) ? Object.entries(flat(raw.provenance)) : [],
     duplicates: d ? { truth_pairs: int(d.truth_pairs), flagged_by_agent: int(d.flagged_by_agent), flagged_by_baseline: int(d.flagged_by_baseline) } : null,
     medianSecondsPerCase: isObj(raw.timing) ? num(raw.timing.median_seconds_per_case) : null,
     bandText: Object.fromEntries(
@@ -92,6 +96,31 @@ export function parseEvalReport(raw: unknown): EvalReport | null {
       runId: str(raw.run_id), logFile: str(raw.log_file), truthDir: str(raw.truth_dir),
     },
   };
+}
+
+const modeRow = (mode: string, m: Obj): ModeRow => ({
+  mode, precision: num(m.precision), recall: num(m.recall), tp: num(m.tp), fp: num(m.fp), fn: num(m.fn), alerts: num(m.alerts),
+});
+
+/** off / on from mo_cosine_trial, plus tfidf from mo_tfidf_trial (WS2-21) when present. One row per mode. */
+function modeRows(raw: Obj): ModeRow[] {
+  const rows = entries(raw.mo_cosine_trial).map(([mode, m]) => modeRow(mode, m));
+  const t = isObj(raw.mo_tfidf_trial) ? raw.mo_tfidf_trial : null;
+  for (const [mode, m] of entries(t)) {
+    if (mode === "table" || rows.some((r) => r.mode === mode)) continue;
+    rows.push(modeRow(mode, m));
+  }
+  return rows;
+}
+
+/** One level of key → display string; nested values are shown as compact JSON. */
+function flat(o: Obj): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (v === null || v === undefined || v === "") continue;
+    out[k] = typeof v === "object" ? JSON.stringify(v) : String(v);
+  }
+  return out;
 }
 
 /** 0.8333 → "83.3%"; null → "—". */

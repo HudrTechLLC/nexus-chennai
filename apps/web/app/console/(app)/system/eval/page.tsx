@@ -100,6 +100,11 @@ export default async function EvalPage() {
                   </tbody>
                 </table>
               )}
+              {r.tfidfTable && (
+                <p className="mt-2 break-words text-xs text-muted">
+                  TF-IDF table: {Object.entries(r.tfidfTable).map(([k, v]) => `${k} ${v}`).join(" · ")}
+                </p>
+              )}
             </section>
           </div>
 
@@ -149,6 +154,11 @@ export default async function EvalPage() {
               <Prov k="Trace" v={r.provenance.logFile ?? "—"} mono />
               {r.provenance.truthDir && <Prov k="Ground truth" v={r.provenance.truthDir} mono />}
             </dl>
+            {r.extraProvenance.length > 0 && (
+              <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                {r.extraProvenance.map(([k, v]) => <Prov key={k} k={k.replaceAll("_", " ")} v={v} mono />)}
+              </dl>
+            )}
             {r.provenance.method && <p className="mt-3 text-xs text-muted">Method: {r.provenance.method}</p>}
             {(r.provenance.withoutFeatures.length > 0 || r.provenance.featuresWithoutReceipt.length > 0) && (
               <details className="mt-3 text-xs">

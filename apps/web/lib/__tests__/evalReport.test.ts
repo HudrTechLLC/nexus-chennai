@@ -71,3 +71,22 @@ describe("formatting", () => {
     expect(beatsText("precision", null)).toMatch(/not comparable/);
   });
 });
+
+describe("WS2-21 additions (optional)", () => {
+  it("adds the tfidf mode and the report's provenance block", () => {
+    const raw = clone();
+    raw.mo_tfidf_trial = { tfidf: { precision: 0.9, recall: 0.8, tp: 7, fp: 1, fn: 1, alerts: 8 }, off: raw.mo_cosine_trial.off,
+      table: { source: "crime_features", docs: 1200, extractor_versions: ["mo-v3", "mo-v4"], built_at: "2026-10-26T12:00:00Z" } };
+    raw.provenance = { sample_mode: true, mo_v3: 900, mo_v4: 300, console_firs_excluded: 2 };
+    const r = parseEvalReport(raw)!;
+    expect(r.modes.map((m) => m.mode)).toEqual(["off", "on", "tfidf"]); // off not duplicated
+    expect(r.modes[2].precision).toBe(0.9);
+    expect(r.tfidfTable).toMatchObject({ source: "crime_features", docs: "1200", extractor_versions: '["mo-v3","mo-v4"]' });
+    expect(r.extraProvenance).toContainEqual(["mo_v4", "300"]);
+  });
+  it("leaves them empty when absent", () => {
+    const r = parseEvalReport(sample)!;
+    expect(r.tfidfTable).toBeNull();
+    expect(r.extraProvenance).toEqual([]);
+  });
+});
