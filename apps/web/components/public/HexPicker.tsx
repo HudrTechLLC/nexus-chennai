@@ -94,22 +94,26 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     <div className="space-y-2">
       <PlaceSearch onPick={pickPlace} />
       <div ref={el} className="h-64 w-full overflow-hidden rounded-lg border border-line" />
-      <div role="radiogroup" aria-label="Area size" className="flex flex-wrap gap-2">
+      {/* Toggle buttons (aria-pressed), not a radiogroup: native Tab + Enter/Space work with no custom key handling. */}
+      <div role="group" aria-label="Area size" className="flex flex-wrap gap-2">
         {AREA_SIZES.map((s) => (
-          <button key={s.res} type="button" role="radio" aria-checked={res === s.res} onClick={() => setRes(s.res)}
+          <button key={s.res} type="button" aria-pressed={res === s.res} onClick={() => setRes(s.res)}
             className={`rounded-full border px-3 py-1 text-xs ${res === s.res ? "border-signal bg-signal-soft" : "border-line"}`}>
             {s.label} <span className="text-muted">{s.km2}</span>
           </button>
         ))}
       </div>
-      {hint && (
-        <p className="text-xs">
-          Zoomed in. Choose {AREA_SIZES.find((s) => s.res === hint)?.label} for a tighter area?{" "}
-          <button type="button" className="underline" onClick={() => setRes(hint)}>Use {AREA_SIZES.find((s) => s.res === hint)?.label.toLowerCase()}</button>
-          <button type="button" className="ml-2 text-muted underline" onClick={() => setHint(null)}>No thanks</button>
-        </p>
-      )}
-      <p className="text-xs text-muted">
+      {/* Always mounted, so screen readers announce the hint when it appears (a live region added later is often missed). */}
+      <div aria-live="polite" data-testid="area-hint">
+        {hint && (
+          <p className="text-xs">
+            Zoomed in. Choose {AREA_SIZES.find((s) => s.res === hint)?.label} for a tighter area?{" "}
+            <button type="button" className="underline" onClick={() => setRes(hint)}>Use {AREA_SIZES.find((s) => s.res === hint)?.label.toLowerCase()}</button>
+            <button type="button" className="ml-2 text-muted underline" onClick={() => setHint(null)}>No thanks</button>
+          </p>
+        )}
+      </div>
+      <p className="text-xs text-muted" aria-live="polite">
         {cell ? "Area chosen. We keep only this small area, not an exact point." : "Search a place or tap the map near where it happened. Optional."}
         {cell && <button type="button" className="ml-2 underline" onClick={() => { point.current = null; onChange(null); }}>clear</button>}
       </p>
@@ -153,6 +157,7 @@ function PlaceSearch({ onPick }: { onPick: (s: PlaceSuggestion) => void }) {
   return (
     <div className="relative">
       <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a street, landmark or area"
+        aria-label="Search for a place near where it happened"
         role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list" autoComplete="off" maxLength={100}
         aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
         onKeyDown={(e) => {
