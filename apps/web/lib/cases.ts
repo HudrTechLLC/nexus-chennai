@@ -138,6 +138,33 @@ export function dayRange(from: string | null, to: string | null, offset = "+05:3
   return { gte, lt };
 }
 
+// =====================
+// Case diary and status (CAP-04, CAP-01)
+// =====================
+
+/** Case diary entry types (spec CAP-04), plus visit and note for routine entries. */
+export const DIARY_KINDS = ["lead", "arrest", "recovery", "forensic", "interrogation", "court", "visit", "note"] as const;
+export type DiaryKind = (typeof DIARY_KINDS)[number];
+export const DIARY_MAX = 2000;
+
+/** Null when the entry can be saved, else the reason. `at` is a city-time datetime-local value or empty (now). */
+export function validateDiary(e: { kind: string; text: string; at: string }, now = new Date(), toIso: (local: string) => string | null): string | null {
+  if (!(DIARY_KINDS as readonly string[]).includes(e.kind)) return "Choose the entry type.";
+  if (!e.text.trim()) return "Write the entry.";
+  if (e.text.length > DIARY_MAX) return `Keep it under ${DIARY_MAX} characters.`;
+  if (e.at) {
+    const iso = toIso(e.at);
+    if (!iso) return "Enter a valid date and time.";
+    if (Date.parse(iso) > now.getTime() + 60_000) return "The entry cannot be in the future.";
+  }
+  return null;
+}
+
+/** Status changes an officer may make; "registered" is only the state a new FIR starts in. */
+export function canSetStatus(from: string, to: string): boolean {
+  return from !== to && (CASE_STATUSES as readonly string[]).includes(to) && to !== "registered";
+}
+
 /** Mirrors public.can_write_crime (0002): admin and supervisor anywhere, a station officer on their own station. */
 export function canWriteCase(role: string | null | undefined, ownStation: string | null | undefined, caseStation: string): boolean {
   if (role === "admin" || role === "supervisor") return true;

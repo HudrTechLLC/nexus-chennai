@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  buildTimeline, canWriteCase, listPlace, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText, reviewFormValues,
+  buildTimeline, canSetStatus, canWriteCase, casesHref, dayRange, describe as describeObj, listPlace, maskPii, moCorrections, moRows, moToText, reviewFormValues, validateDiary,
   normaliseFir, normalisePlate, parseCaseFilters, plateIlike, plateMatches,
 } from "../cases";
 
@@ -138,5 +138,28 @@ describe("listPlace (J5)", () => {
   it("shows the ward, never an address", () => {
     expect(listPlace(176)).toBe("ward 176");
     expect(listPlace(null)).toBe("—");
+  });
+});
+
+describe("case diary and status", () => {
+  const toIso = (l: string) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(l) ? new Date(`${l}:00+05:30`).toISOString() : null);
+  const now = new Date("2026-10-26T10:00:00Z");
+  it("accepts a valid diary entry, with or without a time", () => {
+    expect(validateDiary({ kind: "lead", text: "Pawn shop on LB Road has a matching chain.", at: "" }, now, toIso)).toBeNull();
+    expect(validateDiary({ kind: "arrest", text: "Suspect detained.", at: "2026-10-26T14:00" }, now, toIso)).toBeNull();
+  });
+  it("rejects unknown types, empty or long text, bad and future times", () => {
+    expect(validateDiary({ kind: "gossip", text: "x", at: "" }, now, toIso)).toMatch(/type/);
+    expect(validateDiary({ kind: "note", text: "  ", at: "" }, now, toIso)).toMatch(/Write/);
+    expect(validateDiary({ kind: "note", text: "x".repeat(2001), at: "" }, now, toIso)).toMatch(/under/);
+    expect(validateDiary({ kind: "note", text: "x", at: "26/10/2026" }, now, toIso)).toMatch(/valid/);
+    expect(validateDiary({ kind: "note", text: "x", at: "2026-10-27T10:00" }, now, toIso)).toMatch(/future/);
+  });
+  it("allows moving a case on, never back to registered or to an unknown status", () => {
+    expect(canSetStatus("registered", "under_investigation")).toBe(true);
+    expect(canSetStatus("under_investigation", "charge_sheeted")).toBe(true);
+    expect(canSetStatus("closed", "registered")).toBe(false);
+    expect(canSetStatus("closed", "closed")).toBe(false);
+    expect(canSetStatus("closed", "solved")).toBe(false);
   });
 });
