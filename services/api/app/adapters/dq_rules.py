@@ -33,8 +33,13 @@ COLUMNS = ("crime_id", "rule", "other_id", "detail")
 # Live source for the crime-level rules: the unified crime view (nexus-1's 10_views.sql, live), so legacy rows
 # take part in cross-source duplicates and unmapped_section.
 SPARK_VIEW = "nexus.v_crime_unified"
-SPARK = {"epoch": "unix_timestamp({x})", "str": "STRING", "view": SPARK_VIEW}
-DUCK = {"epoch": "epoch({x})", "str": "VARCHAR", "view": "v_crime_unified"}
+# Second side of the duplicate self-join. Zetaris cannot reference one schema-store view twice in a query
+# (MISSING_ATTRIBUTES.RESOLVED_ATTRIBUTE_APPEAR_IN_OPERATION, whatever the shape), so live the other record
+# comes from sb.crimes, the system of record: a duplicate is any unified record that matches a record there.
+# Two legacy-only records duplicating each other are not caught live (none are planted; _truth's 15 are all
+# sb.crimes pairs). The DuckDB twin has no such limit and joins the view to itself.
+SPARK = {"epoch": "unix_timestamp({x})", "str": "STRING", "view": SPARK_VIEW, "dup_side": "sb.crimes"}
+DUCK = {"epoch": "epoch({x})", "str": "VARCHAR", "view": "v_crime_unified", "dup_side": "v_crime_unified"}
 
 
 def city_bounds(city: dict[str, Any]) -> dict[str, float]:
@@ -49,16 +54,19 @@ def rule_sql(rule: str, d: dict[str, str], bounds: dict[str, float]) -> str:
         return d["epoch"].format(x=x)
 
     if rule == "duplicate_fir":
-        gap = f"abs({ep('a.occurred_from')} - {ep('b.occurred_from')})"
+        # The other record, as a renamed projection of d["dup_side"] (see SPARK above).
+        b_side = (f"(SELECT crime_id AS b_id, source AS b_source, station_id AS b_station, category AS b_category, "
+                  f"occurred_from AS b_from, lat AS b_lat, lon AS b_lon FROM {d['dup_side']})")
+        gap = f"abs({ep('a.occurred_from')} - {ep('b.b_from')})"
         return (
-            f"SELECT a.crime_id AS crime_id, 'duplicate_fir' AS rule, b.crime_id AS other_id, "
+            f"SELECT a.crime_id AS crime_id, 'duplicate_fir' AS rule, b.b_id AS other_id, "
             f"concat('same ', a.category, ' within ', CAST(CAST({gap} / 60 AS INT) AS {s}), ' min and ', "
-            f"CAST(CAST(greatest(abs(a.lat - b.lat), abs(a.lon - b.lon)) * 111000 AS INT) AS {s}), "
-            f"' m, filed at ', coalesce(b.station_id, '?'), ' via ', b.source) AS detail "
-            f"FROM {v} a JOIN {v} b ON a.category = b.category AND a.crime_id <> b.crime_id "
+            f"CAST(CAST(greatest(abs(a.lat - b.b_lat), abs(a.lon - b.b_lon)) * 111000 AS INT) AS {s}), "
+            f"' m, filed at ', coalesce(b.b_station, '?'), ' via ', b.b_source) AS detail "
+            f"FROM {v} a JOIN {b_side} b ON a.category = b.b_category AND a.crime_id <> b.b_id "
             f"AND {gap} <= {DUP_WINDOW_MIN * 60} "
-            f"AND abs(a.lat - b.lat) <= {DUP_MAX_DEG} AND abs(a.lon - b.lon) <= {DUP_MAX_DEG} "
-            f"AND (coalesce(a.station_id, '') <> coalesce(b.station_id, '') OR a.source <> b.source)"
+            f"AND abs(a.lat - b.b_lat) <= {DUP_MAX_DEG} AND abs(a.lon - b.b_lon) <= {DUP_MAX_DEG} "
+            f"AND (coalesce(a.station_id, '') <> coalesce(b.b_station, '') OR a.source <> b.b_source)"
         )
     if rule == "bad_geo":
         return (
