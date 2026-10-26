@@ -1,0 +1,82 @@
+---
+tags: [nexus, deliverables]
+---
+
+# Sponsor technology explanation: final draft (WS5-04)
+
+This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `c686f0c` (rechecked at `a97f1c8`: no change). Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
+Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
+
+> **Notes for the chief, not form text:**
+> - **NVIDIA Embed is not claimed.** `LANE_EMBED=nvidia/nemotron-3.5-embed-1b` is configured, but nothing in `services/api/app` calls the embed lane. Add it only if a feature that uses it lands with a test.
+> - **Vision is a limitation, not a claim.** Super VL is listed as configured, and the image refusal is stated.
+> - **The form may have a length limit.** If it does, keep the first paragraph of each section and the evidence lines, and drop the rest.
+
+---
+
+## Zetaris: the data layer
+
+Nexus never builds a central warehouse. Every crime fact an agent reads comes through **Zetaris**, from the source that holds it.
+
+- **Sources federated today:**
+  - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 4 datasource views where JDBC can't map a type.
+  - **Live REST feeds** for news and social posts, registered as Lightning REST tables, with the views `news_items`, `social_posts` and `v_news_mentions` over them.
+  - **CSV and Parquet file sources** (legacy station exports, ANPR reads, 112 calls) in Zetaris's internal file store: `[PENDING: WS1-12]`.
+- **Governed access.** Agents can run only registered *named queries*, through one adapter (`services/api/app/adapters/zetaris.py`). Every query id goes into the trace and into the alert's evidence. Live today, each with Lightning SQL and a DuckDB twin for sample mode:
+  - `q_case`: one case with its vehicles, statements, evidence and forensics;
+  - `q_candidates`: blocking, i.e. same-category cases within a distance and time window;
+  - `q_features`: extracted MO features;
+  - `q_dq_flags`: data-quality flags;
+  - `q_news`: news that mentions a case's place;
+  - `q_hex_counts`: counts per H3 cell, for the hotspot test.
+  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context`, `q_search` and `q_station_matrix` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
+- **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
+- **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
+- **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
+
+## Meterless engines: all four, each in a feature, each with a passing test
+
+| Engine | Feature it powers | Test | Result |
+|---|---|---|---|
+| **World Model** | One canonical entity per plate, person, phone, place and FIR, with stable ids and provenance; context for the Linker and Skeptic | Official Meterless conformance suite, unchanged, against the vendored reference; plus Nexus feature tests | **8/8** |
+| **H-MEM** | Analyst approvals and rejections become memories that shift a similar pair's score by at most ±0.08 ("memory applied" on the alert), with an append-only trust ledger | Official conformance suite; plus feature tests | **13/13** |
+| **Markovian** | Series dossier: reads a whole series in bounded chunks with a capped carryover; logs projected vs actual tokens | Official conformance suite; plus feature tests | **8/8** |
+| **Scout Intent** | Routes analyst searches; **Tip Guard** screens every public tip for injection, threats, abuse and spam before any agent reads it, and flags emergencies | 120 fixtures, plus a 40-item held-out set written after tuning | Route accuracy **1.000**; injections quarantined **18/18**; emergencies 8/8; 0 false quarantines. Held-out: route accuracy **0.950**, injections **7/7** |
+
+- **How they run.** World Model, H-MEM and Markovian are the official TypeScript references, vendored unmodified from github.com/Meterless/Meterless @ `1742dec5` (Apache-2.0). They are served to the Python agents by a small local sidecar, so the official conformance suites run unchanged. Scout Intent has no runnable reference, so Nexus implements it from the Meterless Scout spec.
+- **Ports.** Python ports of the three references are the default in-process backend, and a parity test checks that both backends agree.
+- **CI.** CI runs the conformance suites and the feature tests on both backends on every pull request.
+- **Persistence.** Engine state can be written to Supabase (`wm_*` and `hmem_*` tables, ledger append-only), so the police console shows it.
+- **Evidence files:** `logs/conformance_world_model.txt`, `logs/conformance_hmem.txt`, `logs/conformance_markovian.txt`, `logs/feature_scout_intent.txt`.
+
+## Meterless Nightshift: the primary AI provider
+
+- **Every model call in the product goes to Nightshift**, through one adapter (`services/api/app/adapters/nightshift.py`). It uses Nightshift's OpenAI-compatible `/v1/chat/completions` with the runtime token and the `meterless-app` / `meterless-scope` headers.
+- **The NVIDIA key lives only in Nightshift.** The app holds only the Nightshift URL and the runtime token, which it can read from the token file Nightshift writes itself.
+- **Pinned lanes, never `meterless/auto`.** The adapter refuses an unpinned or auto model. Each agent role uses a fixed lane.
+- **Every call is traced:** the lane, the pinned model, the model Nightshift reports back, a receipt id (a Meterless receipt header if present, otherwise the response id), the latency and the status. The trace goes to `logs/trace-<run_id>.jsonl`, to stdout and to the console's trace viewer.
+- **Failures are honest.** Transport errors and 5xx responses are retried, up to 3 attempts with backoff. After that, the agent degrades to a traced code-only path. Sample mode replays output recorded from live Nightshift calls, labelled `replayed`. It never invents an answer.
+
+## NVIDIA Nemotron: where it contributes
+
+| Lane | Model (pinned, through Nightshift) | Job in Nexus |
+|---|---|---|
+| `fast` | `nvidia/nemotron-3.5-lightning-30b-a3b` | Extractor: modus operandi labels from FIR narratives, statements, tips and news; Sanitiser: public appeal drafts; Briefer: zone briefing prose |
+| `reason` | `nvidia/nemotron-3-ultra-550b-a55b` | Planner: picks and orders Zetaris queries; Linker: one plain reason per factor; Skeptic: the critique that can downgrade or drop a link; Series analyst: dossier notes |
+| `vision` | `nvidia/nemotron-3.5-super-vl-120b-a12b` (configured) | CCTV stills. Nightshift currently refuses image requests (`no_vision_model`). Reported to Meterless. The Extractor falls back to the officer's caption and traces it. No visual result is faked |
+
+- **Every trace line names the Nemotron model** that handled the request, and the model Nightshift reports back.
+- **Why Ultra:** the spec planned Nemotron Super 120B for reasoning, but it isn't served to our key, so the reasoning lane runs Ultra 550B.
+- **Numbers come from code.** Models write labels, plans and reasons; any number a model returns is ignored.
+
+## Cursor
+
+Not used. Nexus was built with Claude Code as a development tool. Claude Code is not in the product's request path.
+
+## What was unique about our use of the sponsor technology
+
+1. **The data layer is also the fact-checker.** The Skeptic doesn't trust the Linker. It re-runs Zetaris named queries itself, strikes any factor its own rows don't support, and only then lets a link reach a human. Every surviving reason carries the Zetaris query id and the row behind it.
+2. **Human decisions change the next score.** Rejected links stay visible to every police role. Through H-MEM, a rejection ("same street, different entry method") lowers the score of the next similar pair, within a hard ±0.08 bound, and the alert says "memory applied". Each step is in a trust ledger.
+3. **The public can help without steering the system.** Scout Intent screens every anonymous tip before any agent reads it, and fails closed. Zetaris sees tips only through a safe-column view.
+4. **The official engines run unchanged.** The Meterless references are vendored unmodified and pass their own conformance suites, which CI re-runs on every pull request alongside our feature tests.
+5. **Every model call is accountable.** Pinned Nemotron lanes through Nightshift, with the model and receipt logged per call, mean a judge can see which model wrote which sentence of an alert.
