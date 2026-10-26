@@ -49,10 +49,12 @@ def test_every_query_with_parameters_has_an_input():
     assert set(NAMED_QUERIES) - {"q_ping", "q_news"} <= set(INPUTS)
 
 
-@pytest.mark.xfail(strict=True, reason="WS1-16 feeds not registered (nexus.v_news_mentions); remove in the feeds PR")
 def test_q_news_is_live(client):
+    # WS1-16 feeds registered 2026-10-26 (40_feeds #3-#7). Zetaris calls this API's /mock-feeds, so the API must
+    # be up on :8000. Live rows equal the sample slice for the judge cases.
     res = client.named("q_news", agent="parity", crime_id=HERO)
     assert res.source == "zetaris"
+    assert [r["article_id"] for r in res.dicts()] == [f"NEWS-{HERO}"]
 
 
 @pytest.mark.parametrize("name", sorted(INPUTS))
