@@ -447,6 +447,26 @@ def test_label_supported_rules():
     assert label_supported(None, DOOR_BREAK) and label_supported("gold_jewellery_and_cash", DOOR_BREAK)
 
 
+# CHN-VL-2026-001221 (live, 2026-10-26): the text names window grilles only to say they were intact, and the
+# Extractor's "rear_window_grille_cut" passed the check on those words. A negated clause supports nothing.
+BACK_DOOR = ("The back door had been forced open with a crowbar near the latch, and the wooden frame was "
+             "splintered. A laptop and silver articles were missing from the hall. The front door and all "
+             "window grilles were intact. A neighbour saw one man carrying a bag towards the main road.")
+
+
+def test_a_negated_mention_does_not_support_a_label():
+    assert not label_supported("rear_window_grille_cut", BACK_DOOR)
+    assert label_supported("back_door_forced_with_crowbar", BACK_DOOR)
+    assert label_supported("laptop_and_silver_articles", BACK_DOOR)
+    assert label_supported("on_foot_carrying_bag", BACK_DOOR)
+    for neg in ("The windows were not touched.", "No window was broken.", "The grille wasn't cut.",
+                "They left without breaking any window.", "The window was undamaged."):
+        assert not label_supported("window_grille_cut", neg), neg
+    # Negation stays inside its own clause: a later clause still counts.
+    assert label_supported("window_grille_cut", "The door was intact, but the window grille was cut.")
+    assert not label_supported("two_wheeler_from_behind", "No vehicle was seen; the man ran off on foot.")
+
+
 def _house(narrative):
     return crime_from_row(as_row({**ADYAR, "category": "house_break", "sub_type": "night_house_break",
                                   "narrative": narrative, "vehicles": []}))
