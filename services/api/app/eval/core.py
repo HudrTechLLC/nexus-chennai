@@ -33,6 +33,7 @@ from ..agents.planner import Planner, default_plan
 from ..scoring import WEIGHTS_VERSION, baseline_link
 
 POSITIVE_LABELS = frozenset({"series", "vehicle_chain", "offender_return"})
+FEATURE_BATCH = 100  # crime ids per q_features call when prefetching candidates
 
 
 def key(a: str, b: str) -> tuple[str, str]:
@@ -142,6 +143,30 @@ class Evaluator:
         frows, _ = self.deps.query("q_features", agent="Eval", ids=cid)
         return crime_from_row(rows[0]), (features_from_row(frows[0]) if frows else None)
 
+    def _prefetch(self, ids: Iterable[str], cache: dict[str, tuple]) -> None:
+        """Fill the cache for many crimes in a few round trips: q_cases (25 per call) and q_features (100 per
+        call), instead of q_case + q_features per candidate (about 2.4 s each live). Same rows, same parsing
+        as _case; a crime missing from q_cases is cached as (None, None), as _case would."""
+        todo = [i for i in dict.fromkeys(ids) if i and i not in cache]
+        if not todo:
+            return
+        from ..adapters.zetaris_queries_n2 import cases_params
+
+        cases: dict[str, dict[str, Any]] = {}
+        for params in cases_params(todo):
+            rows, _ = self.deps.query("q_cases", agent="Eval", **params)
+            cases.update({r["crime_id"]: r for r in rows})
+        feats: dict[str, dict[str, Any]] = {}
+        have = [i for i in todo if i in cases]
+        for start in range(0, len(have), FEATURE_BATCH):
+            rows, _ = self.deps.query("q_features", agent="Eval", ids=",".join(have[start:start + FEATURE_BATCH]))
+            for r in rows:
+                feats.setdefault(r["crime_id"], r)
+        for i in todo:
+            row = cases.get(i)
+            cache[i] = ((crime_from_row(row), features_from_row(feats[i]) if i in feats else None)
+                        if row is not None else (None, None))
+
     def evaluate_case(self, cid: str, cache: dict[str, tuple]) -> tuple[list[Predicted], list[tuple[str, str]], float]:
         started = time.perf_counter()
         if cid not in cache:
@@ -152,6 +177,9 @@ class Evaluator:
         from ..agents.planner import Plan
         support = self.planner.execute(Plan(default_plan(case, feats), 1, "default"))
         cand_rows = (support.get("q_candidates") or {}).get("rows") or []
+        self._prefetch((r.get("crime_id") for r in cand_rows
+                        if r.get("crime_id") and r.get("crime_id") != cid and r.get("crime_id") not in self.exclude),
+                       cache)
         cands = []
         for r in cand_rows:
             b = r.get("crime_id")
