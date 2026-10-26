@@ -50,6 +50,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - "Every station sees only its own cases."
   - A chain-snatching gang works Adyar on Monday and Velachery on Friday: two stations each file one robbery, and nobody connects them.
   - The evidence is fragmented too: case files, legacy station exports, ANPR cameras, 112 calls, tips, news.
+  - **What linking finds (live demo data, synthetic):** one proposed series, "Red two-wheeler chain snatchings · 3 stations": 9 cases across Adyar, Thiruvanmiyur and Velachery. Its top pair (Adyar ↔ Velachery) shares a partial plate and the same red Bajaj Pulsar 150, high 0.789, waiting for an analyst. Say "proposed", never "caught".
 - **Users:** crime analysts (find and decide links), station officers (capture cases, act on alerts), supervisors, and the public (send tips safely).
 - **Numbers (synthetic city):** 14,000 FIRs over 24 months across 70 stations, with 30 planted series, decoys and duplicates (`cities/chennai/generator/`). Say "synthetic" on the slide.
 - **Visual:** two station icons with the same red motorcycle, no line between them.
@@ -136,6 +137,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 11 · Results
 
 - **On slide:** precision and recall on the planted truth (60 cases), from `output_examples/eval_report.json`: **Nexus 0.59 / 0.86 (F1 0.70) vs rules-only 0.09 / 0.30 (F1 0.13)**. HIGH alerts 10 of 10 correct; MEDIUM 56%, which is why an analyst decides every alert. No model calls in the eval. Footnote: 13 of 60 cases had model features.
+  - **What's new compared with established linkage:** established systems rely on structured case forms and analysts comparing cases by hand. Nexus reads sources in place through Zetaris, cites the query and row behind every factor, lets a Skeptic send back or drop a pair, feeds screened public tips back as corroboration, and learns from analyst decisions within ±0.08. Don't name or characterise any specific outside system on the slide.
 - **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.789**, coverage 0.72, pending until it is decided on camera, with five factors (MO 0.885, vehicle 0.85 on a partial plate, suspect 1, target 1, space–time 0.328). nexus-3 DB read after the re-run, 26 Oct 23:02.
 - **Judge-path result (confirmed @ `de8e666`; label it "fresh clone, sample mode"):** from a fresh clone with no credentials, the hero case gets **3 cross-station links, 2 of them high** (Adyar ↔ Thiruvanmiyur 0.819, Adyar ↔ Velachery 0.789), and a 3-station series. Use this line even if the eval table doesn't land.
 - **Also:** `/run` takes about 7–12 s per example on replay (sample mode); the live recordings took 4–17 min each, because the reasoning lane is Nemotron Ultra 550B; tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.

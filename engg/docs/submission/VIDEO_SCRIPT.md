@@ -52,6 +52,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 6. **Open the Pulse Map at least 30 s before recording segment 1** (it took ~25 s to load in nexus-4's dry run).
 7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
 8. **Segment 3 needs a real `vision_unavailable` trace step.** It comes only from a live FIR filed with a CCTV still (nexus-3 / nexus-5 are producing one). Note its `run_id`. If there is no such trace when you record, cut the CCTV-still sentence from the segment 3 narration.
+9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. Rehearse on a **different** series in dry run #2, so the rehearsal doesn't create the one you film. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
 
 ## Script
 
@@ -64,14 +65,14 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   > Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 - **Check no secrets visible:** console header shows the demo user only. No other tabs in frame.
 
-### 2 · How it's built · 0:18–0:40 (22 s, ~52 words)
+### 2 · How it's built · 0:18–0:35 (17 s, ~41 words)
 
 - **Screen:** architecture diagram (`engg/docs/diagrams/c1-layers.svg`), with each layer highlighted as named.
 - **Narration:**
-  > Case files live in Supabase, legacy exports and ANPR reads in files, weather in a live feed. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+  > Case files, legacy exports, ANPR reads and live feeds stay where they are. Zetaris federates them, and agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give agents memory.
 - **Check no secrets visible:** a static diagram. Nothing to check beyond desktop notifications.
 
-### 3 · A new case arrives · 0:40–1:05 (25 s, ~60 words)
+### 3 · A new case arrives · 0:35–1:00 (25 s, ~60 words)
 
 - **Screen:**
   - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
@@ -83,7 +84,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - no shell history with `env`, `echo $…` or token paths being read;
   - the trace viewer shows the demo user.
 
-### 4 · Zetaris, live · 1:05–1:25 (20 s, ~44 words)
+### 4 · Zetaris, live · 1:00–1:20 (20 s, ~44 words)
 
 - **Screen:** Zetaris UI (`localhost:3000`) running the SQL of `q_candidates` for the Adyar case; the result grid appears with candidate cases from other stations. The registry SQL has `:crime_id` / `:days` / `:ring` placeholders and won't run raw. Print the rendered query and paste that, using the `days` / `ring` the Planner used in the recorded run's trace (14 / 5 shown here):
   ```bash
@@ -96,7 +97,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - crop the browser URL bar;
   - the connection panel must not show the Supabase pooler password.
 
-### 5 · One real Nightshift request · 1:25–1:45 (20 s, ~46 words)
+### 5 · One real Nightshift request · 1:20–1:40 (20 s, ~46 words)
 
 - **Screen:** trace viewer `/console/system/trace/run_da0092da` (sign in as the **demo admin**: system pages are admin-only), step #49 expanded: Skeptic `model_call` on lane `reason`, model `nvidia/nemotron-3-ultra-550b-a55b`, receipt `chatcmpl-…`, status `ok` (**not** `replayed`). This one trace serves segments 5 and 6.
 - **Narration:**
@@ -105,14 +106,14 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - **do not open Nightshift's own Console or Providers tabs for this shot**; the trace viewer is enough;
   - make sure the receipt id isn't mistaken for a token: it's a request id, which is fine to show.
 
-### 6 · The Skeptic drops a false link · 1:45–2:15 (30 s, ~70 words)
+### 6 · The Skeptic drops a false link · 1:40–2:10 (30 s, ~70 words)
 
 - **Screen:** same trace, steps #45–#50. #45 is the Linker's reason (CMBT area, close in time and space, two thin males). #46–#48 are the Skeptic's own Zetaris queries (`via=zetaris`). #50 is **drop · rejected · 0.69**, with its reason: age bands differ, different crime categories, no vehicle or MO overlap. No alert is written for that pair. The line shows `struck=[]`; don't zoom on it and don't say "strike".
 - **Narration:**
   > The Linker scores each pair on nine factors, in code. Here, two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries and disagrees. The ages don't match, one is a shop theft and one a two-wheeler theft, and nothing else overlaps. It drops the link, and no alert is written.
 - **Check no secrets visible:** the trace summaries are redacted by design (D-025). Scan the expanded rows for any key-shaped string anyway.
 
-### 7 · The analyst decides, and H-MEM learns · 2:15–2:50 (35 s, ~80 words)
+### 7 · The analyst decides, and H-MEM learns · 2:10–2:45 (35 s, ~80 words)
 
 - **Screen:**
   - the alert inbox (`/console/alerts`), then click the hero card **directly**: LA-2026-E38C6B38B865, Adyar–Velachery. In the dry run it was the **3rd card by Score**, not the first, and some other Red Pulsar cards showed "model rationale unavailable", so don't open those. Then the alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
@@ -125,11 +126,12 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - the console shows the demo analyst's name only;
   - if you show the ledger file, use a terminal with no env output above it.
 
-### 8 · The series on the map · 2:50–3:12 (22 s, ~50 words)
+### 8 · The series on the map, and a task force · 2:45–3:12 (27 s, ~64 words)
 
 - **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order. **Widen the scrubber window so every member shows** before playing. The series is labelled on screen **"Red two-wheeler chain snatchings · 3 stations"** (9 cases), not "Red Pulsar Duo". The narration says "this series" and doesn't name it. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
+- **Then, live (on main: #154, #178):** on the series, the **analyst** clicks *Propose task force*; cut (off camera: sign in as the **supervisor**); the supervisor approves it on `/console/taskforces`. This creates the task force on camera. **No task force exists beforehand** (none is seeded), and this does **not** decide the hero alert, which stays its own moment in segment 7.
 - **Narration:**
-  > Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
+  > Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier. From the series, an analyst proposes a joint task force, and a supervisor approves it.
 - **Check no secrets visible:** the map tiles carry no key in view; crop the URL bar (a MapTiler key can sit in tile URLs in devtools, so keep devtools closed).
 
 ### 9 · Close · 3:12–3:30 (18 s, ~42 words)
@@ -138,6 +140,17 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 - **Narration:**
   > Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what the data can't support, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
 - **Check no secrets visible:** a static card.
+
+## Swap-in shots once their features merge (no extra time)
+
+Each replaces part of an existing segment's screen; the narration and timing stay the same. Use one only if it is on `main` and deployed when you record; until then, film the default shot.
+
+| Segment | Swap-in shot | Feature | Status |
+|---|---|---|---|
+| 4 · Zetaris | the console's *Data sources* page: every federated source and table | WS3-27 | `[PENDING: WS3-27]` |
+| 5 · Nightshift | the per-step model line on the trace (lane, pinned model, receipt) | WS3-25 | `[PENDING: WS3-25]` |
+| 6 · Skeptic | the alert page's Skeptic panel showing the drop | WS3-26 | `[PENDING: WS3-26]` |
+| 7 · Analyst | the *From the public* panel: screened tips cited on the alert | WS3-28 | `[PENDING: WS3-28]` |
 
 ## ElevenLabs narration text (one block per segment)
 
@@ -148,7 +161,7 @@ Paste each block into `demo/script.md` for `demo/narrate.py` (SPEC M1). Settings
 Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 
 [seg_02]
-Case files live in Supabase, legacy exports and ANPR reads in files, weather in a live feed. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+Case files, legacy exports, ANPR reads and live feeds stay where they are. Zetaris federates them, and agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give agents memory.
 
 [seg_03]
 An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
@@ -166,7 +179,7 @@ The Linker scores each pair on nine factors, in code. Here, two thefts near the 
 The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
 
 [seg_08]
-Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
+Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier. From the series, an analyst proposes a joint task force, and a supervisor approves it.
 
 [seg_09]
 Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what the data can't support, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.

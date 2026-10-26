@@ -22,7 +22,7 @@ The hosted setup (cloud Supabase + Vercel, [D-003](DECISIONS.md)) becomes one de
 ## 2. Today (26 Oct 2026)
 
 - **The judge path needs nothing external.** The Docker image runs in sample mode with no credentials and no Supabase; models replay recorded fixtures. A fully offline check (`--network none`) is on the Tuesday checklist ([WS5-08](validation/WS5-08-checklist.md), section 3b).
-- **Live agent reads on your own Zetaris, no Supabase (WS1-19, in progress):** `python -m data.setup_live` is merged (#280) and its model-output fixtures too (#293); a clean-machine run is still pending. WS2-22 (a local result store for `/run` and the worker) is also in progress.
+- **Live agent reads on your own Zetaris, no Supabase (WS1-19, in progress):** `python -m data.setup_live` is merged (#280) and its model-output fixtures too (#293); a clean-machine run is still pending. WS2-22 is done: `/run` keeps its results in local files when Supabase isn't configured (`NEXUS_STORE=local`, #273); the worker stays Supabase-only.
 - **The judge path is proven offline:** the sample-mode container answers all three examples with `--network none` in CI (`judge-offline`, #285).
 - **The console still needs the cloud.** The police console, Auth, Storage and RLS run on our hosted Supabase; that is what Path 2 replaces.
 
@@ -49,7 +49,7 @@ All are marked `cut` for the hackathon and parked here.
 
 ## 5. Phases (rough order)
 
-1. **Finish WS1-19 and WS2-22** (setup_live #280 and fixtures #293 merged; a clean-machine run pending). Live mode with only Zetaris and Nightshift. Everything later builds on this.
+1. **Finish WS1-19** (setup_live #280 and fixtures #293 merged; a clean-machine run pending; WS2-22 done in #273) **and move the worker off Supabase.** Live mode with only Zetaris and Nightshift. Everything later builds on this.
 2. **Local Supabase in compose (WS6-01).** Migrations on start, seed into a volume, Auth with the demo roles, Storage buckets. Same env names as the cloud, so switching target is a `.env` change.
 3. **Full dataset everywhere (WS6-02).** Rebuild fixtures and re-run the eval on 14k crimes; publish both slices' numbers.
 4. **Safety items (WS6-05, WS6-06, WS6-08).** Close the known limits the README lists.
