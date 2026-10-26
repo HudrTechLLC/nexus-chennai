@@ -318,7 +318,7 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
   const layers: Layer[] = [
     focusCell && new PolygonLayer<{ ring: LonLat[] }>({
       id: "focus-cell", data: [{ ring: cellToBoundary(focusCell, true) as LonLat[] }], getPolygon: (d) => d.ring,
-      stroked: true, filled: true, getFillColor: [255, 214, 120, 40], getLineColor: [255, 214, 120, 235],
+      stroked: true, filled: true, getFillColor: [56, 189, 248, 38], getLineColor: [56, 189, 248, 240], // cyan: amber means a series
       lineWidthMinPixels: 3, pickable: false,
     }),
     toggles.wards && data.boundaries && new GeoJsonLayer({
@@ -532,8 +532,13 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
                 {loading && <span className="text-muted"> · loading month {data.loadedMonths + 1}/{data.totalMonths}</span>}
                 {role === "station_officer" && <span className="text-muted"> · other stations shown by area cell</span>}
               </span>}
-        {cellLabel && <div className="mt-0.5 text-[color:#d8a640]" data-testid="focus-cell-label">Tip area · {cellLabel}</div>}
-        {focusMsg && <div role="status" className="mt-0.5 text-red-600" data-testid="focus-crime-msg">{focusMsg}</div>}
+        {cellLabel && (
+          <div className="mt-0.5 flex items-center gap-1.5 text-ink" data-testid="focus-cell-label">
+            <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-sm border-2 border-[rgb(56,189,248)] bg-[rgba(56,189,248,0.15)]" />
+            Tip area · {cellLabel}
+          </div>
+        )}
+        {focusMsg && <div role="status" className="mt-0.5 text-muted" data-testid="focus-crime-msg">{focusMsg}</div>}
       </div>
 
       {/* clock dial */}

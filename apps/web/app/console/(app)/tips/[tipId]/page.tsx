@@ -43,6 +43,8 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
     const { data: ok } = await sb.rpc("can_read_crime", { p_crime_id: l.crimeId });
     return ok === true;
   }));
+  // Crimes this officer may not read are counted, never named (no id on the page).
+  const hidden = readable.filter((r) => !r).length;
 
   return (
     <div className="space-y-5">
@@ -65,14 +67,17 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
                 <span className="text-xs text-muted"> · {cellAreaLabel(mapCell)}</span>
               </span>
             )}
-            {linked.map((l, i) => (
+            {linked.map((l, i) => readable[i] && (
               <span key={l.crimeId} className="text-xs">
                 <span className="font-mono">{l.crimeId}</span> <span className="text-muted">({SOURCE_LABEL[l.source]})</span>{" "}
-                {readable[i]
-                  ? <Link href={consoleCrimeMapHref(l.crimeId)!} className="font-medium text-signal hover:underline">See crime on map</Link>
-                  : <span className="text-muted">· not visible to your role</span>}
+                <Link href={consoleCrimeMapHref(l.crimeId)!} className="font-medium text-signal hover:underline">See crime on map</Link>
               </span>
             ))}
+            {hidden > 0 && (
+              <span className="text-xs text-muted">
+                {hidden === 1 ? "1 linked crime is" : `${hidden} linked crimes are`} not visible to your role
+              </span>
+            )}
           </div>
         )}
         {tip.status === "quarantined" && (
