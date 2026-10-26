@@ -22,6 +22,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [CITY_PACKS](CITY_PACKS.md): how another city is added without code changes
 - [ENGINES](ENGINES.md): the four Meterless engines, what each powers, how they run and how they're tested
 - [AGENTS](AGENTS.md): the agents, the LangGraph flow, caps and the API routes
+- [ASK_NEXUS](ASK_NEXUS.md): plain-English questions → a checked plan of named queries → a cited answer (WS3-30)
 
 ## Plan and status
 - [LANES](LANES.md): the 4 build lanes, what each owns, interfaces between them, merge rules
