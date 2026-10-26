@@ -161,8 +161,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - vision on an in-house lane instead of a third-party free route;
   - Zetaris reading files straight from object storage (fix the S3 TLS handshake);
   - more named queries and semantic views across sources `[drop the ones that land before freeze]`;
-  - a pilot on real, consented data with police oversight;
-  - multilingual FIRs (Tamil).
+  - a pilot on real, consented data with police oversight.
 - **Limitations (stated plainly):**
   - synthetic data;
   - vision runs on a rate-limited third-party free route (fine for synthetic stills, not for real evidence);
