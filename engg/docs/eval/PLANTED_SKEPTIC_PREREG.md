@@ -6,7 +6,7 @@ tags: [nexus, eval, prereg]
 
 Related: [00-INDEX](../00-INDEX.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
-**Status: pre-registered, not yet run.** This note, the case file and the harness are committed **before any model
+**Status: run on 27 Oct 2026; FAIL (primary 0 of 24). Results are at the end of this note; the method text above them is unchanged.** Pre-registered: This note, the case file and the harness are committed **before any model
 call** for this test. The results will be published as `output_examples/planted_skeptic.json` whatever they are, in a
 later commit. Approved by Ravee and the chief (27 Oct 2026). Owner: nexus-3. Independent reviewer: nexus-5.
 
@@ -166,3 +166,100 @@ About 32 arms × 2 Ultra calls ≈ 45–70 min. Nightshift then goes to nexus-2 
   stated mismatch", not a field accuracy figure.
 - **No memory, one pair per call, round 1 only.** Production batches pairs, may add H-MEM context, and loops on
   send-backs.
+
+## Results (run 27 Oct 2026, 02:02–02:28 IST)
+
+**Result: FAIL.** The primary rate is **0.00 (0 of 24)** against the pre-registered pass threshold of ≥ 0.60. The
+Skeptic did not drop any planted near-miss. It answered `drop` on **none of the 32 arms**.
+
+| Run fact | Value |
+|---|---|
+| Output | `output_examples/planted_skeptic.json` (sha256 `b7ebd4dceaeadaec03dc14fdb170322564576211a6161bb3fb982eab6fd139e5`) |
+| Run id | `planted_a329010d` |
+| `code_sha` / `code_dirty` | `50178c263e013922862b9e63c53d7e5bec4e0fc5` (the #370 merge) / `false` |
+| Case file sha256 | `0e975d82…` as pinned (checked by the harness before any call) |
+| Reason lane | `nvidia/nemotron-3-ultra-550b-a55b`, 64 live calls (a rationale and a critique per arm), each with its receipt id in the file |
+| Unavailable critiques | **none**: all 32 arms have an applied model critique, so nothing left the denominator |
+| Re-runs | none |
+| `git status` after the run | no change under `data/sample/model_fixtures/` or `output_examples/example_*` |
+
+**Deviations from this note: none.** One point of reading: "every critique text" means the text as the Skeptic stores
+it. Production caps a critique at 400 characters (`agents/skeptic.py`, `str(ans.get("critique"))[:400]`), and the
+harness saves exactly that, so most critiques end mid-sentence. The full model output was not kept, only its receipt.
+
+### Pre-registered metrics
+
+| Metric | All | stored (2 twins) | generator_truth (6 twins) |
+|---|---|---|---|
+| **Primary:** near-miss dropped while its twin approved | **0 / 24 (0.00)** | 0 / 6 | 0 / 18 |
+| Planted dropped (twin ignored) | 0 / 24 | 0 / 6 | 0 / 18 |
+| Planted dropped or sent back | 10 / 24 | 2 / 6 | 8 / 18 |
+| Twins approved / sent back / dropped | 7 / 1 / 0 | 2 / 0 / 0 | 5 / 1 / 0 |
+
+**By plant kind** (none dropped in any kind):
+
+| Kind | n | Dropped | Sent back | Approved |
+|---|---|---|---|---|
+| `vehicle_identity` | 3 | 0 | 3 | 0 |
+| `offender_count` | 7 | 0 | 3 | 4 |
+| `offender_age` | 7 | 0 | 2 | 5 |
+| `helmet` | 7 | 0 | 2 | 5 |
+
+**By twin** (the independent units):
+
+| Twin | Series | Twin verdict | a | b | c |
+|---|---|---|---|---|---|
+| PS-01 | Red Pulsar | approve | vehicle: send_back | count: approve | age: approve |
+| PS-02 | G19 | approve | count: approve | age: approve | helmet: approve |
+| PS-03 | G06 | approve | count: send_back | age: send_back | helmet: approve |
+| PS-04 | G19 | approve | count: approve | age: approve | helmet: approve |
+| PS-05 | G02 | approve | count: approve | age: approve | helmet: approve |
+| PS-06 | G01 | **send_back** | helmet: send_back | vehicle: send_back | count: send_back |
+| PS-07 | Red Pulsar | approve | age: approve | helmet: approve | vehicle: send_back |
+| PS-08 | G01 | approve | count: send_back | age: send_back | helmet: send_back |
+
+The code re-check struck no factor on any arm, as expected. Every verdict is the model's.
+
+### What the result means
+
+- **`drop` was available and never used.** The model is allowed to downgrade `approve` to `drop`
+  (`agents/skeptic.py`, the downgrade branch). The prompt defines it word for word as: *"drop" (the link is not
+  credible)*. On the arms it did not approve, the model chose `send_back` every time, even when its own critique
+  called the planted fact decisive (PS-07c: *"Vehicle mismatch is decisive"*) or irreconcilable (PS-03b: *"the
+  suspect age bands are irreconcilable (18-20 vs 40-50) … cannot be explained by witness estimation error"*).
+- **What would happen in production (inferred, not measured).** Only round 1 was run. The planted rows are fixed,
+  so a re-score after a send-back would come back identical. Under #358's revision cap, an unchanged re-score ends
+  **approved**. So all 24 planted false links would most likely have become approved alerts.
+- **PS-06 cannot separate the arms.** Its twin was sent back, so its three sent-back near-misses show nothing
+  about the planted fact. Excluding PS-06, near-misses sent back while their twin was approved are **7 of 21**
+  (*exploratory; not a pre-registered metric*).
+- **The `features_source` split doesn't change the result.** Both sources are 0. The worry that generator-truth MO
+  would make the plant easy to catch did not apply.
+
+### Exploratory: does the critique name the planted fact? (post hoc, not pre-registered)
+
+Owner's hand reading of the stored (400-character) critiques; a single reader. **nexus-5, the independent reviewer,
+is asked to check these labels.**
+- In **19 of 24** the visible critique names the planted discrepancy.
+- In 5 it doesn't, within the visible text: PS-01c, PS-02b, PS-02c, PS-05a and PS-05b. Some may have been cut off.
+- Of the 19 that name it, **9 were approved anyway** and 10 were sent back. The approvals usually **explain the fact
+  away as witness or reporting noise**:
+
+| Arm | Kind | Verdict | Critique (verbatim, excerpt) |
+|---|---|---|---|
+| PS-01b | count | approve | "Offender count differs (2 vs 1) but could reflect same group with one actor solo …" |
+| PS-02a | count | approve | "… offender count (2 vs 1) … may reflect reporting variance (e.g., pillion rider not always noted) rather than different offenders." |
+| PS-04b | age | approve | "Age-band discrepancy (40-50 vs 18-20) is a known witness-reliability issue when helmets are worn; it does not outweigh the multi-factor match." |
+| PS-04c | helmet | approve | "The helmet description differs (grey with sticker vs blue full-face), but witness helmet recall under stress is unreliable …" |
+| PS-07a | age | approve | "Strong link despite age discrepancy …" |
+| PS-07b | helmet | approve | "Credible link despite helmet discrepancy …" |
+
+The same planted age gap (18-20 vs 40-50) was called "irreconcilable" in PS-03b and "a known witness-reliability
+issue" in PS-04b. **Reading:** the Skeptic notices a single stated contradiction most of the time. When the other
+factors match strongly, it weighs the contradiction as noise, and it never uses `drop` to reject a link.
+
+### Not done here
+
+This PR publishes results only. **No prompt change and no re-run.** Any change to the Skeptic, for example
+treating a hard contradiction on a distinctive descriptor as a drop, would need a new pre-registration and a fresh
+test set. It is a decision for the chief, given the 13:30 feature cut-off and D-032.
