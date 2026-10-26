@@ -10,6 +10,8 @@ Lists come back as comma-joined strings in both forms (Spark `concat_ws(collect_
 
 from __future__ import annotations
 
+import functools
+
 
 # Hotspot detector input (WS2-18): crimes per (h3_r9 cell, category, day) from baseline_since to until.
 _HEX_COLUMNS = ("cell", "category", "day", "n", "crime_ids", "station_ids")
@@ -132,18 +134,29 @@ CANDIDATES_COLUMNS = ("crime_id", "station_id", "category", "sub_type", "occurre
                       "geohash7", "days_apart", "km_apart", "same_station")
 
 
-def _candidates_sample() -> str:
-    """Same category, |calendar days| <= :days (UTC dates, as Spark datediff in a UTC session), haversine
-    round(km, 3) <= :ring (R = 6371) after a bounding-box prefilter; ordered by km_apart, crime_id. occurred_from is
-    returned as an ISO string in city time (timezone from the city pack, D-004)."""
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
+@functools.lru_cache(maxsize=1)
+def city_time() -> tuple[str, str]:
+    """(timezone, "+HH:MM" offset) of the city pack (D-004).
+
+    The offset comes from DuckDB's own timezone database (the twins already use it for AT TIME ZONE), not
+    Python's zoneinfo, which needs the tzdata package on Windows: importing this module must never fail."""
+    import duckdb
 
     from ..config import get_settings, load_city
 
     tz = load_city(get_settings().city)["timezone"]
-    off = datetime(2026, 1, 1, tzinfo=ZoneInfo(tz)).strftime("%z")
-    offset = f"{off[:3]}:{off[3:]}"  # "+05:30" (render() only binds ":<letter>...", so this is safe)
+    secs = duckdb.sql(
+        "SELECT CAST(epoch(CAST(TIMESTAMPTZ '2026-01-01 00:00:00+00' AT TIME ZONE ? AS TIMESTAMP)) "
+        "- epoch(TIMESTAMPTZ '2026-01-01 00:00:00+00') AS INTEGER)", params=[tz]).fetchone()[0]
+    sign = "-" if secs < 0 else "+"
+    return tz, f"{sign}{abs(secs) // 3600:02d}:{abs(secs) % 3600 // 60:02d}"
+
+
+def _candidates_sample() -> str:
+    """Same category, |calendar days| <= :days (UTC dates, as Spark datediff in a UTC session), haversine
+    round(km, 3) <= :ring (R = 6371) after a bounding-box prefilter; ordered by km_apart, crime_id. occurred_from is
+    returned as an ISO string in city time (timezone from the city pack, D-004)."""
+    tz, offset = city_time()  # offset "+05:30": render() only binds ":<letter>...", so this is safe
     utc_day = "CAST(CAST({x} AS TIMESTAMPTZ) AT TIME ZONE 'UTC' AS DATE)"
     return f"""
 WITH c AS (SELECT * FROM 'sb/crimes.parquet'),
@@ -252,14 +265,7 @@ def search_params(q: str | None, filters: dict | None = None) -> dict[str, str]:
 
 
 def _city_tz() -> tuple[str, str]:
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-
-    from ..config import get_settings, load_city
-
-    tz = load_city(get_settings().city)["timezone"]
-    off = datetime(2026, 1, 1, tzinfo=ZoneInfo(tz)).strftime("%z")
-    return tz, f"{off[:3]}:{off[3:]}"
+    return city_time()
 
 
 def _q_search() -> dict:
