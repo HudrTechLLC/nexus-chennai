@@ -261,7 +261,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} />
 
       {/* category chips */}
-      <div className="absolute left-3 top-3 flex max-w-[60%] flex-wrap gap-1.5">
+      <div className="absolute left-3 top-3 z-10 flex max-w-[60%] flex-wrap gap-1.5">
         {CAT_KEYS.map((k) => (
           <button
             key={k} aria-pressed={cats.has(k)}
@@ -275,7 +275,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* layers + filters */}
-      <div className="absolute right-12 top-3 w-56 space-y-3 rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur">
+      <div className="absolute right-12 top-3 z-10 w-56 space-y-3 rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur">
         <div>
           <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Layers</p>
           {([
@@ -307,7 +307,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* status line */}
-      <div className="absolute left-3 top-14 rounded-md bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-2 py-1 text-xs shadow backdrop-blur">
+      <div className="absolute left-3 top-14 z-10 rounded-md bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-2 py-1 text-xs shadow backdrop-blur">
         {data.error ? <span className="text-red-600">Map data error: {data.error}</span>
           : !data.extent && data.totalMonths === 0 && data.loadedMonths === 0 && data.crimes.length === 0
             ? <span className="text-muted">No crimes visible to your role yet.</span>
@@ -319,13 +319,13 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* clock dial */}
-      <div className="absolute bottom-28 right-3">
+      <div className="absolute bottom-28 right-3 z-10">
         <ClockDial arc={clock} onChange={setClock} hours={hourBins} />
       </div>
 
       {/* scrubber */}
       {data.extent && win && (
-        <div className="absolute inset-x-3 bottom-3">
+        <div className="absolute inset-x-3 bottom-3 z-10">
           <TimeScrubber
             min={data.extent.min} max={data.extent.max} from={win[0]} to={win[1]} bins={dayBins} playing={playing}
             onWindow={(f, t) => { setPlaying(false); setWin([f, t]); }} onPlay={togglePlay} speedMsPerDay={SPEED_MS_PER_DAY}
