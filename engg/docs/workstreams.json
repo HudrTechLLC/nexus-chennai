@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T11:16:38+05:30",
+  "updated": "2026-10-26T11:29:21+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -157,8 +157,9 @@
           "id": "WS1-18",
           "phase": "P1",
           "title": "Domain models (Pydantic, spec D3) + core schema 0002 with RLS (all Part I tables)",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "nexus-1: models + 0002_core (branch feat/n1-models)"
         }
       ]
     },
@@ -240,8 +241,10 @@
           "id": "WS2-10",
           "phase": "P4",
           "title": "Scoring in code (9 weighted factors) + Linker rationale",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "note": "9 F2 factors, bands, ±0.08 cap, forensic floor, baseline; 68 tests",
+          "ref": "#8"
         },
         {
           "id": "WS2-11",
@@ -289,8 +292,9 @@
           "id": "WS2-17",
           "phase": "P3",
           "title": "Engines TypeScript sidecar + official conformance runs (World Model, H-MEM, Markovian)",
-          "status": "todo",
-          "owner": "nexus-2"
+          "status": "in_progress",
+          "owner": "nexus-2",
+          "note": "nexus-2: facade first, then TS sidecar + official conformance"
         },
         {
           "id": "WS2-18",
@@ -341,8 +345,9 @@
           "id": "WS3-03",
           "phase": "P5",
           "title": "Sign-in and roles (officer, analyst, supervisor, admin)",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-4",
+          "note": "nexus-4: demo users seed + console sign-in (feat/console-auth)"
         },
         {
           "id": "WS3-04",
