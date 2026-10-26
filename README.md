@@ -231,6 +231,7 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 - 60 synthetic truth cases, 98 planted true pairs.
 - **HIGH-band alerts were correct 10 of 10 times.** MEDIUM-band alerts were correct 56% of the time (74 of 132 scored pairs; 138 medium alerts, including 6 flagged duplicates that are neither right nor wrong; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
 - Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
+- **Live spot-check (separate from the headline):** 20 cases on live Zetaris and the QA database, default MO mode, code-only scoring, 0 model calls: **precision 0.61 / recall 0.64 / F1 0.62** (code `de8e666`, before #313; `output_examples/live_spot_off.json`). It is not like-for-like with the sample eval: 20 live cases vs 60 sample cases, a different truth set (the live seed's generated truth vs `data/sample/_truth`), and a larger candidate pool (about 14,000 live crimes plus legacy rows vs the 1,275-crime sample). Precision is close (0.61 vs 0.59); the recall gap (0.64 vs 0.86) is not yet explained.
 - Two similar-MO variants were trialled and left off: a feature cosine without IDF (more false positives) and a fixed-IDF TF-IDF (no change on this set).
 
 Reproduce from a fresh clone (after Setup, a few minutes):
