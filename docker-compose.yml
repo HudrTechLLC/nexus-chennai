@@ -32,5 +32,6 @@ services:
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
         NEXT_PUBLIC_MAPTILER_KEY: ${NEXT_PUBLIC_MAPTILER_KEY:-}
         CITY: ${CITY:-chennai}
-    env_file: [{ path: .env, required: false }]
+    # No env_file: the web app reads only NEXT_PUBLIC_* values (baked in above), and the root .env also
+    # holds server secrets (service-role key, Zetaris, Meterless) that must never reach the web container.
     ports: ["3001:3001"]
