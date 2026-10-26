@@ -21,6 +21,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [DECISIONS](DECISIONS.md): every decision and verification (D-001…)
 - [CITY_PACKS](CITY_PACKS.md): how another city is added without code changes
 - [ENGINES](ENGINES.md): the four Meterless engines, what each powers, how they run and how they're tested
+- [AGENTS](AGENTS.md): the agents, the LangGraph flow, caps and the API routes
 
 ## Plan and status
 - [LANES](LANES.md): the 4 build lanes, what each owns, interfaces between them, merge rules

@@ -257,3 +257,9 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
 - **Super VL is now enabled.** The `NVIDIA_SUPER_VL` gate is read from Nightshift's engine-kv store, not from the environment. The value was set with Nightshift stopped, and a backup of the store was kept.
 - **Images still fail.** Text calls to `nvidia/nemotron-3.5-super-vl-120b-a12b` succeed. **Every request with an image is refused by Nightshift with `no_vision_model`, on every route**, including local PaddleOCR-VL. This has been reported to Meterless.
 - **Effect on the product:** the Extractor records an honest "vision unavailable" trace and falls back to the caption text, so no visual extraction is ever faked. Vision is not a rule requirement.
+
+## D-022 · Zetaris file storage is Supabase Storage, not AWS (2026-10-26)
+- **What:** the generated CSV and Parquet files live in a private Supabase Storage bucket, `nexus-chennai-data`, on `nexus-qa`. Zetaris registers them in place through the S3-compatible endpoint (`https://ukrujnsjucwvytnokbtw.storage.supabase.co/storage/v1/s3`, path-style, `ap-southeast-1`), using its `s3Endpoint` and `useS3PathStyleAccess` options. Recommended by nexus-1 and approved.
+- **Why:** it costs $0 (the bucket is about 60–100 MB, inside the free tier), needs no new account, and stays a separate object store that Zetaris federates. That keeps the data-layer story intact.
+- **Keys:** the access key is read from `~/.secrets/nexus-s3.key` only, and redacted in every log. The team accepted that this key appeared in a chat transcript; it is short-lived and is **deleted after the hackathon**.
+- **Fallback:** AWS S3 in `ap-south-1`, only if Zetaris cannot sign requests for Supabase's endpoint. That would need the team's approval and an account.

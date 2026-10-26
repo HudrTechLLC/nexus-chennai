@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:17:06+05:30",
+  "updated": "2026-10-26T12:24:49+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -152,8 +152,9 @@
           "id": "WS1-17",
           "phase": "P2",
           "title": "Storage Zetaris can read for CSV/Parquet (test Supabase Storage S3 endpoint; AWS only with approval)",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "Supabase Storage S3 endpoint approved (D-022); bucket + Zetaris read check in progress"
         },
         {
           "id": "WS1-18",
@@ -285,7 +286,9 @@
           "phase": "P4",
           "title": "Evaluation vs rules-only baseline (eval_report.json)",
           "status": "in_progress",
-          "owner": "nexus-3"
+          "owner": "nexus-3",
+          "note": "Eval code + tests merged; real eval_report.json run waits on nexus-1 _truth (lands with judge-path PR)",
+          "ref": "#29"
         },
         {
           "id": "WS2-15",
@@ -325,15 +328,17 @@
           "id": "WS2-19",
           "phase": "P8",
           "title": "Sanitiser agent: draft public appeal (fast lane + code redaction)",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "ref": "#31"
         },
         {
           "id": "WS2-20",
           "phase": "P9",
           "title": "Briefer agent: daily zone briefing",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "ref": "#31"
         }
       ]
     },
