@@ -266,9 +266,14 @@ def chat_json(
     purpose: str,
     retries: int = 1,
     thinking: bool = True,
+    expect: str | None = None,
     **params: Any,
 ) -> tuple[dict[str, Any], Any]:
     """Call a pinned lane and parse a JSON object; one corrective retry on bad or cut-off output.
+
+    `expect` names the top-level key the answer must have (e.g. "pairs", "steps"). Reasoning lanes
+    write draft JSON in their thinking; without it, a cut-off reply could hand back a draft fragment
+    (one pair's verdict) as the whole answer, and every pair would silently get nothing.
 
     Nightshift failures (down, 4xx, no replay fixture) surface as AgentError so every
     agent's documented fallback runs instead of crashing the run.
@@ -282,26 +287,32 @@ def chat_json(
         params.setdefault("chat_template_kwargs", {"enable_thinking": False})
     msgs = list(messages)
     last_err: Exception | None = None
+    truncated = False
     for attempt in range(retries + 1):
         try:
             result = deps.nightshift.chat(lane, msgs, agent=agent, purpose=purpose, **params)
         except NightshiftError as exc:
             raise AgentError(f"{agent}: model call failed for {purpose}: {exc}") from exc
+        finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")
+        if finish == "length":
+            # Cut off. Live Lightning sometimes repeats its answer until the budget runs out (D-017): a
+            # complete object (with the expected key) before the cut is the answer. Otherwise retry the same
+            # request with twice the room; the cut-off thinking is not fed back.
+            truncated = True
+            objs = [o for o in _json_objects(_THINK.sub("", result.content or "")) if expect is None or expect in o]
+            budget = int(params["max_tokens"])
+            if objs:
+                _truncation_event(deps, agent, purpose, lane, result, budget, "salvaged")
+                return objs[-1], result
+            last_err = AgentError(f"reply cut off at max_tokens={budget} (finish_reason=length)")
+            if attempt < retries:
+                _truncation_event(deps, agent, purpose, lane, result, budget, "retried")
+                params["max_tokens"] = budget * 2
+                continue
+            _truncation_event(deps, agent, purpose, lane, result, budget, "failed")
+            break
         try:
-            finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")
-            if finish == "length":
-                # Cut off. Live Lightning sometimes repeats its answer until the budget runs out
-                # (D-017): a complete object before the cut is the answer. If there is none,
-                # retry with more room.
-                objs = _json_objects(_THINK.sub("", result.content or ""))
-                if objs:
-                    deps.tracer.emit(agent, "model_output_truncated", input_summary=purpose, status="degraded",
-                                     model=getattr(result, "model", None),
-                                     output_summary=f"finish_reason=length; used last of {len(objs)} complete objects")
-                    return objs[-1], result
-                params["max_tokens"] = int(params["max_tokens"]) * 2
-                raise AgentError("reply cut off at max_tokens (finish_reason=length)")
-            return parse_model_json(result.content), result
+            return _answer(result.content, expect), result
         except AgentError as exc:
             last_err = exc
             deps.tracer.emit(agent, "model_output_invalid", input_summary=purpose, output_summary=str(exc),
@@ -310,7 +321,38 @@ def chat_json(
                 {"role": "assistant", "content": result.content},
                 {"role": "user", "content": "Reply with one JSON object only, matching the schema. No prose."},
             ]
-    raise AgentError(f"{agent}: model did not return valid JSON for {purpose}: {last_err}")
+    raise AgentError(f"{agent}: model did not return valid JSON for {purpose}"
+                     f"{' (reply cut off)' if truncated else ''}: {last_err}")
+
+
+def _truncation_event(deps: AgentDeps, agent: str, purpose: str, lane: str, result: Any, budget: int,
+                      action: str) -> None:
+    """`llm_reply_truncated`: every cut-off reply is visible, with what was done about it."""
+    usage = getattr(result, "usage", None) or {}
+    deps.tracer.emit(agent, "llm_reply_truncated", input_summary=purpose, model=getattr(result, "model", None),
+                     output_summary=short({"lane": lane, "max_tokens": budget,
+                                           "completion_tokens": usage.get("completion_tokens"), "action": action}),
+                     status="degraded" if action != "retried" else "retry")
+
+
+def _answer(text: str, expect: str | None) -> dict[str, Any]:
+    """The reply's answer: its last JSON object, or with `expect` the last one carrying that key."""
+    if expect is None:
+        return parse_model_json(text)
+    if not text:
+        raise AgentError("Empty model reply")
+    body = _THINK.sub("", text)
+    fenced = [m.group(1) for m in _FENCE.finditer(body)]
+    for cand in (fenced[::-1] if fenced else []) + [body]:
+        objs = [o for o in _json_objects(cand) if expect in o]
+        if objs:
+            return objs[-1]
+    raise AgentError(f"No JSON object with {expect!r} in model reply")
+
+
+# Trace summaries that carry an agent's reason (Skeptic verdict + critique, Linker rationale) keep the
+# whole sentence: the critique is capped at 400 chars and the rationale at 600 where they are parsed.
+REASON_SUMMARY_CHARS = 700
 
 
 def short(v: Any, n: int = 160) -> str:

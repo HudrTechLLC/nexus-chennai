@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..scoring import PairScore, strike
-from .base import AgentDeps, AgentError, DeadlineExceeded, chat_json, crime_from_row, features_from_row, short
+from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, DeadlineExceeded, chat_json, crime_from_row, features_from_row, short
 from .linker import CORROBORATION_QUERIES, ScoredPair, compute_factors, corroboration_items, factor_payload
 
 AGENT = "Skeptic"
@@ -54,10 +54,17 @@ class SkepticResult:
     rechecked: dict[str, float | None] = field(default_factory=dict)
     query_ids: list[str] = field(default_factory=list)
     round: int = 1
+    # Pairs that went to the model critique: applied | unavailable (call failed or no answer for this
+    # pair: the code verdict stands, and the alert says so) | skipped (deadline reserve). None otherwise.
+    model_critique: str | None = None
 
     def review_block(self) -> dict[str, Any]:
         """The D3.11 `skeptic` object."""
-        return {"rounds": self.round, "struck": list(self.struck), "verdict": VERDICT_TO_STATUS[self.verdict]}
+        block: dict[str, Any] = {"rounds": self.round, "struck": list(self.struck),
+                                 "verdict": VERDICT_TO_STATUS[self.verdict]}
+        if self.model_critique:
+            block["model_critique"] = self.model_critique
+        return block
 
 
 def factors_to_strike(linker: PairScore, rechecked: Mapping[str, float | None]) -> list[str]:
@@ -168,11 +175,14 @@ class Skeptic:
         live = [r for r in results if r.verdict == "approve"]
         if live and critique:
             self._critique(live, round_no)
+        elif live:
+            for r in live:
+                r.model_critique = "skipped"
         for r in results:
             self.deps.tracer.emit(AGENT, r.verdict if r.verdict != "approve" else "approve",
                                   input_summary=f"pair {r.pair.pair_id} round {round_no}",
                                   output_summary=short(f"score={r.pair.score.score} struck={r.struck} "
-                                                       f"{r.critique}"),
+                                                       f"{r.critique}", REASON_SUMMARY_CHARS),
                                   target_agent={"approve": "Alert writer", "send_back": "Planner",
                                                 "drop": None}[r.verdict],
                                   zetaris_query_ids=r.query_ids, confidence=r.pair.score.score,
@@ -187,16 +197,26 @@ class Skeptic:
                     {"role": "user", "content": short(payload, 24000)}]
         try:
             out, result = chat_json(self.deps, "reason", messages, agent=AGENT,
-                                    purpose=f"critique {len(results)} pairs round {round_no}", temperature=0)
+                                    purpose=f"critique {len(results)} pairs round {round_no}", temperature=0,
+                                    expect="pairs")
             answers = out.get("pairs") or {}
         except AgentError as exc:
             # No model critique: code verdicts stand (approve only what still alerts after strikes).
-            self.deps.tracer.emit(AGENT, "critique_failed", output_summary=short(str(exc)), status="error")
+            for r in results:
+                r.model_critique = "unavailable"
+            self.deps.tracer.emit(AGENT, "critique_failed", input_summary=f"{len(results)} pairs round {round_no}",
+                                  output_summary=short(f"code verdicts stand, marked model_critique=unavailable: {exc}"),
+                                  status="degraded")
             return
         for r in results:
             ans = answers.get(r.pair.pair_id) if isinstance(answers, Mapping) else None
             if not isinstance(ans, Mapping):
+                r.model_critique = "unavailable"
+                self.deps.tracer.emit(AGENT, "critique_missing", input_summary=r.pair.pair_id,
+                                      output_summary="no critique for this pair in the model reply; code verdict stands",
+                                      status="degraded")
                 continue
+            r.model_critique = "applied"
             v = ans.get("verdict")
             r.critique = str(ans.get("critique") or "")[:400]
             # The model may only downgrade: approve -> send_back / drop.

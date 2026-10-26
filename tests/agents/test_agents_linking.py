@@ -291,7 +291,7 @@ def test_alert_writer_writes_valid_d3_11_alert(make_deps):
     LinkAlert.model_validate({k: v for k, v in row.items() if k != "synthetic"})
     assert row["status"] == "pending" and row["kind"] == "pair"
     assert set(row["stations"]) == {ADYAR["station_id"], VELACHERY["station_id"]}
-    assert row["skeptic"] == {"rounds": 1, "struck": [], "verdict": "approved"}
+    assert row["skeptic"] == {"rounds": 1, "struck": [], "verdict": "approved", "model_critique": "applied"}
     assert all(f["value"] is not None and f["reason"] for f in row["factors"])
     assert any(e.get("query_id") for f in row["factors"] for e in f["evidence"])
     assert row["coverage"] > 0.5 and row["synthetic"] is True
@@ -369,3 +369,59 @@ def test_rationale_prompt_never_carries_protected_attributes():
     c = {"offenders_described": [{"age_band": "20-30", "gender": "male", "complexion": "dark", "build": "thin",
                                   "helmet": "black"}]}
     assert described(c) == [{"age_band": "20-30", "build": "thin", "helmet": "black"}]
+
+
+def test_skeptic_marks_critique_applied(make_deps):
+    deps = make_deps(responder=approve_all)
+    res = Skeptic(deps).review(scored(deps))[0]
+    assert res.model_critique == "applied" and res.review_block()["model_critique"] == "applied"
+
+
+def test_skeptic_failed_critique_is_marked_on_the_alert(make_deps):
+    """Live: a cut-off 7-pair critique returned no `pairs`; the code verdicts stood with no sign of it.
+    Now the alert's skeptic block says the model critique was unavailable, and the trace says why."""
+    def cut_off(lane, m, p):
+        return "{}" if "critique" not in p else '{"verdict": "drop", "critique": "draft"} and then'
+
+    deps = make_deps(responder=cut_off)
+    res = Skeptic(deps).review(scored(deps))[0]
+    assert res.verdict == "approve" and res.model_critique == "unavailable"
+    failed = [e for e in deps.tracer.read() if e["action"] == "critique_failed"]
+    assert failed and failed[0]["status"] == "degraded"
+    alert = AlertWriter(deps).write([res])[0]
+    assert alert["skeptic"]["model_critique"] == "unavailable"
+
+
+def test_skeptic_pair_missing_from_critique_is_unavailable(make_deps):
+    def other_pair(lane, m, p):
+        return "{}" if "critique" not in p else json.dumps({"pairs": {"someone-else": {"verdict": "drop"}}})
+
+    deps = make_deps(responder=other_pair)
+    res = Skeptic(deps).review(scored(deps))[0]
+    assert res.verdict == "approve" and res.model_critique == "unavailable"
+    assert any(e["action"] == "critique_missing" for e in deps.tracer.read())
+
+
+def test_trace_keeps_whole_skeptic_critique_and_linker_rationale(make_deps):
+    """nexus-7 on run_da0092da: the stored trace cut the drop reason mid-sentence (160 chars)."""
+    critique = "Same night and same MO, but " + "the second FIR's plate read is partial and unverified; " * 6
+    rationale = "Both FIRs describe " + "two riders on a red Pulsar snatching chains near bus stops; " * 8
+
+    def long_texts(lane, m, p):
+        if "critique" in p:
+            payload = json.loads(m[-1]["content"])
+            return json.dumps({"pairs": {k: {"verdict": "approve", "critique": critique} for k in payload}})
+        if "rationale" in p:
+            payload = json.loads(m[-1]["content"])
+            return json.dumps({"pairs": {k: {"rationale": rationale} for k in payload}})
+        return "{}"
+
+    deps = make_deps(responder=long_texts)
+    pairs = scored(deps)
+    Linker(deps).explain(pairs)
+    Skeptic(deps).review(pairs)
+    ev = deps.tracer.read()
+    explained = [e for e in ev if e["action"] == "explain_pair"]
+    approved = [e for e in ev if e["agent_name"] == "Skeptic" and e["action"] == "approve"]
+    assert explained and explained[0]["output_summary"] == rationale.strip()[:600]
+    assert approved and approved[0]["output_summary"].endswith(critique[:400])
