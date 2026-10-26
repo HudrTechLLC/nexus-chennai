@@ -136,6 +136,18 @@ def place(rng: random.Random, ctx: Ctx, anchors: dict[str, float],
 
     With `near`, only anchors within radius_km of that point are used (series walk, decoys)."""
     types = sorted(anchors)
+    near_cache: dict[str, list] = {}
+
+    def nearby(t: str) -> list:
+        """POIs of type t within radius_km of `near`; computed once per call (box, then exact)."""
+        if t not in near_cache:
+            rad = radius_km or 2.0
+            dlat, dlon = rad / 110.0, rad / 105.0
+            box = [p for p in ctx.pois.get(t, [])
+                   if abs(p[0] - near[0]) <= dlat and abs(p[1] - near[1]) <= dlon]
+            near_cache[t] = [p for p in box if km(near[0], near[1], p[0], p[1]) <= rad]
+        return near_cache[t]
+
     for _ in range(200):
         t = rng.choices(types, weights=[anchors[k] for k in types])[0]
         if t == "residential":
@@ -145,9 +157,7 @@ def place(rng: random.Random, ctx: Ctx, anchors: dict[str, float],
                 lat, lon = _ward_point(rng, ctx)
             name = None
         else:
-            cands = ctx.pois.get(t, [])
-            if near is not None:
-                cands = [p for p in cands if km(near[0], near[1], p[0], p[1]) <= (radius_km or 2.0)]
+            cands = nearby(t) if near is not None else ctx.pois.get(t, [])
             if not cands:
                 continue
             plat, plon, name = rng.choice(cands)

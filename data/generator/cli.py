@@ -19,7 +19,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from . import crimes as C
-from . import plant
+from . import plant, plant2, slice2
 from .context import ROOT, Ctx, load
 
 NS = uuid.UUID("6f1c2a52-6a71-4c51-9e57-2c7b1b0a0e42")  # fixed namespace for source_row_id
@@ -44,7 +44,10 @@ def short_codes(ctx: Ctx) -> dict[str, str]:
 
 def number_firs(ctx: Ctx, drafts: list[dict]) -> None:
     """FIR numbers per station-year, rising through the year with gaps (non-focus FIRs);
-    reserved numbers (the hero pair) are never handed to another crime."""
+    reserved numbers (the hero pair) are never handed to another crime.
+
+    Frozen as merged in #30: seeded crimes keep their ids. Data added later is numbered with
+    number_added() into free slots, never by changing this function or its inputs."""
     per_year = ctx.cfg["fir_numbers_per_year"]
     r = ctx.rng("fir-numbers")
     reserved: dict[tuple[str, int], set[int]] = {}
@@ -66,6 +69,26 @@ def number_firs(ctx: Ctx, drafts: list[dict]) -> None:
             while n in res:
                 n += 1
             d["fir_n"], prev = n, n
+    _assert_unique(drafts)
+
+
+def number_added(ctx: Ctx, existing: list[dict], added: list[dict]) -> None:
+    """Number crimes added after the first seed into free slots near their day of year, from the
+    crime's own facts, so neither they nor any existing crime is ever renumbered."""
+    per_year = ctx.cfg["fir_numbers_per_year"]
+    taken = {(d["station"].station_id, d["reported_at"].year, d["fir_n"]) for d in existing}
+    for d in sorted(added, key=lambda x: (x["station"].station_id, x["reported_at"].isoformat(), x["sub_type"])):
+        sid, y = d["station"].station_id, d["reported_at"].year
+        h = hashlib.sha256(f"{ctx.seed}|{sid}|{d['reported_at'].isoformat()}|{d['sub_type']}".encode()).digest()
+        n = int(d["reported_at"].timetuple().tm_yday / 366 * per_year) + h[0] % 7
+        while (sid, y, n) in taken:
+            n += 1
+        taken.add((sid, y, n))
+        d["fir_n"] = n
+    _assert_unique(existing + added)
+
+
+def _assert_unique(drafts: list[dict]) -> None:
     seen = set()
     for d in drafts:
         k = (d["station"].station_id, d["reported_at"].year, d["fir_n"])
@@ -145,9 +168,13 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
     dups = plant.duplicates(ctx, bg, ctx.series_cfg["counts"]["duplicates"])
     for _, d in dups:
         keyed(d)
-
-    drafts = [m for _, ms in series for m in ms] + [d for _, c in decoys for d in c] + bg + [d for _, d in dups]
-    number_firs(ctx, drafts)
+    first = [m for _, ms in series for m in ms] + [d for _, c in decoys for d in c] + bg + [d for _, d in dups]
+    number_firs(ctx, first)
+    # Added after the first seed (slice 2): numbered into free slots; existing crimes untouched.
+    more = slice2.plant_more(ctx, bg, keyed)
+    added = [u for c in more["chains"] for u in c["uses"]] + [d for x in more["returns"] for d in x["returns"]]
+    number_added(ctx, first, added)
+    drafts = first + added
     sc = short_codes(ctx)
     for d in drafts:
         y = d["reported_at"].year
@@ -155,6 +182,9 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
         d["crime_id"] = d.get("fixed_id") or f"{ctx.cfg['id_prefix']}-{sc[d['station'].station_id]}-{y}-{d['fir_n']:06d}"
     ids = [d["crime_id"] for d in drafts]
     assert len(ids) == len(set(ids)), "duplicate crime ids"
+    # DQ defects mutate a few background rows after numbering, so their ids never move.
+    # Duplicate pairs are left alone (a defect on one side would break the pair).
+    more["dq"] = plant2.dq_defects(ctx, bg, exclude={d["_key"] for pair in dups for d in pair})
     by_key = {d["_key"]: d for d in drafts}
     drafts.sort(key=lambda d: d["crime_id"])
 
@@ -171,7 +201,11 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
         for s in d["statements"]:
             stmts.append({"crime_id": d["crime_id"], **s, "recorded_at": _iso(s["recorded_at"]),
                           "audio_path": None, "transcript_model": None, "source": "sb.statements", "synthetic": True})
-    for i, s in enumerate(stmts):
+    # Statement ids run over the first-seed crimes in crime_id order, then over added crimes,
+    # so adding crimes never renumbers an existing statement.
+    added_ids = {d["crime_id"] for d in added}
+    order = [x for x in stmts if x["crime_id"] not in added_ids] + [x for x in stmts if x["crime_id"] in added_ids]
+    for i, s in enumerate(order):
         s["statement_id"] = f"ST-{i + 1:06d}"
         s["source_row_id"] = s["statement_id"]
     write_jsonl(sb / "crimes.jsonl", crimes)
@@ -213,6 +247,13 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
     for i, (orig, dup) in enumerate(dups):
         a, b = sorted([orig["crime_id"], dup["crime_id"]])
         pairs.append([a, b, "duplicate", f"DUP-{i + 1:02d}"])
+    for c in more["chains"]:
+        ids = sorted([c["theft"]["crime_id"]] + [u["crime_id"] for u in c["uses"]])
+        for a, b in itertools.combinations(ids, 2):
+            pairs.append([a, b, "vehicle_chain", c["chain_id"]])
+    for x in more["returns"]:
+        for a, b in itertools.combinations(sorted(d["crime_id"] for d in x["returns"]), 2):
+            pairs.append([a, b, "offender_return", x["return_id"]])
     pairs.sort()
     write_csv(truth / "pairs.csv", ["crime_a", "crime_b", "label", "group_id"], pairs)
     write_json(truth / "decoys.json", [{"decoy_id": m["decoy_id"], "shadows_series_id": m["shadows_series_id"],
@@ -220,6 +261,10 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
     write_json(truth / "duplicates.json", [{"dup_id": f"DUP-{i + 1:02d}",
                                             "crime_ids": sorted([o["crime_id"], d["crime_id"]])}
                                            for i, (o, d) in enumerate(dups)])
+
+    s2 = slice2.write_sources(ctx, out, drafts, series, more, scale)
+    for name, obj in s2["truth"].items():
+        write_json(truth / f"{name}.json", obj)
 
     # ---- manifest (hash of logical content, so it is stable across platforms) ----
     files = sorted(p for p in out.rglob("*") if p.is_file() and p.name != "MANIFEST.json")
@@ -230,8 +275,11 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
                    "stations": len(ctx.stations), "wards": len(ctx.ward_features), "series": len(series),
                    "series_crimes": sum(len(m) for _, m in series), "decoy_clusters": len(decoys),
                    "decoy_crimes": sum(len(c) for _, c in decoys), "duplicates": len(dups),
-                   "pairs": {lab: sum(1 for p in pairs if p[2] == lab) for lab in ("series", "decoy", "duplicate")}},
-        "sha256": {p.relative_to(out).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+                   "pairs": {lab: sum(1 for p in pairs if p[2] == lab)
+                             for lab in ("series", "decoy", "duplicate", "vehicle_chain", "offender_return")},
+                   **s2["counts"]},
+        "sha256": {p.relative_to(out).as_posix(): s2["hashes"].get(p.relative_to(out).as_posix())
+                   or hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
     }
     write_json(out / "MANIFEST.json", manifest)
     _ = by_key, date
