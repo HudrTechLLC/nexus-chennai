@@ -57,14 +57,14 @@ export function StartForm() {
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label htmlFor="ob-key" className="text-sm font-medium">Source key</label>
-          <input id="ob-key" className={input} value={sourceKey} maxLength={30} placeholder="e.g. ps_kodambakkam_legacy"
+          <input id="ob-key" className={input} value={sourceKey} maxLength={30} placeholder="e.g. redhills_new"
             onChange={(e) => setSourceKey(e.target.value.toLowerCase())} aria-invalid={!!fields.source_key} aria-describedby="ob-key-help" />
           <p id="ob-key-help" className="mt-1 text-xs text-muted">Becomes the Zetaris view name onboard_&lt;key&gt;. Lower-case letters, digits, _.</p>
           {err("source_key")}
         </div>
         <div>
           <label htmlFor="ob-label" className="text-sm font-medium">Name</label>
-          <input id="ob-label" className={input} value={label} maxLength={80} placeholder="e.g. Kodambakkam PS legacy register"
+          <input id="ob-label" className={input} value={label} maxLength={80} placeholder="e.g. Red Hills (new station) register"
             onChange={(e) => setLabel(e.target.value)} aria-invalid={!!fields.label} />
           {err("label")}
         </div>
