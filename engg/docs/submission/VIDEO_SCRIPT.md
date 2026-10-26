@@ -18,10 +18,11 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 | Agent querying Zetaris | 4 (20-second live query) and 6 (Skeptic re-query) |
 | Feature an engine powers | 3 (World Model), 7 (H-MEM) |
 | One real request through Nightshift, model named | 5 |
-| Key features | 6–8 |
+| Key features | 6–8 (Skeptic as a second opinion, analyst decision + H-MEM, series + task force); optional Ask Nexus and source onboarding |
 
 ## Changes from SPEC M2 (on purpose)
 
+- **Never say the Skeptic catches or stops false links** (#392: 0 of 24 planted). Say "second opinion; the officer decides".
 - **"Super VL reads the CCTV still" only with a real trace.** Since D-036 a Nightshift cloud lane serves Super VL, and a live run has shown it (`reextract_vis_1793040194`), so **variant A is the plan** for segment 3. Still check the take: the free route is rate-limited, and if the recorded take's trace shows `vision_unavailable`, use variant B.
 - **Reasoning model is Nemotron Ultra 550B**, not Super 120B (D-017).
 - **Eval numbers are on main** (`output_examples/eval_report.json`: P 0.59 / R 0.86 vs rules-only 0.09 / 0.30; HIGH 10/10). The close doesn't depend on them. If you say one, say it with the baseline, never as a bare accuracy figure.
@@ -118,11 +119,11 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - **do not open Nightshift's own Console or Providers tabs for this shot**; the trace viewer is enough;
   - make sure the receipt id isn't mistaken for a token: it's a request id, which is fine to show.
 
-### 6 · The Skeptic drops a false link · 1:40–2:10 (30 s, ~70 words)
+### 6 · A second opinion: the Skeptic · 1:40–2:10 (30 s, ~68 words)
 
 - **Screen:** same trace, steps #45–#50. #45 is the Linker's reason (CMBT area, close in time and space, two thin males). #46–#48 are the Skeptic's own Zetaris queries (`via=zetaris`). #50 is **drop · rejected · 0.69**, with its reason: age bands differ, different crime categories, no vehicle or MO overlap. No alert is written for that pair. The line shows `struck=[]`; don't zoom on it and don't say "strike".
 - **Narration:**
-  > The Linker scores each pair on nine factors, in code. Here, two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries and disagrees. The ages don't match, one is a shop theft and one a two-wheeler theft, and nothing else overlaps. It drops the link, and no alert is written.
+  > The Linker scores each pair on nine factors, in code. Two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries: the ages differ, and one is a shop theft, the other a two-wheeler theft. It drops this link. It is a second opinion, not a guarantee: in our planted test it missed look-alike false links, so the officer decides.
 - **Check no secrets visible:** the trace summaries are redacted by design (D-025). Scan the expanded rows for any key-shaped string anyway.
 
 ### 7 · The analyst decides, and H-MEM learns · 2:10–2:45 (35 s, ~80 words)
@@ -150,7 +151,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 - **Screen:** the title card: Nexus Chennai, Track 1, the sponsor strip and the repo URL. Optional: "All data synthetic" in small print.
 - **Narration:**
-  > Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what the data can't support, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
+  > Zetaris finds the facts, Nemotron reads and reasons, the Skeptic gives a second opinion, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
 - **Check no secrets visible:** a static card.
 
 ## Swap-in shots once their features merge (no extra time)
@@ -202,7 +203,7 @@ Here is the same question in Zetaris: same-category crimes within a few kilometr
 Every model call is accountable. This is the Skeptic's critique, sent through Nightshift on the pinned reasoning lane. The trace records the model, Nemotron Ultra, and the receipt Nightshift returned for this exact request. The NVIDIA key lives only inside Nightshift, never in our app.
 
 [seg_06]
-The Linker scores each pair on nine factors, in code. Here, two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries and disagrees. The ages don't match, one is a shop theft and one a two-wheeler theft, and nothing else overlaps. It drops the link, and no alert is written.
+The Linker scores each pair on nine factors, in code. Two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries: the ages differ, and one is a shop theft, the other a two-wheeler theft. It drops this link. It is a second opinion, not a guarantee: in our planted test it missed look-alike false links, so the officer decides.
 
 [seg_07]
 The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
@@ -211,7 +212,7 @@ The analyst sees why: each reason, its evidence, and the Zetaris query behind it
 Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier. From the series, an analyst proposes a joint task force, and a supervisor approves it.
 
 [seg_09]
-Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what the data can't support, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
+Zetaris finds the facts, Nemotron reads and reasons, the Skeptic gives a second opinion, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
 ```
 
 ## Narration facts to re-check at recording time
@@ -224,7 +225,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 | "across three stations" | Live series SER-B687C36CFC, "Red two-wheeler chain snatchings · 3 stations": 9 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-3 DB read, 26 Oct 22:56, after D-033 removed test FIR AD-2026-001231 and the naming fix #245) | Say the station count shown on screen, or just "across stations" |
 | Seg 3: variant A "Nexus reads the CCTV still with Nemotron Super VL" / variant B "…couldn't be reached…" | A: a vision `model_call` (Super VL, receipt) in the recorded take's trace. B: a `vision_unavailable` step | Say only the variant the trace shows; read one sentence, not both. If the trace has neither, cut the sentence |
 | Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
-| Seg 6: "ages don't match… shop theft… two-wheeler theft… nothing else overlaps… drops the link" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
+| Seg 6: "the ages differ… shop theft… two-wheeler theft… It drops this link… in our planted test it missed look-alike false links" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
 | Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
 

@@ -48,6 +48,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [README_DRAFT](submission/README_DRAFT.md): superseded; the public README is the root `README.md`
 - [SPONSOR_TECH_FINAL](submission/SPONSOR_TECH_FINAL.md): paste-ready sponsor technology text for the form
 - [FORM](submission/FORM.md): paste-ready HackOS form answers (description, links, pre-existing declaration)
+- [COMPLIANCE](submission/COMPLIANCE.md): every HackOS requirement mapped to where we meet it, with the red gaps and what only Ravee can do
 - [DECK](submission/DECK.md): slide-by-slide deck content, with the screenshot each slide needs
 - [VIDEO_SCRIPT](submission/VIDEO_SCRIPT.md): demo video script (Red Pulsar story) and ElevenLabs narration
 - [SPONSOR_TECH](SPONSOR_TECH.md): sponsor technology text for the form (draft, evidence-backed only)

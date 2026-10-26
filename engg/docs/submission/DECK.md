@@ -57,7 +57,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 ## Slide 3 · The solution in one picture (point 2)
 
-- **On slide:** "Agents read every source through Zetaris, think with Nemotron through Nightshift, and raise link alerts that a Skeptic re-checks and a human decides."
+- **On slide:** "Agents read every source through Zetaris, think with Nemotron through Nightshift, and raise link alerts that a Skeptic gives a second opinion on and a human decides."
 - **Three outputs:** a link alert (score, per-factor evidence, Zetaris query id) → a series with a dossier → a public appeal an officer publishes.
 - **Visual:** alert detail page (`/console/alerts/[alertId]`) showing the factor bars and evidence.
 - **Check no secrets visible:** none on this page beyond the user menu.
@@ -87,7 +87,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - **Governed:** agents may run only registered named queries: **13 the agents run**, plus 4 system queries for health, data quality and the Data sources page. Each one's id lands in the trace.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
-  - **The Skeptic re-runs Zetaris queries itself** before any alert reaches a human.
+  - **The Skeptic re-runs Zetaris queries itself** for its second opinion on each pair.
 - **Visual:** the Zetaris UI (`localhost:3000`) running a live `q_candidates` or `q_case` query, with the result grid.
 - **Check no secrets visible:** Zetaris UI must not show a settings/API-token page; crop the URL bar.
 
@@ -119,10 +119,10 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 9 · What was unique (point 6)
 
 - **On slide (three lines, big):**
-  1. "The data layer is the fact-checker: the Skeptic re-queries Zetaris and drops links the data doesn't support."
+  1. "The data layer is also the second opinion: the Skeptic re-queries Zetaris itself, and the officer decides."
   2. "Rejected links stay visible and teach the system through H-MEM."
   3. "The public can help without steering it: Scout Intent screens every tip first."
-- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`, demo **admin** login; steps #46–#50) showing the Skeptic's own Zetaris queries and then **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
+- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`, demo **admin** login; steps #46–#50) showing the Skeptic's own Zetaris queries and then **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted; a pair that differs on crime type, not a look-alike), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
 
 ## Slide 10 · Product visuals (point 7)
 
@@ -165,6 +165,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 - **Limitations (stated plainly):**
   - synthetic data;
   - vision runs on a rate-limited third-party free route (fine for synthetic stills, not for real evidence);
+  - the Skeptic is a second opinion, not a guarantee: on a pre-registered planted test it dropped 0 of 24 look-alike false links (#392);
   - the reasoning lane is Ultra 550B because Super 120B isn't served to our key;
   - bcrypt instead of Argon2id for tip passphrases;
   - model-written explanations can be imperfect, but the numbers can't (code computes them).
