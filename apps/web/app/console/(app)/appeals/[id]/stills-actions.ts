@@ -51,7 +51,7 @@ export async function attachStill(appealId: string, evidenceId: string): Promise
   if (hasMetadata(out.jpeg)) return { ok: false, error: "Metadata check failed; nothing was published." }; // belt and braces
 
   const path = stillPath(appealId, randomUUID());
-  const { error: upErr } = await sb.storage.from(APPEAL_BUCKET).upload(path, out.jpeg, { contentType: "image/jpeg", upsert: false, cacheControl: "300" });
+  const { error: upErr } = await sb.storage.from(APPEAL_BUCKET).upload(path, out.jpeg, { contentType: "image/jpeg", upsert: false, cacheControl: "60" });
   if (upErr) return { ok: false, error: `Could not store the blurred copy: ${upErr.message}` };
 
   const entry: StillEntry = {
