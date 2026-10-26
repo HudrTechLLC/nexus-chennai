@@ -109,7 +109,8 @@ export function rewriteHref(href: string | undefined, index: DocsIndex): string 
   if (/diagrams\/[^/]+\.svg$/.test(base)) return `/engg-docs/diagrams/${base.split("/").pop()}`;
   if (/(^|\/)SPEC\.md$/.test(base)) return hash && tabIds.has(hash) ? `/docs/${hash}` : "/docs/overview";
   if (base === "workstreams.json") return "/docs/progress";
-  const note = index.notes.find((n) => n.file === base || n.file === `hackathon/${base}`);
+  // Notes can live in subfolders (hackathon/, submission/); sibling links inside them use the bare file name.
+  const note = index.notes.find((n) => n.file === base || n.file.endsWith(`/${base}`));
   if (note) return `/docs/notes/${note.slug}`;
   if (/(^|\/)validation\/README\.md$/.test(base)) return "/docs/notes/00-index";
   return href;
