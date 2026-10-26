@@ -22,7 +22,10 @@ from typing import Any
 from .base import AgentDeps, AgentError, chat_json, short
 
 AGENT = "Extractor"
-EXTRACTOR_VERSION = "mo-v3"
+EXTRACTOR_VERSION = "mo-v4"
+# mo-v4 changed only the prompt grounding (recorded category + multi-type label examples); the label
+# vocabulary is the same, so stored mo-v3 features stay valid and are never re-extracted for the bump.
+COMPATIBLE_VERSIONS: tuple[str, ...] = ("mo-v3", "mo-v4")
 
 MO_FIELDS: tuple[str, ...] = (
     "approach", "offender_count", "target", "target_item", "escape",
@@ -37,7 +40,12 @@ Return ONE JSON object and nothing else:
         "escape": str|null, "violence": str|null, "time_band": "morning"|"afternoon"|"evening"|"night"|null,
         "place_type": [str], "disguise": [str], "verbal": str|null},
  "visual_tags": [str], "entities": {"plates": [str], "persons": [str], "phones": [str]}}
-Rules: use short snake_case labels (e.g. "two_wheeler_from_behind", "lone_pedestrian_woman", "gold_chain").
+Rules: use short snake_case labels that describe THIS text, whatever the crime type. Label shapes only, e.g.
+  chain snatching: approach "two_wheeler_from_behind", target "lone_pedestrian_woman", target_item "gold_chain";
+  house break: approach "rear_window_grille_cut", target "locked_house_owner_away", target_item "gold_jewellery_and_cash";
+  cab robbery: approach "posed_as_ride_hailing_cab", target "late_night_passenger", target_item "cash_and_mobile_phone".
+Never use a label the text does not support: no vehicle in the text means no vehicle in approach or escape.
+The "Recorded as" line, when present, is the crime type the police recorded.
 Fill every field the text supports, including reasonable labels for approach, target, escape and time_band
 (e.g. 7-9 pm is "evening"); use null or [] only when the text gives no clue.
 Output the JSON object exactly once, then stop. Plates keep unknown characters as "?".
@@ -190,6 +198,9 @@ class Extractor:
         text_in = "\n\n".join(parts)
         if not text_in.strip() or text_in.strip() == "FIR narrative:":
             raise AgentError(f"No text to extract for {crime_id}")
+        recorded = " / ".join(str(case[k]) for k in ("category", "sub_type") if case.get(k))
+        if recorded:  # grounding: Lightning (thinking off) otherwise copies example labels across crime types
+            text_in = f"Recorded as: {recorded}\n\n{text_in}"
 
         out, result = self._extract_text(text_in, f"mo {crime_id}")
         mo = clean_mo(out.get("mo"))

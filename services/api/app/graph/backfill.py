@@ -33,7 +33,7 @@ from ..adapters.zetaris import ZetarisClient
 from ..config import REPO_ROOT, Settings, get_settings
 from ..tracing import Tracer, new_run_id
 from ..agents.base import AgentDeps, AgentError, MemoryStore, crime_from_row, features_from_row
-from ..agents.extractor import EXTRACTOR_VERSION, Extractor
+from ..agents.extractor import COMPATIBLE_VERSIONS, Extractor
 
 DEFAULT_JSONL = REPO_ROOT / "data" / "sample" / "crime_features.jsonl"
 JSONL_FIELDS = ("crime_id", "extractor_version", "model", "routed_model", "receipt_id", "mo", "visual_tags",
@@ -75,9 +75,9 @@ def _paged(sb: SupabaseClient, table: str, params: dict[str, str], page: int = 1
 
 
 def stored_ids(sb: SupabaseClient) -> set[str]:
-    """Crimes this extractor version already extracted with a model receipt (a model call happened)."""
+    """Crimes already extracted by a compatible extractor version with a model receipt (a model call happened)."""
     return {r["crime_id"] for r in _paged(sb, "crime_features", {
-        "select": "crime_id", "extractor_version": f"eq.{EXTRACTOR_VERSION}", "receipt_id": "not.is.null",
+        "select": "crime_id", "extractor_version": f"in.({','.join(COMPATIBLE_VERSIONS)})", "receipt_id": "not.is.null",
         "order": "crime_id.asc"})}
 
 
@@ -94,7 +94,7 @@ def export_jsonl(sb: SupabaseClient, path: Path) -> int:
                 local[rec["receipt_id"]] = rec
     rows = _paged(sb, "crime_features", {
         "select": "crime_id,extractor_version,model,receipt_id,mo,visual_tags,entities,confidence,synthetic",
-        "extractor_version": f"eq.{EXTRACTOR_VERSION}", "receipt_id": "not.is.null", "order": "crime_id.asc"})
+        "extractor_version": f"in.({','.join(COMPATIBLE_VERSIONS)})", "receipt_id": "not.is.null", "order": "crime_id.asc"})
     tmp = path.with_suffix(".jsonl.tmp")
     tmp.parent.mkdir(parents=True, exist_ok=True)
     with tmp.open("w", encoding="utf-8", newline="\n") as fh:
