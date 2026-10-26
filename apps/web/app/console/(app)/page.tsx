@@ -3,7 +3,7 @@ import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { ROLE_LABEL, canDecideAlerts } from "@/lib/roles";
 import {
-  OPEN_STATUSES, alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, topSeries, weekKpis,
+  OPEN_STATUSES, alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, seriesCount, topSeries, weekKpis,
   type AlertRow, type SeriesRow,
 } from "@/lib/overview";
 
@@ -53,7 +53,7 @@ export default async function Overview({ searchParams }: { searchParams: { denie
   const funnel = alertFunnel(alertRows);
   const top = topSeries(seriesRows, (members.data ?? []) as { series_id: string }[]);
   const lines = briefing({
-    alerts: alertRows, firsToday: firs.count ?? 0, tipsThisWeek: tips.count ?? 0, series: seriesRows,
+    alerts: alertRows, firsToday: firs.count ?? 0, firsStation: ownStation, tipsThisWeek: tips.count ?? 0, series: seriesRows,
     decisions: (decisions.data ?? []) as { at: string; decision: string }[], now,
   });
   const errors = [open, undetected, firs, alerts, taskforces, series, members, tips, decisions].map((r) => r.error?.message).filter(Boolean);
@@ -105,10 +105,10 @@ export default async function Overview({ searchParams }: { searchParams: { denie
 
         <section className="rounded-xl border border-line bg-surface p-5">
           <h2 className="mb-1 font-semibold">Alert funnel</h2>
-          <p className="mb-3 text-xs text-muted">All stored link alerts: raised by the Linker, passed by the Skeptic, then approved by an analyst.</p>
+          <p className="mb-3 text-xs text-muted">Link alerts written by the agents, then approved by an analyst. Only pairs the Skeptic passed are stored as alerts; the pairs it dropped are in each run’s trace.</p>
           <ol className="space-y-2">
             {[
-              ["Raised", funnel.raised],
+              ["Alerts written", funnel.raised],
               ["Skeptic-approved", funnel.skepticApproved],
               ["Analyst-approved", funnel.analystApproved],
             ].map(([label, v]) => (
@@ -132,7 +132,7 @@ export default async function Overview({ searchParams }: { searchParams: { denie
             {top.map((s) => (
               <li key={s.series_id}>
                 <Link href={`/console/series/${encodeURIComponent(s.series_id)}`} className="underline-offset-2 hover:underline">{s.name}</Link>
-                <span className="text-muted"> · {s.members} case{s.members === 1 ? "" : "s"} · {s.status}</span>
+                <span className="text-muted"> · {[seriesCount(s.name, s.members), s.status].filter(Boolean).join(" · ")}</span>
               </li>
             ))}
           </ul>
