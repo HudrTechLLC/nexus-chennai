@@ -161,7 +161,7 @@ export function FirFormView({ sections, stations, ownStationId, isAdmin, home }:
               </span>
             ))}
           </div>
-          <input value={secQuery} onChange={(e) => setSecQuery(e.target.value)} placeholder="Type an IPC or BNS code or a word (e.g. IPC 392, snatching)" className={`${input} mt-2`} />
+          <input value={secQuery} onChange={(e) => setSecQuery(e.target.value)} placeholder="IPC/BNS code or word, e.g. IPC 392" className={`${input} mt-2`} />
           <ul className="mt-1 divide-y divide-line rounded-md border border-line">
             {suggested.map((s) => (
               <li key={sectionCode(s)}>
