@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T20:24:52+05:30",
+  "updated": "2026-10-26T21:09:14+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -201,6 +201,13 @@
           "title": "Data-quality counts on the System page",
           "status": "done",
           "note": "nexus-1 · q_dq_summary + app.dq_status → system_status (#252)"
+        },
+        {
+          "id": "WS1-22",
+          "phase": "P2",
+          "title": "q_news performance: read sb.crimes directly (2–4 s, was 14–17 s)",
+          "status": "done",
+          "note": "nexus-2 · #237"
         }
       ]
     },
@@ -412,8 +419,8 @@
           "id": "WS2-25",
           "phase": "P3",
           "title": "Address guard on MO tags (privacy, J5)",
-          "status": "todo",
-          "note": "nexus-3 · strip street/locality fragments; re-extract 5 rows"
+          "status": "in_progress",
+          "note": "nexus-5 code (PR #271, named places only) · nexus-3 re-clean of stored rows, no re-extract"
         },
         {
           "id": "WS2-26",
@@ -421,6 +428,13 @@
           "title": "Red Pulsar live re-run on fixed code (hero stays pending)",
           "status": "in_progress",
           "note": "nexus-3 · rp7; model critique on every alert, fresh ANPR vehicle check"
+        },
+        {
+          "id": "WS2-27",
+          "phase": "P6",
+          "title": "Sample-mode date fix (Skeptic vehicle re-check, offender support)",
+          "status": "done",
+          "note": "nexus-3 · #270"
         }
       ]
     },
@@ -592,6 +606,27 @@
           "title": "Console polish from the video dry-run",
           "status": "done",
           "note": "nexus-4 · #240 (map loading, series auto-fit, 1080p header)"
+        },
+        {
+          "id": "WS3-21",
+          "phase": "P5",
+          "title": "Demo-account quick-fill on the login page",
+          "status": "done",
+          "note": "nexus-4 · #267; logins from a Vercel env var, never in the repo"
+        },
+        {
+          "id": "WS3-22",
+          "phase": "P7",
+          "title": "Pulse Map opens framed on the visible data (per role)",
+          "status": "in_progress",
+          "note": "nexus-4 · user request"
+        },
+        {
+          "id": "WS3-23",
+          "phase": "P7",
+          "title": "Admin nav on one line; eval page self-link",
+          "status": "todo",
+          "note": "nexus-4"
         }
       ]
     },
@@ -679,6 +714,34 @@
           "title": "Appeal publish guard: names, landmarks, area label, column grants",
           "status": "done",
           "note": "nexus-5 · 0007_08–0007_10 (#194, #198, #216)"
+        },
+        {
+          "id": "WS4-11",
+          "phase": "P8",
+          "title": "Public map: per-crime cards and detail view on hex click (privacy-safe fields)",
+          "status": "todo",
+          "note": "nexus-5 · 0007_11 RPCs; opaque public ids, no narratives/places/persons"
+        },
+        {
+          "id": "WS4-12",
+          "phase": "P8",
+          "title": "\"Add a tip\" prefilled from a crime card or an appeal",
+          "status": "todo",
+          "note": "nexus-5 (shared /tip/new prefill) + nexus-4 (appeal pages)"
+        },
+        {
+          "id": "WS4-13",
+          "phase": "P8",
+          "title": "Appeal pages: area map + \"See on crime map\" link",
+          "status": "todo",
+          "note": "nexus-4"
+        },
+        {
+          "id": "WS4-14",
+          "phase": "P8",
+          "title": "Synthetic published appeals from several stations",
+          "status": "todo",
+          "note": "nexus-2 · seed through the live publish guard; hero/judge cases excluded"
         }
       ]
     },
@@ -798,6 +861,13 @@
           "title": "Pre-freeze cleanup of test data (Ravee approves the list)",
           "status": "todo",
           "note": "nexus-7 list; audit_log never deleted"
+        },
+        {
+          "id": "WS5-16",
+          "phase": "P10",
+          "title": "Path 2 plan: engg/docs/PATH2.md",
+          "status": "in_progress",
+          "note": "nexus-7"
         }
       ]
     },
