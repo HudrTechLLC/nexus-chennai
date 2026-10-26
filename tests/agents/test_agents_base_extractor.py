@@ -87,7 +87,8 @@ def test_chat_json_salvages_complete_object_from_cut_off_repeat(make_deps):
     deps.nightshift = N()
     out, _ = chat_json(deps, "fast", [], agent="T", purpose="p")
     assert out == {"a": 1}
-    assert any(e["action"] == "model_output_truncated" for e in deps.tracer.read())
+    ev = [e for e in deps.tracer.read() if e["action"] == "llm_reply_truncated"]
+    assert len(ev) == 1 and '"action": "salvaged"' in ev[0]["output_summary"] and ev[0]["status"] == "degraded"
 
 
 def test_extract_case_rejects_empty_mo(make_deps):
@@ -295,3 +296,96 @@ def test_tip_summary_never_copies_tip_text():
         assert leaked not in s
     assert tip_summary({"verdict": "quarantine"}, tags) is None
     assert tip_summary({"verdict": "clean"}, []) == "Tip: no specific details recognised."
+
+
+def _cut_then_ok(first: str, then: str):
+    """Fake Nightshift: the first reply is cut off at max_tokens, the retry finishes."""
+    from app.adapters.nightshift import ModelResult
+    budgets: list[int] = []
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            budgets.append(params["max_tokens"])
+            cut = len(budgets) == 1
+            return ModelResult(lane, "m", "m", first if cut else then, None, False, 1,
+                               raw={"choices": [{"finish_reason": "length" if cut else "stop"}]})
+
+    return N(), budgets
+
+
+def test_chat_json_cut_off_draft_fragment_is_not_the_answer(make_deps):
+    # Live Ultra: a 7-pair Skeptic critique cut at 2048 tokens; the only complete objects were
+    # per-pair drafts in its thinking. Salvaging one silently dropped every critique.
+    first = 'Pair 1 looks like {"verdict": "drop", "critique": "x", "requery": {}} and pair 2 {"verdict"'
+    n, budgets = _cut_then_ok(first, '{"pairs": {"p1": {"verdict": "approve"}}}')
+    deps = make_deps()
+    deps.nightshift = n
+    out, _ = chat_json(deps, "reason", [], agent="T", purpose="p", expect="pairs")
+    assert out == {"pairs": {"p1": {"verdict": "approve"}}}
+    assert budgets[1] == 2 * budgets[0]
+    ev = [e for e in deps.tracer.read() if e["action"] == "llm_reply_truncated"]
+    assert len(ev) == 1 and '"action": "retried"' in ev[0]["output_summary"] and '"lane": "reason"' in ev[0]["output_summary"]
+
+
+def test_chat_json_cut_off_repeat_with_expected_key_is_salvaged(make_deps):
+    n, budgets = _cut_then_ok('{"steps": [1]} {"steps": [1]} {"st', '{"steps": [2]}')
+    deps = make_deps()
+    deps.nightshift = n
+    out, _ = chat_json(deps, "reason", [], agent="T", purpose="p", expect="steps")
+    assert out == {"steps": [1]} and len(budgets) == 1
+
+
+def test_chat_json_finished_reply_prefers_object_with_expected_key(make_deps):
+    from app.adapters.nightshift import ModelResult
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            return ModelResult(lane, "m", "m", '{"pairs": {"p1": {}}} then a note {"verdict": "drop"}', None,
+                               False, 1, raw={"choices": [{"finish_reason": "stop"}]})
+
+    deps = make_deps()
+    deps.nightshift = N()
+    out, _ = chat_json(deps, "reason", [], agent="T", purpose="p", expect="pairs")
+    assert out == {"pairs": {"p1": {}}}
+
+
+def test_chat_json_finished_reply_without_expected_key_retries(make_deps):
+    from app.adapters.nightshift import ModelResult
+    replies = iter(['{"verdict": "drop"}', '{"pairs": {}}'])
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            return ModelResult(lane, "m", "m", next(replies), None, False, 1,
+                               raw={"choices": [{"finish_reason": "stop"}]})
+
+    deps = make_deps()
+    deps.nightshift = N()
+    out, _ = chat_json(deps, "reason", [], agent="T", purpose="p", expect="pairs")
+    assert out == {"pairs": {}}
+    assert any(e["action"] == "model_output_invalid" for e in deps.tracer.read())
+
+
+@pytest.mark.parametrize("agent_mod,key", [("linker", "pairs"), ("skeptic", "pairs"), ("planner", "steps")])
+def test_reason_lane_agents_declare_expected_key(agent_mod, key):
+    import inspect
+    import importlib
+    src = inspect.getsource(importlib.import_module(f"app.agents.{agent_mod}"))
+    assert f'expect="{key}"' in src
+
+
+def test_chat_json_cut_off_twice_fails_loudly(make_deps):
+    from app.adapters.nightshift import ModelResult
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            assert len(messages) == 0  # the retry resends the request, not the cut-off thinking
+            return ModelResult(lane, "m", "m", '{"verdict": "drop"} {"pai', None, False, 1,
+                               raw={"choices": [{"finish_reason": "length"}]})
+
+    deps = make_deps()
+    deps.nightshift = N()
+    with pytest.raises(AgentError, match="cut off"):
+        chat_json(deps, "reason", [], agent="T", purpose="p", expect="pairs")
+    actions = [e["output_summary"] for e in deps.tracer.read() if e["action"] == "llm_reply_truncated"]
+    assert ['"action": "retried"' in a for a in actions] == [True, False]
+    assert '"action": "failed"' in actions[1]

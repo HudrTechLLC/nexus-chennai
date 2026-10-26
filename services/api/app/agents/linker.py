@@ -23,7 +23,7 @@ from typing import Any
 
 from ..scoring import FactorResult, PairScore, score_pair
 from ..scoring import factors as F
-from .base import AgentDeps, AgentError, chat_json, short
+from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, chat_json, short
 
 AGENT = "Linker"
 
@@ -358,11 +358,12 @@ class Linker:
         model = None
         try:
             out, result = chat_json(self.deps, "reason", messages, agent=AGENT,
-                                    purpose=f"rationale {len(todo)} pairs", temperature=0.2)
+                                    purpose=f"rationale {len(todo)} pairs", temperature=0.2, expect="pairs")
             model = result.model
             answers = out.get("pairs") or {}
         except AgentError as exc:
-            self.deps.tracer.emit(AGENT, "rationale_failed", output_summary=short(str(exc)), status="error")
+            self.deps.tracer.emit(AGENT, "rationale_failed", input_summary=f"{len(todo)} pairs",
+                                  output_summary=short(f"code reasons used for every pair: {exc}"), status="degraded")
             answers = {}
         for p in todo:
             ans = answers.get(p.pair_id) if isinstance(answers, Mapping) else None
@@ -377,5 +378,5 @@ class Linker:
             p.recommended_action = str(ans.get("recommended_action") or "").strip()[:400] or None
             p.rationale_model = model
             self.deps.tracer.emit(AGENT, "explain_pair", input_summary=p.pair_id,
-                                  output_summary=short(p.rationale or "(no rationale)"), model=model,
+                                  output_summary=short(p.rationale or "(no rationale)", REASON_SUMMARY_CHARS), model=model,
                                   target_agent="Skeptic", status="ok" if p.rationale else "fallback")

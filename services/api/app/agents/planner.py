@@ -192,7 +192,7 @@ class Planner:
         source, notes = "model", []
         try:
             out, result = chat_json(self.deps, "reason", messages, agent=AGENT, purpose=f"plan round {round_no}",
-                                    temperature=0)
+                                    temperature=0, expect="steps")
             steps, notes = validate_steps(out.get("steps") or [], case)
             if not steps or steps[0].name != "q_candidates":
                 raise AgentError("plan has no q_candidates step")

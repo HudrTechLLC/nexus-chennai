@@ -71,6 +71,8 @@ class SkepticReview(NexusModel):
     rounds: int = Field(ge=0)
     struck: list[str] = []
     verdict: str  # e.g. approved, needs_revision, rejected
+    # applied | unavailable | skipped; absent when the pair never reached the model critique.
+    model_critique: Literal["applied", "unavailable", "skipped"] | None = None
 
 
 class Decision(NexusModel):
