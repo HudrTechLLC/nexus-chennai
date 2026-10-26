@@ -33,6 +33,7 @@ INPUTS = {
     "q_search": {"category": "robbery", "pattern": "pulsar", "since": "2026-01-01", "until": "2026-10-26",
                  "station_id": "", "status": ""},
     "q_context": {"crime_id": HERO},
+    "q_source_counts": {},
 }
 SMALL, LARGE = 1000, 50000
 # Callers that pass their own limit (the answer is legitimately larger than the default page).

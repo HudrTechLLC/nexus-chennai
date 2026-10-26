@@ -476,3 +476,52 @@ def _q_cases() -> dict:
 Q_CASES = _q_cases()
 N2_SPECS[Q_CASES["name"]] = Q_CASES
 TWINS["q_cases"] = (Q_CASES["sample"], CASE_COLUMNS)
+
+
+# ---------------------------------------------------------------------------- q_source_counts (WS3-27)
+# Row count of every federated source, for the console Data sources page. Vercel cannot reach Zetaris
+# (D-019), so app.dq_status runs this and writes system_status 'zetaris:sources' (detail.counts keyed by the
+# source id). The ids are the page's registry ids (apps/web/lib/dataSources.ts; a test keeps them equal).
+# A REST table is one JSON response per call, so the feeds are counted through their item views.
+# The sample twin counts what the bundle has; a source the bundle lacks is NULL (not measured), never 0.
+SOURCE_COUNT_COLUMNS = ("source", "n")
+SOURCE_COUNTS: tuple[tuple[str, str, str | None], ...] = (
+    # (registry id, relation counted live, DuckDB relation over data/sample or None)
+    ("sb.crimes", "sb.crimes", "'sb/crimes.parquet'"),
+    ("sb.crime_vehicles", "sb.crime_vehicles", "'sb/crime_vehicles.parquet'"),
+    ("sb.statements", "sb.statements", "'sb/statements.parquet'"),
+    ("sb.forensics", "sb.forensics", "'sb/forensics.parquet'"),
+    ("sb.crime_features_v", "sb.crime_features_v", "'sb/crime_features.parquet'"),
+    ("sb.stations", "sb.stations", "'sb/stations.parquet'"),
+    ("sb.evidence_media", "sb.evidence_media", "'sb/evidence_media.parquet'"),
+    ("sb.tips_v", "sb.tips_v", "'sb/tips.parquet'"),
+    ("sb.section_map", "sb.section_map", "'sb/section_map.parquet'"),
+    ("s3csv.cctns", "s3csv.cctns", "read_csv('legacy/cctns_*.csv', all_varchar = true, header = true)"),
+    ("s3pq.archive", "s3pq.archive", "'legacy/archive.parquet'"),
+    ("s3pq.anpr_reads", "s3pq.anpr_reads", "'anpr/reads.parquet'"),
+    ("s3csv.anpr_cameras", "s3csv.anpr_cameras", None),
+    ("s3csv.cctv_cameras", "s3csv.cctv_cameras", None),
+    ("s3pq.calls", "s3pq.calls", "'calls/calls.parquet'"),
+    ("s3csv.releases", "s3csv.releases", "read_csv('ref/releases.csv', all_varchar = true, header = true)"),
+    ("s3csv.history_sheets", "s3csv.history_sheets", "read_csv('ref/history_sheets.csv', all_varchar = true, header = true)"),
+    ("s3csv.place_aliases", "s3csv.place_aliases", "read_csv('ref/place_aliases.csv', all_varchar = true, header = true)"),
+    ("s3csv.calendar", "s3csv.calendar", "read_csv('ref/calendar.csv', all_varchar = true, header = true)"),
+    ("s3pq.osm_pois", "s3pq.osm_pois", "'ref/osm_pois.parquet'"),
+    ("nexus_feeds.rest_news", "nexus.news_items", "read_json_auto('news/articles.jsonl')"),
+    ("nexus_feeds.rest_social", "nexus.social_posts", "read_json_auto('social/posts.jsonl')"),
+    ("nexus_feeds.rest_weather", "nexus.weather_hourly", None),
+)
+
+
+def _q_source_counts() -> dict:
+    live = " UNION ALL ".join(f"SELECT '{sid}' AS source, count(*) AS n FROM {rel}" for sid, rel, _ in SOURCE_COUNTS)
+    sample = " UNION ALL ".join(
+        f"SELECT '{sid}' AS source, count(*) AS n FROM {rel}" if rel else f"SELECT '{sid}' AS source, CAST(NULL AS BIGINT) AS n"
+        for sid, _, rel in SOURCE_COUNTS)
+    return dict(name="q_source_counts", lightning=f"SELECT source, n FROM ({live}) s ORDER BY source",  # D-031
+                sample=f"SELECT source, n FROM ({sample}) s ORDER BY source", columns=SOURCE_COUNT_COLUMNS,
+                timeout_s=180.0, description="Row count of each federated source (Data sources page, via app.dq_status)")
+
+
+Q_SOURCE_COUNTS = _q_source_counts()
+N2_SPECS[Q_SOURCE_COUNTS["name"]] = Q_SOURCE_COUNTS
