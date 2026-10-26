@@ -263,3 +263,13 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
 - **Why:** it costs $0 (the bucket is about 60–100 MB, inside the free tier), needs no new account, and stays a separate object store that Zetaris federates. That keeps the data-layer story intact.
 - **Keys:** the access key is read from `~/.secrets/nexus-s3.key` only, and redacted in every log. The team accepted that this key appeared in a chat transcript; it is short-lived and is **deleted after the hackathon**.
 - **Fallback:** AWS S3 in `ap-south-1`, only if Zetaris cannot sign requests for Supabase's endpoint. That would need the team's approval and an account.
+
+## D-023 · Tip passphrases hashed with bcrypt inside the database (deviation from J1) (2026-10-26)
+- **Spec J1 says Argon2id.** Doing that in the Next.js route handler would mean the handler needs the stored hash to verify a tip-status lookup. The only way to get it would be an anon-callable RPC that returns the hash.
+- **The decision:** `submit_tip` and `tip_status` (security-definer RPCs) hash and verify with pgcrypto bcrypt (`crypt(p, gen_salt('bf', 12))`), so the hash never leaves Postgres.
+- **Safeguards:**
+  - one generic error for both a wrong code and a wrong passphrase;
+  - an attempt limit per tip code;
+  - the route handler only rate-limits and strips EXIF;
+  - passphrases are never logged.
+- **Trade-off:** bcrypt is weaker than Argon2id against GPU cracking, but each tip code is random and attempts are limited online. The README states the deviation.
