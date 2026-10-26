@@ -27,3 +27,7 @@ SELECT count(*) AS crimes FROM sb.crimes;
 -- Postgres text[] arrives over JDBC as a '{...}' string, so features come through a view that
 -- turns arrays and jsonb into JSON text on the source.
 CREATE DATASOURCE VIEW crime_features_v FROM sb AS SELECT crime_id, extractor_version, mo::text AS mo, array_to_json(visual_tags)::text AS visual_tags, entities::text AS entities, model, receipt_id, confidence, (reviewed_by IS NOT NULL) AS reviewed_by_officer, synthetic FROM public.crime_features;
+
+-- Tips: only the columns zetaris_reader is granted (0003_zetaris_reader_tips). No raw text, no
+-- passphrase hash. Agents use the Tip Guard output in `guard`.
+CREATE DATASOURCE VIEW tips_v FROM sb AS SELECT tip_id, public_incident_id, channel, category, guard::text AS guard, approx_cell, received_week, status, source, source_row_id, synthetic FROM public.tips;

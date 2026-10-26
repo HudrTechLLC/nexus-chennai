@@ -3,7 +3,7 @@
 import re
 
 from app.adapters.zetaris import NAMED_QUERIES, render
-from app.adapters.zetaris_queries_n1 import CASE_COLUMNS, FEATURES_COLUMNS, specs
+from app.adapters.zetaris_queries_n1 import CANDIDATE_COLUMNS, CASE_COLUMNS, FEATURES_COLUMNS, specs
 
 
 def test_registered_with_contract_columns():
@@ -19,7 +19,7 @@ def test_lightning_renders_with_only_declared_params():
 
 
 def test_reads_only_registered_sources_and_safe_views():
-    for name in ("q_case", "q_features"):
+    for name in ("q_case", "q_features", "q_candidates"):
         sql = NAMED_QUERIES[name].lightning
         tables = set(re.findall(r"\bFROM\s+([a-z_]+\.[a-z_]+)", sql, flags=re.I))
         assert tables <= {"sb.crimes", "sb.crime_vehicles", "sb.statements", "sb.evidence_media", "sb.forensics",
@@ -34,6 +34,13 @@ def test_city_time_comes_from_the_pack():
 
 def test_no_param_lookalikes_in_sql():
     # ':' followed by letters is parsed as a parameter by render(); time formats must not contain it
-    for name in ("q_case", "q_features"):
+    for name in ("q_case", "q_features", "q_candidates"):
         params = set(re.findall(r":([a-z_][a-z0-9_]*)", NAMED_QUERIES[name].lightning))
-        assert params <= {"crime_id", "ids"}, params
+        assert params <= {"crime_id", "ids", "days", "ring"}, params
+
+
+def test_candidates_contract_and_params():
+    q = NAMED_QUERIES["q_candidates"]
+    assert q.columns == CANDIDATE_COLUMNS
+    sql = render(q.lightning, {"crime_id": "X", "days": 45, "ring": 6})
+    assert "<= 45" in sql and "6 / 111.0" in sql and "b.crime_id <> a.crime_id" in sql

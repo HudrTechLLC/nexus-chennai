@@ -39,6 +39,8 @@ CASE_COLUMNS = (
     "geohash7", "week", "severity", "property", "weapon", "offenders_described", "victims", "status",
     "narrative", "synthetic", "vehicles", "statements", "evidence", "forensics", "features",
 )
+CANDIDATE_COLUMNS = ("crime_id", "station_id", "category", "sub_type", "occurred_from", "lat", "lon", "h3_r9",
+                     "geohash7", "days_apart", "km_apart", "same_station")
 FEATURES_COLUMNS = ("crime_id", "extractor_version", "model", "receipt_id", "mo", "visual_tags", "entities",
                     "confidence", "reviewed_by_officer")
 
@@ -81,6 +83,30 @@ Q_FEATURES = (
 )
 
 
+def _km(a: str, b: str) -> str:
+    """Haversine distance in km between two aliases' lat/lon (Spark SQL)."""
+    return (f"2 * 6371 * asin(sqrt(pow(sin(radians({b}.lat - {a}.lat) / 2), 2) + cos(radians({a}.lat)) * "
+            f"cos(radians({b}.lat)) * pow(sin(radians({b}.lon - {a}.lon) / 2), 2)))")
+
+
+def _q_candidates(tz: str, off: str) -> str:
+    """Blocking (spec F1 step 3): same category, within :days, within :ring km of the crime.
+
+    The lat/lon box prefilter keeps the self-join small; the exact ring uses haversine."""
+    return (
+        "SELECT crime_id, station_id, category, sub_type, occurred_from, lat, lon, h3_r9, geohash7, days_apart, "
+        "km_apart, same_station FROM (SELECT b.crime_id, b.station_id, b.category, b.sub_type, "
+        f"{_ts('b.occurred_from', tz, off)} AS occurred_from, b.lat, b.lon, b.h3_r9, b.geohash7, "
+        "abs(datediff(b.occurred_from, a.occurred_from)) AS days_apart, "
+        f"round({_km('a', 'b')}, 3) AS km_apart, b.station_id = a.station_id AS same_station "
+        "FROM sb.crimes a JOIN sb.crimes b ON b.category = a.category AND b.crime_id <> a.crime_id "
+        "WHERE a.crime_id = :crime_id AND abs(datediff(b.occurred_from, a.occurred_from)) <= :days "
+        "AND b.lat BETWEEN a.lat - :ring / 111.0 AND a.lat + :ring / 111.0 "
+        "AND b.lon BETWEEN a.lon - :ring / 108.0 AND a.lon + :ring / 108.0) t "
+        "WHERE km_apart <= :ring ORDER BY km_apart, crime_id"
+    )
+
+
 def _twin(name: str, columns: tuple[str, ...]) -> str:
     """The DuckDB twin from nexus-2 when available; otherwise a stub that fails the width check loudly."""
     try:
@@ -101,6 +127,10 @@ def specs() -> dict[str, dict[str, Any]]:
         "q_case": {"name": "q_case", "lightning": _q_case(tz, off), "sample": _twin("q_case", CASE_COLUMNS),
                    "description": "One crime with vehicles, statements, evidence, forensics and features (D3.1)",
                    "columns": CASE_COLUMNS},
+        "q_candidates": {"name": "q_candidates", "lightning": _q_candidates(tz, off),
+                         "sample": _twin("q_candidates", CANDIDATE_COLUMNS),
+                         "description": "Blocking: same-category crimes within :days and :ring km (F1 step 3)",
+                         "columns": CANDIDATE_COLUMNS},
         "q_features": {"name": "q_features", "lightning": Q_FEATURES,
                        "sample": _twin("q_features", FEATURES_COLUMNS),
                        "description": "Extracted MO features for a comma-joined list of crime ids (D3.2)",
