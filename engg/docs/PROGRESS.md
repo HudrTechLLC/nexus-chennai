@@ -31,13 +31,24 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 |---|---|---|
 | meterless.ai resets the connection, so Nightshift can't be downloaded | Team: ask in HackOS Help Meterless | P0 smoke, P3+ |
 | Nightshift may need a dedicated GPU; the laptop has an integrated Intel Arc | Team: confirm cloud lanes (NVIDIA hosted) work from Nightshift | P3+ |
-| Zetaris platform download + registry login | Team: Zetaris Cloud account | P2 |
-| NVIDIA API key (`nvapi-…`), entered in Nightshift only | Team | P3+ |
+| NVIDIA API key (`nvapi-…`): created; to be entered in Nightshift only | Team | P3+ |
 | AWS S3 bucket `nexus-chennai-data` (or a Zetaris-supported alternative) | Team | P2 |
 
 ## Log
 
 > Live progress chart and full task list: `/docs/progress` in the web app (source `workstreams.json`).
+
+### 2026-10-26 · Zetaris live (branch `chore/zetaris-live`)
+- **Memory fixed:** Reason/RAV antivirus (`rsEngineSvc`, 10.5 GB) was uninstalled by the team. Free RAM went from 0.3 GB to 11.2 GB, and Windows Defender is now active.
+- **Zetaris started:** `docker compose up -d` in `C:\Apps\zetaris-platform`, with the Docker slot claimed in `C:/Apps/_docker-slot/owner.txt`.
+  - `verify.sh` passes 8/9. The ninth item (`bootstrap`) is still loading Zetaris's own sample data.
+- **API access:** token created (org ID 1).
+- **Smoke check:**
+  - Zetaris REST `SELECT 1`: PASS
+  - Supabase: PASS
+  - sample mode: PASS
+  - Nightshift: SKIP (not installed)
+- **Fix:** the sample-mode smoke check now also ignores `ZETARIS_API_KEY_FILE`.
 
 ### 2026-10-26 · Supabase live (branch `feat/supabase-setup`)
 - **Project:** `nexus-qa` (`ukrujnsjucwvytnokbtw`, Singapore), created by the team in the dashboard.
