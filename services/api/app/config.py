@@ -54,6 +54,19 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     port: int = 8000
 
+    # Secrets may be given as a path instead of a value: <NAME>_FILE=/path/to/file.
+    # The file wins over an inline value, so no secret needs to live in a repo .env.
+    zetaris_api_key_file: str = ""
+    meterless_runtime_token_file: str = ""
+    supabase_service_role_key_file: str = ""
+
+    def model_post_init(self, __context: Any) -> None:
+        for name in ("zetaris_api_key", "meterless_runtime_token", "supabase_service_role_key"):
+            path = getattr(self, f"{name}_file")
+            if path:
+                value = Path(path).expanduser().read_text(encoding="utf-8").strip()
+                object.__setattr__(self, name, value)
+
     @property
     def lanes(self) -> dict[str, str]:
         """Configured lanes only (empty lanes are optional and stay off)."""

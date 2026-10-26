@@ -18,8 +18,8 @@ law:
   cutover_date: "2024-07-01"
   section_map: law_sections.csv
 hosting:
-  supabase_region: ap-south-1
-  vercel_region: bom1
+  supabase_region: ap-southeast-1   # project nexus-qa is in Singapore (DECISIONS D-014)
+  vercel_region: sin1
 police:
   commissionerates: [Greater Chennai Police, Tambaram, Avadi]
   stations_file: stations.geojson

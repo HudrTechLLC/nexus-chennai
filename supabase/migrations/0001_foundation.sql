@@ -3,9 +3,9 @@
 -- table access (spec Part I; public data arrives later via narrow RPCs, DECISIONS D-003).
 -- All seeded rows are synthetic or public reference data.
 
-create extension if not exists postgis;
-create extension if not exists pgcrypto;
-create extension if not exists pg_trgm;
+create extension if not exists postgis with schema extensions;
+create extension if not exists pgcrypto with schema extensions;
+create extension if not exists pg_trgm with schema extensions;
 
 create schema if not exists wm;    -- World Model engine
 create schema if not exists hmem;  -- H-MEM engine
@@ -18,8 +18,8 @@ create table if not exists public.stations (
   zone       text,
   district   text,
   region     text,
-  geom       geometry(MultiPolygon, 4326),
-  centroid   geometry(Point, 4326),
+  geom       extensions.geometry(MultiPolygon, 4326),
+  centroid   extensions.geometry(Point, 4326),
   synthetic  boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -28,7 +28,7 @@ create table if not exists public.wards (
   ward_no    integer primary key,
   name       text not null,
   zone       text,
-  geom       geometry(MultiPolygon, 4326),
+  geom       extensions.geometry(MultiPolygon, 4326),
   created_at timestamptz not null default now()
 );
 

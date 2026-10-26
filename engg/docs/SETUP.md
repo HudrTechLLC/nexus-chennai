@@ -14,7 +14,7 @@ Related: [ARCHITECTURE](ARCHITECTURE.md) · [PROGRESS](PROGRESS.md) · [00-INDEX
 | 1 | HackOS (GenAI Works) | ✅ team registered | — |
 | 2 | GitHub `HudrTechLLC/nexus-chennai` | ✅ created (private) | — |
 | 3 | Vercel (team HUDR, project `nexus-chennai`, root `apps/web`, region `bom1`) | ✅ linked; production public, previews behind Vercel login | Vercel env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public values only) |
-| 4 | Supabase `nexus-chennai` (free, `ap-south-1`) | ⏳ blocked on login | app `.env`: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (local only, never Vercel) |
+| 4 | Supabase `nexus-qa` (`ukrujnsjucwvytnokbtw`, Singapore `ap-southeast-1`) | ✅ migration 0001 applied; RLS verified; smoke PASS | app `.env`: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (local only, never Vercel) |
 | 5 | Zetaris Cloud → local Docker platform (`C:\Apps\zetaris-platform`) | 🟡 registry sign-in done (password in `~/.secrets/zetaris-registry.pw`); images downloading | app `.env`: `ZETARIS_REST_URL`, `ZETARIS_ORG_ID`, `ZETARIS_API_KEY` |
 | 6 | Meterless Nightshift | ⏳ download blocked | app `.env`: `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` |
 | 7 | NVIDIA build.nvidia.com | ⏳ | Nightshift Providers tab only |
