@@ -112,7 +112,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 | fast | Nemotron 3.5 Lightning 30B | MO extraction, appeal drafts, briefings |
 | reason | Nemotron 3 Ultra 550B | query planning, per-factor reasons, the Skeptic |
 
-  "Every trace line names the model that handled the request." Footnote: "Vision: Nemotron Super VL through a Nightshift cloud lane (verified 27 Oct). If the lane can't be reached, the Extractor uses the officer's caption, traced as `vision_unavailable`." Say "reads CCTV stills" only once nexus-3's trace shows a vision call.
+  "Every trace line names the model that handled the request." Footnote: "Vision: Nemotron Super VL through a Nightshift cloud lane (verified 27 Oct). If the lane can't be reached, the Extractor uses the officer's caption, traced as `vision_unavailable`." Verified in live run `reextract_vis_1793040194` (Extractor `model_call`, lane `vision`, receipt `chatcmpl-5dfe68c6-…`). Say "reads CCTV stills"; don't quote a success rate (free route, rate-limited).
 - **Visual:** trace viewer (`/console/system/trace/[runId]`) with the model column showing `nvidia/nemotron-3-ultra-550b-a55b` on a Skeptic line.
 - **Check no secrets visible:** trace summaries are redacted (D-025), but scan for any token-like string anyway.
 

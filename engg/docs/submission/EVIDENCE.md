@@ -55,7 +55,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Synthetic data, no real-officer trial | 14,040 synthetic crimes in nexus-qa (generator 14,038 + 2 console FIRs); no field trial | `data/README.md` §2 (nexus-1 counts, 26 Oct) | ✅ stated |
 | Medium band | 56% (74/132 scored pairs); HIGH 10/10 | `output_examples/eval_report.json` (#275) | ✅ |
 | Live speed | 236 / 1,046 / 315 s for the three recorded examples; `run_866f913f` ~59 min for 4 cases, one case at the 3,600 s deadline; replay 6.8–11.9 s | `output_examples/*.json`; nexus-3 (26 Oct 23:02); nexus-7 fresh-clone run @ `de8e666` | ✅ measured (the chief's "~25 min/case" estimate is not used) |
-| Vision: lane works; product use pending | Before 27 Oct `no_vision_model` on every image request. Now a seated cloud lane serves Super VL (chief's direct test: red image → "Red", 200). Product trace with a vision `model_call` `[PENDING: nexus-3]`; judge path and sample mode still use the caption fallback | D-036; README Limitations | 🟡 |
+| Vision: verified in a live run | Before 27 Oct `no_vision_model` on every image request. Now a seated cloud lane serves Super VL (chief's direct test: red image → "Red", 200). Live Nexus run `reextract_vis_1793040194` (27 Oct): an Extractor `model_call` on lane `vision`, model `nvidia/nemotron-3.5-super-vl-120b-a12b`, receipt `chatcmpl-5dfe68c6-80f5-4c50-8962-d45f726a7cb4`, status ok, 24 s; the extracted features had no `degraded` entries and carried `visual_tags` read from the still. One run claimed; the free route is rate-limited. Judge path and sample mode use the caption fallback (offline) | `trace_events` of `reextract_vis_1793040194` (seq 3), read by nexus-3; D-036 | ✅ |
 | Worker Supabase-only | `/run` local store `NEXUS_STORE=local` (#273, `tests/graph/test_local_store.py`); worker + console need Supabase | `services/api/app/graph/local_store.py` docstring | ✅ |
 | Zetaris pushdown workaround | deterministic `ORDER BY` before every limit (#170, #174); `zetaris_result_truncated` event; live parity test | D-031 | ✅ |
 | Live DQ flags not applied in scoring | live `q_dq_flags` 55–80 s vs the 30 s Planner budget; traced `step_degraded`, run continues; the hero numbers were produced without live DQ, so they stand | #334 (`7dbd555`); nexus-2, 27 Oct (decision C for the freeze) | ✅ stated |
@@ -107,7 +107,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | H-MEM: a decision recorded by the worker reaches the API's next score without a restart (store reopened when `state.json`/`ledger.jsonl` change; lock file for concurrent writers); the next alert row carries `memory_applied` | #82 `tests/engines/test_hmem_shared.py`; #83 `tests/graph/test_hmem_e2e.py` | ✅ |
 | Nightshift is the only model path; pinned lanes; `meterless/auto` refused | `adapters/nightshift.py::model_for`, `config.FORBIDDEN_MODELS`; `tests/adapters/test_nightshift.py` | ✅ |
 | Lanes: `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b`, `reason` = `nvidia/nemotron-3-ultra-550b-a55b` (Super 120B is 404 for our key) | D-017; `.env.example` | ✅ |
-| `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: served through a seated Nightshift cloud lane (OpenRouter free route); direct image test 200 "Red" at `max_tokens=1500`; 502 `empty_response` at 20 | D-036 (chief, 27 Oct) | ✅ lane verified; claim visual extraction in Nexus only after nexus-3's trace |
+| `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: served through a seated Nightshift cloud lane (OpenRouter free route); direct image test 200 "Red" at `max_tokens=1500`; 502 `empty_response` at 20 | D-036 (chief, 27 Oct) | ✅ lane verified; product verified in run `reextract_vis_1793040194` |
 | Embed lane `nvidia/nemotron-3.5-embed-1b` | **Not claimed** (D-027): Nightshift 1.2.7 has no `/v1/embeddings` route (404 for every model). Similar-MO and text search use TF-IDF + feature vectors in code (spec E2 fallback), traced `embed_fallback`: `services/api/app/engines/similarity.py`; `tests/engines/test_similarity.py` | ✅ fallback in code; ❌ model not claimed |
 | NVIDIA key lives only in Nightshift; the app holds the Nightshift URL + runtime token | `adapters/nightshift.py` docstring; `.env.example` | ✅ |
 
@@ -136,7 +136,7 @@ Licences: `[PENDING: chief]` — read each package's licence from its metadata b
 ## Spec text that main contradicts (do not reuse)
 
 - "Nemotron 3 Super 120B" as the reasoning model (SPEC L4, L5, M2, P7; `metadata.json` `nvidia[2]`). Main runs **Ultra 550B** (D-017). `metadata.json` is WS5-05, the chief's file.
-- "Super VL reads the CCTV still" (SPEC M2). The lane works since D-036, but no Nexus trace with a vision call is on record yet: `[PENDING: nexus-3]`.
+- "Super VL reads every CCTV still". One live run is verified (`reextract_vis_1793040194`); the free route is rate-limited, so a run can still fall back to the caption. Claim that run, not a rate.
 - "12 named queries", "25 sources, 4+ storage types", "S3 CSV / S3 Parquet". See the Zetaris rows above.
 - ~~"Nexus beats a rules-only baseline"~~: now on main (WS2-14, P 0.59 vs 0.09, R 0.86 vs 0.30). Say it with the numbers and the 10/10 HIGH, 56% MEDIUM split, never as an unqualified accuracy claim.
 - `metadata.json` lists engines `["world_model", "hmem"]`; all four pass on main.

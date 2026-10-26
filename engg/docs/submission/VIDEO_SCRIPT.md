@@ -22,7 +22,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ## Changes from SPEC M2 (on purpose)
 
-- **"Super VL reads the CCTV still" only with a real trace.** Since D-036 a Nightshift cloud lane serves Super VL, but say it on camera only if the recorded run's trace shows a vision `model_call` (variant A in segment 3). Otherwise use variant B, the caption fallback.
+- **"Super VL reads the CCTV still" only with a real trace.** Since D-036 a Nightshift cloud lane serves Super VL, and a live run has shown it (`reextract_vis_1793040194`), so **variant A is the plan** for segment 3. Still check the take: the free route is rate-limited, and if the recorded take's trace shows `vision_unavailable`, use variant B.
 - **Reasoning model is Nemotron Ultra 550B**, not Super 120B (D-017).
 - **Eval numbers are on main** (`output_examples/eval_report.json`: P 0.59 / R 0.86 vs rules-only 0.09 / 0.30; HIGH 10/10). The close doesn't depend on them. If you say one, say it with the baseline, never as a bare accuracy figure.
 - **One story**, not a tour: the public-tip and appeal segments are cut to keep under 3:40. They are covered in the deck.
@@ -51,7 +51,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 5. **1080p (OBS), browser zoom 110–125%, terminal font enlarged.**
 6. **Open the Pulse Map at least 30 s before recording segment 1** (it took ~25 s to load in nexus-4's dry run).
 7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
-8. **Segment 3 needs a real vision step in the trace.** File the live FIR with a CCTV still, and check the trace. A vision `model_call` (lane `vision`, Super VL, a receipt) means narrate **variant A**; `vision_unavailable` means **variant B**. The free route is rate-limited and can refuse during recording, so check the trace of the take you use. `[PENDING: nexus-3]`: no product trace with a vision call is on record yet.
+8. **Segment 3 needs a real vision step in the trace.** File the live FIR with a CCTV still, and check the trace. A vision `model_call` (lane `vision`, Super VL, a receipt) means narrate **variant A**; `vision_unavailable` means **variant B**. The free route is rate-limited and can refuse during recording, so check the trace of the take you use. Variant A is planned: live run `reextract_vis_1793040194` shows the vision `model_call` (seq 3, receipt `chatcmpl-5dfe68c6-…`).
 9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. There is only one series in the database (SER-B687C36CFC), so **rehearse without writing**: in dry run #2, walk up to the *Propose task force* dialog and stop (cancel; nothing is created). The first real creation happens on camera. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
 
 ## Script
@@ -76,7 +76,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 - **Screen:**
   - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
-  - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines. The CCTV-still sentence needs the `vision_unavailable` step from a live FIR filed with a still (Before recording, step 8).
+  - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines. The CCTV-still sentence needs the vision step from a live FIR filed with a still (Before recording, step 8): a `model_call` for variant A, or `vision_unavailable` for variant B.
 - **Narration:**
   > An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. [A] Nexus reads the CCTV still with Nemotron Super VL. [B] This time the vision model couldn't be reached, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
 - **Check no secrets visible:**
