@@ -1,22 +1,27 @@
 """WS5-12: compare offline /run outputs with the committed output_examples (CI job judge-offline).
 
-Two checks per example:
-  strict - the whole JSON after removing only execution_time_seconds (the one wall-clock field;
-           run_id comes from the input, so trace_id / log_file are stable too)
-  stable - status, summary, and per alert: crimes, band, score, stations, kind; plus series and hotspot ids
+The gate is EXACT: the whole response must equal output_examples/example_N.json after removing only the
+per-run values, execution_time_seconds (wall clock) and every Zetaris query_id (a fresh UUID per query by
+design: it is the audit id an alert card cites). run_id, trace_id and log_file come from the input, so they
+must match too. A stable-field summary (status, summary, alert pairs, bands, scores, series, hotspots) is
+printed alongside to make a failure easy to read.
+
 Usage: python scripts/judge_compare.py <repo> <dir with got_N.json>
-Exit 1 when a stable field differs. A strict-only difference is printed but does not fail.
 """
 import json
 import sys
 from pathlib import Path
 
 repo, got_dir = Path(sys.argv[1]), Path(sys.argv[2])
-VOLATILE = {"execution_time_seconds"}
+PER_RUN = {"execution_time_seconds", "query_id"}
 
 
-def strip(d):
-    return {k: v for k, v in d.items() if k not in VOLATILE}
+def norm(v):
+    if isinstance(v, dict):
+        return {k: norm(x) for k, x in v.items() if k not in PER_RUN}
+    if isinstance(v, list):
+        return [norm(x) for x in v]
+    return v
 
 
 def stable(d):
@@ -31,21 +36,31 @@ def stable(d):
     }
 
 
+def diffs(a, b, path=""):
+    if type(a) is not type(b):
+        yield f"{path}: {a!r:.80} != {b!r:.80}"
+    elif isinstance(a, dict):
+        for k in sorted(set(a) | set(b)):
+            yield from diffs(a.get(k), b.get(k), f"{path}.{k}")
+    elif isinstance(a, list):
+        if len(a) != len(b):
+            yield f"{path}: {len(a)} items != {len(b)}"
+        else:
+            for i, (x, y) in enumerate(zip(a, b)):
+                yield from diffs(x, y, f"{path}[{i}]")
+    elif a != b:
+        yield f"{path}: {a!r:.80} != {b!r:.80}"
+
+
 ok = True
 for n in (1, 2, 3):
     want = json.loads((repo / "output_examples" / f"example_{n}.json").read_text(encoding="utf-8"))
     got = json.loads((got_dir / f"got_{n}.json").read_text(encoding="utf-8"))
-    s_ok = stable(want) == stable(got)
-    x_ok = strip(want) == strip(got)
-    ok &= s_ok
-    print(f"example_{n}: stable={'MATCH' if s_ok else 'DIFF'} strict={'MATCH' if x_ok else 'DIFF'} "
-          f"status={got['status']} alerts={len(got['output'].get('alerts') or [])} "
-          f"t={got.get('execution_time_seconds')}s | {got['output'].get('summary', '')[:90]}")
-    if not s_ok:
-        for k in stable(want):
-            if stable(want)[k] != stable(got)[k]:
-                print(f"   {k}: want={stable(want)[k]!s:.300}\n   {k}:  got={stable(got)[k]!s:.300}")
-    elif not x_ok:
-        diff = [k for k in set(strip(want)) | set(strip(got)) if strip(want).get(k) != strip(got).get(k)]
-        print(f"   strict differs only in: {diff}")
+    exact = norm(want) == norm(got)
+    ok &= exact
+    print(f"example_{n}: {'EXACT' if exact else 'DIFF'} (stable fields {'match' if stable(want) == stable(got) else 'DIFFER'}) "
+          f"status={got['status']} alerts={len(got['output'].get('alerts') or [])} t={got.get('execution_time_seconds')}s"
+          f" | {got['output'].get('summary', '')[:90]}")
+    for line in list(diffs(norm(want), norm(got)))[:15]:
+        print("   " + line)
 sys.exit(0 if ok else 1)
