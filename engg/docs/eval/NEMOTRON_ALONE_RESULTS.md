@@ -39,8 +39,8 @@ own. Because both judged the *same* pairs, the right comparison is paired (McNem
 - Among the 14 true links, the model alone found 3 the system missed, and the system alone found 0 the model
   missed. p = 0.25.
 
-Neither difference is significant. Read it as "the model alone judges a shown pair about as well as the full
-system", not as a ranking. The model's mean stated confidence on its links was 0.90 (reported, never
+Neither difference is significant. Ultra alone scores the higher F1 on these pairs (0.80 vs 0.69), but with
+14 true links that is not evidence of a real gap in either direction. The model's mean stated confidence on its links was 0.90 (reported, never
 thresholded).
 
 ## Reach: what the 10-pair cap hid
@@ -57,8 +57,8 @@ reaches them. This table is about coverage under a budget, not judgement quality
 
 ## What this says
 
-- **On a pair it is shown, Ultra alone is as good a judge as the full pipeline.** We don't claim the agents
-  beat the model at judging one pair.
+- **On the pairs it is shown, Ultra alone scores a higher F1 than the pipeline (0.80 vs 0.69), not significant
+  with 14 true links.** We don't claim the agents beat the model at judging one pair.
 - **The pipeline's value is in cost and coverage, and in everything around the judgement:**
   - It scores every candidate with 0 model calls, about 0.83 s per case in the headline. Here the model needed
     about 3.4 min of Ultra time per case for about 9 pairs.
