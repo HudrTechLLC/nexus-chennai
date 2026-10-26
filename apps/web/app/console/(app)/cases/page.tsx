@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { allows } from "@/lib/roles";
-import { CASE_STATUSES, CATEGORIES, casesHref, humanise, PAGE_SIZE, parseCaseFilters } from "@/lib/cases";
+import { CASE_STATUSES, CATEGORIES, casesHref, humanise, listPlace, PAGE_SIZE, parseCaseFilters } from "@/lib/cases";
 import { fetchCases, PLATE_CAP, stationOptions } from "@/lib/casesData";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +96,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Record
                 <th className="px-3 py-2">Station</th>
                 <th className="px-3 py-2">Type</th>
                 <th className="px-3 py-2">Occurred</th>
-                <th className="px-3 py-2">Place</th>
+                <th className="px-3 py-2">Ward</th>
                 <th className="px-3 py-2">Status</th>
               </tr>
             </thead>
@@ -110,7 +110,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Record
                   <td className="px-3 py-2">{names[c.station_id] ?? c.station_id}</td>
                   <td className="px-3 py-2">{humanise(c.category)}{c.sub_type ? <span className="text-muted"> · {humanise(c.sub_type)}</span> : null}</td>
                   <td className="whitespace-nowrap px-3 py-2">{fmt(c.occurred_from)}</td>
-                  <td className="px-3 py-2 text-muted">{c.address ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted">{listPlace(c.ward_no)}</td>
                   <td className="px-3 py-2">{humanise(c.status)}</td>
                 </tr>
               ))}

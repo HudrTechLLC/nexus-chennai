@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  buildTimeline, canWriteCase, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText, reviewFormValues,
+  buildTimeline, canWriteCase, listPlace, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText, reviewFormValues,
   normaliseFir, normalisePlate, parseCaseFilters, plateIlike, plateMatches,
 } from "../cases";
 
@@ -131,5 +131,12 @@ describe("moCorrections", () => {
   it("shows values as text", () => {
     expect(moToText(["bus_stop", "main_road"])).toBe("bus stop, main road");
     expect(moToText(null)).toBe("");
+  });
+});
+
+describe("listPlace (J5)", () => {
+  it("shows the ward, never an address", () => {
+    expect(listPlace(176)).toBe("ward 176");
+    expect(listPlace(null)).toBe("—");
   });
 });
