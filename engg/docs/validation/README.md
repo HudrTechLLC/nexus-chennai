@@ -9,4 +9,4 @@ Related: [DELIVERABLES](../DELIVERABLES.md) · [WS5-08 checklist](WS5-08-checkli
 
 | Gate | Date | Result |
 |---|---|---|
-| [WS3-06 / WS3-10](WS3-06-WS3-10-2026-10-26.md) case file, search, FIR capture | 2026-10-26 | 7 PASS · 8 PARTIAL · 1 FAIL (accepted, D-029) · 1 N/A |
+| [WS3-06 / WS3-10](WS3-06-WS3-10-2026-10-26.md) case file, search, FIR capture | 2026-10-26 | 10 PASS · 5 PARTIAL · 1 FAIL (accepted, D-029) · 1 N/A |
