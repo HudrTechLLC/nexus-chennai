@@ -1,0 +1,17 @@
+sub_type,category
+assault,hurt
+attempt_murder,hurt
+cab_robbery,robbery
+car_theft,theft
+chain_snatching,robbery
+cheating,cheating
+day_house_break,house_break
+kidnapping,kidnapping
+mobile_snatching,robbery
+murder,homicide
+night_house_break,house_break
+pickpocket,theft
+shop_theft,theft
+stalking,crimes_against_women
+street_robbery,robbery
+two_wheeler_theft,theft
