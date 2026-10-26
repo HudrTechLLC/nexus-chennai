@@ -9,6 +9,9 @@ import { buildTimeline, canWriteCase, describe, humanise, maskPii, moRows, moToT
 import { fetchCaseFile, fetchCitywide, stationOptions, type CaseFile } from "@/lib/casesData";
 import { fetchSimilar } from "@/lib/similarData";
 import { SimilarList } from "../_components/SimilarList";
+import { fetchGraph } from "@/lib/memoryData";
+import { allows } from "@/lib/roles";
+import { GraphExplorer } from "@/components/console/graph/GraphExplorer";
 import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { AppealButton } from "../_components/AppealButton";
 import { EvidenceUpload } from "../_components/EvidenceUpload";
@@ -73,10 +76,10 @@ export default async function CaseFilePage({ params }: { params: { crimeId: stri
   }
 
   await audit(sb, "view_case", "crime", crimeId);
-  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} isAdmin={officer.role === "admin"} />;
+  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} isAdmin={officer.role === "admin"} canExplore={allows(officer.role, "analyst+")} />;
 }
 
-async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite: boolean; isAdmin: boolean }) {
+async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFile; canWrite: boolean; isAdmin: boolean; canExplore: boolean }) {
   // The trace viewer is admin-only (G2 /console/system/**); everyone else sees the run's status.
   const traceLink = (runId: string) => isAdmin
     ? <Link href={`/console/system/trace/${encodeURIComponent(runId)}`} className="text-signal hover:underline">trace</Link>
@@ -86,7 +89,13 @@ async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite:
   const otherIds = file.alerts.flatMap((a) => a.crimes).filter((id) => id !== crime.crime_id);
   const [names, briefs] = await Promise.all([stationNames(sb, [crime.station_id]), crimeBriefs(sb, otherIds)]);
   const station = names[crime.station_id] ?? crime.station_id;
-  const [similar, allStations] = await Promise.all([fetchSimilar(sb, crime.crime_id, 6), stationOptions(sb)]);
+  const [similar, allStations, wm] = await Promise.all([
+    fetchSimilar(sb, crime.crime_id, 6),
+    stationOptions(sb),
+    // World Model around this case (nexus-6's wm_graph, security invoker: D-020 decides what each role sees).
+    fetchGraph(sb, { seed: crime.crime_id, hops: 1, types: null }),
+  ]);
+  const graphSeeds = wm.graph.nodes.filter((n) => n.type === "crime" && n.key === crime.crime_id).map((n) => n.id);
   const allNames = Object.fromEntries(allStations.map((s) => [s.station_id, s.name]));
   // Latest officer review wins (crime_feature_reviews is append-only); the Extractor's MO is never edited.
   const latestReview = file.reviews[0] ?? null;
@@ -216,6 +225,17 @@ async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite:
           <Card title="Case diary" count={file.diary.length}>
             {file.diary.length === 0 ? <Empty>No diary entries yet.</Empty> : (
               <ul className="space-y-2">{file.diary.map((d) => <li key={d.entry_id}><span className="text-xs text-muted">{fmt(d.at)} · {humanise(d.kind)} · {d.author}</span><p>{maskPii(d.text)}</p></li>)}</ul>
+            )}
+          </Card>
+
+          <Card title="Linked graph" count={wm.graph.nodes.length || undefined}>
+            {wm.graph.nodes.length > 0 ? (
+              <>
+                <GraphExplorer nodes={wm.graph.nodes} edges={wm.graph.edges} provenance={wm.graph.provenance} seedIds={graphSeeds} explorerLinks={canExplore} heightClass="h-96" />
+                {canExplore && <Link href={`/console/graph?seed=${encodeURIComponent(crime.crime_id)}`} className="mt-2 inline-block text-xs text-signal hover:underline">Open in the graph explorer →</Link>}
+              </>
+            ) : (
+              <Empty>{wm.error ? `Could not load the World Model: ${wm.error}` : "No World Model entities for this case yet. They appear after the pipeline ingests it."}</Empty>
             )}
           </Card>
 
