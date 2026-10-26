@@ -183,6 +183,27 @@ def test_extract_case_ingests_world_model(make_deps):
     assert {"used_vehicle", "seen_at"} <= {e["type"] for e in ent["edges"]}
 
 
+def test_extract_case_skips_keyless_plates_for_world_model(make_deps):
+    """Live regression: a model plate of "??" made the World Model reject the whole entity."""
+    class WM:
+        got: list = []
+
+        def ingest(self, entities, source):
+            for e in entities:
+                for edge in e["edges"]:
+                    if edge["to"]["type"] == "vehicle" and not edge["to"]["key"].strip("?- "):
+                        raise ValueError("empty key for vehicle")
+            self.got.append(entities)
+            return ["id"]
+
+    mo = {**MODEL_MO, "entities": {"plates": ["??", "TN09??4471"], "persons": [], "phones": []}}
+    deps = make_deps(responder=lambda lane, m, p: json.dumps(mo), engines=FakeEngines(wm=WM()))
+    Extractor(deps).extract_case(crime_from_row(as_row(ADYAR)))
+    assert not any(e["action"] == "world_model_ingest_failed" for e in deps.tracer.read())
+    keys = [edge["to"]["key"] for edge in WM.got[0][0]["edges"] if edge["to"]["type"] == "vehicle"]
+    assert keys == ["TN09??4471"]
+
+
 def test_extract_case_with_real_world_model_engine(make_deps):
     from app import engines
     engines.world_model.reset()

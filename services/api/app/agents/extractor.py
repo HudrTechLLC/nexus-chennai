@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -246,6 +247,8 @@ class Extractor:
             return
         edges: list[dict[str, Any]] = []
         for plate in features["entities"]["plates"]:
+            if not re.sub(r"[^A-Za-z0-9]", "", str(plate or "")):
+                continue  # "??" or "" from the model: no key, and one bad plate must not lose the crime entity
             edges.append({"type": "used_vehicle", "to": {"type": "vehicle", "key": plate,
                                                          "attrs": {"plate_pattern": plate}}})
         h3 = (case.get("location") or {}).get("h3_r9")
