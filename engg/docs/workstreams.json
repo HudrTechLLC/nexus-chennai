@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T13:01:13+05:30",
+  "updated": "2026-10-26T13:22:54+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -153,7 +153,8 @@
           "phase": "P9",
           "title": "News and social REST feeds in Zetaris",
           "status": "todo",
-          "owner": "nexus-2"
+          "owner": "nexus-2",
+          "ref": "#54"
         },
         {
           "id": "WS1-17",
@@ -403,8 +404,8 @@
           "id": "WS3-06",
           "phase": "P5",
           "title": "Case file page and search",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-5"
         },
         {
           "id": "WS3-07",
@@ -436,15 +437,15 @@
           "id": "WS3-10",
           "phase": "P9",
           "title": "FIR capture form",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-5"
         },
         {
           "id": "WS3-11",
           "phase": "P7",
           "title": "Series pages, station link matrix, memory page, case graph explorer",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-6"
         }
       ]
     },
