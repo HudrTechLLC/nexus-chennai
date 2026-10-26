@@ -327,14 +327,15 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Evidence keeps the original bytes:** no re-encoding and no EXIF stripping.
   - A server-side sha256 is taken over the original.
   - Each upload adds a custody entry `{at, by, action:"uploaded", sha256}`.
-  - **Limit (until 0007_06 lands):** the sha256 and custody are computed by the upload route. The database does not re-verify them, and a police role that may write the case can still insert an `evidence_media` row directly through the API with values of its own. `case_diary.author` is likewise set by the client. Fix in progress: a `record_evidence` RPC that ties each row to the caller's own uploaded object, plus a server-set diary author.
+  - **What the database enforces (0007_06, #167, applied 26 Oct):** the upload route computes sha256 server-side; the database enforces that the evidence row matches a storage object the caller uploaded (owner, size, mime) and sets uploaded_by + custody itself; the hash itself is not re-verified in the database. Direct INSERT on `evidence_media` / `statements` is revoked; rows go in only through `record_evidence`. `case_diary.author` is set from the signed-in officer by a trigger, not by the client.
+  - **Post-hackathon hardening:** have the upload route sign `(path, sha256, bytes)` with a server-only key, and have `record_evidence` accept only a valid signature. Then a direct RPC call can no longer supply a wrong hash for the caller's own file.
   - `captured_at` is read from EXIF.
   - Files are capped at 4 MB, the Vercel body limit.
   - This supersedes the chief's earlier "strip EXIF" instruction, which applies only to **public tips and appeal images**. Re-encoding would break integrity and the chain of custody.
   - Private bucket `evidence`; RLS by `can_write_crime` / `can_read_crime`; anon none.
 - **Officer MO corrections** go to `crime_feature_reviews` through `review_features()`, never into the Extractor's row, which keeps its provenance (R3). `zetaris_reader` has a SELECT grant on `crime_feature_reviews` so agents can see reviewed MO.
 - **Search provenance (deviation from SRCH-07):** Vercel cannot reach Zetaris, so console search reads Supabase under RLS. Its footer lists the **tables and row counts** it used instead of Zetaris query ids. Agent-side search (`q_search`, D-024 family) still goes through Zetaris.
-- **Standing live checks:** `apps/web/scripts/rls-check.mjs` and `apps/web/scripts/evidence-check.mjs` (stored sha256 = recorded = custody; overwrite, other station, anon and public URL all refused; 8/8 on 26 Oct).
+- **Standing live checks:** `apps/web/scripts/rls-check.mjs` and `apps/web/scripts/evidence-check.mjs` (stored sha256 = recorded = custody; overwrite, other station, anon and public URL all refused; 8/8 on 26 Oct; 9/9 after 0007_06, adding "direct insert refused").
 
 ## D-030 · `audit_log` is append-only (nexus-5) (2026-10-26)
 - **Rule:** no role, including the service role, can UPDATE or DELETE `audit_log` rows. Only INSERT is allowed. Migration `0007_03` (#124), applied 26 Oct.
