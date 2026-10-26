@@ -49,7 +49,7 @@ if (tabs.length !== 16) {
 
 // ---- project notes ----
 const NOTES = [
-  ["00-INDEX", "Index"], ["PROGRESS", "Progress log"], ["ARCHITECTURE", "Architecture (as built)"],
+  ["00-INDEX", "Index"], ["LANES", "Build lanes"], ["PROGRESS", "Progress log"], ["ARCHITECTURE", "Architecture (as built)"],
   ["DECISIONS", "Decisions"], ["DELIVERABLES", "Deliverables checklist"], ["SETUP", "Setup"],
   ["CITY_PACKS", "City packs"], ["SPONSOR_TECH", "Sponsor tech (draft)"], ["TOOLING", "Tooling"],
   ["hackathon/DIGEST", "Hackathon digest"],
