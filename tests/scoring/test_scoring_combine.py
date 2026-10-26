@@ -270,3 +270,37 @@ def test_scoring_imports_no_model_or_data_adapter():
                 stripped = n.lstrip(".")
                 assert not any(stripped == f or stripped.startswith(f + ".") or f in stripped.split(".")
                                for f in FORBIDDEN_IMPORTS), f"{path.name} imports {n}"
+
+
+# ----- positive-only corroboration (proposal, behind NEXUS_CORROB_POSITIVE_ONLY; default off) ---------
+
+def _strong(corr: float | None) -> list[FactorResult]:
+    fs = [FactorResult("mo_similarity", 0.885), FactorResult("vehicle", 0.84), FactorResult("space_time", 0.328),
+          FactorResult("suspect_description", 1.0), FactorResult("target_profile", 1.0)]
+    return fs + ([FactorResult("corroboration", corr)] if corr is not None else [])
+
+
+def test_today_one_corroborating_item_lowers_a_strong_pair():
+    """nexus-2's finding, kept as the default until the chief decides: renormalising over present factors
+    means one item (0.39) pulls a strong pair down."""
+    assert score_pair(_strong(0.39)).score < score_pair(_strong(None)).score
+
+
+def test_positive_only_corroboration_never_lowers_a_pair():
+    without = score_pair(_strong(None))
+    low = score_pair(_strong(0.39), positive_only=("corroboration",))
+    assert low.score == without.score and low.coverage == without.coverage
+    assert low.ignored_low == ["corroboration"]
+    assert next(f for f in low.factors if f.factor == "corroboration").value == 0.39  # still shown
+
+
+def test_positive_only_corroboration_still_raises_a_pair_it_supports():
+    without = score_pair(_strong(None))
+    high = score_pair(_strong(0.95), positive_only=("corroboration",))
+    assert high.score > without.score and high.ignored_low == []
+
+
+def test_strike_keeps_the_positive_only_policy():
+    ps = score_pair(_strong(0.39), positive_only=("corroboration",))
+    struck = strike(ps, "vehicle")
+    assert struck.ignored_low == ["corroboration"] and struck.score < ps.score

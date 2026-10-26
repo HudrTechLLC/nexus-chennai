@@ -68,6 +68,10 @@ class PairScore:
     coverage: float = 0.0
     factors_with_data: int = 0
     coverage_capped: bool = False
+    # Positive-only policy the score was computed under, and the factors it left out because counting them
+    # would have lowered the score (proposal: NEXUS_CORROB_POSITIVE_ONLY; off unless the caller passes it).
+    positive_only: tuple[str, ...] = ()
+    ignored_low: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -117,8 +121,13 @@ def score_pair(
     memory: Sequence[Mapping[str, Any]] | None = None,
     weights: Mapping[str, float] | None = None,
     weights_version: str | None = None,
+    positive_only: Sequence[str] = (),
 ) -> PairScore:
     """Combine factor results into a scored, banded pair.
+
+    `positive_only` names factors that may only raise a score (supporting evidence never weakens a link):
+    each is counted only if it is above the mean of the other factors, otherwise it is left out of the
+    renormalised mean (still shown) and listed in `ignored_low`.
 
     `weights` defaults to the F2 defaults. Unknown factor names are rejected so a typo
     can't silently drop a factor.
@@ -128,6 +137,9 @@ def score_pair(
     out: list[FactorResult] = []
     num = den = coverage = 0.0
     with_data = 0
+    pos_only = tuple(positive_only)
+    deferred: list[FactorResult] = []
+    ignored: list[str] = []
     for f in factors:
         if f.factor not in FACTORS:
             raise ValueError(f"Unknown factor '{f.factor}'")
@@ -143,14 +155,26 @@ def score_pair(
         out.append(fr)
         if fr.struck_by_skeptic:
             den += weight  # counts as 0 with its full weight: a strike only ever lowers the score
+        elif fr.value is not None and fr.factor in pos_only:
+            deferred.append(fr)
         elif fr.value is not None:
             num += weight * fr.value
             den += weight
             coverage += weight
             with_data += 1
 
+    for fr in sorted(deferred, key=lambda f: f.value or 0.0, reverse=True):
+        if den > 0.0 and (fr.value or 0.0) <= num / den:
+            ignored.append(fr.factor)  # would lower the score: treated as absent
+            continue
+        num += fr.weight * (fr.value or 0.0)
+        den += fr.weight
+        coverage += fr.weight
+        with_data += 1
+
     if den <= 0.0:
-        return PairScore(None, None, False, None, 0.0, [], False, out, version)
+        return PairScore(None, None, False, None, 0.0, [], False, out, version, positive_only=pos_only,
+                         ignored_low=ignored)
 
     base = num / den
     delta, applied = cap_memory(memory)
@@ -186,6 +210,8 @@ def score_pair(
         coverage=coverage,
         factors_with_data=with_data,
         coverage_capped=capped,
+        positive_only=pos_only,
+        ignored_low=ignored,
     )
 
 
@@ -196,4 +222,5 @@ def strike(pair: PairScore, factor: str, memory: Sequence[Mapping[str, Any]] | N
         FactorResult(f.factor, f.value, f.weight, f.evidence, f.struck_by_skeptic or f.factor == factor, f.reason)
         for f in pair.factors
     ]
-    return score_pair(factors, memory, weights, None if weights is None else pair.weights_version)
+    return score_pair(factors, memory, weights, None if weights is None else pair.weights_version,
+                      positive_only=pair.positive_only)

@@ -481,3 +481,18 @@ def test_linker_rationale_goes_in_chunks_with_a_budget_sized_to_the_chunk(make_d
     assert [len(ids) for ids, _ in seen] == [2, 2, 1]
     assert [b for _, b in seen] == [reason_budget(2), reason_budget(2), reason_budget(1)]
     assert [p.rationale for p in pairs] == [f"why P{i}" for i in range(5)]
+
+
+def test_linker_positive_only_flag_traces_ignored_corroboration(make_deps, monkeypatch):
+    from app.agents.linker import positive_only
+    monkeypatch.delenv("NEXUS_CORROB_POSITIVE_ONLY", raising=False)
+    assert positive_only() == ()
+    monkeypatch.setenv("NEXUS_CORROB_POSITIVE_ONLY", "1")
+    assert positive_only() == ("corroboration",)
+    deps = make_deps(responder=approve_all)
+    sp = scored(deps)[0]
+    from app.scoring import FactorResult
+    low = [*(f for f in sp.score.factors if f.factor != "corroboration"), FactorResult("corroboration", 0.01)]
+    Linker(deps).rescore(sp, low)
+    assert sp.score.ignored_low == ["corroboration"]
+    assert any(e["action"] == "corroboration_ignored_low" for e in deps.tracer.read())

@@ -128,6 +128,13 @@ def _forensic_codes(crime: Mapping[str, Any]) -> list[str]:
 
 
 MO_COSINE_FLAG = "NEXUS_MO_COSINE"
+CORROB_POSITIVE_ONLY_FLAG = "NEXUS_CORROB_POSITIVE_ONLY"
+
+
+def positive_only() -> tuple[str, ...]:
+    """("corroboration",) when NEXUS_CORROB_POSITIVE_ONLY=1 (proposal under eval, default off), else ()."""
+    on = os.environ.get(CORROB_POSITIVE_ONLY_FLAG, "").strip().lower() in ("1", "true", "on", "yes")
+    return ("corroboration",) if on else ()
 
 
 def mo_text_cosine() -> Callable[[Any, Any], float | None] | None:
@@ -307,7 +314,7 @@ class Linker:
                 continue
             fs = compute_factors(case, cand.crime, features, cand.features, anpr_rows=anpr,
                                  query_ids={**plan_qmap, **cand.query_ids})
-            prelim.append((cand, fs, score_pair(fs)))
+            prelim.append((cand, fs, score_pair(fs, positive_only=positive_only())))
         prelim.sort(key=lambda t: t[2].base_score or 0.0, reverse=True)
 
         pairs: list[ScoredPair] = []
@@ -325,21 +332,31 @@ class Linker:
             pid = pair_id(case["crime_id"], b["crime_id"])
             hp = hmem_pair(case, features, b, fb)
             memory = self._memory(pid, hp)
-            ps = score_pair(fs, memory=memory)
+            ps = score_pair(fs, memory=memory, positive_only=positive_only())
             qids = list(dict.fromkeys(qmap.values()))
             sp = ScoredPair(pid, dict(case), dict(b), dict(features) if features else None,
                             dict(fb) if fb else None, ps, memory, query_ids=qids, hmem_pair=hp)
             pairs.append(sp)
+            self._trace_ignored(sp)
             self.deps.tracer.emit(AGENT, "score_pair", input_summary=sp.pair_id,
                                   output_summary=f"score={ps.score} band={ps.band} coverage={ps.coverage}",
                                   zetaris_query_ids=qids[-6:], confidence=ps.score, status="ok")
         pairs.sort(key=lambda p: p.score.score or 0.0, reverse=True)
         return pairs
 
+    def _trace_ignored(self, sp: ScoredPair) -> None:
+        for name in sp.score.ignored_low:
+            value = next((f.value for f in sp.score.factors if f.factor == name), None)
+            self.deps.tracer.emit(AGENT, f"{name}_ignored_low", input_summary=sp.pair_id,
+                                  output_summary=f"{name}={value} is below the other factors' mean; counted as absent "
+                                                 "(positive-only: supporting evidence never weakens a link)",
+                                  status="ok")
+
     def rescore(self, sp: ScoredPair, factors: Sequence[FactorResult]) -> ScoredPair:
         """Recompute a pair from revised factors (after a Skeptic send-back). Memory is reapplied."""
-        sp.score = score_pair(factors, memory=sp.memory)
+        sp.score = score_pair(factors, memory=sp.memory, positive_only=positive_only())
         sp.revisions += 1
+        self._trace_ignored(sp)
         self.deps.tracer.emit(AGENT, "rescore_pair", input_summary=sp.pair_id,
                               output_summary=f"score={sp.score.score} band={sp.score.band} rev={sp.revisions}",
                               status="ok")
