@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from ..adapters.nightshift import NightshiftError
+from ..adapters.nightshift import NightshiftEmptyResponse, NightshiftError
 from ..tracing import Tracer
 
 
@@ -337,6 +337,19 @@ def chat_json(
     for attempt in range(retries + 1):
         try:
             result = deps.nightshift.chat(lane, msgs, agent=agent, purpose=purpose, **params)
+        except NightshiftEmptyResponse as exc:
+            # Live cloud route: an empty reply means too little room (max_tokens=20 -> 502, 1500 -> answer).
+            # Retry the same request once with twice the room; never a refusal.
+            budget = int(params["max_tokens"])
+            deps.tracer.emit(agent, "model_empty_response", input_summary=purpose, retry_count=attempt,
+                             output_summary=short({"lane": lane, "max_tokens": budget,
+                                                   "action": "retried" if attempt < retries else "failed"}),
+                             status="retry" if attempt < retries else "degraded")
+            if attempt < retries:
+                params["max_tokens"] = budget * 2
+                last_err = exc
+                continue
+            raise AgentError(f"{agent}: model call failed for {purpose}: {exc}") from exc
         except NightshiftError as exc:
             raise AgentError(f"{agent}: model call failed for {purpose}: {exc}") from exc
         finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")

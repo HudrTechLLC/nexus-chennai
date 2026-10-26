@@ -63,6 +63,9 @@ Describe only what is visible. Never infer religion, caste, community or other p
 AUDIO_PROMPT = "Transcribe this witness or tip audio verbatim. Return ONE JSON object: {\"transcript\": str}."
 
 MediaLoader = Callable[[str], bytes]
+# The cloud vision route returns 502 "_empty_response" when cramped (max_tokens=20 failed, 1500 answered;
+# chief, 2026-10-27). chat_json doubles it once if the reply still comes back empty.
+VISION_MAX_TOKENS = 2048
 
 
 def _slug(v: Any) -> str | None:
@@ -345,7 +348,8 @@ class Extractor:
                     {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{data}"}},
                 ]}]
                 out, _ = chat_json(self.deps, "vision", messages, agent=AGENT,
-                                   purpose=f"vision {ev.get('evidence_id')}", temperature=0)
+                                   purpose=f"vision {ev.get('evidence_id')}", temperature=0,
+                                   max_tokens=VISION_MAX_TOKENS)
                 return _str_list(out.get("tags")), out.get("plate_read") or None, False
             except Exception as exc:  # fall through to the documented fallback
                 unavailable = "no_vision_model" in str(exc) or "vision-capable" in str(exc)

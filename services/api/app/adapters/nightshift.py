@@ -48,7 +48,13 @@ class NightshiftRefused(NightshiftError):
     never retried, and the body's reason is kept in the message so callers can trace it."""
 
 
+class NightshiftEmptyResponse(NightshiftError):
+    """The provider answered with no content (e.g. the cloud vision route with too small a max_tokens). Not retried
+    as-is here: the same request comes back empty again. chat_json retries it once with more room."""
+
+
 REFUSALS = ("no_vision_model",)
+EMPTY_RESPONSES = ("_empty_response",)
 
 
 @dataclass
@@ -125,6 +131,8 @@ class NightshiftClient:
             raise NightshiftUnauthorized(f"Nightshift rejected the runtime token (HTTP {resp.status_code})")
         if resp.status_code >= 400 and any(r in resp.text for r in REFUSALS):
             raise NightshiftRefused(f"HTTP {resp.status_code}: {resp.text[:300]}")
+        if resp.status_code >= 400 and any(r in resp.text for r in EMPTY_RESPONSES):
+            raise NightshiftEmptyResponse(f"HTTP {resp.status_code}: {resp.text[:300]}")
         resp.raise_for_status()
         return resp
 
@@ -161,6 +169,8 @@ class NightshiftClient:
             if self.settings.sample_mode and _is_retryable(exc):
                 return self._replay(lane, model, messages, agent, purpose, started)
             self._trace(agent, purpose, lane, model, None, None, status="error", note=str(exc))
+            if isinstance(exc, NightshiftEmptyResponse):
+                raise  # the caller retries it with more room
             raise NightshiftError(str(exc)) from exc
 
         data = resp.json()
