@@ -246,7 +246,15 @@ def chat_json(
         try:
             finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")
             if finish == "length":
-                # Cut off mid-reasoning: the last JSON object may be a draft. Retry with more room.
+                # Cut off. Live Lightning sometimes repeats its answer until the budget runs out
+                # (D-017): a complete object before the cut is the answer. If there is none,
+                # retry with more room.
+                objs = _json_objects(_THINK.sub("", result.content or ""))
+                if objs:
+                    deps.tracer.emit(agent, "model_output_truncated", input_summary=purpose, status="degraded",
+                                     model=getattr(result, "model", None),
+                                     output_summary=f"finish_reason=length; used last of {len(objs)} complete objects")
+                    return objs[-1], result
                 params["max_tokens"] = int(params["max_tokens"]) * 2
                 raise AgentError("reply cut off at max_tokens (finish_reason=length)")
             return parse_model_json(result.content), result

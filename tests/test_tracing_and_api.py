@@ -35,7 +35,8 @@ def test_secret_can_be_read_from_file(tmp_path):
     assert s.supabase_service_role_key == "from-file"
 
 
-def test_run_is_honest_until_graph_exists():
+def test_run_rejects_case_without_crime_id():
+    """/run is real since WS2-16 (graph tests: tests/graph); bad input is a 422, never a faked answer."""
     resp = TestClient(app).post("/run", json={"input": {"kind": "case"}})
-    assert resp.status_code == 501
-    assert resp.json()["detail"]["status"] == "not_implemented"
+    assert resp.status_code == 422
+    assert resp.json()["detail"]["status"] == "bad_input"
