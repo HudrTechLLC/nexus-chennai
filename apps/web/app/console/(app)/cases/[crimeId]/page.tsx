@@ -16,6 +16,7 @@ import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/Ale
 import { AppealButton } from "../_components/AppealButton";
 import { EvidenceUpload } from "../_components/EvidenceUpload";
 import { MoReview } from "../_components/MoReview";
+import { DiaryForm, StatusForm } from "../_components/CaseWrites";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +130,7 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
             <p className="font-mono text-xs text-muted">{crime.crime_id}{crime.synthetic ? " · synthetic" : ""}</p>
             <h1 className="mt-1 text-2xl font-bold">{station.replace(/^PS-/, "")} FIR {crime.fir_no}</h1>
             <p className="text-muted">{humanise(crime.category)}{crime.sub_type ? ` · ${humanise(crime.sub_type)}` : ""} · severity {crime.severity}/5 · {humanise(crime.status)}</p>
+            {canWrite && <div className="mt-2"><StatusForm crimeId={crime.crime_id} status={crime.status} /></div>}
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             <Link href={`/console/cases/${encodeURIComponent(crime.crime_id)}/evidence`} className="rounded-md border border-line px-3 py-1.5 hover:bg-bg">Evidence gallery ({file.evidence.length})</Link>
@@ -224,8 +226,9 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
 
           <Card title="Case diary" count={file.diary.length}>
             {file.diary.length === 0 ? <Empty>No diary entries yet.</Empty> : (
-              <ul className="space-y-2">{file.diary.map((d) => <li key={d.entry_id}><span className="text-xs text-muted">{fmt(d.at)} · {humanise(d.kind)} · {d.author}</span><p>{maskPii(d.text)}</p></li>)}</ul>
+              <ul className="space-y-2">{[...file.diary].reverse().map((d) => <li key={d.entry_id}><span className="text-xs text-muted">{fmt(d.at)} · {humanise(d.kind)} · {d.author}</span><p>{maskPii(d.text)}</p></li>)}</ul>
             )}
+            {canWrite && <div className="mt-3"><DiaryForm crimeId={crime.crime_id} /></div>}
           </Card>
 
           <Card title="Linked graph" count={wm.graph.nodes.length || undefined}>
