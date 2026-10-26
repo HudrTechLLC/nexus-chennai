@@ -21,6 +21,7 @@ logs/*
 !logs/feature_*.txt
 !logs/.gitkeep
 data/out/
+data/local/
 data/_truth/
 *.duckdb
 .DS_Store

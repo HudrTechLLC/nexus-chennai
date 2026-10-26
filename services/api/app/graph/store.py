@@ -131,6 +131,9 @@ class SupabaseStore:
                          status="ok")
         return sid
 
+    def get_features(self, crime_id: str) -> dict[str, Any] | None:
+        return None  # live features come through Zetaris q_features (sb.crime_features_v)
+
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool:
         """True when a stored series row took the dossier (an unknown id updates nothing)."""
         return bool(self.client.update("series", {"series_id": f"eq.{series_id}"}, {"dossier": dossier}))

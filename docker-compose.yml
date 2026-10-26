@@ -8,7 +8,8 @@ services:
       METERLESS_BASE_URL: ${METERLESS_BASE_URL:-http://host.docker.internal:8088/v1}
       ZETARIS_REST_URL: ${ZETARIS_REST_URL:-http://host.docker.internal:8888/api/v1.0}
     ports: ["8000:8000"]
-    volumes: ["./logs:/repo/logs"]
+    # data/local: LocalStore results survive a container restart when Supabase is not configured (WS2-22).
+    volumes: ["./logs:/repo/logs", "./data/local:/repo/data/local"]
     extra_hosts: ["host.docker.internal:host-gateway"]
   worker:
     build: { context: ., dockerfile: Dockerfile }

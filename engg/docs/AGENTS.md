@@ -80,6 +80,17 @@ Caps:
 
 `SupabaseStore` writes the `runs` row first. It never writes alert `status`, so a re-run cannot undo an analyst's decision.
 
+**Which store a run uses (WS2-22).** One function, `store_kind(settings)` in `app/graph/local_store.py`, decides for both `/run` and `/health`:
+
+| Setting | Store |
+|---|---|
+| `NEXUS_STORE=supabase` / `local` / `memory` | That store. `supabase` without keys, or an unknown value, fails loudly |
+| unset, Supabase keys present | `SupabaseStore` |
+| unset, no keys, live mode | `LocalStore`: JSON files under `data/local/` (gitignored; `NEXUS_LOCAL_DIR` overrides) |
+| unset, no keys, `SAMPLE_MODE=true` | `MemoryStore`, so the judge fixtures stay byte-stable |
+
+`LocalStore` keeps alerts with their factors, series and members (with D-033 removal), Extractor features and runs. It behaves like `SupabaseStore`: it never overwrites `status`, and a dossier only lands on a stored series. Notifications stay in memory. The Extractor reads local features before extracting again, so a restart reuses them; `force_extract` still re-extracts. With no keys in live mode, `/health` reports Supabase as `not_configured (local store)`, not `down`. The worker is Supabase-only, because the console writes its queues there. Backfill and the eval keep `MemoryStore`, so the eval report stays reproducible.
+
 ## Eval (F3)
 
 `python -m app.eval` runs blocking, then F2 scoring, then the Skeptic's re-check against `_truth/`. It makes no model calls. The output is `output_examples/eval_report.json`.

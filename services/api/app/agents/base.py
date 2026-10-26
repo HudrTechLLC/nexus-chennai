@@ -48,6 +48,11 @@ class Store(Protocol):
 
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool: ...
 
+    def get_features(self, crime_id: str) -> dict[str, Any] | None:
+        """Stored Extractor output for a crime, or None. Only LocalStore answers (WS2-22): Supabase features
+        already arrive through Zetaris q_features, and memory runs must stay byte-stable."""
+        ...
+
 
 def series_name(series: Mapping[str, Any]) -> str:
     """The detected series' descriptive name (agents.series.describe_series), else "N linked cases (stations)"."""
@@ -110,6 +115,9 @@ class MemoryStore:
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool:
         self.series.setdefault(series_id, {"series_id": series_id, "crime_ids": []})["dossier"] = dossier
         return True
+
+    def get_features(self, crime_id: str) -> dict[str, Any] | None:
+        return None  # sample-mode runs must not change with what an earlier run wrote
 
 
 @dataclass

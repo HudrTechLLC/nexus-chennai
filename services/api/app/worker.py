@@ -20,6 +20,10 @@ worker picks the work up:
 
 Queue and state rows come from Supabase. The crime facts behind an H-MEM memory are read
 through Zetaris named queries (R1).
+
+The worker is Supabase-only (WS2-22): its queues (decisions, tips, appeal requests, new FIRs) are
+written by the console, which only Supabase connects. `NEXUS_STORE=local` affects /run and the
+API, never the worker; without Supabase keys the worker has nothing to poll.
 """
 
 from __future__ import annotations

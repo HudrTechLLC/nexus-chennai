@@ -23,6 +23,7 @@ from ..agents.series import describe_series, find_test_firs, flag_test_firs, rea
 from ..config import Settings
 from ..tracing import Tracer, new_run_id
 from .pipeline import AgentGraph
+from .local_store import LocalStore, store_kind
 from .store import SupabaseStore
 
 AGENTS = [
@@ -91,9 +92,14 @@ def agent_deps(settings: Settings, run_id: str, *, zetaris: Any = None, nightshi
 
 
 def default_store(settings: Settings, tracer: Tracer) -> Store:
-    """Supabase when configured (live and sample runs alike persist), else in-memory."""
-    sb = SupabaseClient(settings)
-    return SupabaseStore(sb, tracer) if sb.configured else MemoryStore()
+    """The store `store_kind` names (WS2-22): Supabase when configured, else local files in live mode and
+    memory in sample mode; `NEXUS_STORE` overrides."""
+    kind = store_kind(settings)
+    if kind == "supabase":
+        return SupabaseStore(SupabaseClient(settings), tracer)
+    if kind == "local":
+        return LocalStore(settings.local_store_dir)
+    return MemoryStore()
 
 
 def run_request(
@@ -120,7 +126,7 @@ def run_request(
         store: Store = MemoryStore()
     else:
         store = (store_factory or default_store)(settings, tracer)
-    if isinstance(store, SupabaseStore):
+    if isinstance(store, (SupabaseStore, LocalStore)):
         store.start_run(run_id, kind, f"logs/trace-{run_id}.jsonl",
                         subject=str(payload.get("crime_id")) if kind == "case" and payload.get("crime_id") else None)
     tracer.emit("api", "run_received", input_summary=f"kind={kind}", status="ok",
@@ -156,8 +162,8 @@ def run_request(
 
 
 def _finish(store: Store, run_id: str, status: str, kind: str) -> None:
-    """Close the run in Supabase and copy its trace; a failure here never loses the run's answer."""
-    if not isinstance(store, SupabaseStore):
+    """Close the run (Supabase: and copy its trace); a failure here never loses the run's answer."""
+    if not isinstance(store, (SupabaseStore, LocalStore)):
         return
     try:
         store.finish_run(run_id, status, kind)

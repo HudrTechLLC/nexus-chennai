@@ -57,6 +57,7 @@ class RunState(TypedDict, total=False):
     case: dict[str, Any]
     case_query_ids: dict[str, str]
     features: dict[str, Any] | None
+    features_source: str  # "local store" when load_case took them from LocalStore (WS2-22)
     context: dict[str, Any] | None
     plan_round: int
     send_backs: int
@@ -76,6 +77,11 @@ class RunState(TypedDict, total=False):
 
 def _remaining(deps: AgentDeps) -> float:
     return float("inf") if deps.deadline is None else deps.deadline - time.monotonic()
+
+
+def _has_mo(feats: Mapping[str, Any]) -> bool:
+    """Features count only when at least one MO field has a value (else the Extractor runs again)."""
+    return any(v not in (None, [], "") for v in (feats.get("mo") or {}).values())
 
 
 class AgentGraph:
@@ -168,15 +174,23 @@ class AgentGraph:
         except DeadlineExceeded:
             return self._deadline(state, "load_case")
         feats = features_from_row(frows[0]) if frows else None
-        if feats and not any(v not in (None, [], "") for v in (feats.get("mo") or {}).values()):
+        if feats and not _has_mo(feats):
             feats = None
-        return {"case": crime_from_row(rows[0]), "features": feats,
-                "case_query_ids": {"q_case": qid, "q_features": fqid}}
+        out: dict[str, Any] = {"case": crime_from_row(rows[0]), "features": feats,
+                               "case_query_ids": {"q_case": qid, "q_features": fqid}}
+        if feats is None:  # WS2-22: a live run without Supabase keeps features in the local store
+            local = self.deps.store.get_features(cid) if hasattr(self.deps.store, "get_features") else None
+            if local and _has_mo(local):
+                out["features"] = local
+                out["features_source"] = "local store"
+        return out
 
     def extract(self, state: RunState) -> dict[str, Any]:
         force = bool(state.get("options", {}).get("force_extract"))
         if state.get("features") and not force:
-            self._trace("Extractor", "features_reused", input_summary=state["case"]["crime_id"], status="ok")
+            src = state.get("features_source")
+            self._trace("Extractor", "features_reused", input_summary=state["case"]["crime_id"],
+                        **({"output_summary": f"from the {src}"} if src else {}), status="ok")
             return {}
         try:
             feats = self.extractor.extract_case(state["case"])

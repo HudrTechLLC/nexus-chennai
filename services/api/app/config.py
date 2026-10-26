@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
 
     sample_mode: bool = False
+    # Where agent results go (WS2-22): "supabase" | "local" | "memory"; empty = automatic
+    # (Supabase when configured, else local files in live mode, memory in sample mode). See graph/local_store.py.
+    nexus_store: str = ""
+    nexus_local_dir: str = ""  # LocalStore directory; default data/local (gitignored)
     max_agent_rounds: int = 3
     run_deadline_seconds: int = 300
     log_level: str = "INFO"
@@ -89,6 +93,10 @@ class Settings(BaseSettings):
     @property
     def logs_dir(self) -> Path:
         return REPO_ROOT / "logs"
+
+    @property
+    def local_store_dir(self) -> Path:
+        return Path(self.nexus_local_dir) if self.nexus_local_dir else REPO_ROOT / "data" / "local"
 
     @property
     def sample_dir(self) -> Path:
