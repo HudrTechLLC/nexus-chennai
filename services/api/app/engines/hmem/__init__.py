@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -67,12 +68,39 @@ def _fingerprint(persist_dir: Path | None) -> tuple:
     return tuple(out)
 
 
+_dir_locks: dict[str, threading.RLock] = {}
+_held = threading.local()  # per thread: {dir: depth}
+
+
 @contextmanager
 def _write_lock(persist_dir: Path | None) -> Iterator[None]:
-    """Cross-process lock for a read-modify-write of the store (O_EXCL lock file; stale locks expire)."""
+    """Lock for a read-modify-write of the store, across processes (O_EXCL lock file; stale locks expire) and
+    threads (an RLock per directory). Re-entrant in one thread: record_decision queries while holding it."""
     if persist_dir is None:
         yield
         return
+    key = str(persist_dir)
+    with _dir_locks.setdefault(key, threading.RLock()):
+        depth = getattr(_held, "d", None)
+        if depth is None:
+            depth = _held.d = {}
+        if depth.get(key):
+            depth[key] += 1
+            try:
+                yield
+            finally:
+                depth[key] -= 1
+            return
+        with _file_lock(persist_dir):
+            depth[key] = 1
+            try:
+                yield
+            finally:
+                depth[key] = 0
+
+
+@contextmanager
+def _file_lock(persist_dir: Path) -> Iterator[None]:
     persist_dir.mkdir(parents=True, exist_ok=True)
     lock = persist_dir / LOCK_FILE
     deadline = time.monotonic() + LOCK_WAIT_S
@@ -144,8 +172,12 @@ class _Local(_Shared):
         self.mem = HMEM(persist_dir=self.dir, clock=self.clock, actor="analyst")
 
     def query(self, text: str) -> list[tuple[str, list[str], float]]:
-        self.refresh()
-        return [(m["id"], list(m["tags"]), s) for m, s in self.mem.query(text)]
+        # Not read-only: retrieval writes "read" ledger entries and rewrites state.json, so it takes the lock.
+        with _write_lock(self.dir):
+            self.refresh()
+            out = [(m["id"], list(m["tags"]), s) for m, s in self.mem.query(text)]
+            self.wrote()
+        return out
 
     def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
         out = self.mem.add(content, source=source, tags=tags, confidence=confidence, provenance=provenance)["id"]
@@ -182,8 +214,11 @@ class _Sidecar(_Shared):
                                 "now_ms": self.clock() if self.clock else None})
 
     def query(self, text: str) -> list[tuple[str, list[str], float]]:
-        self.refresh()
-        return [(h["id"], h["tags"], float(h["relevance"])) for h in self.call("hmem/query", {"text": text})["hits"]]
+        with _write_lock(self.dir):  # the TS query also writes the ledger and state
+            self.refresh()
+            hits = self.call("hmem/query", {"text": text})["hits"]
+            self.wrote()
+        return [(h["id"], h["tags"], float(h["relevance"])) for h in hits]
 
     def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
         out = self.call("hmem/add", {"content": content, "source": source, "tags": tags,

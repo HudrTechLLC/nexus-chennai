@@ -61,3 +61,30 @@ def test_concurrent_writers_lose_no_decision(tmp_path):
     alerts = {t for r in hmem.instance().records() for t in r["tags"] if t.startswith("alert:")}
     assert alerts == {f"alert:LA-A{i}" for i in range(4)} | {f"alert:LA-B{i}" for i in range(4)}
     assert not (mem_dir / ".write.lock").exists()
+
+
+READER = """
+import json, sys
+from app.engines import hmem
+hmem.configure(sys.argv[1], clock=lambda: 1_790_000_000_000)
+pair = json.loads(sys.argv[2])
+for _ in range(int(sys.argv[3])):
+    hmem.adjust(pair)        # retrieval writes "read" ledger entries and state.json
+"""
+
+
+def test_scoring_while_the_worker_records_loses_no_decision(tmp_path):
+    """adjust() is not read-only (H-MEM logs reads), so an API scoring pairs must not overwrite a decision the
+    worker records at the same moment."""
+    mem_dir = tmp_path / "shared"
+    hmem.configure(mem_dir, clock=CLOCK)
+    env = {**os.environ, "ENGINES_SIDECAR_NS": f"reader-{uuid.uuid4().hex}"}
+    env.pop("ENGINES_PERSIST", None)
+    reader = subprocess.Popen([sys.executable, "-c", READER, str(mem_dir), json.dumps(SIMILAR_TO_REJECTED), "40"],
+                              cwd=API_DIR, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    writer = _writer(mem_dir, [[f"LA-W{i}", "reject", REJECTED] for i in range(6)])
+    _run(writer)
+    _run(reader)
+    alerts = {t for r in hmem.instance().records() for t in r["tags"] if t.startswith("alert:")}
+    assert alerts == {f"alert:LA-W{i}" for i in range(6)}
+    assert hmem.adjust(SIMILAR_TO_REJECTED)["delta"] < 0
