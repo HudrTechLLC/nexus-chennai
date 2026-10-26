@@ -73,8 +73,21 @@ def test_dq_flags_find_every_planted_kind(client):
     assert {"duplicate_fir", "bad_geo", "time_inconsistent"} <= rules
 
 
-def test_tips_are_unscreened():
+def test_tips_carry_recorded_tip_guard_results_and_no_secrets():
     p = (SAMPLE / "sb" / "tips.parquet").as_posix()
-    n, unscreened = duckdb.connect().execute(
-        f"SELECT count(*), count(*) FILTER (WHERE guard IS NULL AND status = 'new') FROM '{p}'").fetchone()
-    assert n == 40 and unscreened == 40
+    n, hashed, bad = duckdb.connect().execute(
+        f"SELECT count(*), count(tip_code_hash), count(*) FILTER (WHERE (guard IS NULL) <> (status = 'new')) "
+        f"FROM '{p}'").fetchone()
+    assert n == 40 and hashed == 0 and bad == 0  # screened rows have a verdict, unscreened ones none
+
+
+def test_hero_cross_station_pair_is_a_candidate(client):
+    """Red Pulsar: Velachery-000877 (3.5 km, 2 days later, other station) must be a candidate of Adyar-001182."""
+    rows = {r["crime_id"]: r for r in client.named("q_candidates", agent="test", crime_id="CHN-AD-2026-001182",
+                                                     days=45, ring=6).dicts()}
+    assert "CHN-VL-2026-000877" in rows and rows["CHN-VL-2026-000877"]["same_station"] is False
+
+
+def test_q_tip_corroboration_in_sample_mode(client):
+    rows = client.named("q_tip_corroboration", agent="test", crime_id="CHN-AD-2026-001182").dicts()
+    assert all(r["status"] in ("screened", "reviewed", "urgent") for r in rows)
