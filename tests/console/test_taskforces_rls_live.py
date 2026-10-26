@@ -24,7 +24,9 @@ pytestmark = pytest.mark.skipif(not os.environ.get("NEXUS_DB_PASSWORD"), reason=
 REF = os.environ.get("NEXUS_SUPABASE_REF", "ukrujnsjucwvytnokbtw")
 HOSTS = [os.environ.get("NEXUS_DB_HOST", ""), "aws-0-ap-southeast-1.pooler.supabase.com",
          "aws-1-ap-southeast-1.pooler.supabase.com"]
-MIGRATION = Path(__file__).resolve().parents[2] / "supabase" / "migrations" / "0004_06_03_taskforces.sql"
+MIGRATIONS = Path(__file__).resolve().parents[2] / "supabase" / "migrations"
+MIGRATION = MIGRATIONS / "0004_06_03_taskforces.sql"
+INVITES = MIGRATIONS / "0004_06_04_taskforce_invites.sql"
 
 
 @pytest.fixture()
@@ -45,6 +47,8 @@ def cur():
             c.execute("set local search_path = public, extensions")
             c.execute(MIGRATION.read_text(encoding="utf-8"))
             c.execute("reset search_path")
+        # 0004_06_04 is a plain create-or-replace, so loading it in the rolled-back transaction is always safe.
+        c.execute(INVITES.read_text(encoding="utf-8"))
         yield c
         conn.rollback()
 
@@ -193,3 +197,23 @@ def test_every_police_role_reads(cur):
         assert cur.fetchone()[0] == 1, who
     _as(cur, None)
     assert _refused(cur, "select count(*) from public.taskforces")
+
+
+def test_adding_a_member_notifies_them_once(cur):
+    u = _seed(cur)
+    tf = _propose(cur, u)
+    _as(cur, u["supervisor"])
+    cur.execute("select public.taskforce_set_member(%s, %s, 'member')", (tf, u["member"]))
+    cur.execute("select public.taskforce_set_member(%s, %s, 'lead')", (tf, u["member"]))  # role change: no second invite
+    cur.execute("reset role")
+    cur.execute("select kind, title, link from public.notifications where user_id = %s", (u["member"],))
+    rows = cur.fetchall()
+    assert len(rows) == 1
+    assert rows[0][0] == "taskforce_invite"
+    assert rows[0][1] == "Invited to task force Test TF"
+    assert rows[0][2] == f"/console/taskforces/{tf}"
+    _as(cur, u["supervisor"])
+    cur.execute("select public.taskforce_set_member(%s, %s, null)", (tf, u["member"]))  # removal: nothing new
+    cur.execute("reset role")
+    cur.execute("select count(*) from public.notifications where user_id = %s", (u["member"],))
+    assert cur.fetchone()[0] == 1
