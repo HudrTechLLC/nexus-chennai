@@ -95,18 +95,18 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 5 · One real Nightshift request · 1:25–1:45 (20 s, ~46 words)
 
-- **Screen:** trace viewer, one Linker or Skeptic line expanded: lane `reason`, model `nvidia/nemotron-3-ultra-550b-a55b`, the routed model Nightshift reported, the receipt id, the latency and status `ok` (**not** `replayed`).
+- **Screen:** trace viewer `/console/system/trace/run_da0092da` (sign in as the **demo admin**: system pages are admin-only), step #49 expanded: Skeptic `model_call` on lane `reason`, model `nvidia/nemotron-3-ultra-550b-a55b`, receipt `chatcmpl-…`, status `ok` (**not** `replayed`). This one trace serves segments 5 and 6.
 - **Narration:**
-  > Every model call is accountable. This request went through Nightshift on the pinned reasoning lane. The trace records the model we asked for, Nemotron Ultra, the model Nightshift says answered, and its receipt. The NVIDIA key lives only inside Nightshift, never in our app.
+  > Every model call is accountable. This is the Skeptic's critique, sent through Nightshift on the pinned reasoning lane. The trace records the model, Nemotron Ultra, and the receipt Nightshift returned for this exact request. The NVIDIA key lives only inside Nightshift, never in our app.
 - **Check no secrets visible:**
   - **do not open Nightshift's own Console or Providers tabs for this shot**; the trace viewer is enough;
   - make sure the receipt id isn't mistaken for a token: it's a request id, which is fine to show.
 
 ### 6 · The Skeptic drops a false link · 1:45–2:15 (30 s, ~70 words)
 
-- **Screen:** trace viewer `/console/system/trace/run_da0092da`, Skeptic section: its own Zetaris query ids, then the **drop** of CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium) with its reason; the run writes no alert for that pair.
+- **Screen:** same trace, steps #45–#50. #45 is the Linker's reason (CMBT area, close in time and space, two thin males). #46–#48 are the Skeptic's own Zetaris queries (`via=zetaris`). #50 is **drop · rejected · 0.69**, with its reason: age bands differ, different crime categories, no vehicle or MO overlap. No alert is written for that pair. The line shows `struck=[]`; don't zoom on it and don't say "strike".
 - **Narration:**
-  > The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work with its own Zetaris queries. Here, two thefts near the CMBT bus terminus scored medium, but the Skeptic dropped the link: only proximity, a vague description, very different ages. No alert was written. Only links that survive reach an analyst.
+  > The Linker scores each pair on nine factors, in code. Here, two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries and disagrees. The ages don't match, one is a shop theft and one a two-wheeler theft, and nothing else overlaps. It drops the link, and no alert is written.
 - **Check no secrets visible:** the trace summaries are redacted by design (D-025). Scan the expanded rows for any key-shaped string anyway.
 
 ### 7 · The analyst decides, and H-MEM learns · 2:15–2:50 (35 s, ~80 words)
@@ -154,10 +154,10 @@ An Adyar officer files a chain snatching: two riders on a red motorcycle, a part
 Here is the same question in Zetaris: same-category crimes within a few kilometres and days of the Adyar case, across every station. One query over the federated sources, no warehouse. The Planner chooses queries like this, and each query's id is kept as evidence.
 
 [seg_05]
-Every model call is accountable. This request went through Nightshift on the pinned reasoning lane. The trace records the model we asked for, Nemotron Ultra, the model Nightshift says answered, and its receipt. The NVIDIA key lives only inside Nightshift, never in our app.
+Every model call is accountable. This is the Skeptic's critique, sent through Nightshift on the pinned reasoning lane. The trace records the model, Nemotron Ultra, and the receipt Nightshift returned for this exact request. The NVIDIA key lives only inside Nightshift, never in our app.
 
 [seg_06]
-The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work with its own Zetaris queries. Here, two thefts near the CMBT bus terminus scored medium, but the Skeptic dropped the link: only proximity, a vague description, very different ages. No alert was written. Only links that survive reach an analyst.
+The Linker scores each pair on nine factors, in code. Here, two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries and disagrees. The ages don't match, one is a shop theft and one a two-wheeler theft, and nothing else overlaps. It drops the link, and no alert is written.
 
 [seg_07]
 The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
@@ -177,7 +177,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
 | Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `7534e9e`):** the same pair, high 0.787 | Read the score shown on screen; never the number from this table |
 | "five stations" | `SER-RED-PULSAR` `stations: [J2, J7, J6, J3, J5]`; only true if all members are linked | Say "across stations" |
-| "the Skeptic dropped the link" (CMBT pair) | `run_da0092da`: CHN-CM-2025-000450 ↔ 000461, 0.694, dropped | If the recorded trace differs, narrate exactly what it shows (drop or send-back). **Never a strike** |
+| Seg 6: "ages don't match… shop theft… two-wheeler theft… nothing else overlaps… drops the link" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
 | Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
 

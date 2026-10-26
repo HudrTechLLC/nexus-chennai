@@ -121,7 +121,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   1. "The data layer is the fact-checker: the Skeptic re-queries Zetaris and drops links the data doesn't support."
   2. "Rejected links stay visible and teach the system through H-MEM."
   3. "The public can help without steering it: Scout Intent screens every tip first."
-- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`) showing the Skeptic **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
+- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`, demo **admin** login; steps #46–#50) showing the Skeptic's own Zetaris queries and then **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
 
 ## Slide 10 · Product visuals (point 7)
 
