@@ -180,6 +180,7 @@ TWINS: dict[str, tuple[str, tuple[str, ...]]] = {
 # was published within NEWS_DAYS days after the crime. category_hint = the headline names the category's
 # first word (e.g. "chain" for chain_snatching); it is reported, not required. One row per article.
 NEWS_DAYS = 4
+NEWS_TIMEOUT_S = 8.0
 NEWS_COLUMNS = ("crime_id", "article_id", "headline", "outlet", "published_at", "url", "matched_place",
                 "hours_after", "category_hint")
 
@@ -211,5 +212,8 @@ ORDER BY any_value(n.published_at), n.article_id
 """.strip(),
     description="News articles that mention a crime's place within a few days of it",
     columns=NEWS_COLUMNS,
+    # Zetaris reads the news REST table from this API (/mock-feeds), so a live q_news is a callback into us.
+    # It is optional evidence: one attempt, 8 s, then skipped for the run; callers degrade to "no news".
+    timeout_s=NEWS_TIMEOUT_S,
 )
 N2_SPECS[Q_NEWS["name"]] = Q_NEWS

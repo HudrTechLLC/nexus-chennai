@@ -50,6 +50,13 @@ class NamedQuery:
     # Output column names, in order (D3 names where they exist). Both forms must return
     # exactly these columns; a width mismatch raises instead of mislabelling values.
     columns: tuple[str, ...] = ()
+    # Fail fast: one attempt with this timeout (seconds), no retries, and a short circuit breaker. For
+    # queries that are optional and can hang, e.g. q_news, where Zetaris calls back into this API.
+    timeout_s: float | None = None
+
+
+# After a fail-fast query times out, skip it for this long (per client; a client lives for one run).
+BREAKER_SECONDS = 60.0
 
 
 @dataclass
@@ -132,6 +139,7 @@ class ZetarisClient:
             transport=transport,
         )
         self._duck: duckdb.DuckDBPyConnection | None = None
+        self._tripped: dict[str, float] = {}  # fail-fast query name -> monotonic time it may run again
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -148,8 +156,12 @@ class ZetarisClient:
         reraise=True,
     )
     def _run_rest(self, sql: str, query_id: str, limit: int) -> list[list[Any]]:
+        return self._post(sql, query_id, limit)
+
+    def _post(self, sql: str, query_id: str, limit: int, timeout: float | None = None) -> list[list[Any]]:
         body = {"queryId": query_id, "sql": sql, "source": "SqlEditor", "limit": limit}
-        resp = self._client.post("/sql-editor/sqls/run", json=body, headers=self._headers())
+        kw: dict[str, Any] = {} if timeout is None else {"timeout": httpx.Timeout(timeout)}
+        resp = self._client.post("/sql-editor/sqls/run", json=body, headers=self._headers(), **kw)
         if resp.status_code == 401:
             raise ZetarisError("Zetaris rejected the API key (HTTP 401)")
         if resp.status_code == 400:
@@ -172,11 +184,19 @@ class ZetarisClient:
         query_id = str(uuid.uuid4())
         started = time.perf_counter()
         source = "zetaris"
+        if q.timeout_s is not None and self._tripped.get(name, 0.0) > time.monotonic():
+            msg = f"'{name}' skipped: it timed out within the last {int(BREAKER_SECONDS)} s"
+            self._trace(agent, name, query_id, None, 0, "error", msg)
+            raise ZetarisError(msg)
         try:
             if self.settings.sample_mode and not self.settings.zetaris_api_key:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
-            rows = self._run_rest(render(q.lightning, params), query_id, limit)
+            sql = render(q.lightning, params)
+            rows = (self._post(sql, query_id, limit, q.timeout_s) if q.timeout_s is not None
+                    else self._run_rest(sql, query_id, limit))
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
+            if q.timeout_s is not None and isinstance(exc, httpx.TimeoutException):
+                self._tripped[name] = time.monotonic() + BREAKER_SECONDS
             # Fall back only when Zetaris is unreachable or failing (transport / 5xx).
             # A 4xx (bad SQL, bad key) is a real error and must surface.
             if not (self.settings.sample_mode and _is_retryable(exc)):
