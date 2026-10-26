@@ -23,6 +23,7 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-013 | 2026-10-26 | ✅ | Engg Docs (16 spec tabs, notes, progress tracker) published in the web app at `/docs`; production URL public, previews need Vercel login |
 
 ---
 
@@ -131,3 +132,17 @@ The adapter uses our generated `queryId` as the Zetaris query id shown in traces
 - start read-only;
 - dry-run every create script;
 - never call port 8889.
+
+## D-013 · Engg Docs in the web app
+The team wants one shareable link to the spec and to live progress.
+
+- **What is published:** the web app serves `/docs`:
+  - all 16 spec tabs;
+  - the project notes;
+  - `/docs/progress`, built from `workstreams.json`.
+- **How it stays in sync:** `apps/web/scripts/sync-docs.mjs` copies `engg/docs` into the app at build time. `engg/docs` stays the only source; generated copies are gitignored. Every merge to `main` redeploys.
+- **Access:**
+  - Vercel's login wall is now on **preview deployments only**, so the production URL can be shared with the team.
+  - The repo itself stays private until submission.
+  - The docs contain no secrets: CI runs a secret scan and SETUP.md lists only placeholder names.
+- **Updating progress:** edit the task status in `workstreams.json` and merge. The chart and the task list update on the next deploy.

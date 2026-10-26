@@ -7,13 +7,20 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node scripts/sync-docs.mjs && tsc --noEmit",
+    "sync-docs": "node scripts/sync-docs.mjs",
+    "predev": "node scripts/sync-docs.mjs",
+    "prebuild": "node scripts/sync-docs.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
+    "@tailwindcss/typography": "^0.5.15",
     "next": "14.2.35",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-markdown": "^9.0.1",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
