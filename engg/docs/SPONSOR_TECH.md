@@ -15,7 +15,7 @@ _Pending P2._ To write up:
 - the registered sources and storage types;
 - the semantic views (`v_crime_unified` and the data-quality and feed views; vehicle trail and the other cross-source checks became named queries, not views);
 - the data-quality views;
-- the named queries (14, plus `q_ping`);
+- the named queries (15, plus `q_ping`);
 - the evidence that every agent read goes through `app/adapters/zetaris.py`.
 
 > Draft line from the spec: "Every fact in a Nexus link alert traces back to a row Zetaris returned from the source that holds it: Supabase, S3 or a live feed."
