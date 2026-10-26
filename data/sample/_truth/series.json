@@ -1,0 +1,221 @@
+[
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AD-2026-001071",
+   "CHN-AD-2026-001078",
+   "CHN-AD-2026-001182",
+   "CHN-TI-2026-001056",
+   "CHN-TI-2026-001087",
+   "CHN-TI-2026-001134",
+   "CHN-TI-2026-001148",
+   "CHN-VL-2026-000877",
+   "CHN-VL-2026-001113"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Red Pulsar Duo",
+  "series_id": "SER-RED-PULSAR",
+  "stations": [
+   "PS-ADYAR-J2",
+   "PS-THIRUVANMIYUR-J6",
+   "PS-VELACHERY-J7"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler_towards_main_road",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "main_road"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "thin",
+    "count": 2,
+    "helmet": "black with red stripe"
+   },
+   "signature": null,
+   "vehicle": {
+    "colour": "red",
+    "make_model": "Bajaj Pulsar 150",
+    "plate": "TN 09 BX 4471",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 09 ?? 4471",
+     "TN 09 B? 4471",
+     "?? 4471",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-AS-2025-000080",
+   "CHN-KA-2025-000077",
+   "CHN-KU-2025-000078",
+   "CHN-KU-2025-000082",
+   "CHN-MG-2025-000077",
+   "CHN-MG-2025-000079",
+   "CHN-PO-2025-000068",
+   "CHN-VI-2025-000079"
+  ],
+  "crime_type": "night_house_break",
+  "kind": "series",
+  "name": "Grille Cutters",
+  "series_id": "SER-GRILLE-CUTTERS",
+  "stations": [
+   "PS-ASHOKNAGAR-R3",
+   "PS-KODAMBAKKAM-R2",
+   "PS-KUMARANNAGAR-R6",
+   "PS-MGRNAGAR-R10",
+   "PS-PONDYBAZAAR-R4",
+   "PS-VIRUGAMBAKKAM-R5"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "window_grille_cut",
+    "disguise": [
+     "mask"
+    ],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "residential"
+    ],
+    "target": "locked_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "medium",
+    "count": 2
+   },
+   "signature": null,
+   "vehicle": null,
+   "weapon": "cutter"
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AM-2025-000865",
+   "CHN-AM-2025-001042",
+   "CHN-GU-2025-000945",
+   "CHN-GU-2025-001149",
+   "CHN-NA-2025-000990",
+   "CHN-ST-2025-001108"
+  ],
+  "crime_type": "cab_robbery",
+  "kind": "series",
+  "name": "Night Cab",
+  "series_id": "SER-NIGHT-CAB",
+  "stations": [
+   "PS-ADAMBAKKAM-S8",
+   "PS-GUINDY-J3",
+   "PS-NANDAMBAKKAM-S4",
+   "PS-STTHOMASMOUNT-S1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_ride_hailing_cab",
+    "disguise": [],
+    "escape": "car",
+    "offender_count": 3,
+    "place_type": [
+     "main_road",
+     "hotel"
+    ],
+    "target": "lone_passenger",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "knife_threat"
+   },
+   "offenders": {
+    "age_band": "25-35",
+    "build": "heavy",
+    "count": 3
+   },
+   "signature": null,
+   "vehicle": {
+    "colour": "white",
+    "make_model": "Maruti Swift Dzire",
+    "plate": "TN 22 CK 7312",
+    "type": "car",
+    "witnessed": [
+     "TN 22 ?? 7312",
+     "TN 22 C? 73??",
+     null
+    ]
+   },
+   "weapon": "knife"
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-MM-2025-001211",
+   "CHN-MM-2025-001313",
+   "CHN-PO-2025-001230"
+  ],
+  "crime_type": "mobile_snatching",
+  "kind": "series",
+  "name": "Generated series 2",
+  "series_id": "SER-G02",
+  "stations": [
+   "PS-MAMBALAM-R1",
+   "PS-PONDYBAZAAR-R4"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "on_foot_snatch_and_run",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "metro_station"
+    ],
+    "target": "pedestrian",
+    "target_item": "mobile_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "heavy",
+    "count": 2,
+    "helmet": "white full-face"
+   },
+   "signature": "scar on left cheek",
+   "vehicle": {
+    "colour": "grey",
+    "make_model": "Honda Activa",
+    "plate": "TN 88 ZK 4057",
+    "type": "motorcycle",
+    "witnessed": [
+     "?? 4057",
+     "TN 88 ZK 40??",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ }
+]
