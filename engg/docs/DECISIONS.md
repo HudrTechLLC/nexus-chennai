@@ -21,6 +21,8 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-008 | 2026-10-26 | ✅ | Meterless engines are **ported to Python** from the Apache-2.0 TypeScript references at commit `1742dec` |
 | D-009 | 2026-10-26 | 🟡 | Scope for the deadline: P0–P6 + **P7 (Pulse Map, lean)** + **P8 (portal, lean)** + P10; cut data-source breadth first |
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
+| D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
+| D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
 
 ---
 
@@ -40,14 +42,18 @@ The spec lists Vercel as optional (O7 #12). The team wants the Pulse Map and the
   - The web app reads them through RLS, and alerts arrive live via Realtime.
 - **Public map** reads only a dedicated `public_map_cells` table: H3 cell, crime type, week and count, with a minimum-count cutoff. It never reads a view over FIRs, because a plain view runs with the owner's rights and could leak rows to `anon`.
 - **Tip intake** is a Next.js route handler.
-  - It does only the deterministic steps: size and type limits, metadata (EXIF) stripping, rate limiting and issuing the tip code. Then it inserts the tip with `screen_status='pending'`.
+  - It does only the deterministic steps: size and type limits, metadata (EXIF) stripping, rate limiting and issuing the tip code.
+  - It then calls the `submit_tip` RPC, which stores the tip with `screen_status='pending'`.
   - Scout Intent / Tip Guard runs in the local worker.
   - The Zetaris tip views exclude anything not screened clean, so rule R8 still holds.
   - Face blur (OpenCV) runs in the worker. Raw uploads go to a private bucket.
-- **Keys on Vercel:** only the Supabase URL and the anon / publishable key.
-  - `anon` gets INSERT-only on `tips` and on the tip upload bucket.
-  - Tip status comes from a `security definer` RPC that takes a tip code and returns only the status.
-  - The service-role key never goes to Vercel.
+- **Keys on Vercel:** only the Supabase URL and the anon / publishable key. The service-role key never goes to Vercel.
+- **`anon` has no access to any table** (spec Part I). It can only `EXECUTE` a few narrow `security definer` functions, each returning or accepting a fixed shape:
+  - `submit_tip` (insert only);
+  - `tip_status(code, passphrase)`;
+  - `public_incidents_list`;
+  - `public_map_cells`.
+- **How this differs from Part J:** the spec routes tips through FastAPI. On a public host that would mean exposing the laptop. These RPCs keep the same guarantees: no table access for `public`, and no IP stored by the app.
 - **The local run is unchanged.** `docker compose up` still serves the web app on 3001 against the same Supabase, so the fresh-clone check (L3) does not depend on Vercel.
 
 ## D-004 · City packs
@@ -106,3 +112,22 @@ WS4 requires "No IP / user agent in logs for `/api/public/*`". Vercel's platform
 - The limitation is disclosed in the README and in [SPEC Part J](SPEC.md#security).
 
 If the gate needs a strict pass, the local Docker portal (no platform logs) is what the gate is run against.
+
+## D-011 · Zetaris REST format
+Read from `scripts/zetaris_sql.py` in `github.com/zetaris/getting-started`, commit `6a2fbaa47c32c9ac33f6584c64b43b146c621bed`:
+
+- **Endpoint:** `POST {ZETARIS_REST_URL}/sql-editor/sqls/run`
+- **Body:** `{"queryId": <uuid>, "sql", "source": "SqlEditor", "limit"}`
+- **Headers:**
+  - `Authorization: Bearer <api key>`
+  - `X-Org-ID` (numeric)
+  - a fresh UUID `X-Request-ID`
+- **Response:** `{"data": [[...]]}`
+- **Errors:** 401 = bad key; 400 = bad org id or a non-UUID request id.
+- **SQL:** one statement per call, no trailing semicolon.
+
+The adapter uses our generated `queryId` as the Zetaris query id shown in traces and on alert cards. The `AGENTS.md` safety rules in that repo also apply here:
+
+- start read-only;
+- dry-run every create script;
+- never call port 8889.
