@@ -47,7 +47,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 **Sponsor technology is load-bearing:**
 - **Zetaris** is the only way agents read crime data (registered named queries over federated sources).
 - **Meterless Nightshift** is the only model path, on pinned NVIDIA Nemotron lanes, with the model logged on every call.
-- **All four Meterless engines** run in features. World Model, H-MEM and Markovian pass their official conformance suites unchanged (8/8, 13/13, 8/8), and Scout Intent passes its 120-fixture evaluation.
+- **All four Meterless engines** run in features. World Model, H-MEM and Markovian pass their official conformance suites unchanged (8/8, 13/13, 8/8), and Scout Intent passes its fixture evaluation (route accuracy 1.000 on 120 fixtures, 0.950 held-out). On the 40 live seeded tips it quarantined 3 of 4 injections and 1 of 4 spam tips and flagged both emergencies; the misses were stored only as vocabulary-only summaries, and fixes are in progress.
 
 **Built to be checked.** Judges can run it with Docker or a Python virtual environment, post an input to `POST /run`, and read a JSONL trace of every agent step, Zetaris query, engine call and model. `SAMPLE_MODE=true` runs the same agent logic without credentials, on a committed synthetic sample `[PENDING: WS1-11]`. All data is synthetic.
 
