@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getAppeal } from "@/lib/publicData";
 import { APPEAL_IMAGE_ALT, appealImageUrl } from "@/lib/appealImages";
+import { appealTipHref, crimeMapHref, publicCell } from "@/lib/publicArea";
+import { AppealAreaMap } from "@/components/public/AppealAreaMap";
 
 export const revalidate = 60;
 
@@ -13,6 +15,8 @@ export default async function AppealDetail({ params }: { params: { publicId: str
     const url = appealImageUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, img.path);
     return url ? [{ url, width: img.width ?? 640, height: img.height ?? 360 }] : [];
   });
+  const cell = publicCell(a.cell);
+  const mapHref = crimeMapHref(cell);
   return (
     <article className="mx-auto max-w-2xl space-y-5">
       <Link href="/appeals" className="text-sm text-muted hover:text-ink">← All appeals</Link>
@@ -40,13 +44,23 @@ export default async function AppealDetail({ params }: { params: { publicId: str
           <p className="text-xs text-muted">Whole images are blurred before publishing, so no face or plate can be read.</p>
         </section>
       )}
+      {cell && (
+        <section aria-labelledby="where" className="space-y-2 rounded-xl border border-line bg-surface p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="where" className="font-semibold">Where it happened</h2>
+            {mapHref && <Link href={mapHref} className="text-sm text-accent underline-offset-2 hover:underline">See on crime map →</Link>}
+          </div>
+          <AppealAreaMap cell={cell} />
+          <p className="text-xs text-muted">{a.area}. Shown as an area of about 0.7 km², never an exact spot.</p>
+        </section>
+      )}
       <section className="rounded-xl border border-line bg-surface p-5 text-sm">
         <h2 className="font-semibold">Timeline</h2>
         <p className="mt-1 text-muted">Happened in week {a.week} ({a.time_window.toLowerCase()}). Published {a.published_at ? new Date(a.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "recently"}. {a.tip_count} tip{a.tip_count === 1 ? "" : "s"} received.</p>
       </section>
       <div className="flex flex-wrap gap-3">
-        <Link href={`/tip/new?appeal=${encodeURIComponent(a.id)}`} className="rounded-md bg-signal px-4 py-2 font-medium text-white">Share a tip</Link>
-        <Link href={`/tip/new?appeal=${encodeURIComponent(a.id)}&kind=cctv`} className="rounded-md border border-line px-4 py-2">I have CCTV</Link>
+        <Link href={appealTipHref(a.id)} className="rounded-md bg-signal px-4 py-2 font-medium text-white">Add a tip about this appeal</Link>
+        <Link href={appealTipHref(a.id, "cctv")} className="rounded-md border border-line px-4 py-2">I have CCTV</Link>
       </div>
       <p className="text-xs text-muted">In an emergency, call 112.</p>
     </article>

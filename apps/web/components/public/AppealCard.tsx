@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Appeal } from "@/lib/publicData";
+import { appealTipHref } from "@/lib/publicArea";
 
 /** Appeal card (spec G1 /appeals): title, area, week, time window, what police are looking for, tip count. */
 export function AppealCard({ a }: { a: Appeal }) {
@@ -16,7 +17,7 @@ export function AppealCard({ a }: { a: Appeal }) {
       )}
       <div className="mt-auto flex items-center justify-between pt-4 text-sm">
         <span className="rounded-full bg-bg px-2 py-0.5 text-xs">{a.tip_count} tip{a.tip_count === 1 ? "" : "s"} so far</span>
-        <Link href={`/tip/new?appeal=${encodeURIComponent(a.id)}`} className="rounded-md bg-signal px-3 py-1.5 text-white">Share a tip</Link>
+        <Link href={appealTipHref(a.id)} aria-label={`Add a tip about this appeal: ${a.title}`} className="rounded-md bg-signal px-3 py-1.5 text-white">Add a tip</Link>
       </div>
     </article>
   );

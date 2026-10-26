@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import { cellToBoundary } from "h3-js";
 import { CITY } from "@/lib/city";
+import { cellBounds } from "@/lib/publicArea";
 import type { PublicCell } from "@/lib/publicData";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -10,7 +11,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
  * Public crime map (spec G1 /map): H3 r8 cells coloured by count, gentle pulse on cells with an
  * open appeal. Data arrives already aggregated with the minimum-count cutoff; there are no points.
  */
-export function PublicHexMap({ cells, category }: { cells: PublicCell[]; category: string | null }) {
+export function PublicHexMap({ cells, category, focus = null }: { cells: PublicCell[]; category: string | null; focus?: string | null }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
@@ -31,8 +32,11 @@ export function PublicHexMap({ cells, category }: { cells: PublicCell[]; categor
 
   useEffect(() => {
     if (!el.current) return;
+    const fb = focus ? cellBounds(focus) : null;
     const m = new maplibregl.Map({
       container: el.current, style: "/map/light.json", center: CITY.map.center, zoom: CITY.map.zoom,
+      // opened on one area (/map?cell=): start framed on it, with the neighbourhood around
+      ...(fb ? { bounds: [[fb[0], fb[1]], [fb[2], fb[3]]] as [[number, number], [number, number]], fitBoundsOptions: { padding: 120, maxZoom: 14 } } : {}),
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -50,6 +54,17 @@ export function PublicHexMap({ cells, category }: { cells: PublicCell[]; categor
         id: "hex-appeal", type: "line", source: "hex", filter: ["==", ["get", "appeal"], 1],
         paint: { "line-color": "#0e7c86", "line-width": 3, "line-opacity": 0.9 },
       });
+      if (focus) {
+        // the selected area: a heavy outline, plus a label with its count (if it passes the public minimum)
+        m.addSource("focus", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [cellToBoundary(focus, true)] } } });
+        m.addLayer({ id: "focus-line", type: "line", source: "focus", paint: { "line-color": "#111827", "line-width": 4 } });
+        const row = cells.find((c) => c.cell === focus);
+        const [w, s, e, n] = cellBounds(focus);
+        new maplibregl.Popup({ closeButton: true, closeOnClick: false, className: "nexus-focus" })
+          .setLngLat([(w + e) / 2, n - (n - s) * 0.15])
+          .setText(row ? `This area · ${row.n} reported crimes${row.appeal ? " · open appeal" : ""}` : "This area · too few reports to show a count")
+          .addTo(m);
+      }
       const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
       m.on("mousemove", "hex-fill", (e) => {
         const f = e.features?.[0];
