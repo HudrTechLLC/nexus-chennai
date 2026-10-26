@@ -315,6 +315,7 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **What we don't do:** call scribe or Ollama ports directly, which would bypass Nightshift (R2).
 - **Later:** if Nightshift exposes `/v1/embeddings`, pinning `LANE_EMBED` turns the live path on with no code change.
 - **Submission:** the Nemotron embed model is **not** claimed.
+- **Update 27 Oct (~01:00, chief):** a Nightshift lane for Nemotron 3.5 Embed 1B is now seated, with the NVIDIA key held in Nightshift. Embeddings are still unavailable: `POST /v1/embeddings`, `/embeddings`, `/v1/meterless/embed` and `/v1/meterless/embeddings` all return 404 `not_found`, and `meterless/embed` in `/v1/models` lists endpoints `[chat, embeddings]` but `routes: []`. **This decision stands.** Unlike vision (D-036), seating a lane is not enough here, because Nightshift exposes no embeddings route. Embed stays "wired; waiting for a Nightshift embeddings route".
 
 ## D-028 · Console reads for series, stations, memory and graph go through jsonb RPCs (nexus-6) (2026-10-26)
 - **The RPCs:**
