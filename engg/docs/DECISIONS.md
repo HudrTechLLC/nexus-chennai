@@ -295,3 +295,10 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **The decision:** CSV and Parquet files go into **Zetaris's internal file store** and are still registered as file sources, so Zetaris still federates them alongside Supabase Postgres. The Supabase bucket stays as a backup copy.
 - **Not done:** we will not change the Zetaris container's JVM/TLS settings during the build, because restarting Zetaris would put every lane at risk. The fix (a newer JDK or `-Djdk.tls.client.protocols`) plus a one-line endpoint switch is documented in `zetaris/README` as a future option and stated as a limitation.
 - **Still true:** no AWS, no spend.
+
+## D-026 · Lightning runs with thinking off for extraction-type agents (nexus-3, #58) (2026-10-26)
+- **The finding:** with thinking on, Nemotron 3.5 Lightning spent its whole `max_tokens` budget reasoning and returned a 502 `empty_response`, taking about 56 s and 4,088 tokens.
+- **The fix:** sending `chat_template_kwargs.enable_thinking=false` makes the same extraction take about 12 s and 110 tokens.
+- **Where it applies:** the Extractor, Sanitiser and Briefer (structured-output jobs) run Lightning with thinking **off**. The Planner on Nemotron Ultra keeps reasoning on.
+- **Supersedes:** the D-017 rule "`max_tokens` ≥ 1024", for thinking-off calls only.
+- **Traceability:** the trace records the model and the receipt on every call.
