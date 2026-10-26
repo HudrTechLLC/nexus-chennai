@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T18:23:28+05:30",
+  "updated": "2026-10-26T20:21:36+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -20,7 +20,8 @@
     "P7": "Pulse Map (lean)",
     "P8": "Public portal (lean)",
     "P9": "FIR form + remaining sources",
-    "P10": "Submission package"
+    "P10": "Submission package",
+    "P11": "After the hackathon (Path 2)"
   },
   "workstreams": [
     {
@@ -124,9 +125,9 @@
           "id": "WS1-12",
           "phase": "P2",
           "title": "Register sources in Zetaris (Supabase, S3 CSV, S3 Parquet, REST)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "Supabase + 12 file-store tables (s3csv/s3pq) live; REST feeds pending generator",
+          "note": "Supabase sb + 12 file-store tables + REST feeds (news/social/weather) live (#210)",
           "ref": "#50"
         },
         {
@@ -142,17 +143,17 @@
           "id": "WS1-14",
           "phase": "P2",
           "title": "Data-quality views: duplicate FIRs, bad geo, unmapped sections",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "nexus-2 · 8 dq views live, re-verifying on legacy-union v_crime_unified (#170)"
+          "note": "8 dq views live on the legacy union; duplicates 15/15, 0 FP (#170, #192)"
         },
         {
           "id": "WS1-15",
           "phase": "P2",
           "title": "12 named queries + DuckDB sample equivalents",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "13/14 live on Zetaris (all but q_news, waits WS1-16); 14/14 sample twins; D-031 ORDER BY + parity test (#174)"
+          "note": "14/14 named queries live on Zetaris + DuckDB twins; parity test (#174); q_dq_summary added (#252)"
         },
         {
           "id": "WS1-16",
@@ -179,6 +180,27 @@
           "owner": "nexus-1",
           "note": "models D3 + 0002_core applied; live RLS 4/4; crimes_citywide summary-only",
           "ref": "#10"
+        },
+        {
+          "id": "WS1-19",
+          "phase": "P2",
+          "title": "Self-contained live data: one command generates the 14k dataset and loads it into the judge's own Zetaris (no Supabase)",
+          "status": "in_progress",
+          "note": "nexus-1 + nexus-2 · rules: data setup automated, no credentials beyond env vars"
+        },
+        {
+          "id": "WS1-20",
+          "phase": "P2",
+          "title": "Data sources README with licences (SRC-01)",
+          "status": "done",
+          "note": "nexus-1 · data/README.md (#243); real public reference data named with licences (#249)"
+        },
+        {
+          "id": "WS1-21",
+          "phase": "P2",
+          "title": "Data-quality counts on the System page",
+          "status": "done",
+          "note": "nexus-1 · q_dq_summary + app.dq_status → system_status (#252)"
         }
       ]
     },
@@ -364,6 +386,41 @@
           "owner": "nexus-2",
           "note": "similarity.py merged (TF-IDF fallback, D-027); Linker wiring behind flag (nexus-3)",
           "ref": "#75"
+        },
+        {
+          "id": "WS2-22",
+          "phase": "P6",
+          "title": "Live mode without Supabase: local result store for /run and the worker",
+          "status": "in_progress",
+          "note": "nexus-3 · judges run live mode with their own Zetaris + Nightshift only"
+        },
+        {
+          "id": "WS2-23",
+          "phase": "P3",
+          "title": "Extractor label-support check + mo-v4 re-extract",
+          "status": "done",
+          "note": "nexus-3 · #201, #227; 16 mislabelled rows corrected, hero untouched"
+        },
+        {
+          "id": "WS2-24",
+          "phase": "P4",
+          "title": "Series quality: test-FIR exclusion (D-033), readable names, cited dossier",
+          "status": "in_progress",
+          "note": "nexus-3 · #239, #245, #234 merged; Red Pulsar dossier regeneration pending"
+        },
+        {
+          "id": "WS2-25",
+          "phase": "P3",
+          "title": "Address guard on MO tags (privacy, J5)",
+          "status": "todo",
+          "note": "nexus-3 · strip street/locality fragments; re-extract 5 rows"
+        },
+        {
+          "id": "WS2-26",
+          "phase": "P6",
+          "title": "Red Pulsar live re-run on fixed code (hero stays pending)",
+          "status": "in_progress",
+          "note": "nexus-3 · rp7; model critique on every alert, fresh ANPR vehicle check"
         }
       ]
     },
@@ -437,9 +494,9 @@
           "id": "WS3-08",
           "phase": "P6",
           "title": "System status + trace viewer",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-3",
-          "note": "Moved to nexus-3 (traces in Supabase via 0006, D-025)"
+          "note": "System status, trace viewer (model + receipt, Zetaris query ids), DQ counts (#252), eval card (#244)"
         },
         {
           "id": "WS3-09",
@@ -463,9 +520,9 @@
           "id": "WS3-11",
           "phase": "P7",
           "title": "Series pages, station link matrix, memory page, case graph explorer",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-6",
-          "note": "All 4 screens merged (series, stations, memory, graph); live check pending real rows",
+          "note": "Series, station matrix, memory, graph live on real rows (#153, #231)",
           "ref": "#70, #85"
         },
         {
@@ -500,6 +557,41 @@
           "owner": "nexus-5",
           "note": "Chief decisions 26 Oct: open = registered + under_investigation; briefing is code-generated, no LLM",
           "ref": "#184"
+        },
+        {
+          "id": "WS3-16",
+          "phase": "P6",
+          "title": "Evaluation page /console/system/eval (LNK-10)",
+          "status": "done",
+          "note": "nexus-6 · #244; reads the committed eval_report.json"
+        },
+        {
+          "id": "WS3-17",
+          "phase": "P7",
+          "title": "Pulse Map filters: station, zone, status, weapon, vehicle, MO (DASH-04)",
+          "status": "done",
+          "note": "nexus-4 · #253 (0004_12), #255"
+        },
+        {
+          "id": "WS3-18",
+          "phase": "P5",
+          "title": "Alert detail map: both scenes + vehicle trail",
+          "status": "done",
+          "note": "nexus-5 · #242, #248"
+        },
+        {
+          "id": "WS3-19",
+          "phase": "P5",
+          "title": "Vehicle register + ANPR/evidence, alias and phone search",
+          "status": "done",
+          "note": "nexus-5 · #226, #228, #218, #232"
+        },
+        {
+          "id": "WS3-20",
+          "phase": "P7",
+          "title": "Console polish from the video dry-run",
+          "status": "done",
+          "note": "nexus-4 · #240 (map loading, series auto-fit, 1080p header)"
         }
       ]
     },
@@ -580,6 +672,13 @@
           "title": "Blurred stills on public appeals (PUB-02)",
           "status": "done",
           "note": "nexus-6 · blurred stills on appeals, 0004_06_05 + 0004_11 (#197, #199)"
+        },
+        {
+          "id": "WS4-10",
+          "phase": "P8",
+          "title": "Appeal publish guard: names, landmarks, area label, column grants",
+          "status": "done",
+          "note": "nexus-5 · 0007_08–0007_10 (#194, #198, #216)"
         }
       ]
     },
@@ -671,6 +770,104 @@
           "owner": "nexus-chief",
           "note": "Root Dockerfile + CI docker-judge-path (sample mode, no creds) green; live host.docker.internal run pending",
           "ref": "#49"
+        },
+        {
+          "id": "WS5-12",
+          "phase": "P10",
+          "title": "Offline proof: judge image runs with --network none",
+          "status": "todo",
+          "note": "nexus-7 · WS5-08 checklist §3b, Tue morning"
+        },
+        {
+          "id": "WS5-13",
+          "phase": "P6",
+          "title": "docker compose serves the web app too (NFR-03)",
+          "status": "done",
+          "note": "nexus-6 · #241, #247; CI job web-image"
+        },
+        {
+          "id": "WS5-14",
+          "phase": "P10",
+          "title": "Video dry-run #2 before recording",
+          "status": "todo",
+          "note": "nexus-4 · Tue morning, read-only"
+        },
+        {
+          "id": "WS5-15",
+          "phase": "P10",
+          "title": "Pre-freeze cleanup of test data (Ravee approves the list)",
+          "status": "todo",
+          "note": "nexus-7 list; audit_log never deleted"
+        }
+      ]
+    },
+    {
+      "id": "WS6",
+      "name": "After the hackathon (Path 2)",
+      "focus": "Self-contained stack and deferred improvements, built after submission",
+      "tasks": [
+        {
+          "id": "WS6-01",
+          "phase": "P11",
+          "title": "Local Supabase stack in docker compose (console runs without our cloud)",
+          "status": "cut",
+          "note": "Path 2; cloud Supabase becomes one deploy target"
+        },
+        {
+          "id": "WS6-02",
+          "phase": "P11",
+          "title": "Full 14k dataset in sample mode; fixtures and eval rebuilt",
+          "status": "cut",
+          "note": "Path 2"
+        },
+        {
+          "id": "WS6-03",
+          "phase": "P11",
+          "title": "Positive-only corroboration rule",
+          "status": "cut",
+          "note": "D-032; evaluated, parked by Ravee"
+        },
+        {
+          "id": "WS6-04",
+          "phase": "P11",
+          "title": "Fold \"_aged_NN\" target labels",
+          "status": "cut",
+          "note": "changes MO matching; after recording"
+        },
+        {
+          "id": "WS6-05",
+          "phase": "P11",
+          "title": "Worker-side face/plate blur (OpenCV) for public stills",
+          "status": "cut",
+          "note": "closes the direct-upload risk (WS4-09)"
+        },
+        {
+          "id": "WS6-06",
+          "phase": "P11",
+          "title": "Route-signed evidence hashes",
+          "status": "cut",
+          "note": "D-029 limit"
+        },
+        {
+          "id": "WS6-07",
+          "phase": "P11",
+          "title": "Full lazy news generator over the live crime set",
+          "status": "cut",
+          "note": "5 multi-match articles today"
+        },
+        {
+          "id": "WS6-08",
+          "phase": "P11",
+          "title": "Column-limited persons view for zetaris_reader",
+          "status": "cut",
+          "note": "hardening"
+        },
+        {
+          "id": "WS6-09",
+          "phase": "P11",
+          "title": "Vision and audio lanes once Nightshift routes them",
+          "status": "cut",
+          "note": "WS2-05, CAP-03, CAP-09"
         }
       ]
     }
