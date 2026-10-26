@@ -157,7 +157,9 @@ class ZetarisClient:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
             rows = self._run_rest(render(q.lightning, params), query_id, limit)
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
-            if not self.settings.sample_mode:
+            # Fall back only when Zetaris is unreachable or failing (transport / 5xx).
+            # A 4xx (bad SQL, bad key) is a real error and must surface.
+            if not (self.settings.sample_mode and _is_retryable(exc)):
                 self._trace(agent, name, query_id, None, 0, "error", str(exc))
                 raise ZetarisError(str(exc)) from exc
             source = "sample"

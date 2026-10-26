@@ -53,6 +53,12 @@ def test_errors_raise_when_not_in_sample_mode():
         c.named("q_ping", agent="x")
 
 
+def test_sample_mode_does_not_hide_bad_sql():
+    c = ZetarisClient(settings(sample_mode=True), transport=httpx.MockTransport(lambda r: httpx.Response(400)))
+    with pytest.raises(ZetarisError):
+        c.named("q_ping", agent="x")
+
+
 def test_sample_mode_falls_back_to_duckdb():
     r = ZetarisClient(settings(sample_mode=True, zetaris_api_key="")).named("q_ping", agent="x")
     assert r.source == "sample" and r.rows == [[1]]

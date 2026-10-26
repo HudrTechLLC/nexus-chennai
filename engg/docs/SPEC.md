@@ -5,7 +5,7 @@ source: "claude.ai/artifact/DaVvLJmn1E6KCpxP2mppXW (version 1792978746-8efb, 26 
 
 # Nexus Chennai · Specification (v1.0)
 
-> **This is the single source of truth.** It is converted from the team's spec page, all 16 tabs, without changing the content.
+> **This is the single source of truth.** It is converted from the team's spec page, all 16 tabs: the text of every part unchanged, plus each tab's visual blocks (KPIs, product cards, lanes, weights, screen mockups, phase grid) converted to text at the end of that part.
 >
 > **Repo deviations from the spec text** (see [DECISIONS](DECISIONS.md)):
 > - Wherever the spec says `docs/`, this repo uses **`engg/docs/`** (D-002).
@@ -82,6 +82,33 @@ The information that would link these cases exists. It is scattered across stati
 -   Data: public reference data plus a large synthetic dataset (Part D) with **30 planted crime series** so linking can be measured.
 
 * * *
+
+## Exhibits on the spec page (overview)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### At a glance · _hackathon build scope_
+
+- **25** data sources
+- **4+** storage types via Zetaris
+- **4** Meterless engines, each tested
+- **3–7** Nemotron lanes, pinned
+- **14k** synthetic FIRs, 70 stations
+- **30** planted series to measure
+
+| Tab | Link token | Use it for |
+| --- | --- | --- |
+| Products | [#products](#products) | Each product and the job only it does in Nexus |
+| Claude Code | [#claude-code](#claude-code) | Operating manual, tooling, hackathon digest, validation gates, accounts to create |
+| Requirements | [#requirements](#requirements) | Every requirement ID (CAP, SRC, LNK, SRCH, DASH, PUB, NOT, NFR) |
+| Architecture | [#architecture](#architecture) | Layers, sequence, agent graph, repo layout |
+| Data | [#data](#data) | 25 sources, generator, planted series, JSON/CSV formats |
+| Agents & sponsors | [#sponsors](#sponsors) | Zetaris, Meterless engines, Nemotron lanes, ElevenLabs |
+| Linking | [#linking](#linking) | Factors, weights, Skeptic, evaluation |
+| Screens & URLs | [#screens](#screens) | Pulse Map, alert cards, tip form, every route |
+| API · Database · Security | [#api](#api) · [#database](#database) · [#security](#security) | Endpoints, tables + RLS, anonymity rules |
+| Phases | [#phases](#phases) | P0–P10 with Claude Code prompts |
+| Deliverables · Demo · Risks | [#deliverables](#deliverables) · [#demo](#demo) · [#risks](#risks) | Submission mapping, ElevenLabs script, verification list |
 
 
 ---
@@ -178,6 +205,92 @@ LangGraph (agent graph with loops), FastAPI, Next.js, MapLibre GL + deck.gl (Pul
 -   **The Skeptic** (Nemotron 3 Super re-querying Zetaris) refuses links the data doesn't support.
 -   **H-MEM** makes each human decision change the next alert.
 -   **Scout Intent** lets the public help without being able to steer the system.
+
+## Exhibits on the spec page (products)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### The cast · _one job each that only it does_
+
+Data layer · required
+
+### Zetaris
+
+Queries station FIRs, legacy CCTNS files, ANPR, 112 calls, releases and live feeds where they live, and turns them into views every agent trusts.
+
+Seen in demo: the Skeptic re-runs the vehicle-trail query and the alert shows its query id.
+
+AI runtime · required
+
+### Meterless Nightshift
+
+The only AI provider. Lanes match agent jobs; the app never holds the NVIDIA key.
+
+Seen in demo: trace lines with the pinned and routed Nemotron model.
+
+Engine · shared state
+
+### World Model
+
+One canonical entity per real-world thing, so every agent agrees which red Pulsar or alias it means.
+
+Seen in demo: the case graph explorer.
+
+Engine · memory
+
+### H-MEM
+
+Turns approve and reject decisions into memory that changes the next alert's score, with a visible chip.
+
+Seen in demo: "memory applied +0.03".
+
+Engine · routing + risk
+
+### Scout Intent
+
+Routes analyst searches to the right tool and quarantines spam, threats and injection in public tips.
+
+Seen in demo: an injection tip marked quarantined.
+
+Engine · long tasks
+
+### Markovian
+
+Reads hundreds of records for a crime series in bounded chunks and writes the dossier.
+
+Seen in demo: series dossier and token-savings line.
+
+Models · NVIDIA
+
+### Nemotron
+
+Lightning extracts MO at volume, Super VL reads CCTV and photos, Super plans, explains and challenges links.
+
+Seen in demo: CCTV still → "red motorcycle, partial plate".
+
+System of record
+
+### Supabase
+
+FIRs, evidence, tips, alerts and decisions with Auth, row-level security and realtime alerts.
+
+Seen in demo: both stations get the alert live.
+
+Demo narration
+
+### ElevenLabs
+
+Narrates the 1–4 minute video per segment; also voices synthetic tips at data-build time. Not in the product.
+
+Heard in demo: the voiceover.
+
+Builder
+
+### Claude Code
+
+Builds phase by phase and runs a hackathon validation gate after every workstream.
+
+Seen in repo: docs/validation reports.
 
 
 ---
@@ -371,6 +484,22 @@ Read docs/SPEC.md Part O first, then Parts K and L, then docs/PROGRESS.md.
 ```
 
 * * *
+
+## Exhibits on the spec page (claude-code)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### How a Claude Code session runs · _every session, every phase_
+
+- 1 · Read CLAUDE.md, Part O, K, L, PROGRESS: start
+- 2 · Check hackathon digest + saved official docs: rules
+- 3 · Run smoke.py (live vs sample): health
+- 4 · Build the current phase: work
+- 5 · Pass the phase exit check: check
+- 6 · Workstream done → /gate WS: gate
+- 7 · Update PROGRESS.md, commit: end
+
+A failed gate blocks the next phase unless the team accepts the gap in docs/DECISIONS.md. The gate report lists PASS / FAIL with evidence: file paths, test output, trace lines and Zetaris query ids.
 
 
 ---
@@ -590,6 +719,61 @@ nexus-chennai/
 ```
 
 * * *
+
+## Exhibits on the spec page (architecture)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### Where each product sits · _read left to right_
+
+**Sources**
+
+- Station FIRs, diary, statements (Supabase Postgres)
+- Photos, CCTV clips, audio (Supabase Storage)
+- Legacy CCTNS exports, cameras, releases (S3 CSV)
+- ANPR reads, 112 calls, archive (S3 Parquet)
+- Weather, news, social (Live REST)
+- Public tips & CCTV (Portal → Supabase)
+
+**Zetaris**
+
+- 6 registered sources (no copy, no ETL)
+- v_crime_unified (IPC↔BNS, legacy schemas)
+- v_link_candidates · v_vehicle_trail (cell + time joins)
+- v_offender_return · v_tip_corroboration
+- DQ views (duplicate FIRs, bad geo)
+- 12 named queries (logged with query id)
+
+**Agents**
+
+- Scout Intent router · Tip Guard
+- Extractor (text, image, audio)
+- Planner ⟲ (revises on Skeptic request)
+- Linker (scores in code)
+- Skeptic (strike · send back · drop)
+- Series analyst · Sanitiser · Briefer
+
+**Meterless**
+
+- World Model (shared case graph)
+- H-MEM (remembers decisions)
+- Scout Intent (routing + risk screen)
+- Markovian (series dossiers)
+- Nightshift runtime (only AI provider)
+
+**Nemotron lanes**
+
+- 3.5 Lightning 30B (MO extraction, sanitiser)
+- 3.5 Super VL 120B (CCTV, photos, scans)
+- 3 Super 120B (planner, linker, skeptic)
+- Omni · safety · Nano · embed (if exposed; fallbacks)
+
+**People**
+
+- Station officers (capture, diary, tips)
+- Analysts (approve / reject links)
+- DCP / Commissioner (task forces, KPIs)
+- Public (map, appeals, anonymous tips)
 
 
 ---
@@ -1005,6 +1189,24 @@ Score = Σ wᵢ·vᵢ over available factors, renormalised by the weights of fac
 
 * * *
 
+## Exhibits on the spec page (linking)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### Factor weights · _default · editable by admin · versioned_
+
+- MO similarity: 0.25
+- Space–time: 0.15
+- Vehicle / ANPR: 0.15
+- Suspect description: 0.12
+- Weapon / tool: 0.08
+- Forensic match: 0.08
+- Corroboration (tips, 112, news): 0.07
+- Target profile: 0.05
+- Offender return: 0.05
+
+Numbers come from code. Nemotron writes the reason for each factor from the rows it is given, and the Skeptic can strike any factor whose rows do not check out.
+
 
 ---
 
@@ -1077,6 +1279,98 @@ Base URLs in development: web `http://localhost:3001`, API `http://localhost:800
 Sections: Incident (category → sub-type, sections IPC/BNS with auto-mapping, occurred from/to, reported at) · Place (map picker, address, auto ward and station check with a warning when outside jurisdiction) · People (complainant masked, victims, described offenders with structured descriptors) · Property & weapon · Vehicles (plate with `?` wildcards) · Narrative (free text; "Extract MO" button shows Nemotron's extraction for review) · Evidence upload (drag and drop, kind, camera id, capture time) · Statements (text or audio upload) · Save → triggers processing; a toast links to the run trace.
 
 * * *
+
+## Exhibits on the spec page (screens)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### /console · Command overview · _mockup · synthetic numbers_
+
+- **1,284** open cases
+- **37** new link alerts (7 days)
+- **21** cross-station links approved
+- **68%** analyst approval rate
+- **5** active joint task forces
+
+- Pairs scored this week: 412
+- Above threshold: 88
+- Survived the Skeptic: 37
+- Approved by analysts: 21
+
+### /console/map · Pulse Map · _working mockup · tap the chips, press Play_
+
+ [Homicide]   [Robbery]   [Burglary]   [Vehicle theft]   [Cyber / fraud] 
+
+**Layers**  
+✓ Link arcs · ✓ Series hulls  
+○ Hex heat · ○ CCTV cones  
+○ ANPR · ○ Tips · ○ 112 calls
+
+**Filters**  
+Zone: South · Status: open  
+Vehicle: motorcycle, red  
+Score ≥ 0.55 · Linked only
+
+ [Play] 
+
+2026-10-31
+
+Recent crimes pulse (faster when under 3 days old). Dashed arcs travel from the earlier crime to the later one. The dial in the corner is the time-of-day filter, here 19:00–23:00.
+
+### /console/alerts · Link alert cards · _pending and rejected, as every police role sees them_
+
+High · 91% precise on eval
+
+### Adyar 1182/2026 ↔ Velachery 877/2026
+
+LA-2026-000913 · chain snatching · 2 days · 3.4 km
+
+- MO similarity · 0.91
+- Vehicle / ANPR · 0.88
+- Suspect description · 0.76
+- Space–time · 0.64
+- ~~Weapon / tool · struck~~ (struck)
+
+Partial plate TN 09 ?? 4471 seen by ANPR-OMR-12 18 min after the Adyar incident and by ANPR-VLY-03 9 min before Velachery. Skeptic: 2 rounds, struck "weapon" (no weapon in either FIR).
+
+Memory applied +0.03 · 4 earlier Red Pulsar pairs approved
+
+ [Approve and notify both stations]  [Reject with reason]  [Open evidence] 
+
+Rejected · coincidental location
+
+### T. Nagar 2210/2026 ↔ T. Nagar 2231/2026
+
+LA-2026-000902 · house-break · same street · 5 days
+
+**Reason (analyst, 24 Oct 18:10):** Same street, but 2210 used a duplicate key and 2231 cut the window grille. Different offenders. Visible to every station; saved to H-MEM so similar pairs score lower.
+
+ [View decision history]
+
+### /tip/new · Anonymous tip · _working mockup · nothing is sent_
+
+In an emergency, call 112. This form is not monitored around the clock.
+
+ [1 · What you saw]   [2 · Files]   [3 · Stay anonymous] 
+
+About: **Chain snatching by two riders on a red motorcycle** · Adyar (LB Road area) · week of 13 Oct · evening
+
+Vehicle seenPerson seenI have CCTVStolen item offered for saleSomething else
+
+What did you see? `<textarea>`  Roughly where? (we only keep the area, not a point) `<select>`   [Next: add files] 
+
+Drop photos, video or audio here  
+Location and camera details are removed in your browser before upload.
+
+ `<input>`  Blur faces before sending  [Next: privacy] 
+
+ `<input>`  Fully anonymous. No way for police to reply.  `<input>`  Anonymous, with a tip code so I can read police replies
+
+8F3K·2QWA
+
+We never store your IP address, device, phone number, email or exact time. Keep the code; it cannot be recovered.
+
+ [Send tip]
 
 
 ---
@@ -1259,6 +1553,22 @@ Each phase lists **build**, **exit check** and a **Claude Code prompt** to start
 -   Build: final README, `docs/SPONSOR_TECH.md`, deck (Part L2), ElevenLabs narration and demo video (Part M), pre-existing components declaration, repo public, clean-clone test, submit on HackOS with hours to spare.
 
 * * *
+
+## Exhibits on the spec page (phases)
+
+> Visual blocks from this tab, converted to text. Mockups show intended UI, not built screens.
+
+### Workstreams × phases · _shaded = smallest submittable version_
+
+MVP phasepolish phase
+
+| Workstream | P0 | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| WS1 Data & Zetaris | **repo** (MVP) | **generator** (MVP) | **views** (MVP) |  |  |  |  |  |  | feeds |  |
+| WS2 Agents & Meterless | **adapters** (MVP) |  |  | **extract** (MVP) | **link** (MVP) |  | **judge path** (MVP) |  |  |  |  |
+| WS3 Police console |  |  |  |  |  | **alerts** (MVP) |  | pulse map |  | FIR form |  |
+| WS4 Public portal |  |  |  |  |  |  |  |  | tips |  |  |
+| WS5 Demo, deck, QA |  |  |  |  |  |  | **README** (MVP) |  |  |  | **submit** (MVP) |
 
 
 ---

@@ -101,7 +101,9 @@ create policy "supervisors read profiles" on public.profiles for select to authe
 create policy "admins update profiles" on public.profiles for update to authenticated
   using (public.current_role_name() = 'admin');
 
--- Read-only role for Zetaris federation (spec O7 #6). Password is set out of band, never here.
+-- Read-only role for Zetaris federation (spec O7 #6). Created NOLOGIN here; in P2 run
+-- `ALTER ROLE zetaris_reader LOGIN PASSWORD ...` out of band (never in a migration). Through the
+-- Supabase pooler the user name is `zetaris_reader.<project-ref>`.
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'zetaris_reader') then

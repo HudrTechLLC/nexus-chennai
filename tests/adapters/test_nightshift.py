@@ -102,6 +102,15 @@ def test_sample_mode_replays_recorded_fixture(tmp_path):
     assert tracer.read()[-1]["status"] == "replayed"
 
 
+def test_sample_mode_does_not_hide_a_rejected_model(tmp_path):
+    # A 400 (e.g. Nightshift does not accept the pinned id) must surface, not be replayed.
+    c = NightshiftClient(
+        settings(sample_mode=True), transport=httpx.MockTransport(lambda r: httpx.Response(400)), fixtures_dir=tmp_path
+    )
+    with pytest.raises(NightshiftError):
+        c.chat("fast", [{"role": "user", "content": "x"}], agent="t")
+
+
 def test_sample_mode_without_fixture_fails_instead_of_inventing(tmp_path):
     c = NightshiftClient(settings(sample_mode=True), transport=httpx.MockTransport(down), fixtures_dir=tmp_path)
     with pytest.raises(NightshiftError):

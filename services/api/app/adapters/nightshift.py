@@ -140,7 +140,9 @@ class NightshiftClient:
         try:
             resp = self._post("/chat/completions", {"model": model, "messages": messages, **params})
         except (httpx.TransportError, NightshiftError, httpx.HTTPStatusError) as exc:
-            if self.settings.sample_mode and not isinstance(exc, NightshiftUnauthorized):
+            # Replay only when Nightshift is unreachable or failing (transport / 5xx).
+            # A 4xx (bad token, unknown model id) is a real answer and must surface.
+            if self.settings.sample_mode and _is_retryable(exc):
                 return self._replay(lane, model, messages, agent, purpose, started)
             self._trace(agent, purpose, lane, model, None, None, status="error", note=str(exc))
             raise NightshiftError(str(exc)) from exc
