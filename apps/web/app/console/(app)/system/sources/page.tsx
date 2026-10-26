@@ -93,7 +93,7 @@ export default async function DataSourcesPage() {
               const num = sourceNumber(s, zCounts, zSources?.checked_at ?? null, mirrorCounts);
               const flags = Object.entries(dqFor(s, dq));
               return (
-                <li key={s.id} className="rounded-xl border border-line bg-surface p-4 shadow-[0_1px_2px_rgb(19_33_48/0.06)]">
+                <li key={s.id} className="rounded-xl border border-line bg-surface p-4 shadow-card">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-medium">{s.label}</div>

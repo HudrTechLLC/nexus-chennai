@@ -456,7 +456,7 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
       <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} focus={seriesFocus} initialFocus={openFrame} />
 
       {/* category chips */}
-      <div data-map-overlay className="absolute left-3 top-3 z-10 flex max-w-[60%] flex-wrap gap-1.5 max-md:max-w-[calc(100%-4.5rem)] max-md:flex-nowrap max-md:overflow-x-auto">
+      <div data-map-overlay className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-18rem)] flex-wrap gap-1 xl:gap-1.5 max-md:max-w-[calc(100%-4.5rem)] max-md:flex-nowrap max-md:overflow-x-auto">
         <button onClick={() => setPanelOpen((v) => !v)} aria-expanded={panelOpen}
           className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-medium text-ink shadow md:hidden">
           {panelOpen ? "Close" : "Layers"}
@@ -465,7 +465,7 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
           <button
             key={k} aria-pressed={cats.has(k)}
             onClick={() => setCats((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; })}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium shadow ${cats.has(k) ? "bg-surface text-ink" : "bg-[color-mix(in_srgb,var(--surface)_50%,transparent)] text-muted line-through"}`}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium shadow xl:px-3 ${cats.has(k) ? "bg-surface text-ink" : "bg-[color-mix(in_srgb,var(--surface)_50%,transparent)] text-muted line-through"}`}
           >
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: `rgb(${CAT_COLOUR[k].join(",")})` }} />
             <span aria-hidden>{CAT_GLYPH[k]}</span> {CAT_LABEL[k]}
