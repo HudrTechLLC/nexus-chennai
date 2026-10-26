@@ -17,14 +17,14 @@
 -- jsonb columns arrive over JDBC as JSON strings; timestamps are Spark timestamps (UTC session).
 
 -- Container for every semantic view (also in nexus-2's files; register.py skips "already exists").
-CREATE SCHEMASTORE CONTAINER nexus;
+CREATE SCHEMASTORE CONTAINER {{src:nexus}};
 
-CREATE OR REPLACE SCHEMASTORE VIEW v_crime_unified WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW v_crime_unified WITH CONTAINER {{src:nexus}} AS
 WITH codes AS (
-  SELECT ipc_code AS code FROM sb.section_map WHERE ipc_code IS NOT NULL
-  UNION SELECT bns_code AS code FROM sb.section_map WHERE bns_code IS NOT NULL),
-cats AS (SELECT DISTINCT sub_type, category FROM sb.crimes WHERE sub_type IS NOT NULL),
-st AS (SELECT station_id, lower(substring_index(name, ' (', 1)) AS locality FROM sb.stations),
+  SELECT ipc_code AS code FROM {{src:sb}}.section_map WHERE ipc_code IS NOT NULL
+  UNION SELECT bns_code AS code FROM {{src:sb}}.section_map WHERE bns_code IS NOT NULL),
+cats AS (SELECT DISTINCT sub_type, category FROM {{src:sb}}.crimes WHERE sub_type IS NOT NULL),
+st AS (SELECT station_id, lower(substring_index(name, ' (', 1)) AS locality FROM {{src:sb}}.stations),
 cctns_unmapped AS (
   SELECT t.rid, max(CASE WHEN k.code IS NULL THEN 1 ELSE 0 END) AS unmapped
   FROM (SELECT concat(PS_CODE, ':', FIR_NUM) AS rid, trim(tok) AS tok
@@ -38,7 +38,7 @@ archive_unmapped AS (
 SELECT crime_id, source, source_row_id, station_id, fir_no, category, sub_type, sections, occurred_from,
        occurred_to, reported_at, lat, lon, address, ward_no, h3_r9, h3_r8, geohash7, week, severity, property,
        weapon, offenders_described, victims, status, narrative, CAST(NULL AS STRING) AS sections_raw, synthetic
-FROM sb.crimes
+FROM {{src:sb}}.crimes
 UNION ALL
 SELECT concat('CCTNS-', c.PS_CODE, '-', replace(c.FIR_NUM, '/', '-')) AS crime_id, 's3csv.cctns' AS source,
        concat(c.PS_CODE, ':', c.FIR_NUM) AS source_row_id, s.station_id, c.FIR_NUM AS fir_no, m.category,
@@ -73,4 +73,4 @@ LEFT JOIN st s ON s.locality = lower(a.station_name)
 LEFT JOIN cats m ON m.sub_type = a.crime_subhead
 LEFT JOIN archive_unmapped u ON u.case_ref = a.case_ref;
 
-SELECT source, count(*) AS n FROM nexus.v_crime_unified GROUP BY source ORDER BY source;
+SELECT source, count(*) AS n FROM {{src:nexus}}.v_crime_unified GROUP BY source ORDER BY source;

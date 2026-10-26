@@ -11,6 +11,10 @@ File format
     {{secret:NAME}}   value read from the file in SECRETS[NAME]; masked in every print and log
     {{city:a.b.0}}    value from cities/<CITY>/city.yaml by dotted path (list indices allowed)
     {{since}} {{until}}  ISO dates from --since/--until (default: 30 days before the generator end date)
+    {{src:sb}} {{src:nexus}}  where crime data lives, from --data (default $ZETARIS_DATA or supabase):
+                      sb / nexus for our hosted Supabase, nexus_fs / nexusfs for the file store (WS1-19).
+                      The map is services/api/app/adapters/zetaris_sources.py, shared with the API.
+- Files that only make sense for one data source are skipped for the other (FILE_MODES).
 - A statement that fails with "already exists" is reported and skipped, so re-runs are safe.
 Every call is logged to logs/zetaris-register-<stamp>.jsonl with its secrets masked.
 """
@@ -37,7 +41,24 @@ SECRETS = {  # name -> (file, line index)
     "s3_key_id": ("~/.secrets/nexus-s3.key", 0),
     "s3_secret": ("~/.secrets/nexus-s3.key", 1),
 }
-PH = re.compile(r"\{\{(secret|city):([A-Za-z0-9_.]+)\}\}|\{\{(since|until)\}\}")
+PH = re.compile(r"\{\{(secret|city|src):([A-Za-z0-9_.]+)\}\}|\{\{(since|until)\}\}")
+
+# Files tied to one data source. 00_sources/30_case define the sb datasource and its native views;
+# 02_fs registers the nexus_fs file store. Every other file runs for both.
+FILE_MODES = {"00_sources.sql": {"supabase"}, "30_case.sql": {"supabase"}, "02_fs.sql": {"files"}}
+
+
+def _load_sources():
+    import importlib.util
+
+    path = ROOT / "services" / "api" / "app" / "adapters" / "zetaris_sources.py"
+    spec = importlib.util.spec_from_file_location("zetaris_sources", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod
+
+
+SOURCES = _load_sources()
 
 
 def read_secret(name: str) -> str:
@@ -71,9 +92,10 @@ def statements(text: str) -> list[str]:
     return out
 
 
-def fill(stmt: str, city: dict, since: str, until: str) -> tuple[str, str, list[str]]:
+def fill(stmt: str, city: dict, since: str, until: str, data: str = "supabase") -> tuple[str, str, list[str]]:
     """Returns (real sql, masked sql, secret values used)."""
     secrets: list[str] = []
+    src = SOURCES.sources(data)
 
     def sub(m: re.Match, masked: bool) -> str:
         kind, name, window = m.group(1), m.group(2), m.group(3)
@@ -81,6 +103,8 @@ def fill(stmt: str, city: dict, since: str, until: str) -> tuple[str, str, list[
             return since if window == "since" else until
         if kind == "city":
             return str(city_value(city, name))
+        if kind == "src":
+            return src[name]
         val = read_secret(name)
         if not masked:
             secrets.append(val)
@@ -114,6 +138,8 @@ def main() -> int:
     ap.add_argument("--since")
     ap.add_argument("--until")
     ap.add_argument("--timeout", type=float, default=600)
+    ap.add_argument("--data", choices=sorted(SOURCES.SOURCES), default=os.environ.get("ZETARIS_DATA") or SOURCES.DEFAULT,
+                    help="where crime data lives: supabase (sb datasource) or files (nexus_fs file store)")
     a = ap.parse_args()
 
     city_name = os.environ.get("CITY", "chennai")
@@ -123,6 +149,9 @@ def main() -> int:
     since, until = a.since or (end - timedelta(days=30)).isoformat(), a.until or end.isoformat()
 
     files = [HERE / f for f in a.file] if a.file else sorted(HERE.glob("*.sql"))
+    skipped = [f.name for f in files if a.data not in FILE_MODES.get(f.name, {a.data})]
+    files = [f for f in files if f.name not in skipped]
+    print(f"data source: {a.data}" + (f" (skipping {', '.join(skipped)})" if skipped else ""))
     token = ""
     if not a.dry_run:
         tf = os.environ.get("ZETARIS_API_KEY_FILE", "~/.secrets/nexus-zetaris.key")
@@ -139,7 +168,7 @@ def main() -> int:
         for i, stmt in enumerate(stmts, 1):
             if (a.only and i != a.only) or i < a.start:
                 continue
-            real, shown, secrets = fill(stmt, city, since, until)
+            real, shown, secrets = fill(stmt, city, since, until, a.data)
             print(f"-- [{f.name} #{i}]\n{shown};")
             if a.dry_run:
                 continue
