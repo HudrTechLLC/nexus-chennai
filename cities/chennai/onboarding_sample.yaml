@@ -1,0 +1,29 @@
+# Synthetic "new station" export for source onboarding (WS1-23). Read by data/onboarding/generate_sample.py.
+# The station is NOT one of the 70 in stations_seed.csv; it exists only in this sample file. Everything is synthetic.
+station:
+  id: PS-REDHILLS-NEW
+  name: Red Hills (new station, synthetic)
+  fir_prefix: RH
+  center: [80.1843, 13.1912]   # lon, lat (inside the city bounds)
+  spread_km: 2.5
+period: ["2026-06-01", "2026-10-20"]
+rows: 150
+# The export's own vocabulary: crime head -> (sections as the station writes them)
+crime_heads:
+  Chain Snatching: BNS 304(2)
+  Mobile Phone Snatching: BNS 304(2)
+  Two Wheeler Theft: BNS 303(2)
+  House Breaking (Night): BNS 331(4)
+  House Breaking (Day): BNS 331(3)
+  Robbery: BNS 309(4)
+places: [Red Hills Junction, Puzhal Lake Road, Grand Northern Trunk Road, Vadakarai, Theerthagiri Nagar,
+         Kavangarai, Lakshmipuram, Sholavaram Road, Padiyanallur Bus Stop, Puzhal Central Prison Road]
+statuses: [Under Investigation, Charge Sheeted, Undetected, Closed - Mistake of Fact]
+# Rows that must fail a data-quality check (the sample shows each rule firing)
+bad:
+  dates: ["31/02/2026", "00/05/2026", "", "15/13/2026", "32/08/2026"]
+  coords: ["12.5012, 79.9001", "13.9000, 80.2000", "0, 0", "80.1843, 13.1912"]   # last one is lat/long swapped
+  missing_fir_no: 3
+  repeated_fir_no: 4
+  # copies of existing crimes (same day, time and spot) from the sample bundle: likely duplicates
+  existing_crime_ids: [CHN-MD-2025-000126, CHN-KD-2025-000008, CHN-AT-2025-000162, CHN-MD-2025-000005]

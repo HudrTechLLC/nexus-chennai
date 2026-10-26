@@ -318,6 +318,34 @@ class ZetarisClient:
             retry_count=retries,
         )
 
+    def onboard(self, template: str, *args: Any, agent: str, limit: int = 1000, timeout_s: float = 120.0) -> QueryResult:
+        """Run one source-onboarding statement (WS1-23). The caller names a template and gives its arguments; the
+        SQL is built here from zetaris_onboard's fixed templates over generated onboard_* identifiers, never from
+        text the caller passes. Live only: onboarding stages a real file in a real Zetaris."""
+        from . import zetaris_onboard as zo
+
+        builder = {"create_raw": zo.create_raw, "describe_raw": zo.describe_raw, "profile": zo.profile,
+                   "examples": zo.examples, "dq": zo.dq, "dq_samples": zo.dq_samples,
+                   "likely_duplicates": zo.likely_duplicates, "create_view": zo.create_view,
+                   "count_view": zo.count_view}.get(template)
+        if builder is None:
+            raise ZetarisError(f"'{template}' is not an onboarding template")
+        if not (self.settings.zetaris_api_key or "").strip():
+            raise ZetarisError("source onboarding needs a live Zetaris (no API key set)")
+        sql = builder(*args)
+        name = f"onboard:{template}"
+        query_id = str(uuid.uuid4())
+        started = time.perf_counter()
+        try:
+            rows = self._post(sql, query_id, limit, timeout_s)
+        except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
+            ms = int((time.perf_counter() - started) * 1000)
+            self._trace(agent, name, query_id, None, ms, "error", f"{type(exc).__name__}: {str(exc)[:200]}")
+            raise ZetarisError(f"{name} failed: {str(exc)[:300]}") from exc
+        ms = int((time.perf_counter() - started) * 1000)
+        self._trace(agent, name, query_id, len(rows), ms, "ok", "zetaris")
+        return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source="zetaris")
+
     def close(self) -> None:
         self._client.close()
         if self._duck is not None:
