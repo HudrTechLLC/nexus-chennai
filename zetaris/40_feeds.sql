@@ -8,7 +8,7 @@
 -- v_news_mentions must stay in step with the q_news DuckDB twin in services/api/app/adapters/zetaris_queries_n2.py
 -- (NEWS_DAYS = 4; alias -> station or ward; category_hint reported, not required).
 
-CREATE SCHEMASTORE CONTAINER nexus;
+CREATE SCHEMASTORE CONTAINER {{src:nexus}};
 
 CREATE LIGHTNING DATABASE nexus_feeds DESCRIBE BY "Nexus synthetic news and social feeds";
 
@@ -28,27 +28,27 @@ CREATE LIGHTNING REST TABLE rest_social FROM nexus_feeds REQUEST (
   insecure_ssl "false"
 ) HEADER () BODY ();
 
-CREATE OR REPLACE SCHEMASTORE VIEW news_items WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW news_items WITH CONTAINER {{src:nexus}} AS
 SELECT i.article_id, i.outlet, CAST(i.published_at AS TIMESTAMP) AS published_at, i.headline, i.body,
        i.places_mentioned, i.url, i.synthetic
 FROM nexus_feeds.rest_news LATERAL VIEW explode(items) e AS i
 WHERE i.synthetic = true;
 
-CREATE OR REPLACE SCHEMASTORE VIEW social_posts WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW social_posts WITH CONTAINER {{src:nexus}} AS
 SELECT i.post_id, i.platform, CAST(i.posted_at AS TIMESTAMP) AS posted_at, i.handle, i.text,
        i.places_mentioned, i.hashtags, i.synthetic
 FROM nexus_feeds.rest_social LATERAL VIEW explode(items) e AS i
 WHERE i.synthetic = true;
 
-CREATE OR REPLACE SCHEMASTORE VIEW v_news_mentions WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW v_news_mentions WITH CONTAINER {{src:nexus}} AS
 SELECT c.crime_id, n.article_id, first(n.headline) AS headline, first(n.outlet) AS outlet,
        first(n.published_at) AS published_at, first(n.url) AS url, min(a.canonical) AS matched_place,
        CAST(floor((unix_timestamp(first(n.published_at)) - unix_timestamp(c.occurred_from)) / 3600) AS INT) AS hours_after,
        max(instr(lower(n.headline), split(c.category, '_')[0]) > 0) AS category_hint
-FROM nexus.v_crime_unified c
+FROM {{src:nexus}}.v_crime_unified c
 JOIN s3csv.place_aliases a ON (a.station_id = c.station_id OR a.ward_no = c.ward_no)
 JOIN (SELECT article_id, headline, outlet, published_at, url, place
-      FROM nexus.news_items LATERAL VIEW explode(places_mentioned) p AS place) n
+      FROM {{src:nexus}}.news_items LATERAL VIEW explode(places_mentioned) p AS place) n
   ON lower(trim(n.place)) = lower(trim(a.alias))
 WHERE n.published_at >= c.occurred_from AND n.published_at < c.occurred_from + INTERVAL 4 DAYS
 GROUP BY c.crime_id, n.article_id, c.occurred_from;
@@ -64,7 +64,7 @@ CREATE LIGHTNING REST TABLE rest_weather FROM nexus_feeds REQUEST (
   insecure_ssl "false"
 ) HEADER () BODY ();
 
-CREATE OR REPLACE SCHEMASTORE VIEW weather_hourly WITH CONTAINER nexus AS
+CREATE OR REPLACE SCHEMASTORE VIEW weather_hourly WITH CONTAINER {{src:nexus}} AS
 SELECT substring(t, 1, 13) AS hour, hourly.temperature_2m[i] AS temperature_c,
        hourly.precipitation[i] AS precipitation_mm, hourly.weather_code[i] AS weather_code
 FROM nexus_feeds.rest_weather LATERAL VIEW posexplode(hourly.time) e AS i, t;

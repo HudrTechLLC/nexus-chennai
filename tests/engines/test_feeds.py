@@ -92,7 +92,11 @@ def test_q_news_twin_matches_by_alias_station_or_ward_within_the_window(bundle, 
 
 
 def test_feeds_sql_shape():
+    from app.adapters.zetaris_sources import sources
+
     sql = (ROOT / "zetaris" / "40_feeds.sql").read_text(encoding="utf-8")
+    for key, value in sources("supabase").items():  # {{src:...}} as register.py fills them (WS1-19)
+        sql = sql.replace("{{src:%s}}" % key, value)
     code = "\n".join(line for line in sql.splitlines() if not line.lstrip().startswith("--"))
     statements = [s.strip() for s in re.split(r";\s*(?:\n|$)", code) if s.strip()]
     heads = [re.match(r"CREATE (?:OR REPLACE )?(?:LIGHTNING|SCHEMASTORE) (?:CONTAINER|DATABASE|REST TABLE|VIEW) "
