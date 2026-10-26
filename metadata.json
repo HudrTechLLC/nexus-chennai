@@ -2,16 +2,24 @@
   "project": "Nexus Chennai",
   "track": "Solving Fragmented Intelligence",
   "team": "Heisenbugs",
-  "status": "in development; claims below are updated only when tests and traces prove them",
+  "status": "in development; claims are updated only when tests and traces prove them (ledger: engg/docs/submission/EVIDENCE.md)",
   "sponsor_technology": {
-    "zetaris": "Data layer: Supabase, S3 CSV, S3 Parquet and REST feeds federated into a semantic layer; agents read only through named queries",
-    "meterless_engines": ["world_model", "hmem"],
-    "meterless_nightshift": "Primary AI provider; pinned Nemotron lanes",
-    "nvidia": ["nemotron-3.5-lightning-30b-a3b", "nemotron-3.5-super-vl-120b-a12b", "nemotron-3-super-120b-a12b"],
+    "zetaris": "Data layer: Supabase Postgres federated as source `sb` (read-only role), REST news/social feeds, data-quality views; agents read only through named queries. File sources (CSV/Parquet) in Zetaris's internal store: in progress",
+    "meterless_engines": [
+      "world_model",
+      "hmem",
+      "markovian",
+      "scout_intent"
+    ],
+    "meterless_nightshift": "Primary AI provider; every model call pinned to a Nemotron lane and traced with model + receipt",
+    "nvidia": [
+      "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
     "cursor": "not used"
   },
   "entry_point": "python run.py; POST /run",
   "sample_mode": "SAMPLE_MODE=true",
-  "engine_tests": "pytest tests/engines -q",
+  "engine_tests": "engines-ts conformance (logs/conformance_*.txt) + pytest tests/engines -q",
   "docs": "engg/docs/00-INDEX.md"
 }
