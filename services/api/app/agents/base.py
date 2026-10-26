@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime
 import re
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -143,7 +144,7 @@ def rows_as_dicts(res: Any) -> list[dict[str, Any]]:
     when neither exists: guessing column positions would silently corrupt scoring.
     """
     if hasattr(res, "dicts"):
-        return list(res.dicts())
+        return [{k: _plain(v) for k, v in r.items()} for r in res.dicts()]
     cols = getattr(res, "columns", None)
     if not cols:
         raise AgentError(f"Query '{getattr(res, 'name', '?')}' returned rows without column names")
@@ -151,8 +152,14 @@ def rows_as_dicts(res: Any) -> list[dict[str, Any]]:
     for row in res.rows:
         if len(row) != len(cols):
             raise AgentError(f"Query '{res.name}' row width {len(row)} != {len(cols)} columns")
-        out.append(dict(zip(cols, row)))
+        out.append({c: _plain(v) for c, v in zip(cols, row)})
     return out
+
+
+def _plain(v: Any) -> Any:
+    """Dates as ISO-8601 strings, the shape live Zetaris rows have. Sample (DuckDB) rows carry datetime objects,
+    which then failed as query parameters and in JSON."""
+    return v.isoformat() if isinstance(v, (datetime, date)) else v
 
 
 def _maybe_json(v: Any) -> Any:
