@@ -6,7 +6,9 @@ import { consoleServerClient } from "@/lib/supabase/server";
 import { decisionState, pct } from "@/lib/alerts";
 import { audit, crimeBriefs, crimeTitle, officerNames, stationNames } from "@/lib/alertsData";
 import { buildTimeline, canWriteCase, describe, humanise, maskPii, moRows, moToText, type TimelineItem } from "@/lib/cases";
-import { fetchCaseFile, fetchCitywide, type CaseFile } from "@/lib/casesData";
+import { fetchCaseFile, fetchCitywide, stationOptions, type CaseFile } from "@/lib/casesData";
+import { fetchSimilar } from "@/lib/similarData";
+import { SimilarList } from "../_components/SimilarList";
 import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { AppealButton } from "../_components/AppealButton";
 import { EvidenceUpload } from "../_components/EvidenceUpload";
@@ -84,6 +86,8 @@ async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite:
   const otherIds = file.alerts.flatMap((a) => a.crimes).filter((id) => id !== crime.crime_id);
   const [names, briefs] = await Promise.all([stationNames(sb, [crime.station_id]), crimeBriefs(sb, otherIds)]);
   const station = names[crime.station_id] ?? crime.station_id;
+  const [similar, allStations] = await Promise.all([fetchSimilar(sb, crime.crime_id, 6), stationOptions(sb)]);
+  const allNames = Object.fromEntries(allStations.map((s) => [s.station_id, s.name]));
   // Latest officer review wins (crime_feature_reviews is append-only); the Extractor's MO is never edited.
   const latestReview = file.reviews[0] ?? null;
   const corrected: Record<string, unknown> = latestReview?.corrections ?? {};
@@ -102,6 +106,7 @@ async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite:
     ...file.evidence.map((e): TimelineItem => ({ at: e.captured_at ?? e.created_at, kind: "evidence", label: `${humanise(e.kind)}${e.camera_id ? ` · camera ${e.camera_id}` : ""}` })),
     ...file.diary.map((d): TimelineItem => ({ at: d.at, kind: "diary", label: `${humanise(d.kind)}: ${maskPii(d.text)}` })),
     ...file.alerts.map((a): TimelineItem => ({ at: a.created_at, kind: "alert", label: `Link alert ${a.alert_id} · ${pct(a.score)} · ${a.status}`, href: `/console/alerts/${encodeURIComponent(a.alert_id)}` })),
+    ...file.tips.map((t): TimelineItem => ({ at: t.at, kind: "tip", label: `Tip ${t.tip_id} matched to this case (${t.useful ? "useful" : "not useful"})`, href: `/console/tips/${encodeURIComponent(t.tip_id)}` })),
     features?.reviewed_at ? { at: features.reviewed_at, kind: "review", label: "MO features reviewed by an officer" } : null,
   ]);
 
@@ -284,6 +289,13 @@ async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite:
                   );
                 })}
               </ul>
+            )}
+          </Card>
+
+          <Card title="Similar cases" count={similar?.hits.length}>
+            {similar ? <SimilarList hits={similar.hits} names={allNames} /> : <Empty>Available once the Extractor has read this case.</Empty>}
+            {similar && similar.hits.length > 0 && (
+              <Link href={`/console/search?similar=${encodeURIComponent(crime.crime_id)}`} className="mt-2 inline-block text-xs text-signal hover:underline">More similar cases →</Link>
             )}
           </Card>
 

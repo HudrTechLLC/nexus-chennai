@@ -16,6 +16,8 @@ export type PersonHit = { person_id: string; name: string | null; aliases: strin
 export type TipHit = { tip_id: string; category: string; text: string; received_week: string; status: string };
 
 export type SearchResult = {
+  /** True when a tag or linked facet matched more ids than one query carries, so results are a subset. */
+  capped: boolean;
   cases: CaseRow[];
   vehicles: VehicleHit[];
   persons: PersonHit[];
@@ -24,6 +26,9 @@ export type SearchResult = {
 };
 
 const LIMIT = 50;
+const ID_CAP = 500;
+
+const intersect = (a: string[] | null, b: string[]) => (a === null ? b : a.filter((x) => b.includes(x)));
 const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, severity, status";
 
 export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<SearchResult> {
@@ -41,16 +46,45 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
     note("Vehicles", "crime_vehicles", vehicles.length, error?.message ?? null);
   }
 
+  // Facets that narrow by id: MO/visual tag and time band (from the Extractor's features, city-wide
+  // view), zone (stations), linked/unlinked (link_alerts). Each is reported as a source.
+  const f = p.facets;
+  let onlyIds: string[] | null = null;
+  let capped = false;
+  for (const tag of [f.mo, f.tod].filter((t): t is string => !!t)) {
+    const { data, error } = await sb.from("crimes_citywide").select("crime_id").or(`mo_tags.ov.{"${tag}"},visual_tags.ov.{"${tag}"}`).limit(ID_CAP);
+    const ids = (data ?? []).map((r) => r.crime_id as string);
+    capped = capped || ids.length >= ID_CAP;
+    onlyIds = intersect(onlyIds, ids);
+    note(`Tag ${tag}`, "crimes_citywide (Extractor MO + visual tags)", ids.length, error?.message ?? null);
+  }
+  let zoneStations: string[] | null = null;
+  if (f.zone) {
+    const { data, error } = await sb.from("stations").select("station_id").eq("zone", f.zone);
+    zoneStations = (data ?? []).map((r) => r.station_id as string);
+    note(`Zone ${f.zone}`, "stations", zoneStations.length, error?.message ?? null);
+  }
+  let alertIds: string[] | null = null;
+  if (f.linked) {
+    const { data, error } = await sb.from("link_alerts").select("crimes").neq("status", "rejected").limit(1000);
+    alertIds = Array.from(new Set((data ?? []).flatMap((a) => a.crimes as string[])));
+    note("Linked", "link_alerts (pending + approved)", alertIds.length, error?.message ?? null);
+    if (f.linked === "linked") onlyIds = intersect(onlyIds, alertIds.slice(0, ID_CAP));
+  }
+
   // Cases.
   let cq = sb.from("crimes").select(CASE_COLS);
-  const f = p.facets;
   if (f.station) cq = cq.eq("station_id", f.station);
   if (f.category) cq = cq.eq("category", f.category);
   if (f.status) cq = cq.eq("status", f.status);
   const { gte, lt } = dayRange(f.from, f.to);
   if (gte) cq = cq.gte("occurred_from", gte);
   if (lt) cq = cq.lt("occurred_from", lt);
-  let skipCases = false;
+  if (f.weapon) cq = cq.eq("weapon", f.weapon);
+  if (zoneStations) cq = cq.in("station_id", zoneStations.length ? zoneStations : ["-"]);
+  if (f.linked === "unlinked" && alertIds && alertIds.length) cq = cq.not("crime_id", "in", `(${alertIds.slice(0, ID_CAP).map((x) => `"${x}"`).join(",")})`);
+  let skipCases = onlyIds !== null && onlyIds.length === 0;
+  if (onlyIds && onlyIds.length) cq = cq.in("crime_id", onlyIds);
   if (p.kind === "crime_id") cq = cq.eq("crime_id", p.value);
   else if (p.kind === "fir") cq = p.value.includes("/") ? cq.eq("fir_no", p.value) : cq.like("fir_no", `${p.value}/%`);
   else if (p.kind === "plate") {
@@ -86,5 +120,5 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
     note("Tips", "tips (screened by Tip Guard only)", tips.length, tr.error?.message ?? null);
   }
 
-  return { cases, vehicles, persons, tips, sources };
+  return { capped, cases, vehicles, persons, tips, sources };
 }
