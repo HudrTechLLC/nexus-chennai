@@ -148,12 +148,14 @@ Each replaces part of an existing segment's screen; the narration and timing sta
 
 | Segment | Swap-in shot | Feature | Status |
 |---|---|---|---|
-| 4 · Zetaris | the console's *Data sources* page: every federated source and table | WS3-27 | `[PENDING: WS3-27]` |
-| 5 · Nightshift | the per-step model line on the trace (lane, pinned model, receipt) | WS3-25 | `[PENDING: WS3-25]` |
+| 4 · Zetaris | the console's *Data sources* page (`/console/system/sources`, admin): 23 sources in 8 types, with counts | WS3-27 (#327) | merged; check on the deployed console before filming (admin view) |
+| 5 · Nightshift | the alert's *How this alert was made* card (lane, pinned model, receipt per step) | WS3-25 (#333) | merged; check on the deployed console before filming |
 | 6 · Skeptic | the alert page's Skeptic panel. On the hero alert it reads **"Reviewed in 1 round · verdict: approved · nothing struck · model critique applied"**, with a one-step timeline below (Approved · round 1 · score 0.79 · the critique). Show the summary line and the badge; **don't zoom on the critique text**, which the trace stores cut off with "…". The drop itself is still shown in the trace viewer (`run_da0092da`) | WS3-26 (#326) | ✅ usable: live, read by nexus-4 as analyst on 27 Oct |
-| 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320, open) | `[PENDING: WS3-28]` |
+| 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320) | merged; needs a screened tip on screen (beat 7a) |
+| 4 · Zetaris (new) | *New source onboarding*: a new source registered through Zetaris and showing up in the agents' reads | WS1-23 (nexus-1, nexus-6) | `[PENDING: WS1-23]` (cut-off 13:30) |
+| 9 · Close, or after 8 (new) | *Ask Nexus*: a question in plain words answered from Zetaris with its query cited | WS3-30 (nexus-5, nexus-4) | `[PENDING: WS3-30]` (cut-off 13:30) |
 
-### Optional beat 7a · A tip from the public reaches the analyst `[PENDING: WS3-28, #320]`
+### Optional beat 7a · A tip from the public reaches the analyst (WS3-28 merged in #320; film only with a screened tip on screen)
 
 Use it only if #320 ("From the public" on alert and series pages) is merged and deployed. #320 reads tips tied to a crime through `tips.about_crime_id`, which a crime card's tip link sets.
 

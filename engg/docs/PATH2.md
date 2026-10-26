@@ -76,6 +76,13 @@ All are marked `cut` for the hackathon and parked here.
 | WS6-08 | Column-limited persons view for `zetaris_reader` | Hardening: Zetaris should see only the columns agents need |
 | WS6-09 | Vision on an in-house lane; an audio lane once Nightshift routes one | Vision works through a rate-limited third-party free route (D-036, verified in run `reextract_vis_1793040194`); no audio model is pinned (WS2-05, CAP-03, CAP-09) |
 
+### Next if time allows (ideas, not started)
+
+| Idea | What it is | Status |
+|---|---|---|
+| Tamil tips via NVIDIA Riva Translate | Translate tips written in Tamil before Tip Guard and the agents read them | Only if Nightshift serves a Riva lane; **untested** |
+| Morning station briefing | A daily cited brief for each station, built on the zone briefing that ships today (`agents/briefer.py`, `POST /api/briefing`: numbers from code, the model only writes prose) | Not started: per-station scope, a daily schedule and citations per line |
+
 ## 4. Hardware
 
 - **Zetaris alone wants 8 GB RAM and 4 CPUs given to Docker** (16 GB laptop, ~15 GB disk; see [SETUP](SETUP.md)). Local Supabase, the API, the worker and the web app add to that (estimate a few GB more; not yet measured). Plan for a 32 GB machine for the full stack, or run Zetaris on the managed cluster.
@@ -83,7 +90,7 @@ All are marked `cut` for the hackathon and parked here.
 
 ## 5. Phases (rough order)
 
-1. **Live DQ flags back in scoring** (a snapshot table written by `app.dq_status`, so the Planner reads it in one fast query). Then **move the worker off Supabase** (WS1-19 done: #280, #293, clean-machine run #325; WS2-22 done in #273). Live mode with only Zetaris and Nightshift. Everything later builds on this.
+1. **Live DQ flags in scoring: shipped** (#348, snapshot written by `app.dq_status`). Next, **move the worker off Supabase** (WS1-19 done: #280, #293, clean-machine run #325; WS2-22 done in #273). Live mode with only Zetaris and Nightshift. Everything later builds on this.
 2. **Local Supabase in compose (WS6-01).** Migrations on start, seed into a volume, Auth with the demo roles, Storage buckets. Same env names as the cloud, so switching target is a `.env` change.
 3. **Full dataset everywhere (WS6-02).** Rebuild fixtures and re-run the eval on 14k crimes; publish both slices' numbers.
 4. **Safety items (WS6-05, WS6-06, WS6-08).** Close the known limits the README lists.
