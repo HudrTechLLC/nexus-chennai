@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T13:41:57+05:30",
+  "updated": "2026-10-26T14:00:46+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -411,8 +411,9 @@
           "id": "WS3-06",
           "phase": "P5",
           "title": "Case file page and search",
-          "status": "in_progress",
-          "owner": "nexus-5"
+          "status": "done",
+          "owner": "nexus-5",
+          "ref": "#61, #78"
         },
         {
           "id": "WS3-07",
@@ -445,14 +446,18 @@
           "phase": "P9",
           "title": "FIR capture form",
           "status": "in_progress",
-          "owner": "nexus-5"
+          "owner": "nexus-5",
+          "note": "FIR form + file_fir merged; evidence/audio upload + MO review UI next",
+          "ref": "#73"
         },
         {
           "id": "WS3-11",
           "phase": "P7",
           "title": "Series pages, station link matrix, memory page, case graph explorer",
           "status": "in_progress",
-          "owner": "nexus-6"
+          "owner": "nexus-6",
+          "note": "Series + stations pages merged; memory + graph next",
+          "ref": "#70"
         }
       ]
     },
