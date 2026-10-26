@@ -184,17 +184,17 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
 
           <Card title="Vehicles" count={file.vehicles.length}>
             {file.vehicles.length === 0 ? <Empty>No vehicles recorded.</Empty> : (
-              <table className="w-full">
+              <div className="overflow-x-auto"><table className="w-full min-w-[30rem]">
                 <thead className="text-left text-xs uppercase tracking-wider text-muted"><tr><th className="py-1">Role</th><th>Type</th><th>Make / model</th><th>Colour</th><th>Plate</th></tr></thead>
                 <tbody>
                   {file.vehicles.map((v) => (
                     <tr key={v.id} className="border-t border-line">
-                      <td className="py-1">{humanise(v.role)}</td><td>{humanise(v.vehicle_type)}</td><td>{v.make_model ?? "—"}</td><td>{v.colour ?? "—"}</td>
-                      <td className="font-mono text-xs">{v.plate_pattern ? <Link href={`/console/search?q=${encodeURIComponent(v.plate_pattern)}`} className="text-signal hover:underline">{v.plate_pattern}</Link> : "unread"}</td>
+                      <td className="py-1">{humanise(v.role)}</td><td>{humanise(v.vehicle_type)}</td><td className="whitespace-nowrap">{v.make_model ?? "—"}</td><td>{v.colour ?? "—"}</td>
+                      <td className="whitespace-nowrap font-mono text-xs">{v.plate_pattern ? <Link href={`/console/search?q=${encodeURIComponent(v.plate_pattern)}`} className="text-signal hover:underline">{v.plate_pattern}</Link> : "unread"}</td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </Card>
 
