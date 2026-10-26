@@ -16,6 +16,7 @@ step is traced.
 
 from __future__ import annotations
 
+import dataclasses
 import time
 from collections.abc import Mapping
 from typing import Any, TypedDict
@@ -70,6 +71,8 @@ class RunState(TypedDict, total=False):
     approved: list[SkepticResult]
     dropped: list[SkepticResult]
     pending: list[SkepticResult]
+    # pair_id -> (Linker score signature, Skeptic result) for pairs sent back in the previous round
+    last_sent: dict[str, tuple[Any, SkepticResult]]
     alerts: list[dict[str, Any]]
     # tip / search paths
     tip: dict[str, Any]
@@ -78,6 +81,11 @@ class RunState(TypedDict, total=False):
 
 def _remaining(deps: AgentDeps) -> float:
     return float("inf") if deps.deadline is None else deps.deadline - time.monotonic()
+
+
+def _signature(ps: Any) -> tuple:
+    """What a re-score must change to count as new evidence: score, band and every factor value."""
+    return (ps.score, ps.band, tuple((f.factor, f.value, f.struck_by_skeptic) for f in ps.factors))
 
 
 def _has_mo(feats: Mapping[str, Any]) -> bool:
@@ -304,15 +312,32 @@ class AgentGraph:
 
     def skeptic_node(self, state: RunState) -> dict[str, Any]:
         rnd = state.get("send_backs", 0) + 1
+        fresh = state.get("to_review", [])
+        sigs = {p.pair_id: _signature(p.score) for p in fresh}  # before the review can strike anything
+        last = state.get("last_sent") or {}
+        # A sent-back pair whose re-score is identical brought no new evidence: another critique cannot change it.
+        # Apply the revision-cap verdict now (chief, 2026-10-27; run_e18df7ca).
+        unchanged = [p for p in fresh if p.pair_id in last and last[p.pair_id][0] == sigs[p.pair_id]]
+        to_review = [p for p in fresh if p not in unchanged]
         try:
-            results = self.skeptic.review(state.get("to_review", []), round_no=rnd, critique=self._model_time())
+            results = self.skeptic.review(to_review, round_no=rnd, critique=self._model_time()) if to_review else []
         except DeadlineExceeded:
             return self._deadline(state, "Skeptic")
+        for p in unchanged:
+            prev = last[p.pair_id][1]
+            verdict = "approve" if p.score.alert else "drop"
+            results.append(dataclasses.replace(prev, pair=p, verdict=verdict,
+                                               critique=prev.critique + " (no new evidence on re-score)"))
+            self._trace("Skeptic", "sendback_no_new_evidence", input_summary=f"pair {p.pair_id} round {rnd}",
+                        confidence=p.score.score, status="approved" if verdict == "approve" else "rejected",
+                        output_summary=f"re-score identical to round {rnd - 1} (score={p.score.score}, factors "
+                                       f"unchanged): {verdict} as at the revision cap, no further critique")
         approved = [*state.get("approved", []), *(r for r in results if r.verdict == "approve")]
         dropped = [*state.get("dropped", []), *(r for r in results if r.verdict == "drop")]
         sent = [r for r in results if r.verdict == "send_back"]
-        update: dict[str, Any] = {"approved": approved, "dropped": dropped, "to_review": []}
+        update: dict[str, Any] = {"approved": approved, "dropped": dropped, "to_review": [], "last_sent": {}}
         if sent and self._can_send_back(state):
+            update.update(last_sent={r.pair.pair_id: (sigs[r.pair.pair_id], r) for r in sent})
             update.update(pending=sent, send_backs=rnd,
                           feedback="; ".join(f"{r.pair.pair_id}: {r.critique}" for r in sent)[:1500],
                           requery=next((r.requery for r in sent if r.requery), None))
