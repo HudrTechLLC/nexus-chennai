@@ -7,6 +7,7 @@ only the adapters switch to DuckDB over data/sample and recorded model fixtures 
 
 from __future__ import annotations
 
+import os
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -51,13 +52,25 @@ def summarise(alerts: list[dict[str, Any]], struck_pairs: int, dropped: int, ext
     return s + (f"; {extra}" if extra else "")
 
 
+RECORD_FLAG = "NEXUS_RECORD_FIXTURES"
+
+
+def record_fixtures() -> bool:
+    """Save live model replies to data/sample/model_fixtures (judge-path recording, R3/R6).
+
+    An environment switch for whoever records the bundle, never a /run option, so a request can't
+    write files. Replay needs nothing: sample mode replays when Nightshift is unreachable.
+    """
+    return os.environ.get(RECORD_FLAG, "").strip().lower() in ("1", "true", "on", "yes")
+
+
 @contextmanager
 def agent_deps(settings: Settings, run_id: str, *, zetaris: Any = None, nightshift: Any = None
                ) -> Iterator[AgentDeps]:
     """Deps for one API call outside /run (drafts, dossiers, briefings): real adapters, traced, deadline."""
     tracer = Tracer(run_id, settings.logs_dir)
     z = zetaris or ZetarisClient(settings, tracer)
-    n = nightshift or NightshiftClient(settings, tracer)
+    n = nightshift or NightshiftClient(settings, tracer, record_fixtures=record_fixtures())
     try:
         with engines.use_tracer(tracer):
             yield AgentDeps(tracer=tracer, zetaris=z, nightshift=n, engines=engines,
@@ -94,7 +107,7 @@ def run_request(
     started = time.perf_counter()
     deadline = time.monotonic() + settings.run_deadline_seconds
     z = zetaris or ZetarisClient(settings, tracer)
-    n = nightshift or NightshiftClient(settings, tracer)
+    n = nightshift or NightshiftClient(settings, tracer, record_fixtures=record_fixtures())
     if options.get("persist") is False:
         store: Store = MemoryStore()
     else:
