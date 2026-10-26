@@ -145,7 +145,7 @@ def default_handlers() -> dict[str, Callable[[dict[str, Any]], list[dict[str, An
 
     return {"q_case": q_case, "q_features": q_features, "q_candidates": q_candidates, "q_vehicle_trail": trail,
             "q_offender_return": empty, "q_tip_corroboration": empty, "q_calls_near": empty, "q_news": empty,
-            "q_context": empty, "q_dq_flags": empty}
+            "q_context": empty, "q_dq_flags": empty, "q_hex_counts": empty}
 
 
 class FakeHmem:
