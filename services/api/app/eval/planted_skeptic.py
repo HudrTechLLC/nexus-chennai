@@ -551,6 +551,7 @@ def review_case(settings: Settings, case: Mapping[str, Any], near: Mapping[str, 
     sp, _ = score_pair(deps, case["a"], case["b"])
     out: dict[str, Any] = {"case_id": case["case_id"], "id": arm_id, "arm": "planted" if near else "twin",
                            "plant_kind": near["plant"]["kind"] if near else None,
+                           "features_source": features_source(case),
                            "score": sp.score.score, "band": sp.score.band, "alert": sp.score.alert}
     if not sp.score.alert:  # cannot happen for a pre-registered arm; recorded, never silently skipped
         out.update(verdict="not_alerting")
@@ -567,7 +568,23 @@ def review_case(settings: Settings, case: Mapping[str, Any], near: Mapping[str, 
     return out
 
 
+def features_source(case: Mapping[str, Any]) -> str:
+    """'stored' or 'generator_truth' for a twin's pair (both crimes share one source; 'mixed' if they ever don't)."""
+    src = set((case.get("features_source") or {}).values())
+    return src.pop() if len(src) == 1 else "mixed"
+
+
 def summarise(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Every metric overall and split by features_source (pre-registered, nexus-5): generator-truth MO matches
+    perfectly across a series, so a planted fact stands alone against a perfect match there; stored (extracted) MO
+    is noisier. The split shows whether the headline rate is carried by one source."""
+    out = _metrics(results)
+    out["by_features_source"] = {src: _metrics([r for r in results if r.get("features_source") == src])
+                                 for src in sorted({r.get("features_source") for r in results if r.get("features_source")})}
+    return out
+
+
+def _metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Primary: near-misses DROPPED while their twin was APPROVED, over arms where both critiques were applied."""
     twins = {r["case_id"]: r for r in results if r["arm"] == "twin"}
     near = [r for r in results if r["arm"] == "planted"]

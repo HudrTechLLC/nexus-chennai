@@ -237,3 +237,22 @@ def test_the_prompts_are_the_pre_registered_ones():
     text = PREREG.read_text(encoding="utf-8")
     assert hashlib.sha256(SKEPTIC_PROMPT.encode()).hexdigest() in text
     assert hashlib.sha256(RATIONALE_PROMPT.encode()).hexdigest() in text
+
+
+def test_every_metric_is_also_split_by_features_source():
+    def arm(cid, aid, kind, verdict, src):
+        return {"case_id": cid, "id": aid, "arm": "twin" if kind is None else "planted", "plant_kind": kind,
+                "verdict": verdict, "model_critique": "applied", "features_source": src}
+    r = [arm("PS-01", "PS-01", None, "approve", "stored"), arm("PS-01", "PS-01a", "helmet", "send_back", "stored"),
+         arm("PS-02", "PS-02", None, "approve", "generator_truth"),
+         arm("PS-02", "PS-02a", "helmet", "drop", "generator_truth")]
+    s = P.summarise(r)
+    assert s["primary_dropped_while_twin_approved"] == 1 and s["near_misses_scored"] == 2
+    by = s["by_features_source"]
+    assert by["stored"]["primary_dropped_while_twin_approved"] == 0 and by["stored"]["near_misses_scored"] == 1
+    assert by["generator_truth"]["primary_rate"] == 1.0 and by["generator_truth"]["twins_approved"] == 1
+
+
+def test_each_twin_has_one_features_source():
+    assert {P.features_source(c) for c in SPEC["cases"]} == {"stored", "generator_truth"}
+    assert sum(P.features_source(c) == "stored" for c in SPEC["cases"]) == 2

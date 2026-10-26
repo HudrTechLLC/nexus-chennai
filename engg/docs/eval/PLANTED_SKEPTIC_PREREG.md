@@ -106,6 +106,11 @@ per near-miss.
   - planted dropped or sent back;
   - twins approved / sent back / dropped;
   - each of these by plant kind.
+- **Every metric, primary and secondary, is also reported split by `features_source`** (nexus-5, added before any
+  run): **stored** (2 twins, 6 near-misses) vs **generator_truth** (6 twins, 18 near-misses). Generator-truth MO is
+  identical across a series, so there A and B match perfectly on MO and the planted fact stands alone against a
+  perfect match. That is plausibly easier than the stored pairs, whose extracted MO is noisier. The split shows
+  whether the headline rate is carried by one source. No pair mixes sources.
 - **Unavailable critiques** (`critique_failed`, `critique_missing`, a failed call) are **listed by id** and leave
   the denominator. They are never counted as either verdict.
 - **Pass threshold:** **primary rate ≥ 0.60** (at least 15 of 24). The result is reported whatever it is, with the
