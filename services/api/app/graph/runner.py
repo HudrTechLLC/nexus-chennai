@@ -208,7 +208,15 @@ def _detect_series(graph: AgentGraph, alerts: list[dict[str, Any]]) -> tuple[lis
     series = detect_series(alerts)
     if not series:
         return series, {}
-    rows = read_member_cases(graph.deps, [cid for s in series for cid in s["crime_ids"]]) or {}
+    try:
+        rows = read_member_cases(graph.deps, [cid for s in series for cid in s["crime_ids"]]) or {}
+    except DeadlineExceeded:
+        # The run's alerts are already written; losing the whole run output for a late series check is worse than
+        # skipping series this run (never save unchecked: a test FIR could join). The next run detects them.
+        graph.deps.tracer.emit("Series analyst", "series_skipped", input_summary=f"{len(series)} series",
+                               output_summary="run deadline passed before the member check; series not saved",
+                               status="degraded")
+        return [], {}
     excluded = flag_test_firs(rows)
     for cid, why in sorted(excluded.items()):
         graph.deps.tracer.emit("Series analyst", "series_member_excluded", input_summary=cid, output_summary=why,
