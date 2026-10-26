@@ -101,6 +101,31 @@ export function coverageOf(alert: Pick<LinkAlert, "coverage" | "link_factors">):
   return Math.min(1, Math.round(sum * 100) / 100);
 }
 
+// D-016 guard thresholds (mirror services/api/app/scoring/weights.py; display only).
+export const BAND_HIGH = 0.75;
+export const MIN_COVERAGE_FOR_HIGH = 0.5;
+
+/**
+ * When the evidence-coverage guard (D-016) held a high score down to "medium", returns how many
+ * of the nine factors had data and the coverage; otherwise null. A forensic match is exempt.
+ */
+export function coverageCap(
+  alert: Pick<LinkAlert, "band" | "score" | "coverage" | "link_factors">,
+): { withData: number; total: number; coverage: number } | null {
+  const coverage = coverageOf(alert);
+  if (alert.band !== "medium" || alert.score < BAND_HIGH || coverage >= MIN_COVERAGE_FOR_HIGH) return null;
+  const factors = alert.link_factors ?? [];
+  if (factors.some((f) => f.factor === "forensic" && !f.struck_by_skeptic && (f.value ?? 0) >= 1)) return null;
+  const withData = factors.filter((f) => !f.struck_by_skeptic && (f.value as number | null) != null).length;
+  return { withData, total: FACTORS.length, coverage };
+}
+
+/** "Capped at medium: only N of 9 factors had data (coverage 35%)", or null when no cap applied. */
+export function coverageCapLine(alert: Parameters<typeof coverageCap>[0]): string | null {
+  const c = coverageCap(alert);
+  return c && `Capped at medium: only ${c.withData} of ${c.total} factors had data (coverage ${Math.round(c.coverage * 100)}%)`;
+}
+
 /** All distinct Zetaris query ids cited by an alert's evidence. */
 export function queryIds(factors: LinkFactor[] = []): string[] {
   const ids = new Set<string>();

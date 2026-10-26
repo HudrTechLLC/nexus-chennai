@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { coverageOf, decisionState, factorRows, latestDecision, pct, REASON_LABEL, type LinkAlert } from "@/lib/alerts";
+import { coverageCapLine, coverageOf, decisionState, factorRows, latestDecision, pct, REASON_LABEL, type LinkAlert } from "@/lib/alerts";
 import { crimeTitle, type CrimeBrief } from "@/lib/alertsData";
 import { BandPill, FactorBars, ScoreRing, StatusPill } from "./AlertBits";
 
@@ -17,6 +17,7 @@ export function AlertCard({ alert, crimes, deciderNames }: {
   const title = alert.crimes.map((id) => crimeTitle(crimes[id], id)).join(" ↔ ");
   const first = crimes[alert.crimes[0]];
   const memDelta = alert.memory_applied?.[0];
+  const capLine = coverageCapLine(alert);
 
   return (
     <article className="rounded-xl border border-line bg-surface p-4">
@@ -38,6 +39,7 @@ export function AlertCard({ alert, crimes, deciderNames }: {
         </div>
       </div>
 
+      {capLine && <p className="mt-3 text-xs text-muted">{capLine}</p>}
       <div className="mt-3"><FactorBars rows={rows} compact /></div>
       <p className="mt-3 text-sm">{alert.rationale}</p>
 
