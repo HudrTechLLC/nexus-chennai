@@ -1,0 +1,71 @@
+code,name,approx_lat,approx_lon,match
+C1,Flower Bazaar,13.0927,80.2826,C1
+C2,Elephant Gate,13.0950,80.2730,C2
+C3,Seven Wells,13.0990,80.2780,C3
+C5,Kothavalchavadi,13.0960,80.2850,C5
+N3,Muthialpet,13.0965,80.2885,N3
+B1,North Beach,13.1000,80.2920,B1 North Beach
+B2,Esplanade,13.0880,80.2840,Esplanade
+H1,Washermanpet,13.1140,80.2870,H1
+H3,Tondiarpet,13.1260,80.2890,Tondiarpet
+H5,New Washermanpet,13.1200,80.2950,New Washermanpet
+P1,Pulianthope,13.0990,80.2620,Pulianthope
+P2,Otteri,13.0940,80.2500,P2
+P3,Vyasarpadi,13.1170,80.2600,Vyasarpadi
+M1,Madhavaram,13.1480,80.2310,Madhavaram
+M3,Kodungaiyur,13.1350,80.2470,Kodungaiyur
+M5,Ennore,13.2150,80.3200,M5
+D1,Triplicane,13.0580,80.2770,D1
+D2,Anna Salai,13.0640,80.2650,D2
+D3,Ice House,13.0530,80.2780,Ice House
+D5,Marina,13.0500,80.2810,D5
+F2,Egmore,13.0780,80.2610,F2
+F3,Nungambakkam,13.0600,80.2420,F3
+F4,Thousand Lights,13.0610,80.2530,F4
+G1,Vepery,13.0850,80.2620,Vepery
+G2,Periamet,13.0830,80.2700,Periamet
+G3,Kilpauk,13.0820,80.2420,Kilpauk
+G7,Chetpet,13.0720,80.2400,G7
+K2,Ayanavaram,13.0980,80.2330,K2
+K4,Anna Nagar,13.0850,80.2100,K4
+K10,Koyambedu,13.0700,80.1950,Koyambedu
+K11,CMBT,13.0680,80.2050,K11
+V3,JJ Nagar,13.0880,80.1950,V3
+V5,Thirumangalam,13.0850,80.2010,Thirumangalam
+E1,Mylapore,13.0330,80.2680,E1
+E2,Royapettah,13.0540,80.2640,Royapettah
+E3,Teynampet,13.0400,80.2500,E3
+E4,Abhiramapuram,13.0300,80.2550,Abhiramapuram
+E5,Foreshore Estate,13.0250,80.2790,E5
+J1,Saidapet,13.0210,80.2230,J1
+J2,Adyar,13.0012,80.2565,J2
+J3,Guindy,13.0070,80.2200,J3
+J5,Shastri Nagar,12.9990,80.2600,Shastri Nagar
+J6,Thiruvanmiyur,12.9830,80.2600,J6
+J7,Velachery,12.9790,80.2209,Velachery Police Station
+J8,Neelankarai,12.9490,80.2590,Neelankarai
+J9,Thoraipakkam,12.9400,80.2330,J9
+J10,Semmencheri,12.8740,80.2250,J-10
+R1,Mambalam,13.0350,80.2295,Mambalam
+R2,Kodambakkam,13.0500,80.2240,Kodambakkam
+R3,Ashok Nagar,13.0370,80.2120,R3
+R4,Pondy Bazaar,13.0410,80.2340,Pondy Bazaar
+R5,Virugambakkam,13.0530,80.1960,R-5
+R6,Kumaran Nagar,13.0410,80.2080,R6 KUMARAN
+R8,Vadapalani,13.0500,80.2120,Vadapalani
+R10,MGR Nagar,13.0330,80.1960,R10
+S1,St. Thomas Mount,12.9950,80.2000,Saint Thomas Mount
+S4,Nandambakkam,13.0080,80.1880,S4
+S5,Madipakkam,12.9640,80.1990,Madipakkam
+S6,Shankar Nagar,12.9700,80.1500,S6
+S8,Adambakkam,12.9890,80.2050,S-8
+S10,Pallikaranai,12.9370,80.2140,S-10
+S11,Tambaram,12.9250,80.1180,s11
+T1,Ambattur,13.1140,80.1550,Ambattur T1
+T3,Pallavaram,12.9680,80.1500,T-3
+T4,Avadi,13.1150,80.1010,Avadi
+T9,Pattabiram,13.1230,80.0600,T9
+T11,Ramapuram,13.0320,80.1800,Ramapuram
+T13,Kundrathur,12.9970,80.0970,T13 Kundrathur
+T15,SRMC Porur,13.0350,80.1450,T15
+T16,Selaiyur,12.9170,80.1420,Selaiyur Police Station

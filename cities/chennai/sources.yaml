@@ -1,0 +1,22 @@
+# Inputs and feeds for the Chennai city pack (engg/docs/CITY_PACKS.md).
+reference:
+  downloads:
+    # DataMeet Municipal_Spatial_Data, Chennai (Transparent Chennai), CC BY-SA 2.5 IN.
+    wards.geojson: https://raw.githubusercontent.com/datameet/Municipal_Spatial_Data/master/Chennai/Wards.geojson
+    zones.geojson: https://raw.githubusercontent.com/datameet/Municipal_Spatial_Data/master/Chennai/Zones.geojson
+  overpass:
+    # OpenStreetMap via Overpass, ODbL. {bbox} = city.yaml map.bounds.
+    osm_police.json: >
+      node["amenity"="police"]{bbox}; way["amenity"="police"]{bbox};
+    osm_pois.json: >
+      nwr["amenity"~"^(atm|bank|bar|pub|hospital|clinic|marketplace|fuel|bus_station|place_of_worship|school|college|cinema|restaurant|cafe|pharmacy|parking)$"]{bbox};
+      nwr["shop"~"^(jewelry|mall|supermarket|mobile_phone|electronics|pawnbroker)$"]{bbox};
+      node["highway"="bus_stop"]{bbox};
+      nwr["railway"="station"]{bbox};
+      nwr["public_transport"="station"]{bbox};
+      nwr["tourism"="hotel"]{bbox};
+wards:
+  number_property: Ward_No
+  zone_property: Zone_Name
+zones:
+  name_property: Zone Name
