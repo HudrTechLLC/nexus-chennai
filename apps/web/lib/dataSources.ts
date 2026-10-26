@@ -24,6 +24,7 @@ export type SourceType =
   | "CCTV registry (files)"
   | "112 calls (files)"
   | "Offender records (files)"
+  | "Reference data (files)"
   | "Open feeds (REST)";
 
 export type DataSource = {
@@ -53,6 +54,26 @@ export const DATA_SOURCES: DataSource[] = [
     id: "sb.crimes", label: "FIRs (current system)", type: "Case records (Postgres)", store: "Supabase Postgres",
     what: "Every FIR filed in the current system, one row per crime, from each police station.",
     feeds: ["v_crime_unified", "case_bundle_v"], mirror: { table: "crimes" }, stationScoped: true,
+  },
+  {
+    id: "sb.crime_vehicles", label: "Vehicles in cases", type: "Case records (Postgres)", store: "Supabase Postgres",
+    what: "Vehicles recorded against a crime: type, colour, partial plate.",
+    feeds: ["case_bundle_v"], mirror: { table: "crime_vehicles" },
+  },
+  {
+    id: "sb.statements", label: "Witness statements", type: "Case records (Postgres)", store: "Supabase Postgres",
+    what: "Statements taken for each case.",
+    feeds: ["case_bundle_v", "q_news"], mirror: { table: "statements" },
+  },
+  {
+    id: "sb.forensics", label: "Forensic results", type: "Case records (Postgres)", store: "Supabase Postgres",
+    what: "Forensic findings attached to cases.",
+    feeds: ["case_bundle_v"], mirror: { table: "forensics" },
+  },
+  {
+    id: "sb.crime_features_v", label: "Extracted case features", type: "Case records (Postgres)", store: "Supabase Postgres",
+    what: "The method-of-operation features the agents extract from each FIR.",
+    feeds: ["case_bundle_v", "q_features"], mirror: { table: "crime_features" },
   },
   {
     id: "sb.stations", label: "Police stations", type: "Case records (Postgres)", store: "Supabase Postgres",
@@ -113,16 +134,29 @@ export const DATA_SOURCES: DataSource[] = [
     what: "Known offenders' recorded methods.", feeds: ["q_offender_return"],
   },
   {
+    id: "s3csv.place_aliases", label: "Place names", type: "Reference data (files)", store: "Zetaris file store (CSV)",
+    what: "Local names and spellings of places, tied to stations and wards, for matching news to crimes.",
+    feeds: ["v_news_mentions", "q_news"],
+  },
+  {
+    id: "s3csv.calendar", label: "Calendar", type: "Reference data (files)", store: "Zetaris file store (CSV)",
+    what: "Festivals, holidays and events, for context on a case.", feeds: ["q_context"],
+  },
+  {
+    id: "s3pq.osm_pois", label: "Points of interest", type: "Reference data (files)", store: "Zetaris file store (Parquet)",
+    what: "Shops, transit stops and landmarks from OpenStreetMap, for context on a case.", feeds: ["q_context"],
+  },
+  {
     id: "nexus_feeds.rest_news", label: "Local news", type: "Open feeds (REST)", store: "REST feed (read by Zetaris)",
     what: "Local news articles, matched to crimes by place and time.", feeds: ["v_news_mentions", "q_news"],
   },
   {
     id: "nexus_feeds.rest_social", label: "Social posts", type: "Open feeds (REST)", store: "REST feed (read by Zetaris)",
-    what: "Public posts about incidents.", feeds: ["social_posts"],
+    what: "Public posts about incidents.", feeds: ["social_posts (view; no agent reads it yet)"],
   },
   {
     id: "nexus_feeds.rest_weather", label: "Weather", type: "Open feeds (REST)", store: "REST feed (read by Zetaris)",
-    what: "Hourly weather, for context on a case.", feeds: ["weather_hourly"],
+    what: "Hourly weather, for context on a case.", feeds: ["weather_hourly", "q_context"],
   },
 ];
 
@@ -138,9 +172,11 @@ const isCount = (v: unknown): v is number => typeof v === "number" && Number.isF
 
 /**
  * Per-source counts from 'zetaris:sources' (detail.counts: { "<source id>": n }). Unknown keys and
- * non-numbers are dropped; a missing row gives {} (the page then says "read live through Zetaris").
+ * non-numbers are dropped; a missing or non-live row gives {} (the page then says "read live through Zetaris").
  */
 export function zetarisCounts(row: StatusRow | undefined): Record<string, number> {
+  // Only counts Zetaris itself produced: a sample-mode or failed run must never read as live.
+  if (row?.state !== "live") return {};
   const counts = (row?.detail as { counts?: unknown } | null | undefined)?.counts;
   if (!counts || typeof counts !== "object") return {};
   const known = new Set(DATA_SOURCES.map((s) => s.id));

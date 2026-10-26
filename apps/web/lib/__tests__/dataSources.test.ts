@@ -21,7 +21,11 @@ describe("registry", () => {
   it("names which unified view each FIR source feeds", () => {
     for (const id of ["sb.crimes", "s3csv.cctns", "s3pq.archive"]) expect(src(id).feeds).toContain("v_crime_unified");
     expect(src("sb.crimes").feeds).toContain("case_bundle_v");
-    expect(src("sb.evidence_media").feeds).toContain("case_bundle_v");
+    // 30_case.sql: the case bundle joins all of these (nexus-1 review)
+    for (const id of ["sb.evidence_media", "sb.crime_vehicles", "sb.statements", "sb.forensics", "sb.crime_features_v"])
+      expect(src(id).feeds).toContain("case_bundle_v");
+    for (const id of ["s3csv.calendar", "s3pq.osm_pois", "nexus_feeds.rest_weather"]) expect(src(id).feeds).toContain("q_context");
+    expect(src("s3csv.place_aliases").feeds).toContain("q_news");
   });
   it("covers the ANPR, CCTV, 112 and REST sources", () => {
     for (const id of ["s3pq.anpr_reads", "s3csv.cctv_cameras", "s3pq.calls", "nexus_feeds.rest_news", "nexus_feeds.rest_social", "nexus_feeds.rest_weather"])
@@ -65,6 +69,7 @@ describe("system_status rows", () => {
       .toEqual({ "s3csv.cctns": 3000 });
     expect(zetarisCounts(undefined)).toEqual({});
     expect(zetarisCounts(row("zetaris:sources", null))).toEqual({});
+    expect(zetarisCounts({ ...row("zetaris:sources", { counts: { "s3csv.cctns": 3000 } }), state: "sample" })).toEqual({});
   });
   it("assigns DQ counts to their sources", () => {
     const dq = row("zetaris:dq", { duplicate_fir: 30, bad_geo: 5, time_inconsistent: 5, unmapped_section: 20, orphan_evidence: 0, tip_without_incident: 36, stale_camera: 134, total: 230 });
