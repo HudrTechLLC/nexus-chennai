@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T23:40:50+05:30",
+  "updated": "2026-10-26T23:57:31+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -653,15 +653,15 @@
           "id": "WS3-27",
           "phase": "P7",
           "title": "Console Data sources page: federated sources, row counts, freshness, DQ flags",
-          "status": "in_progress",
-          "note": "nexus-2 · PR #327 · UI/read-only; cut if not green by 09:00 Tue"
+          "status": "done",
+          "note": "nexus-2 · #327 (23 sources, 8 types; live counts via app.dq_status --only sources)"
         },
         {
           "id": "WS3-28",
           "phase": "P7",
           "title": "\"From the public\": linked tips on alert and series pages",
-          "status": "in_progress",
-          "note": "nexus-6 · PR #320 · UI/read-only; cut if not green by 09:00 Tue"
+          "status": "done",
+          "note": "nexus-6 · #320"
         },
         {
           "id": "WS3-29",
