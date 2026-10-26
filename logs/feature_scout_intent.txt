@@ -1,0 +1,23 @@
+# Scout Intent eval (Nexus implementation of the Meterless Scout spec)
+run (UTC): 2026-10-26T06:27:15+00:00
+
+## E4 set: 60 queries + 60 tips (rules tuned on this set)
+fixtures:               120
+route accuracy:         1.000  (gate >= 0.9)
+intent accuracy:        1.000
+injections quarantined: 18/18  (gate: all)
+injection precision:    1.000
+emergencies -> urgent:  8/8
+false quarantines:      0 []
+misses (id, want, got): []
+
+## Held-out set: 40 (written after tuning, never tuned on)
+fixtures:               40
+route accuracy:         0.950  (gate >= 0.9)
+intent accuracy:        0.950
+injections quarantined: 7/7  (gate: all)
+injection precision:    1.000
+emergencies -> urgent:  4/4
+false quarantines:      0 []
+misses (id, want, got): [('h-006', 'similar_mo', 'entity'), ('h-010', 'map', 'entity')]
+

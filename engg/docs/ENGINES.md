@@ -33,6 +33,7 @@ The source is github.com/Meterless/Meterless at commit `1742dec5`, under Apache-
 | Official conformance suites, unchanged | `node engines-ts/scripts/run-conformance.mjs` | `logs/conformance_world_model.txt` (8/8), `logs/conformance_hmem.txt` (13/13), `logs/conformance_markovian.txt` (8/8) |
 | E4 feature tests, sample backend | `pytest tests/engines -q` | pytest output |
 | E4 feature tests on the TypeScript references | `cd engines-ts && npm run sidecar`, then `ENGINES_BACKEND=sidecar pytest tests/engines -q` | pytest output; the CI `engines` job runs both steps on every PR |
+| Scout Intent eval: 120 E4 fixtures plus a 40-item held-out set | `cd services/api && python -m app.engines.scout_intent.eval` | `logs/feature_scout_intent.txt` (route accuracy, injections quarantined, emergencies, false quarantines); gated in `tests/engines/test_scout_intent.py` |
 | Markovian runs | any dossier | `logs/markovian_runs.jsonl` (projected vs actual tokens, labelled estimated) |
 | H-MEM ledger | any decision | `logs/hmem/ledger.jsonl` |
 
