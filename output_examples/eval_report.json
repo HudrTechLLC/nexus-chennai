@@ -1,0 +1,212 @@
+{
+  "synthetic": true,
+  "weights_version": "f2-default-v1",
+  "method": "blocking (q_candidates, default plan) -> F2 code scoring -> Skeptic re-query/strike; no model calls (models only explain, R7)",
+  "cases_evaluated": 60,
+  "features": {
+    "with_live_model_features": 13,
+    "without_features": [
+      "CHN-AM-2024-001346",
+      "CHN-AM-2025-000865",
+      "CHN-AM-2025-001042",
+      "CHN-AM-2025-001062",
+      "CHN-AS-2025-000080",
+      "CHN-AV-2026-000609",
+      "CHN-CH-2025-000823",
+      "CHN-CH-2025-000832",
+      "CHN-GU-2025-000055",
+      "CHN-GU-2025-001149",
+      "CHN-IC-2025-001225",
+      "CHN-KA-2025-000077",
+      "CHN-KD-2025-000086",
+      "CHN-KD-2025-000125",
+      "CHN-KD-2025-000202",
+      "CHN-KI-2025-000789",
+      "CHN-KO-2026-000043",
+      "CHN-KU-2025-000082",
+      "CHN-KU-2025-001216",
+      "CHN-MA-2025-001323",
+      "CHN-MG-2025-000077",
+      "CHN-MG-2025-000079",
+      "CHN-MI-2025-000932",
+      "CHN-MI-2025-001070",
+      "CHN-MM-2025-000040",
+      "CHN-MM-2025-001211",
+      "CHN-MM-2025-001313",
+      "CHN-MY-2025-001289",
+      "CHN-NA-2025-000990",
+      "CHN-NO-2026-000043",
+      "CHN-NU-2025-000748",
+      "CHN-PL-2025-000927",
+      "CHN-PO-2025-000068",
+      "CHN-PO-2025-001230",
+      "CHN-PT-2026-000608",
+      "CHN-RO-2025-001142",
+      "CHN-RO-2025-001330",
+      "CHN-SA-2025-001209",
+      "CHN-SN-2025-000954",
+      "CHN-ST-2025-001032",
+      "CHN-ST-2025-001108",
+      "CHN-TM-2025-000881",
+      "CHN-TM-2025-000979",
+      "CHN-TM-2025-001050",
+      "CHN-VI-2025-000079",
+      "CHN-VL-2024-001346",
+      "CHN-VY-2025-000125"
+    ],
+    "features_without_receipt": [],
+    "extractor_versions": {
+      "mo-v3": 13
+    }
+  },
+  "excluded_non_generated": [],
+  "truth_positive_pairs": 98,
+  "agent": {
+    "tp": 84,
+    "fp": 58,
+    "fn": 14,
+    "precision": 0.5915,
+    "recall": 0.8571,
+    "f1": 0.7,
+    "alerts": 148,
+    "by_band": {
+      "high": {
+        "alerts": 9,
+        "precision": 1.0,
+        "tp": 9,
+        "fp": 0
+      },
+      "medium": {
+        "alerts": 139,
+        "precision": 0.5639,
+        "tp": 75,
+        "fp": 58
+      }
+    },
+    "by_crime_type": {
+      "house_break": {
+        "tp": 28,
+        "fp": 24,
+        "fn": 1,
+        "precision": 0.5385,
+        "recall": 0.9655,
+        "f1": 0.6914
+      },
+      "robbery": {
+        "tp": 56,
+        "fp": 34,
+        "fn": 13,
+        "precision": 0.6222,
+        "recall": 0.8116,
+        "f1": 0.7044
+      },
+      "theft": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      }
+    },
+    "false_alerts_per_100_cases": 96.67,
+    "skeptic_strikes": 0,
+    "series": {
+      "predicted_series": 10,
+      "mean_purity": 0.3478
+    }
+  },
+  "baseline_rules_only": {
+    "tp": 29,
+    "fp": 306,
+    "fn": 69,
+    "precision": 0.0866,
+    "recall": 0.2959,
+    "f1": 0.1339,
+    "alerts": 341,
+    "rule": "same category, <= 2 km, <= 14 days",
+    "false_alerts_per_100_cases": 510.0
+  },
+  "duplicates": {
+    "truth_pairs": 6,
+    "flagged_by_agent": 6,
+    "flagged_by_baseline": 6
+  },
+  "timing": {
+    "median_seconds_per_case": 0.502
+  },
+  "beats_baseline": {
+    "precision": true,
+    "recall": true
+  },
+  "mo_cosine": "off",
+  "mo_cosine_trial": {
+    "off": {
+      "precision": 0.5915,
+      "recall": 0.8571,
+      "tp": 84,
+      "fp": 58,
+      "fn": 14,
+      "alerts": 148
+    },
+    "on": {
+      "precision": 0.5455,
+      "recall": 0.8571,
+      "tp": 84,
+      "fp": 70,
+      "fn": 14,
+      "alerts": 160
+    }
+  },
+  "mo_tfidf_trial": {
+    "tfidf": {
+      "precision": 0.5915,
+      "recall": 0.8571,
+      "tp": 84,
+      "fp": 58,
+      "fn": 14,
+      "alerts": 148
+    },
+    "off": {
+      "precision": 0.5915,
+      "recall": 0.8571,
+      "tp": 84,
+      "fp": 58,
+      "fn": 14,
+      "alerts": 148
+    },
+    "table": {
+      "source": "zetaris sb.crime_features_v",
+      "docs": 421,
+      "extractor_versions": {
+        "mo-v3": 410,
+        "mo-v4": 11
+      },
+      "built_at": "2026-10-26T13:52:51+00:00"
+    }
+  },
+  "hmem": "off: no memory adjusts any score (reproducible; live analyst decisions excluded)",
+  "truth_dir": "data/sample/_truth",
+  "sample_mode": true,
+  "run_id": "eval_c407165d",
+  "log_file": "logs/trace-eval_c407165d.jsonl",
+  "band_accuracy_text": {
+    "high": "alerts in the high band were correct 100% of the time on the evaluation set (9 alerts)",
+    "medium": "alerts in the medium band were correct 56% of the time on the evaluation set (139 alerts)"
+  },
+  "provenance": {
+    "data": "sample bundle data/sample, DuckDB twins of the named queries (reproducible from a fresh clone)",
+    "truth_dir": "data/sample/_truth",
+    "cases_evaluated": 60,
+    "synthetic": true,
+    "case_features_by_extractor": {
+      "mo-v3": 13
+    },
+    "hmem": "empty: the evaluator binds no engines, so no memory adjusts a score",
+    "model_calls": 0,
+    "console_firs_excluded": 0,
+    "weights_version": "f2-default-v1",
+    "git_commit": "2049552",
+    "generated_at": "2026-10-26T14:46:25+00:00"
+  }
+}
