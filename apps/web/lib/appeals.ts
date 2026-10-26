@@ -60,13 +60,13 @@ export function parseLookingFor(raw: string): string[] {
 }
 
 /** Problems that stop a publish (shown in the form; the DB trigger enforces the leak list too). */
-export function validateAppeal(e: AppealEdit): string | null {
+export function validateAppeal(e: AppealEdit, terms: CaseTerm[] = []): string | null {
   if (!e.title.trim()) return "Add a title.";
   if (e.title.length > 90) return "Keep the title under 90 characters.";
   if (!e.summary.trim()) return "Add a summary.";
   if (e.summary.length > 500) return "Keep the summary under 500 characters.";
   for (const [field, text] of [["title", e.title], ["summary", e.summary], ...e.looking_for.map((t) => ["looking for", t])]) {
-    const k = leakKind(text);
+    const k = leakKind(text) ?? caseLeakKind(text, terms);
     if (k) return `The ${field} contains a ${k}. Public appeals must not.`;
   }
   return null;
@@ -88,4 +88,43 @@ export function tipCounts(rows: { public_incident_id: string | null }[]): Map<st
   const m = new Map<string, number>();
   for (const r of rows) if (r.public_incident_id) m.set(r.public_incident_id, (m.get(r.public_incident_id) ?? 0) + 1);
   return m;
+}
+
+// =====================
+// Per-case leaks (0007_08): names of people linked to the case and its address
+// =====================
+
+/** Mirrors public.appeal_case_terms (0007_08) and app/agents/sanitiser.py case_terms; fixture case_leaks. */
+export type CaseTerm = { term: string; kind: "person name from the case" | "place from the case address" };
+
+const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+/** "near Saligramam Bus Depot, Vadapalani" → "saligramam bus depot" (run on the lower-cased address). */
+const LANDMARK = /(?:^|[ ,])(?:near|opp\.?|opposite|behind|next to)\s+([^,]+)/;
+/** "12/4, 1st cross street, kodungaiyur" → "12/4, 1st cross street" (a door number, then the street). */
+const DOOR = /^(\d+[a-z0-9/-]*\s*,\s*[^,]+)/;
+
+export function caseTerms(persons: { name: string | null; aliases: string[] | null }[], address: string | null | undefined): CaseTerm[] {
+  const out = new Map<string, CaseTerm["kind"]>();
+  for (const p of persons) {
+    const name = p.name ?? "";
+    const raw = [name, name.replace(/^(\s*[A-Za-z]\.)+\s*/, ""), ...name.split(/\s+alias\s+/i), ...(p.aliases ?? [])];
+    for (const t of raw.map(norm)) if (t.length >= 3 && !out.has(t)) out.set(t, "person name from the case");
+  }
+  // A plain road or locality is not a term: the Sanitiser's area label names the road on purpose.
+  const addr = norm(address ?? "");
+  const landmark = LANDMARK.exec(addr)?.[1] ?? "";
+  const door = DOOR.exec(addr)?.[1] ?? "";
+  for (const t of [landmark, door].map(norm)) if (t.length >= 6 && !out.has(t)) out.set(t, "place from the case address");
+  return Array.from(out, ([term, kind]) => ({ term, kind }));
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The first per-case leak in `text` (whole word, case-insensitive, whitespace-insensitive), names first. */
+export function caseLeakKind(text: string | null | undefined, terms: CaseTerm[]): string | null {
+  const t = norm(text ?? "");
+  const hit = (x: CaseTerm) => new RegExp(`(^|[^a-z0-9])${escapeRe(x.term)}($|[^a-z0-9])`).test(t);
+  return terms.find((x) => x.kind === "person name from the case" && hit(x))?.kind
+    ?? terms.find((x) => x.kind === "place from the case address" && hit(x))?.kind
+    ?? null;
 }

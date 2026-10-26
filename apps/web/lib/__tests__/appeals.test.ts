@@ -1,12 +1,22 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { isCrimeId, leakKind, parseLookingFor, tipCounts, validateAppeal } from "../appeals";
+import { caseLeakKind, caseTerms, isCrimeId, leakKind, parseLookingFor, tipCounts, validateAppeal } from "../appeals";
 
 // The same fixture pytest and the SQL check use, so the three leak lists cannot drift apart.
 const fixture = JSON.parse(
   readFileSync(resolve(__dirname, "../../../../tests/agents/appeal_leaks.json"), "utf-8"),
-) as { leaky: { text: string; kind: string }[]; clean: string[] };
+) as {
+  leaky: { text: string; kind: string }[];
+  clean: string[];
+  case_leaks: {
+    persons: { name: string | null; aliases: string[] }[];
+    address: string;
+    more_addresses: { address: string; leaky: string[]; clean: string[] }[];
+    leaky: { text: string; kind: string }[];
+    clean: string[];
+  };
+};
 
 describe("leakKind (shared fixture)", () => {
   it("catches every leaky text with the right kind", () => {
@@ -42,5 +52,28 @@ describe("tipCounts", () => {
   it("counts tips per appeal and ignores general tips", () => {
     const m = tipCounts([{ public_incident_id: "PI-1" }, { public_incident_id: "PI-1" }, { public_incident_id: null }, { public_incident_id: "PI-2" }]);
     expect(Object.fromEntries(m)).toEqual({ "PI-1": 2, "PI-2": 1 });
+  });
+});
+
+describe("per-case leaks (shared fixture case_leaks, 0007_08)", () => {
+  const cl = fixture.case_leaks;
+  const terms = caseTerms(cl.persons, cl.address);
+  it("catches names, aliases and the case address with the right kind", () => {
+    for (const c of cl.leaky) expect([c.text, caseLeakKind(c.text, terms)]).toEqual([c.text, c.kind]);
+  });
+  it("passes clean texts: whole words only, short aliases ignored, the motorcycle model is not a name", () => {
+    for (const t of cl.clean) expect([t, caseLeakKind(t, terms)]).toEqual([t, null]);
+  });
+  it("blocks landmarks and door addresses, never a plain road or locality", () => {
+    for (const a of cl.more_addresses) {
+      const t = caseTerms([], a.address);
+      for (const x of a.leaky) expect([x, caseLeakKind(x, t)]).toEqual([x, "place from the case address"]);
+      for (const x of a.clean) expect([x, caseLeakKind(x, t)]).toEqual([x, null]);
+    }
+  });
+  it("blocks a publish that names someone in the case", () => {
+    const ok = { title: "Chain snatching", summary: "Karthik was seen nearby.", looking_for: [] };
+    expect(validateAppeal(ok, terms)).toMatch(/person name from the case/);
+    expect(validateAppeal(ok)).toBeNull(); // without the case's terms only the pattern list applies
   });
 });

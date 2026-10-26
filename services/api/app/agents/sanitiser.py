@@ -59,7 +59,9 @@ def area_label(case: Mapping[str, Any]) -> str:
     parts = st.split("-")
     locality = parts[1].title() if len(parts) > 1 else "City"
     addr = str((case.get("location") or {}).get("address") or "")
-    road = re.split(r"\s+(?:near|opp\.?|opposite|behind|next to)\s+", addr, maxsplit=1, flags=re.I)[0].strip()
+    # (?:^|\s+): addresses often START with the landmark ("near Saligramam Bus Depot, Vadapalani"); the old
+    # split needed a space before "near", so the whole address, landmark included, became the label.
+    road = re.split(r"(?:^|\s+)(?:near|opp\.?|opposite|behind|next to)\s+", addr, maxsplit=1, flags=re.I)[0].strip()
     road = re.sub(r"^\d+[\w/-]*,?\s*", "", road)  # drop door numbers
     if road and len(road) <= 40 and not any(p.search(road) for p in _LEAKS):
         return f"{locality} ({road} area)"
@@ -99,8 +101,51 @@ def allowed_facts(case: Mapping[str, Any], features: Mapping[str, Any] | None) -
     }
 
 
+# ---------- per-case leaks (0007_08) ----------
+# Same rule as public.appeal_case_terms / appeal_case_leak (0007_08) and apps/web/lib/appeals.ts caseTerms /
+# caseLeakKind; shared fixture tests/agents/appeal_leaks.json -> case_leaks.
+NAME_KIND = "person name from the case"
+PLACE_KIND = "place from the case address"
+_LANDMARK = re.compile(r"(?:^|[ ,])(?:near|opp\.?|opposite|behind|next to)\s+([^,]+)")  # on the lower-cased address
+_DOOR = re.compile(r"^(\d+[a-z0-9/-]*\s*,\s*[^,]+)")
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", s.lower()).strip()
+
+
+def case_terms(persons: Any, address: str | None) -> list[tuple[str, str]]:
+    """(term, kind) for every person linked to the case and for its address; see 0007_08 for the rule."""
+    out: dict[str, str] = {}
+    for p in persons or []:
+        name = str(p.get("name") or "")
+        raw = [name, re.sub(r"^(\s*[A-Za-z]\.)+\s*", "", name), *re.split(r"\s+alias\s+", name, flags=re.I),
+               *(p.get("aliases") or [])]
+        for t in map(_norm, raw):
+            if len(t) >= 3:
+                out.setdefault(t, NAME_KIND)
+    # A plain road or locality is not a term: area_label names the road on purpose.
+    addr = _norm(address or "")
+    landmark, door = _LANDMARK.search(addr), _DOOR.match(addr)
+    for t in (landmark.group(1) if landmark else "", door.group(1) if door else ""):
+        if len(_norm(t)) >= 6:
+            out.setdefault(_norm(t), PLACE_KIND)
+    return list(out.items())
+
+
+def case_leak(text: str, terms: list[tuple[str, str]]) -> str | None:
+    """The first per-case leak in `text` (whole word, ignoring case and whitespace runs), names first."""
+    t = _norm(text or "")
+    hit = [k for term, k in terms if re.search(rf"(^|[^a-z0-9]){re.escape(term)}($|[^a-z0-9])", t)]
+    return NAME_KIND if NAME_KIND in hit else (PLACE_KIND if hit else None)
+
+
 def leaks(text: str, case: Mapping[str, Any]) -> list[str]:
+    """Pattern leaks, case ids, and (when the caller passes case["persons"]) per-case names and address."""
     found = [p.pattern for p in _LEAKS if p.search(text)]
+    kind = case_leak(text, case_terms(case.get("persons"), str((case.get("location") or {}).get("address") or "")))
+    if kind:
+        found.append(kind)
     addr = str((case.get("location") or {}).get("address") or "").strip()
     if addr and addr.lower() in text.lower():
         found.append("exact address")
