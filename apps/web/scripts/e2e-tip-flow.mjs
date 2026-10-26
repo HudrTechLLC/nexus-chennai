@@ -2,7 +2,8 @@
 /**
  * End-to-end check of the anonymous tip loop against a running web app + Supabase
  * (spec G1 tip flow, G2 /console/tips; WS4-05, WS4-06, WS4-08). It creates ONE test tip,
- * exercises every step, and always deletes the tip and its file at the end.
+ * exercises every step, and always deletes the tip and its file at the end (audit rows are
+ * append-only, so the cleanup is recorded there instead of deleted).
  *
  *   BASE_URL=http://localhost:3041 \
  *   NEXT_PUBLIC_SUPABASE_ANON_KEY="$(tr -d '\r\n' < <publishable key file>)" \
@@ -115,9 +116,10 @@ try {
   if (media?.length) await service.storage.from("tip-media").remove(media.map((m) => m.path));
   await service.from("tips").delete().eq("tip_id", tipId);
   await service.from("tip_attempts").delete().eq("tip_id", tipId);
-  await service.from("audit_log").delete().eq("object_type", "tip").eq("object_id", tipId);
+  // audit_log is append-only (D-030, 0007_03): record the cleanup instead of deleting history.
+  await service.from("audit_log").insert({ what: "cleanup_test_record", object_type: "tip", object_id: tipId, details: { reason: "e2e tip-flow cleanup" } });
   const { count } = await service.from("tips").select("tip_id", { count: "exact", head: true }).eq("tip_id", tipId);
-  console.log(count === 0 ? "cleanup: test tip, file and audit rows removed" : "cleanup: FAILED, remove " + tipId + " by hand");
+  console.log(count === 0 ? "cleanup: test tip and file removed; cleanup recorded in audit_log" : "cleanup: FAILED, remove " + tipId + " by hand");
 }
 console.log(fails ? `\n${fails} check(s) FAILED` : "\nall checks passed");
 process.exit(fails ? 1 : 0);
