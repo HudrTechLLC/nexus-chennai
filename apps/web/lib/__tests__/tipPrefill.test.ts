@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateTip } from "../tip";
-import { appealSubject, prefillCategory, prefillCell, prefillWhen, tipFields, type PublicAppealFields } from "../tipPrefill";
+import { appealSubject, crimeSubject, prefillCategory, prefillCell, prefillWhen, tipFields, type CrimeCardFields, type PublicAppealFields } from "../tipPrefill";
 
 // Shaped like a seeded appeal as public_appeal returns it (data/seed_appeals.py, PI-2026-CC4470).
 const APPEAL: PublicAppealFields = {
@@ -56,7 +56,7 @@ describe("prefillCell", () => {
 describe("appealSubject", () => {
   it("prefills from public fields only", () => {
     expect(appealSubject(APPEAL)).toEqual({
-      kind: "appeal", id: "PI-2026-CC4470", label: "Chain snatching in Guindy · Guindy · 2026-W40",
+      kind: "appeal", id: "PI-2026-CC4470", label: "Chain snatching in Guindy · Guindy · week 40",
       category: "vehicle_seen", cell: "88618c4f49fffff", when: "Morning",
     });
   });
@@ -66,6 +66,34 @@ describe("appealSubject", () => {
   });
   it("drops a malformed cell instead of blocking step 1", () => {
     expect(appealSubject({ ...APPEAL, cell: "" }).cell).toBeNull();
+  });
+});
+
+// Shaped like 0007_11 public_crime (nexus-5's live example PC-3149BAAA6D32).
+const CARD: CrimeCardFields = {
+  public_id: "PC-3149BAAA6D32", category: "theft", sub_type: "two_wheeler_theft", week: "2026-W43",
+  time_window: "afternoon", cell: "88618c4585fffff", area: "Tambaram", mo_summary: null,
+};
+
+describe("crimeSubject", () => {
+  it("prefills from the public card and labels it like the chief's example", () => {
+    expect(crimeSubject(CARD)).toEqual({
+      kind: "about", id: "PC-3149BAAA6D32", label: "Theft · Two wheeler theft · Tambaram · week 43",
+      category: "vehicle_seen", cell: "88618c4585fffff", when: "Afternoon",
+    });
+  });
+  it("is vehicle_seen from the MO summary too, else something_else", () => {
+    expect(crimeSubject({ ...CARD, sub_type: "chain_snatching", category: "robbery", mo_summary: "rider escaped on a two-wheeler" }).category).toBe("vehicle_seen");
+    expect(crimeSubject({ ...CARD, sub_type: "car_theft" }).category).toBe("vehicle_seen");
+    expect(crimeSubject({ ...CARD, sub_type: "house_break_in", category: "burglary", mo_summary: "back door pried" }).category).toBe("something_else");
+  });
+  it("leaves out a sub-type that repeats the category, and a missing area", () => {
+    expect(crimeSubject({ ...CARD, category: "burglary", sub_type: "burglary", area: null }).label).toBe("Burglary · week 43");
+  });
+  it("passes validateTip with the about link", () => {
+    const s = crimeSubject(CARD);
+    expect(validateTip({ category: s.category, text: "I saw the bike later", cell: s.cell, followUp: false, code: null, passphrase: null, appeal: null, about: s.id })).toBeNull();
+    expect(validateTip({ category: s.category, text: "I saw the bike later", cell: null, followUp: false, code: null, passphrase: null, appeal: null, about: "CHN-TM-2026-001123" })).toMatch(/Unknown crime/);
   });
 });
 
@@ -80,6 +108,11 @@ describe("tipFields", () => {
   it("sends no appeal after the About line is removed", () => {
     const keys = tipFields({ ...base, appeal: null }).map(([k]) => k);
     expect(keys).not.toContain("appeal");
+  });
+  it("sends a crime-card link as `about`, and nothing once unlinked", () => {
+    expect(Object.fromEntries(tipFields({ ...base, appeal: null, about: "PC-3149BAAA6D32" }))).toMatchObject({ about: "PC-3149BAAA6D32" });
+    expect(tipFields({ ...base, appeal: null, about: "PC-3149BAAA6D32" }).map(([k]) => k)).not.toContain("appeal");
+    expect(tipFields({ ...base, appeal: null, about: null }).map(([k]) => k)).not.toContain("about");
   });
   it("adds the follow-up fields only with a tip code", () => {
     expect(tipFields({ ...base, cell: null }).map(([k]) => k)).toEqual(["pow", "category", "text", "appeal"]);

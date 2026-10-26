@@ -17,14 +17,16 @@ type Item = { name: string; kind: "image" | "audio"; blob: Blob; preview: string
 
 /**
  * Anonymous tip in 3 steps (spec G1 /tip/new; exhibit "Anonymous tip").
- * A `subject` (WS4-12, from ?appeal=) prefills category, area and time band; all stay editable, and
- * removing the "About" line also stops the tip being linked to the appeal.
+ * A `subject` (WS4-12, from ?appeal= or ?about=) prefills category, area and time band; all stay editable,
+ * and removing the "About" line also stops the tip being linked to the appeal or crime card.
  */
 export function TipForm({ subject, defaultCategory }: { subject: TipSubject | null; defaultCategory?: TipCategory }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [linked, setLinked] = useState<TipSubject | null>(subject);
-  const appeal = linked?.id ?? null;
+  const appeal = linked?.kind === "appeal" ? linked.id : null;
+  const about = linked?.kind === "about" ? linked.id : null;
+  const [staleLink, setStaleLink] = useState(false);
   const [category, setCategory] = useState<TipCategory | "">(defaultCategory ?? subject?.category ?? "");
   const [text, setText] = useState("");
   const [when, setWhen] = useState<TipWhen>(subject?.when ?? "");
@@ -73,12 +75,12 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
     setItems((s) => s.concat(next));
   }
 
-  const check1 = () => validateTip({ category, text: fullText, cell, followUp: false, code: null, passphrase: null, appeal });
+  const check1 = () => validateTip({ category, text: fullText, cell, followUp: false, code: null, passphrase: null, appeal, about });
 
   async function send() {
     setError(null);
     if (mode === "code" && pass !== pass2) return setError("The two passphrases do not match.");
-    const input = { category, text: fullText, cell, followUp: mode === "code", code: mode === "code" ? code : null, passphrase: mode === "code" ? pass : null, appeal };
+    const input = { category, text: fullText, cell, followUp: mode === "code", code: mode === "code" ? code : null, passphrase: mode === "code" ? pass : null, appeal, about };
     const problem = validateTip(input);
     if (problem) return setError(problem);
 
@@ -95,7 +97,15 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
     try {
       const r = await fetch("/api/public/tip", { method: "POST", body: fd, credentials: "omit", referrerPolicy: "no-referrer" });
       const j = await r.json();
-      if (!j.ok) { setBusy(null); return setError(j.error ?? "Could not send the tip."); }
+      if (!j.ok) {
+        setBusy(null);
+        // The crime left the public map between page load and send (aged out of 90 days, or hidden).
+        if (about && /unknown crime/i.test(j.error ?? "")) {
+          setStaleLink(true);
+          return setError("This crime is no longer on the public map. You can send the tip without the link.");
+        }
+        return setError(j.error ?? "Could not send the tip.");
+      }
       try { sessionStorage.setItem("nexus-tip-sent", JSON.stringify({ code: mode === "code" ? code : null, week: j.received_week })); } catch { /* private mode */ }
       router.replace("/tip/sent");
     } catch {
@@ -117,7 +127,7 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
       {linked && (
         <p className="text-sm">
           About: <strong>{linked.label}</strong>
-          <button type="button" className="ml-2 text-muted underline" aria-label="Remove the link to this appeal"
+          <button type="button" className="ml-2 text-muted underline" aria-label={linked.kind === "appeal" ? "Remove the link to this appeal" : "Remove the link to this crime"}
             onClick={() => setLinked(null)}>✕ remove</button>
         </p>
       )}
@@ -229,6 +239,10 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
           <div className="flex gap-2">
             <button type="button" className="rounded-md px-3 py-2 text-sm text-muted" onClick={() => setStep(2)}>Back</button>
             <button type="button" disabled={!!busy} className="rounded-md bg-signal px-4 py-2 font-medium text-white disabled:opacity-60" onClick={() => void send()}>Send tip</button>
+            {staleLink && linked && (
+              <button type="button" className="rounded-md border border-line px-3 py-2 text-sm"
+                onClick={() => { setLinked(null); setStaleLink(false); setError(null); }}>Remove the link</button>
+            )}
           </div>
         </section>
       )}

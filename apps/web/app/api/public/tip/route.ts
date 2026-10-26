@@ -41,9 +41,11 @@ export async function POST(req: Request) {
     code: str("code"),
     passphrase: str("passphrase"),
     appeal: str("appeal"),
+    about: str("about"),
   };
   const problem = validateTip(input);
   if (problem) return reply({ ok: false, error: problem }, 400);
+  if (input.appeal && input.about) return reply({ ok: false, error: "A tip can be about one appeal or one crime, not both." }, 400);
 
   const files = form.getAll("files").filter((f): f is File => typeof f !== "string");
   const blurred = form.getAll("blurred").map(String);
@@ -72,9 +74,11 @@ export async function POST(req: Request) {
     p_appeal: input.appeal, p_category: input.category, p_text: input.text, p_cell: input.cell,
     p_follow_up: input.followUp, p_code: input.followUp ? input.code : null, p_passphrase: input.followUp ? input.passphrase : null,
     p_media: media, p_tz: CITY.timezone,
+    // Crime-card link (0007_11). Sent only when present; submit_tip re-checks that the crime is public.
+    ...(input.about ? { p_about: input.about } : {}),
   });
   if (error) {
-    const known = /already used|too many tips|invalid|must be|unknown appeal|at most/i.test(error.message);
+    const known = /already used|too many tips|invalid|must be|unknown appeal|unknown crime|at most/i.test(error.message);
     return reply({ ok: false, error: known ? error.message : "Could not send the tip. Please try again." }, known ? 400 : 502);
   }
   return reply({ ok: true, tip_id: (data as { tip_id: string }).tip_id, received_week: (data as { received_week: string }).received_week });
