@@ -53,6 +53,8 @@ class NamedQuery:
     # Fail fast: one attempt with this timeout (seconds), no retries, and a short circuit breaker. For
     # queries that are optional and can hang, e.g. q_news, where Zetaris calls back into this API.
     timeout_s: float | None = None
+    # Values for optional parameters; the caller's params override them.
+    defaults: dict[str, Any] | None = None
 
 
 # After a fail-fast query times out, skip it for this long (per client; a client lives for one run).
@@ -196,6 +198,7 @@ class ZetarisClient:
         q = self.registry.get(name)
         if q is None:
             raise UnknownQuery(f"'{name}' is not a registered named query")
+        params = {**(q.defaults or {}), **params}
         query_id = str(uuid.uuid4())
         started = time.perf_counter()
         source = "zetaris"
