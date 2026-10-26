@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T23:57:31+05:30",
+  "updated": "2026-10-27T00:07:23+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -185,8 +185,8 @@
           "id": "WS1-19",
           "phase": "P2",
           "title": "Self-contained live data: one command generates the 14k dataset and loads it into the judge's own Zetaris (no Supabase)",
-          "status": "in_progress",
-          "note": "nexus-1 · #264, #280 merged (setup_live, full parity); fixtures PR + clean-machine run pending"
+          "status": "done",
+          "note": "nexus-1 · #264, #280, #293, #325; clean-machine run green (fresh clone 79478cf → nexus_fs2, ~10 min, hero + 106 candidates via Zetaris)"
         },
         {
           "id": "WS1-20",
@@ -252,8 +252,8 @@
           "id": "WS2-05",
           "phase": "P0",
           "title": "Verify Nightshift model ids and pin the three Nemotron lanes",
-          "status": "blocked",
-          "note": "Lightning/Ultra/Embed pinned + verified. Super VL gate enabled (engine-kv), text OK, but Nightshift refuses every image request (no_vision_model) - reported to Meterless",
+          "status": "in_progress",
+          "note": "Lightning/Ultra verified; Super VL now served via a Nightshift cloud lane (OpenRouter), direct test OK 27 Oct; in-product vision call pending nexus-3 FIR re-run",
           "owner": "nexus-chief"
         },
         {
