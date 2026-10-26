@@ -32,6 +32,12 @@ python zetaris/register.py --file 00_sources.sql --only 6     # run one statemen
 - `q_case` takes 7–10 s cold. Still to check: whether `WHERE crime_id = …` is pushed down to Postgres.
 
 ## Object store (CSV / Parquet sources): limitation
+
+> **`s3csv` and `s3pq` are NOT S3.** They are Lightning databases over Zetaris's **internal file store**
+> (`file:/home/zetaris/customer-data/shared/nexus/`, D-022a). The names are kept from the spec so code and
+> views don't change if the bucket path returns. `zetaris/stage_files.py` copies the generated files into
+> that volume with `docker cp` (no container restart), and `01_files.sql` registers them: 12 tables, live
+> 2026-10-26, counts in the PR.
 Supabase Storage's S3-compatible endpoint works with standard S3 clients. The bucket is `nexus-chennai-data`, private, and boto3 SigV4 in `ap-southeast-1` lists it. But Zetaris's S3A client fails with `com.amazonaws.SdkClientException: Unable to execute HTTP request: Received fatal alert: handshake_failure` (hadoop-aws 3.3.5, aws-java-sdk 1.12.797). The container's OS TLS is fine, so the cause is the S3A JSSE channel. It most likely strips the GCM cipher suites the Cloudflare edge requires.
 
 The team chose not to change the running container mid-build (D-022a). File sources therefore use Zetaris's internal file store, still registered as file sources, and the bucket stays a backup copy.
