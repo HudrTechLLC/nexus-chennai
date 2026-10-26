@@ -36,6 +36,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [validation](validation/README.md): gate reports
 - [WS3-06 / WS3-10 gate](validation/WS3-06-WS3-10-2026-10-26.md): case file, search and FIR capture vs CAP-01…10 and SRCH-01…07, with live evidence and open gaps
 - [WS5-08 checklist](validation/WS5-08-checklist.md): Tuesday fresh-clone validation (L3), every Disqualification Checklist item with its command and PASS rule
+- [PLANTED_SKEPTIC_PREREG](eval/PLANTED_SKEPTIC_PREREG.md): planted false-link test for the Skeptic, pre-registered before any model call (paired: 10 twins + 20 single-fact near-misses; primary = near-miss dropped while its twin is approved)
 - [WS5-08 results](validation/WS5-08-2026-10-27.md): the checklist run; part 1 pre-run (secrets incl. full history, hygiene, README, licences, vendored engines), part 2 on Tuesday
 
 ## Hackathon

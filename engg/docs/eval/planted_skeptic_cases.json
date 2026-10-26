@@ -1,0 +1,537 @@
+{
+ "version": 2,
+ "population": "data/sample/_truth/pairs.csv label=series; protected and judge crimes excluded; stored features required (no extraction)",
+ "excluded": [
+  "CHN-AD-2026-001182",
+  "CHN-AD-2026-001231",
+  "CHN-AM-2025-000865",
+  "CHN-AS-2025-000080",
+  "CHN-CM-2025-000450",
+  "CHN-GU-2025-000945",
+  "CHN-GU-2025-001149",
+  "CHN-KA-2025-000077",
+  "CHN-KU-2025-000078",
+  "CHN-KU-2025-000082",
+  "CHN-MG-2025-000077",
+  "CHN-MG-2025-000079",
+  "CHN-NA-2025-000990",
+  "CHN-PO-2025-000068",
+  "CHN-ST-2025-001108",
+  "CHN-TI-2026-001134",
+  "CHN-TI-2026-001148",
+  "CHN-TU-2025-000437",
+  "CHN-VI-2025-000079",
+  "CHN-VL-2026-000877"
+ ],
+ "plant_kinds": [
+  "vehicle_colour",
+  "vehicle_make",
+  "offender_count",
+  "offender_age",
+  "helmet",
+  "simultaneous"
+ ],
+ "plants_per_base": 2,
+ "cases": [
+  {
+   "case_id": "PS-01",
+   "a": "CHN-AD-2026-001071",
+   "b": "CHN-AD-2026-001078",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7628,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-01a",
+     "plant": {
+      "kind": "vehicle_colour",
+      "crime_id": "CHN-AD-2026-001078",
+      "old": "red",
+      "new": "blue",
+      "detail": "B's vehicle is blue, A's is red"
+     },
+     "planted_score": 0.7618,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-01b",
+     "plant": {
+      "kind": "vehicle_make",
+      "crime_id": "CHN-AD-2026-001078",
+      "old": "Bajaj Pulsar 150",
+      "new": "Hero Splendor Plus",
+      "detail": "B's vehicle is a Hero Splendor Plus, A's a Bajaj Pulsar 150"
+     },
+     "planted_score": 0.7628,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "a": "CHN-AD-2026-001071",
+   "b": "CHN-TI-2026-001056",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7556,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-02a",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-TI-2026-001056",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6854,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-02b",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-TI-2026-001056",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.714,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "a": "CHN-AD-2026-001071",
+   "b": "CHN-TI-2026-001087",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7221,
+   "twin_band": "medium",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-03a",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "black with red stripe",
+      "new": "plain yellow",
+      "detail": "B's rider wore plain yellow, A's black with red stripe"
+     },
+     "planted_score": 0.6345,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-03b",
+     "plant": {
+      "kind": "vehicle_colour",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "red",
+      "new": "blue",
+      "detail": "B's vehicle is blue, A's is red"
+     },
+     "planted_score": 0.7212,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "a": "CHN-AD-2026-001071",
+   "b": "CHN-VL-2026-001113",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7121,
+   "twin_band": "medium",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-04a",
+     "plant": {
+      "kind": "vehicle_make",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": "Bajaj Pulsar 150",
+      "new": "Hero Splendor Plus",
+      "detail": "B's vehicle is a Hero Splendor Plus, A's a Bajaj Pulsar 150"
+     },
+     "planted_score": 0.7121,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-04b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6418,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "a": "CHN-AD-2026-001078",
+   "b": "CHN-TI-2026-001056",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.8018,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-05a",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-TI-2026-001056",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.7601,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-05b",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-TI-2026-001056",
+      "old": "black with red stripe",
+      "new": "plain yellow",
+      "detail": "B's rider wore plain yellow, A's black with red stripe"
+     },
+     "planted_score": 0.7131,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "a": "CHN-AD-2026-001078",
+   "b": "CHN-TI-2026-001087",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.8624,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-06a",
+     "plant": {
+      "kind": "vehicle_colour",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "red",
+      "new": "blue",
+      "detail": "B's vehicle is blue, A's is red"
+     },
+     "planted_score": 0.8614,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-06b",
+     "plant": {
+      "kind": "vehicle_make",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "Bajaj Pulsar 150",
+      "new": "Hero Splendor Plus",
+      "detail": "B's vehicle is a Hero Splendor Plus, A's a Bajaj Pulsar 150"
+     },
+     "planted_score": 0.8552,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "a": "CHN-AD-2026-001078",
+   "b": "CHN-VL-2026-001113",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7586,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-07a",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6883,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-07b",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.7169,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "a": "CHN-TI-2026-001056",
+   "b": "CHN-TI-2026-001087",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7804,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-08a",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "black with red stripe",
+      "new": "plain yellow",
+      "detail": "B's rider wore plain yellow, A's black with red stripe"
+     },
+     "planted_score": 0.6905,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-08b",
+     "plant": {
+      "kind": "vehicle_colour",
+      "crime_id": "CHN-TI-2026-001087",
+      "old": "red",
+      "new": "blue",
+      "detail": "B's vehicle is blue, A's is red"
+     },
+     "planted_score": 0.7793,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-09",
+   "a": "CHN-TI-2026-001056",
+   "b": "CHN-VL-2026-001113",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7587,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-09a",
+     "plant": {
+      "kind": "vehicle_make",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": "Bajaj Pulsar 150",
+      "new": "Hero Splendor Plus",
+      "detail": "B's vehicle is a Hero Splendor Plus, A's a Bajaj Pulsar 150"
+     },
+     "planted_score": 0.7587,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-09b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6882,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-10",
+   "a": "CHN-TI-2026-001087",
+   "b": "CHN-VL-2026-001113",
+   "group": "SER-RED-PULSAR",
+   "twin_score": 0.7805,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-10a",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.7389,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-10b",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-VL-2026-001113",
+      "old": "black with red stripe",
+      "new": "plain yellow",
+      "detail": "B's rider wore plain yellow, A's black with red stripe"
+     },
+     "planted_score": 0.7092,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  }
+ ],
+ "skipped": [
+  {
+   "a": "CHN-CH-2025-000823",
+   "b": "CHN-CH-2025-000832",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-CH-2025-000823",
+   "b": "CHN-KI-2025-000789",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-CH-2025-000823",
+   "b": "CHN-NU-2025-000748",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-CH-2025-000832",
+   "b": "CHN-KI-2025-000789",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-CH-2025-000832",
+   "b": "CHN-NU-2025-000748",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-IC-2025-001225",
+   "b": "CHN-MA-2025-001323",
+   "group": "SER-G06",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-IC-2025-001225",
+   "b": "CHN-RO-2025-001142",
+   "group": "SER-G06",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-KI-2025-000789",
+   "b": "CHN-NU-2025-000748",
+   "group": "SER-G19",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-MA-2025-001323",
+   "b": "CHN-RO-2025-001142",
+   "group": "SER-G06",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-MM-2025-001211",
+   "b": "CHN-MM-2025-001313",
+   "group": "SER-G02",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-MM-2025-001211",
+   "b": "CHN-PO-2025-001230",
+   "group": "SER-G02",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-MM-2025-001313",
+   "b": "CHN-PO-2025-001230",
+   "group": "SER-G02",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-SN-2025-000954",
+   "b": "CHN-TM-2025-000881",
+   "group": "SER-G01",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-SN-2025-000954",
+   "b": "CHN-TM-2025-000979",
+   "group": "SER-G01",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-SN-2025-000954",
+   "b": "CHN-TM-2025-001050",
+   "group": "SER-G01",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-TM-2025-000881",
+   "b": "CHN-TM-2025-000979",
+   "group": "SER-G01",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-TM-2025-000881",
+   "b": "CHN-TM-2025-001050",
+   "group": "SER-G01",
+   "why": "no stored features"
+  },
+  {
+   "a": "CHN-TM-2025-000979",
+   "b": "CHN-TM-2025-001050",
+   "group": "SER-G01",
+   "why": "no stored features"
+  }
+ ]
+}
