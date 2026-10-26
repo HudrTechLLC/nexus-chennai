@@ -136,7 +136,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 11 · Results
 
 - **On slide:** precision and recall on the planted truth (60 cases), from `output_examples/eval_report.json`: **Nexus 0.59 / 0.86 (F1 0.70) vs rules-only 0.09 / 0.30 (F1 0.13)**. HIGH alerts 10 of 10 correct; MEDIUM 56%, which is why an analyst decides every alert. No model calls in the eval. Footnote: 13 of 60 cases had model features.
-- **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.787**, coverage 0.72, with five factors (MO 0.885, vehicle 0.84 on a partial plate, suspect 1, target 1, space–time 0.328).
+- **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.789**, pending until it is decided on camera (nexus-3 DB read after the rp7 re-run, 26 Oct 22:56). For the factor bars, use a screenshot of the alert page itself; the earlier factor numbers (vehicle 0.84 etc.) predate the re-run.
 - **Judge-path result (confirmed @ `de8e666`; label it "fresh clone, sample mode"):** from a fresh clone with no credentials, the hero case gets **3 cross-station links, 2 of them high** (Adyar ↔ Thiruvanmiyur 0.819, Adyar ↔ Velachery 0.789), and a 3-station series. Use this line even if the eval table doesn't land.
 - **Also:** `/run` takes about 7–12 s per example on replay (sample mode); the live recordings took 4–17 min each, because the reasoning lane is Nemotron Ultra 550B; tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
 - **Visual:** the eval page or a clean table. No chart without real numbers.
