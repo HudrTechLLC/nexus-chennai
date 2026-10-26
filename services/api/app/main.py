@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import json
 import re
-
+import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any, Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from .adapters.nightshift import NightshiftClient, NightshiftError
 from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient, ZetarisError
-from .config import REPO_ROOT, get_settings, load_city
+from .config import REPO_ROOT, Settings, get_settings, load_city
 from .feeds import router as feeds_router
 from .agents import AgentError, Briefer, Sanitiser, SeriesAnalyst
 from .agents.base import crime_from_row, features_from_row
@@ -50,39 +53,74 @@ class RunRequest(BaseModel):
     options: RunOptions = Field(default_factory=RunOptions)
 
 
-@app.get("/health")
-def health() -> dict[str, Any]:
-    """Liveness plus which adapters are live, in sample mode or down."""
-    s = get_settings()
-    city = load_city(s.city)
-    status: dict[str, Any] = {"status": "ok", "city": city.get("name"), "sample_mode": s.sample_mode, "adapters": {}}
+HEALTH_PROBE_SECONDS = 1.5  # per adapter: one attempt with this timeout, no retries
+HEALTH_BUDGET_SECONDS = 2.0  # the whole endpoint; a probe still running then is reported down
+_health_pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix="health")
 
+
+def _err(exc: BaseException) -> str:
+    return f"{type(exc).__name__}: {str(exc)[:160]}"
+
+
+def _probe_zetaris(s: Settings) -> dict[str, Any]:
+    if s.sample_mode and not s.zetaris_api_key:  # the adapter goes straight to the DuckDB twins (no Zetaris call)
+        return {"state": "sample", "reason": "sample mode without Zetaris credentials"}
     z = ZetarisClient(s)
     try:
         r = z.named("q_ping", agent="health")
-        status["adapters"]["zetaris"] = "sample" if r.source == "sample" else "live"
-    except ZetarisError as exc:
-        status["adapters"]["zetaris"] = f"down: {exc}"
+        return {"state": "sample" if r.source == "sample" else "live", "ms": r.ms}
     finally:
         z.close()
 
+
+def _probe_nightshift(s: Settings) -> dict[str, Any]:
     n = NightshiftClient(s)
-    try:
-        models = n.list_models()
-        status["adapters"]["nightshift"] = {"state": "live", "models_available": len(models), "lanes": s.lanes}
-    except Exception as exc:  # health must never raise
-        status["adapters"]["nightshift"] = {"state": "sample" if s.sample_mode else f"down: {exc}", "lanes": s.lanes}
+    try:  # GET /v1/models only: never a model call from /health
+        return {"state": "live", "models_available": len(n.list_models()), "lanes": s.lanes}
     finally:
         n.close()
 
+
+def _probe_supabase(s: Settings) -> dict[str, Any]:
     sb = SupabaseClient(s)
     try:
-        status["adapters"]["supabase"] = "live" if sb.health() else "not configured or down"
-    except Exception as exc:
-        status["adapters"]["supabase"] = f"down: {exc}"
+        if not sb.configured:  # sample runs keep results in memory
+            return {"state": "sample" if s.sample_mode else "down", "error": "NotConfigured"}
+        sb._client.timeout = httpx.Timeout(HEALTH_PROBE_SECONDS)
+        return {"state": "live"} if sb.health() else {"state": "down", "error": "HealthCheckFailed"}
     finally:
         sb.close()
-    return status
+
+
+@app.get("/health")
+def health() -> dict[str, Any]:
+    """Liveness plus each connector's state (live / sample / down + error class), within ~2 s.
+
+    Probes run concurrently with a 1.5 s timeout each and no retries; anything slower is reported down,
+    so judges and the CI docker job never wait on an unreachable service.
+    """
+    s = get_settings()
+    fast = s.model_copy(update={"zetaris_timeout_seconds": HEALTH_PROBE_SECONDS,
+                                "nightshift_timeout_seconds": HEALTH_PROBE_SECONDS})
+    probes = {"zetaris": _probe_zetaris, "nightshift": _probe_nightshift, "supabase": _probe_supabase}
+    futures = {name: _health_pool.submit(fn, fast) for name, fn in probes.items()}
+    deadline = time.monotonic() + HEALTH_BUDGET_SECONDS
+    adapters: dict[str, Any] = {}
+    for name, fut in futures.items():
+        try:
+            adapters[name] = fut.result(timeout=max(0.0, deadline - time.monotonic()))
+        except FutureTimeout:
+            fut.cancel()
+            adapters[name] = {"state": "down", "error": f"TimeoutError: no answer in {HEALTH_PROBE_SECONDS:g}s"}
+        except Exception as exc:  # health must never raise
+            adapters[name] = {"state": "down", "error": _err(exc)}
+    ns = adapters["nightshift"]
+    if ns["state"] == "down":
+        ns["lanes"] = s.lanes
+        if s.sample_mode:  # sample mode replays recorded model outputs; Nightshift is optional
+            ns["state"] = "sample"
+    city = load_city(s.city)
+    return {"status": "ok", "city": city.get("name"), "sample_mode": s.sample_mode, "adapters": adapters}
 
 
 @app.post("/run")
