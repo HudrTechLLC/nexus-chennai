@@ -45,6 +45,12 @@ function pointOf(p: LinkPoint | undefined, byId: Map<string, MapCrime>, id: stri
 }
 
 /** focusCell / focusCrime come from /console/map?cell= / ?crime= (WS3-24), already validated by the page. */
+/** The hull's northernmost point at the hull centre's longitude, so a label can sit just above the series. */
+function topOf(hull: LonLat[], centre: LonLat): LonLat {
+  if (!hull.length) return centre;
+  return [centre[0], Math.max(...hull.map((p) => p[1]))];
+}
+
 export default function PulseMap({ stationId, role, focusCell = null, focusCrime = null }: {
   stationId: string | null; role: Role; focusCell?: string | null; focusCrime?: string | null;
 }) {
@@ -362,7 +368,12 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
     }),
     toggles.hulls && new PolygonLayer<(typeof series)[number]>({
       id: "hull-glow", data: series.filter((s) => s.hull.length), getPolygon: (s) => s.hull, filled: true, stroked: true,
-      getFillColor: [255, 214, 120, constellation ? 18 : 28], getLineColor: [255, 214, 120, 120], lineWidthMinPixels: 1.5,
+      getFillColor: [255, 214, 120, constellation ? 18 : 40], getLineColor: [255, 214, 120, 230], lineWidthMinPixels: 2.5,
+    }),
+    // Each series member gets a gold ring, so the series reads at a glance among the city's other crimes.
+    toggles.hulls && !constellation && new ScatterplotLayer<{ p: LonLat }>({
+      id: "series-members", data: series.flatMap((s) => s.pts), getPosition: (x) => x.p, getRadius: 8, radiusUnits: "pixels",
+      filled: false, stroked: true, getLineColor: [255, 214, 120, 255], lineWidthUnits: "pixels", getLineWidth: 2,
     }),
     constellation && new PathLayer<(typeof series)[number]>({
       id: "constellation-lines", data: series, getPath: (s) => s.pts.map((x) => x.p), getColor: [255, 236, 190, 200],
@@ -371,11 +382,6 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
     constellation && new ScatterplotLayer<{ p: LonLat }>({
       id: "constellation-stars", data: series.flatMap((s) => s.pts), getPosition: (x) => x.p, getRadius: 4, radiusUnits: "pixels",
       getFillColor: [255, 245, 220, 255],
-    }),
-    (toggles.hulls || constellation) && new TextLayer<(typeof series)[number]>({
-      id: "series-labels", data: series.filter((s) => s.centre), getPosition: (s) => s.centre!, getText: (s) => s.label.toUpperCase(),
-      getSize: 11, getColor: theme === "dark" ? [255, 236, 190, 230] : [90, 70, 20, 230], fontFamily: "ui-sans-serif, system-ui",
-      characterSet: "auto", fontSettings: { sdf: true }, outlineWidth: 2, outlineColor: theme === "dark" ? [0, 0, 0, 200] : [255, 255, 255, 220],
     }),
     toggles.arcs && toggles.rejected && new PathLayer<(typeof arcs)[number]>({
       id: "arcs-rejected", data: arcs.filter((a) => a.status === "rejected"), getPath: (a: { path: LonLat[] }) => a.path, getColor: [150, 150, 150, 160],
@@ -428,6 +434,13 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
     toggles.glyphs && new TextLayer<MapCrime>({
       id: "glyphs", data: visible, getPosition: (c) => c.pos, getText: (c) => CAT_GLYPH[c.cat], getSize: 10,
       getColor: [255, 255, 255, 230], characterSet: Object.values(CAT_GLYPH),
+    }),
+    (toggles.hulls || constellation) && new TextLayer<(typeof series)[number]>({
+      // Drawn last so no crime dot covers it. Sits just above the hull (not across its dots), sentence case, bold, with a heavy outline so it reads over points.
+      id: "series-labels", data: series.filter((s) => s.centre), getPosition: (s) => topOf(s.hull, s.centre!), getText: (s) => s.label,
+      getSize: 14, fontWeight: 700, getColor: theme === "dark" ? [255, 236, 190, 255] : [90, 70, 20, 255], fontFamily: "ui-sans-serif, system-ui",
+      getTextAnchor: "middle", getAlignmentBaseline: "bottom", getPixelOffset: [0, -10],
+      characterSet: "auto", fontSettings: { sdf: true, buffer: 6 }, outlineWidth: 5, outlineColor: theme === "dark" ? [8, 12, 18, 235] : [255, 255, 255, 240],
     }),
   ].filter(Boolean) as Layer[];
 

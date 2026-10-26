@@ -4,7 +4,7 @@
  * rationale, friendly model names and the honest vision-lane note.
  */
 import { describe, expect, it } from "vitest";
-import { alertSteps, failureOutcome, friendlyModel, pairKey, stepsSummary, visionLane, type AlertStep } from "../alertTrace";
+import { alertSteps, failureOutcome, sharedTags, friendlyModel, pairKey, stepsSummary, visionLane, type AlertStep } from "../alertTrace";
 import type { TraceRow } from "../trace";
 
 const A = "CHN-AD-2026-001182", V = "CHN-VL-2026-000877", T = "CHN-TI-2026-001134";
@@ -168,5 +168,13 @@ describe("failureOutcome", () => {
     expect(failureOutcome(run.slice(0, 2), 1)).toBe("fatal");
     expect(failureOutcome(run, 0)).toBeNull();
     expect(failureOutcome(run, 3)).toBeNull();
+  });
+});
+
+describe("sharedTags", () => {
+  it("keeps only tags in every card, and nothing when one card has no tags", () => {
+    expect(Array.from(sharedTags([["on_motorcycle", "woman", "push_and_fall", "gold_chain"], ["on_motorcycle", "woman", "push", "gold_chain"]])))
+      .toEqual(["on_motorcycle", "woman", "gold_chain"]);
+    expect(sharedTags([["a"], []]).size).toBe(0);
   });
 });

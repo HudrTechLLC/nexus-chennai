@@ -19,6 +19,8 @@ import { AlertHowMade } from "@/components/console/alerts/AlertHowMade";
 import { alertSteps } from "@/lib/alertTrace";
 import { allows } from "@/lib/roles";
 import type { TraceRow } from "@/lib/trace";
+import { Id } from "@/components/ui";
+import { sharedTags } from "@/lib/alertTrace";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ function fmt(at: string | null) {
   return new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function CrimeColumn({ c, id }: { c: CrimeBrief | undefined; id: string }) {
+function CrimeColumn({ c, id, shared }: { c: CrimeBrief | undefined; id: string; shared: Set<string> }) {
   return (
     <div className="rounded-lg border border-line p-3 text-sm">
       <h3 className="font-semibold">{crimeTitle(c, id)}</h3>
@@ -40,7 +42,9 @@ function CrimeColumn({ c, id }: { c: CrimeBrief | undefined; id: string }) {
       </dl>
       {c && c.mo_tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
-          {c.mo_tags.map((t) => <span key={t} className="rounded bg-bg px-1.5 py-0.5 text-xs">{t.replaceAll("_", " ")}</span>)}
+          {c.mo_tags.map((t) => shared.has(t)
+            ? <span key={t} title="In both cases" className="rounded bg-signal-soft px-1.5 py-0.5 text-xs font-medium text-signal ring-1 ring-inset ring-[color-mix(in_srgb,var(--signal)_30%,transparent)]">{t.replaceAll("_", " ")}</span>
+            : <span key={t} className="rounded bg-bg px-1.5 py-0.5 text-xs text-muted">{t.replaceAll("_", " ")}</span>)}
         </div>
       )}
       {c && !c.full && (
@@ -65,6 +69,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
   const state = decisionState(alert);
   const rows = factorRows(alert.link_factors);
   const qids = queryIds(alert.link_factors);
+  const shared = sharedTags(alert.crimes.map((id) => crimes[id]?.mo_tags ?? []));
   const last = latestDecision(decisions);
   // Map of both scenes + vehicle trail (G2): exact points only where the officer may read the crime.
   const scenes = alert.crimes.flatMap((id) => {
@@ -141,7 +146,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
       </header>
 
       <section className="grid gap-3 md:grid-cols-2">
-        {alert.crimes.map((id) => <CrimeColumn key={id} c={crimes[id]} id={id} />)}
+        {alert.crimes.map((id) => <CrimeColumn key={id} c={crimes[id]} id={id} shared={shared} />)}
       </section>
 
       <section className="rounded-xl border border-line bg-surface p-5">
@@ -187,17 +192,17 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
                 <td className={`py-2 pr-3 ${f.struck_by_skeptic ? "text-muted line-through" : ""}`}>{f.label}</td>
                 <td className="py-2 pr-3">{f.reason}</td>
                 <td className="py-2 pr-3 font-mono text-xs">
-                  {(f.evidence ?? []).length === 0 ? "—" : f.evidence.map((e, i) => <div key={i}>{e.view} · {e.row}</div>)}
+                  {(f.evidence ?? []).length === 0 ? "—" : f.evidence.map((e, i) => <div key={i} className="whitespace-nowrap">{e.view} · <Id value={String(e.row)} max={22} tone="ink" /></div>)}
                 </td>
                 <td className="py-2 font-mono text-xs">
-                  {(f.evidence ?? []).map((e, i) => <div key={i}>{e.query ?? "—"}{e.query_id ? ` · ${e.query_id}` : ""}</div>)}
+                  {(f.evidence ?? []).map((e, i) => <div key={i} className="whitespace-nowrap">{e.query ?? "—"}{e.query_id ? <> · <Id value={e.query_id} tone="evidence" /></> : ""}</div>)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         </div>
-        <p className="mt-2 font-mono text-xs text-muted">Zetaris query ids: {qids.length ? qids.join(", ") : "none recorded"}</p>
+        <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted">Zetaris query ids: {qids.length ? qids.map((q, i) => <span key={q}><Id value={q} tone="evidence" />{i < qids.length - 1 ? "," : ""}</span>) : "none recorded"}</p>
       </section>
 
       {/* items-start: Memory applied keeps its own height beside a taller Skeptic timeline */}

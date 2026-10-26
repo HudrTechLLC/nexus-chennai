@@ -1,3 +1,5 @@
+import { Children, type ReactNode } from "react";
+import { Id } from "@/components/ui";
 import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +18,22 @@ import { TfStatusPill } from "@/components/console/taskforces/TfBits";
 import { canPropose } from "@/lib/taskforces";
 import { SeriesMapLoader } from "@/components/console/series/SeriesMapLoader";
 import type { SeriesMapPoint } from "@/components/console/series/SeriesMap";
+
+/** Bracketed record ids in the dossier text ("[CHN-AD-2026-001182]", "[ST-017554]") shown as small id chips. */
+const BRACKET_ID = /\[((?:CHN|ST|LA|SER)-[A-Z0-9-]+)\]/g;
+function withIdChips(children: ReactNode): ReactNode {
+  return Children.map(children, (ch) => {
+    if (typeof ch !== "string" || !ch.includes("[")) return ch;
+    const out: ReactNode[] = []; let last = 0;
+    for (const m of Array.from(ch.matchAll(BRACKET_ID))) {
+      if (m.index! > last) out.push(ch.slice(last, m.index));
+      out.push(<span key={m.index} className="not-prose mx-0.5 inline-block rounded bg-bg px-1 align-baseline"><Id value={m[1]} /></span>);
+      last = m.index! + m[0].length;
+    }
+    out.push(ch.slice(last));
+    return out;
+  });
+}
 
 export const dynamic = "force-dynamic";
 
@@ -95,8 +113,12 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
                 <div><dt className="text-muted">Saving</dt><dd className="font-mono tabular-nums" title={saving?.hint ?? undefined}>{saving?.text ?? "—"}</dd></div>
                 <div><dt className="text-muted">Built</dt><dd>{fmt(dossier.generated_at) ?? "—"}</dd></div>
               </dl>
-              <div className="prose prose-sm prose-slate mt-4 max-w-none dark:prose-invert">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{dossier.text}</ReactMarkdown>
+              {/* The dossier's own markdown title repeats the card heading, so prose headings stay at section size. */}
+              <div className="prose prose-sm prose-slate mt-4 max-w-none dark:prose-invert prose-h1:mb-2 prose-h1:text-base prose-h1:font-semibold prose-h2:mt-5 prose-h2:text-base prose-h2:font-semibold prose-li:my-1">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                  li: ({ children }) => <li>{withIdChips(children)}</li>,
+                  p: ({ children }) => <p>{withIdChips(children)}</p>,
+                }}>{dossier.text}</ReactMarkdown>
               </div>
               {cites && (cites.crimes.length > 0 || cites.other.length > 0) && (
                 <div className="mt-4 border-t border-line pt-3 text-xs">
