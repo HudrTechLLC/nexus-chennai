@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections.abc import Mapping, Sequence, Set
 from typing import Any
@@ -73,30 +74,123 @@ def is_test_fir(narrative: Any) -> bool:
     return isinstance(narrative, str) and bool(TEST_FIR.match(narrative))
 
 
-def find_test_firs(deps: AgentDeps, crime_ids: Sequence[str]) -> dict[str, str]:
-    """{crime_id: reason} for the D-033 test FIRs among `crime_ids`, read through Zetaris (q_cases, R1).
+def read_member_cases(deps: AgentDeps, crime_ids: Sequence[str]) -> dict[str, dict[str, Any]] | None:
+    """{crime_id: q_cases row} for `crime_ids`, read through Zetaris (q_cases, R1); None when the read fails.
 
-    If the read fails, nothing is excluded or removed this run (traced `test_fir_check_failed`); the next run
-    that can read the narratives applies the rule.
+    A failed read is traced `test_fir_check_failed` (degraded): nothing is excluded or removed that run, and
+    the next run that can read the cases applies D-033.
     """
     from ..adapters.zetaris_queries_n2 import cases_params
     ids = sorted({str(c) for c in crime_ids if c})
-    found: dict[str, str] = {}
+    rows_by_id: dict[str, dict[str, Any]] = {}
     if not ids:
-        return found
+        return rows_by_id
     try:
         for params in cases_params(ids):
             rows, _ = deps.query("q_cases", agent=AGENT, **params)
             for r in rows:
-                if r.get("crime_id") in ids and is_test_fir(r.get("narrative")):
-                    found[str(r["crime_id"])] = TEST_FIR_REASON
+                if r.get("crime_id") in ids:
+                    rows_by_id.setdefault(str(r["crime_id"]), r)
     except DeadlineExceeded:
         raise
     except Exception as exc:
         deps.tracer.emit(AGENT, "test_fir_check_failed", input_summary=f"{len(ids)} crimes",
                          output_summary=short(str(exc)), status="degraded")
-        return {}
-    return found
+        return None
+    return rows_by_id
+
+
+def flag_test_firs(rows: Mapping[str, Mapping[str, Any]]) -> dict[str, str]:
+    """{crime_id: reason} for the D-033 test FIRs among q_cases rows."""
+    return {cid: TEST_FIR_REASON for cid, r in rows.items() if is_test_fir(r.get("narrative"))}
+
+
+def find_test_firs(deps: AgentDeps, crime_ids: Sequence[str]) -> dict[str, str]:
+    """{crime_id: reason} for the D-033 test FIRs among `crime_ids` ({} when the cases cannot be read)."""
+    return flag_test_firs(read_member_cases(deps, crime_ids) or {})
+
+
+# ----- series names (code-generated from the members' dominant MO; no model) --------------------------------
+
+# Offender vehicle types, as the crime_vehicles table records them, to the word an analyst uses.
+VEHICLE_WORDS = {
+    "motorcycle": "two-wheeler", "motorbike": "two-wheeler", "bike": "two-wheeler", "scooter": "two-wheeler",
+    "moped": "two-wheeler", "two_wheeler": "two-wheeler", "autorickshaw": "auto-rickshaw",
+    "auto_rickshaw": "auto-rickshaw", "auto": "auto-rickshaw", "car": "car", "cab": "cab", "taxi": "cab",
+}
+
+
+def _majority(values: Sequence[Any], n: int) -> Any:
+    """The value more than half of the n members share (ties impossible), or None."""
+    counts: dict[Any, int] = {}
+    for v in values:
+        if v:
+            counts[v] = counts.get(v, 0) + 1
+    best = sorted(counts.items(), key=lambda kv: (-kv[1], str(kv[0])))
+    return best[0][0] if best and best[0][1] * 2 > n else None
+
+
+def _plural(label: str) -> str:
+    words = label.replace("_", " ").replace("-", " ").split()
+    if not words:
+        return ""
+    last = words[-1]
+    if last.endswith("y") and last[-2:-1] not in ("a", "e", "i", "o", "u"):
+        last = last[:-1] + "ies"
+    elif last.endswith(("s", "sh", "ch", "x")):
+        last += "es"
+    else:
+        last += "s"
+    return " ".join(words[:-1] + [last])
+
+
+def _json(v: Any) -> Any:
+    if isinstance(v, str):
+        try:
+            return json.loads(v)
+        except ValueError:
+            return None
+    return v
+
+
+def _offender_vehicle(row: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    """(vehicle word, colour) of the crime's first offender vehicle, or (None, None)."""
+    for v in _json(row.get("vehicles")) or []:
+        if isinstance(v, Mapping) and v.get("role") in (None, "", "used_by_offender"):
+            kind = str(v.get("type") or v.get("vehicle_type") or "").strip().lower()
+            word = VEHICLE_WORDS.get(kind) or (kind.replace("_", " ") or None)
+            colour = str(v.get("colour") or "").strip().lower() or None
+            return word, colour
+    return None, None
+
+
+def describe_series(rows: Sequence[Mapping[str, Any]]) -> str | None:
+    """A name from the members' dominant MO, e.g. "Red two-wheeler chain snatchings · 3 stations".
+
+    Deterministic and code-only. Each part appears only when more than half the members share it: the crime
+    (sub-type, else category), the offender vehicle and its colour, else the approach. None when the members
+    share no crime type (the caller keeps the plain "N linked cases" name).
+    """
+    n = len(rows)
+    if not n:
+        return None
+    crime = _majority([r.get("sub_type") for r in rows], n) or _majority([r.get("category") for r in rows], n)
+    if not crime:
+        return None
+    vehicles = [_offender_vehicle(r) for r in rows]
+    vehicle = _majority([w for w, _ in vehicles], n)
+    colour = _majority([c for w, c in vehicles if w == vehicle], n) if vehicle else None
+    words = [w for w in (colour, vehicle, _plural(str(crime))) if w]
+    if not vehicle:
+        mos = [((_json(r.get("features")) or {}).get("mo") or {}) for r in rows]
+        approach = _majority([m.get("approach") if isinstance(m, Mapping) else None for m in mos], n)
+        if approach and approach not in ("unknown", "none"):
+            words.append(f"({str(approach).replace('_', ' ')})")
+    stations = len({r.get("station_id") for r in rows if r.get("station_id")})
+    name = " ".join(words)
+    name = name[:1].upper() + name[1:]
+    # No case count: the console adds the member count next to the name (apps/web lib/overview seriesCount).
+    return name + (f" · {stations} station{'s' if stations != 1 else ''}" if stations else "")
 
 
 def detect_series(alerts: Sequence[Mapping[str, Any]], excluded: Set[str] = frozenset()) -> list[dict[str, Any]]:
