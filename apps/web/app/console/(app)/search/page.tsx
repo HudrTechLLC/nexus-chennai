@@ -188,13 +188,20 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
             </Group>
           )}
 
-          {p.kind === "text" && (
+          {p.kind === "phone" && (
+            <p className="text-xs text-muted">
+              Phone fragment {p.value}: matched in case narratives, statements and screened tips, with or without spaces or dashes.
+              Numbers stay masked when a case is shown.
+            </p>
+          )}
+
+          {(p.kind === "text" || p.kind === "phone") && (
             <>
-              <Group title="Persons" count={res.persons.length}>
+              {p.kind === "text" && <Group title="Persons" count={res.persons.length}>
                 <ul className="space-y-1">
                   {res.persons.map((x) => <li key={x.person_id}><span className="font-mono text-xs">{x.person_id}</span> · {x.name ?? "unnamed"}{x.aliases.length ? ` · aka ${x.aliases.join(", ")}` : ""}</li>)}
                 </ul>
-              </Group>
+              </Group>}
               <Group title="Tips" count={res.tips.length}>
                 <ul className="space-y-3">
                   {res.tips.map((t) => (

@@ -2,7 +2,7 @@
  * Unit tests for console search parsing (lib/search.ts).
  */
 import { describe, expect, it } from "vitest";
-import { aliasVariants, classifyQuery, evidenceFilter, hasCriteria, parseSearch, personFilter, searchWords } from "../search";
+import { aliasVariants, classifyQuery, evidenceFilter, hasCriteria, parseSearch, personFilter, phoneDigits, phoneRegex, searchWords } from "../search";
 
 describe("classifyQuery", () => {
   it("recognises case ids", () => {
@@ -84,5 +84,28 @@ describe("evidence search (SRCH-01)", () => {
   });
   it("drops characters that could change the filter", () => {
     expect(evidenceFilter(["a,b)", "x"])).toBe("camera_id.ilike.%ab%");
+  });
+});
+
+describe("phone fragment search (SRCH-05)", () => {
+  it("reads 5 to 12 digits, with spaces, dashes or +91, as a phone fragment", () => {
+    expect(classifyQuery("98400 12345")).toEqual({ kind: "phone", value: "9840012345" });
+    expect(classifyQuery("+91 98400-12345")).toEqual({ kind: "phone", value: "9840012345" });
+    expect(classifyQuery("40012")).toEqual({ kind: "phone", value: "40012" });
+  });
+  it("leaves FIR numbers, 4-digit plate fragments and words alone", () => {
+    expect(classifyQuery("1182/2026").kind).toBe("fir");
+    expect(classifyQuery("4471").kind).toBe("plate");
+    expect(classifyQuery("877").kind).toBe("text");
+    expect(phoneDigits("98400 abc")).toBeNull();
+    expect(phoneDigits("1234567890123")).toBeNull();
+  });
+  it("matches the digits with or without a space or dash between them", () => {
+    const re = new RegExp(phoneRegex("4001"));
+    expect(phoneRegex("4001")).toBe("4[ -]?0[ -]?0[ -]?1");
+    expect(re.test("call 98400 12345")).toBe(true);
+    expect(re.test("call 9840012345")).toBe(true);
+    expect(re.test("call 98-400-1-2345")).toBe(true); // one separator between digits is fine
+    expect(re.test("ward 40 and 01")).toBe(false); // other text between digits is not
   });
 });
