@@ -170,7 +170,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8000/run -ContentType "appl
 
 `POST /run` takes `{"run_id"?, "input": {"kind": "case" | "batch" | "tip" | "search", ...}, "options": {...}}` and returns `run_id`, `status`, `output` (`alerts`, `series`, `hotspots`, `summary`), `agents`, `engines`, `trace_id`, `log_file` and `execution_time_seconds`. Bad input returns a 422; it never returns a made-up answer.
 
-Other routes: `POST /api/cases/{id}/process`, `POST /api/batch/link`, `POST /api/cases/{id}/public-draft`, `POST /api/series/{id}/dossier`, `POST /api/briefing`, `GET /api/traces/{run_id}`. The worker (`python -m app.worker`, or `docker compose --profile worker up`) handles analyst decisions, new tips and new cases.
+Other routes: `POST /api/cases/{id}/process`, `POST /api/batch/link`, `POST /api/cases/{id}/public-draft`, `POST /api/series/{id}/dossier`, `POST /api/briefing`, `GET /api/traces/{run_id}`. The worker (`python -m app.worker`, or `docker compose --profile worker up`) handles analyst decisions, new tips and new cases. Ask Nexus questions (`/console/ask`) are answered by a second process beside it, `python -m app.ask_worker` (same environment; see [ASK_NEXUS](engg/docs/ASK_NEXUS.md)). Without it, questions stay queued.
 
 ## Sample mode vs live
 
