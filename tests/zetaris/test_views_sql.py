@@ -10,7 +10,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _select_columns(sql: str) -> list[str]:
-    body = re.search(r"SELECT(.*?)\bFROM\b", sql, re.S).group(1)
+    """Columns of the view's first branch: the SELECT that starts with crime_id (after any CTEs).
+    The other branches must match it positionally; DuckDB's DESCRIBE in test_sample_bundle and the live
+    count check in 10_views.sql catch a width mismatch."""
+    body = re.search(r"SELECT\s+(crime_id,.*?)\bFROM\b", sql, re.S).group(1)
     return [re.split(r"\s+AS\s+", c.strip(), flags=re.I)[-1].strip() for c in body.split(",")]
 
 

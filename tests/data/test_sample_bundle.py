@@ -136,3 +136,19 @@ def test_every_judge_series_station_has_a_place_alias():
     judge = [s for s in series if set(s["crime_ids"]) & set(JUDGE_IDS)]
     missing = {st for s in judge for st in s["stations"]} - aliases
     assert not missing, missing
+
+
+def test_v_crime_unified_includes_legacy_like_live(client):
+    """Same union as zetaris/10_views.sql: CCTNS + archive in full, ids unique, 20 planted unmapped sections."""
+    rows = dict((r[0], r[1:]) for r in client._duck.execute(
+        "SELECT source, count(*), count(DISTINCT crime_id), count(station_id), count(category), count(occurred_from), "
+        "count(sections_raw) FROM v_crime_unified GROUP BY source").fetchall())
+    assert rows["s3csv.cctns"] == (3000, 3000, 3000, 3000, 3000, 20)
+    assert rows["s3pq.archive"] == (2500, 2500, 2500, 2500, 2500, 0)
+    total, distinct = client._duck.execute("SELECT count(*), count(DISTINCT crime_id) FROM v_crime_unified").fetchone()
+    assert total == distinct
+    raw = {r[0] for r in client._duck.execute(
+        "SELECT source_row_id FROM v_crime_unified WHERE sections_raw IS NOT NULL").fetchall()}
+    truth = {d["row_id"] for d in json.loads((SAMPLE / "_truth" / "dq.json").read_text(encoding="utf-8"))
+             if d["rule"] == "dq_unmapped_sections"}
+    assert not truth or raw == truth

@@ -11,7 +11,9 @@ query (`adapters/zetaris.py`). Every row carries `synthetic: true`.
 | `anpr/reads.parquet` | ANPR reads near bundle scenes, every read of a planted plate, and 3,000 background reads | nexus-1 |
 | `calls/calls.parquet` | 112 calls near bundle scenes, plus 2,000 background calls | nexus-1 |
 | `_truth/` | series, decoys, duplicates, dq, pairs, tips: restricted to this subset | nexus-1 |
-| `views.sql` | `v_crime_unified` (same columns as `zetaris/10_views.sql`) | nexus-1 |
+| `legacy/` | the legacy CCTNS CSVs and archive parquet, whole, for `v_crime_unified`'s union | nexus-1 |
+| `sb/section_map.parquet` | IPC/BNS map, for `sections_raw` | nexus-1 |
+| `views.sql` | `v_crime_unified`: Supabase + legacy, same union and columns as `zetaris/10_views.sql` | nexus-1 |
 | `model_fixtures/` | recorded **live** Nightshift calls | nexus-3 |
 | `crime_features.jsonl`, `news/`, `social/` | other lanes' fixtures | their lanes |
 

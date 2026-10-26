@@ -97,16 +97,13 @@ _PARAM = re.compile(r":([a-z_][a-z0-9_]*)")
 
 def load_sample_views(con: duckdb.DuckDBPyConnection, sample_dir) -> None:
     """Create the bundle's views (data/sample/views.sql, e.g. v_crime_unified) on a sample connection.
-    Missing file = no views (an older bundle); statements run in order, one per `;`."""
+    Missing file = no views (an older bundle). The file runs as one script (DuckDB executes every
+    statement), so a ';' inside a string literal is safe."""
     from pathlib import Path
 
     path = Path(sample_dir) / "views.sql"
-    if not path.is_file():
-        return
-    body = "\n".join(ln for ln in path.read_text(encoding="utf-8").splitlines() if not ln.lstrip().startswith("--"))
-    for stmt in body.split(";"):
-        if stmt.strip():
-            con.execute(stmt)
+    if path.is_file():
+        con.execute(path.read_text(encoding="utf-8"))
 
 
 class ZetarisTransient(ZetarisError):
