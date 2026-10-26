@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T14:33:29+05:30",
+  "updated": "2026-10-26T15:00:22+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -114,8 +114,10 @@
           "id": "WS1-11",
           "phase": "P1",
           "title": "Sample bundle for SAMPLE_MODE (600 crimes, 3 series, 40 tips)",
-          "status": "in_progress",
-          "owner": "nexus-1"
+          "status": "done",
+          "owner": "nexus-1",
+          "note": "v1: 759 crimes, 172 features, 40 tips, views.sql; model fixtures + news slice to follow",
+          "ref": "#111"
         },
         {
           "id": "WS1-12",
@@ -130,8 +132,9 @@
           "id": "WS1-13",
           "phase": "P2",
           "title": "Semantic views: v_crime_unified, v_vehicle_trail, v_offender_return, v_tip_corroboration",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "v_crime_unified live (slice 1, Supabase); legacy CSV union later"
         },
         {
           "id": "WS1-14",
@@ -395,18 +398,18 @@
           "id": "WS3-04",
           "phase": "P5",
           "title": "Link-alert inbox incl. Rejected tab",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-4",
-          "note": "Built + merged; live check pending seed data",
+          "note": "Live-verified with LA-2026-C802D4F2E02B (both roles)",
           "ref": "#18"
         },
         {
           "id": "WS3-05",
           "phase": "P5",
           "title": "Alert detail: factors, evidence, Zetaris query ids, approve/reject",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-4",
-          "note": "Built + merged; live check pending seed data",
+          "note": "Live-verified: factors, evidence with Zetaris query ids, Skeptic, memory",
           "ref": "#18"
         },
         {
@@ -438,10 +441,10 @@
           "id": "WS3-09",
           "phase": "P7",
           "title": "Pulse Map (lean): hex layer, crime-type filter, time scrubber",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-4",
-          "note": "Slices A+B live; slice C data now seeded",
-          "ref": "#33"
+          "note": "All layers live on seeded data; map load 3.1 MB -> 168 KB",
+          "ref": "#33, #86, #98, #105"
         },
         {
           "id": "WS3-10",
@@ -531,7 +534,8 @@
           "title": "Tip triage in console (quarantined tips visible)",
           "status": "done",
           "owner": "nexus-4",
-          "ref": "#55"
+          "ref": "#55",
+          "note": "Live-verified with 40 tips"
         }
       ]
     },
