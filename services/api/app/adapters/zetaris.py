@@ -39,6 +39,10 @@ class UnknownQuery(ZetarisError):
     pass
 
 
+class ZetarisTimeout(ZetarisError):
+    """The query timed out, or was skipped because it timed out earlier in this run (fail-fast breaker)."""
+
+
 @dataclass(frozen=True)
 class NamedQuery:
     """A governed query. `lightning` runs on Zetaris; `sample` runs on DuckDB over data/sample."""
@@ -213,37 +217,45 @@ class ZetarisClient:
             load_sample_views(self._duck, self.settings.sample_dir)
         return [list(r) for r in self._duck.execute(sql).fetchall()]
 
-    def named(self, name: str, *, agent: str, limit: int = 1000, **params: Any) -> QueryResult:
-        """Run one registered query. Agents call this, never raw SQL."""
+    def named(self, name: str, *, agent: str, limit: int = 1000, timeout_s: float | None = None,
+              **params: Any) -> QueryResult:
+        """Run one registered query. Agents call this, never raw SQL.
+
+        `timeout_s` makes this call fail fast (one attempt, then the breaker) with at most that timeout, even for
+        a query not declared fail-fast; the shorter of it and the query's own `timeout_s` applies."""
         q = self.registry.get(name)
         if q is None:
             raise UnknownQuery(f"'{name}' is not a registered named query")
         params = {**(q.defaults or {}), **params}
+        caps = [t for t in (q.timeout_s, timeout_s) if t is not None]
+        fast = min(caps) if caps else None
         query_id = str(uuid.uuid4())
         started = time.perf_counter()
         source = "zetaris"
-        if q.timeout_s is not None and self._tripped.get(name, 0.0) > time.monotonic():
+        if fast is not None and self._tripped.get(name, 0.0) > time.monotonic():
             msg = f"'{name}' skipped: it timed out within the last {int(BREAKER_SECONDS)} s"
             self._trace(agent, name, query_id, None, 0, "error", msg)
-            raise ZetarisError(msg)
+            raise ZetarisTimeout(msg)
         try:
             if self.settings.sample_mode and not self.settings.zetaris_api_key:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
             sql = render(localise(q.lightning, self.settings.zetaris_data), params)
-            if q.timeout_s is not None:
-                rows = self._post(sql, query_id, limit, q.timeout_s)
+            if fast is not None:
+                rows = self._post(sql, query_id, limit, fast)
             else:
                 rows, used = self._run_rest(sql, query_id, limit)
                 if used != query_id:  # a retry answered: cite its id, keep the retry count
                     self._retries[used] = self._retries.pop(query_id, 0)
                     query_id = used
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
-            if q.timeout_s is not None and isinstance(exc, httpx.TimeoutException):
+            if fast is not None and isinstance(exc, httpx.TimeoutException):
                 self._tripped[name] = time.monotonic() + BREAKER_SECONDS
             # Fall back only when Zetaris is unreachable or failing (transport / 5xx).
             # A 4xx (bad SQL, bad key) is a real error and must surface.
             if not (self.settings.sample_mode and _is_retryable(exc)):
                 self._trace(agent, name, query_id, None, 0, "error", str(exc))
+                if isinstance(exc, httpx.TimeoutException):
+                    raise ZetarisTimeout(f"timed out: {exc}") from exc
                 raise ZetarisError(str(exc)) from exc
             source = "sample"
             rows = self._run_sample(render(q.sample, params))[:limit]
