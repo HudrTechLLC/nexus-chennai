@@ -63,7 +63,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
   const scenes = alert.crimes.flatMap((id) => {
     const c = crimes[id];
     const ll = c ? memberLonLat(c) : null;
-    return c && ll ? [{ id, p: ll.p, exact: ll.exact, at: c.full ? c.occurred_from : null, week: c.week, label: crimeTitle(c, id) } as Scene & { label: string }] : [];
+    return c && ll ? [{ id, p: ll.p, exact: ll.exact, at: c.full ? c.occurred_from : null, week: c.week, cell: c.cell ?? null, label: crimeTitle(c, id) } as Scene & { label: string }] : [];
   });
   const gap = scenes.length === 2 ? sceneGap(scenes[0], scenes[1]) : null;
   const { data: nearReads } = await sb.from("map_anpr_reads").select("plate_text").in("crime_id", alert.crimes).limit(50);
