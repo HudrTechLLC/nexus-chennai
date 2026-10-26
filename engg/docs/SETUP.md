@@ -16,8 +16,8 @@ Related: [ARCHITECTURE](ARCHITECTURE.md) · [PROGRESS](PROGRESS.md) · [00-INDEX
 | 3 | Vercel (team HUDR, project `nexus-chennai`, root `apps/web`, region `bom1`) | ✅ linked; production public, previews behind Vercel login | Vercel env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public values only) |
 | 4 | Supabase `nexus-qa` (`ukrujnsjucwvytnokbtw`, Singapore `ap-southeast-1`) | ✅ migration 0001 applied; RLS verified; smoke PASS | app `.env`: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (local only, never Vercel) |
 | 5 | Zetaris local platform (`C:\Apps\zetaris-platform`, UI http://localhost:3000, REST :8888) | ✅ running; live `SELECT 1` PASS; org ID `1` | app `.env`: `ZETARIS_REST_URL`, `ZETARIS_ORG_ID=1`, `ZETARIS_API_KEY_FILE=~/.secrets/nexus-zetaris.key` |
-| 6 | Meterless Nightshift | ⏳ download blocked | app `.env`: `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` |
-| 7 | NVIDIA build.nvidia.com | ⏳ | Nightshift Providers tab only |
+| 6 | Meterless Nightshift 1.2.7 | ✅ running; NVIDIA connected; lanes per D-017 | app `.env`: `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` |
+| 7 | NVIDIA build.nvidia.com | ✅ key in Nightshift Providers only | Nightshift Providers tab only |
 | 8 | AWS S3 `nexus-chennai-data` | ⏳ | generator `.env`: `AWS_*`; read-only keys in the Zetaris source definition |
 | 9 | ElevenLabs | ⏳ | build-time `.env`: `ELEVENLABS_API_KEY` |
 | 10 | YouTube (unlisted) + Drive | ⏳ | README + form |
