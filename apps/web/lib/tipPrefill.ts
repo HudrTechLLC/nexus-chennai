@@ -1,4 +1,5 @@
 import type { TipCategory } from "@/lib/tip";
+import { isTipCell } from "@/lib/tipArea";
 
 /**
  * /tip/new prefill (WS4-12). Pure functions only, so the server page and the tests share them.
@@ -42,7 +43,6 @@ export type CrimeCardFields = {
 // Field mapping
 // =====================
 
-const CELL = /^88[0-9a-f]{13}$/;
 const VEHICLE = /two[- ]?wheeler|motor ?(cycle|bike)|scooter|auto[- ]?rickshaw|\b(cab|car|bike|vehicle)s?\b/i;
 
 /** vehicle_seen when the public text says a vehicle was involved; otherwise something_else (chief, WS4-12). */
@@ -57,9 +57,9 @@ export function prefillWhen(band: string | null | undefined): TipWhen {
   return TIP_WHEN.find((w) => w && w.toLowerCase() === b) ?? "";
 }
 
-/** Only an H3 resolution-8 cell the form will accept; otherwise no area (the user can pick one). */
+/** Only a cell the form will accept (H3 r8-r10); otherwise no area (the user can pick one). */
 export function prefillCell(cell: string | null | undefined): string | null {
-  return cell && CELL.test(cell) ? cell : null;
+  return isTipCell(cell) ? cell : null;
 }
 
 const VEHICLE_SUB_TYPES = new Set(["two_wheeler_theft", "car_theft"]);
