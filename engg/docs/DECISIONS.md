@@ -327,6 +327,7 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Evidence keeps the original bytes:** no re-encoding and no EXIF stripping.
   - A server-side sha256 is taken over the original.
   - Each upload adds a custody entry `{at, by, action:"uploaded", sha256}`.
+  - **Limit (until 0007_06 lands):** the sha256 and custody are computed by the upload route. The database does not re-verify them, and a police role that may write the case can still insert an `evidence_media` row directly through the API with values of its own. `case_diary.author` is likewise set by the client. Fix in progress: a `record_evidence` RPC that ties each row to the caller's own uploaded object, plus a server-set diary author.
   - `captured_at` is read from EXIF.
   - Files are capped at 4 MB, the Vercel body limit.
   - This supersedes the chief's earlier "strip EXIF" instruction, which applies only to **public tips and appeal images**. Re-encoding would break integrity and the chain of custody.
