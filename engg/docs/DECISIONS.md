@@ -109,7 +109,7 @@ The deadline is 27 Oct 23:45 UTC, and the spec says to submit ≥ 6 h early. The
    - Portal: appeals list, fuzzed map, tip form, tip status.
 3. **Cut first if late:** number of data sources (keep at least 4 storage types), P9 FIR form, constellation mode, voice tips.
 
-## D-010 · IP addresses in Vercel logs (to resolve)
+## D-010 · IP addresses in Vercel logs (resolved 2026-10-26: accepted and disclosed)
 WS4 requires "No IP / user agent in logs for `/api/public/*`". Vercel's platform request logs record client IPs, and the app cannot turn that off. Mitigations:
 
 - The app never logs or stores IP or user agent.
@@ -118,6 +118,8 @@ WS4 requires "No IP / user agent in logs for `/api/public/*`". Vercel's platform
 - The limitation is disclosed in the README and in [SPEC Part J](SPEC.md#security).
 
 If the gate needs a strict pass, the local Docker portal (no platform logs) is what the gate is run against.
+
+**Resolution (chief, 2026-10-26):** PUB-05 is met at the application level. The tip route stores no IP, user agent or cookie, and the rate limiter keys only an in-memory salted hash (verified in nexus-6's spec sweep). Vercel's platform logs are outside the app's control; they are disclosed in README Limitations, and log drains stay off. A production deployment would sit behind an operator-controlled proxy that drops client IPs before the platform.
 
 ## D-011 · Zetaris REST format
 Read from `scripts/zetaris_sql.py` in `github.com/zetaris/getting-started`, commit `6a2fbaa47c32c9ac33f6584c64b43b146c621bed`:
@@ -355,3 +357,14 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Decision (Ravee):** leave scoring as is. Corroborating roundups stay **off**, so news is shown as context and never moves a score. The rule stays on branch `feat/corroboration-positive-only` (flag `NEXUS_CORROB_POSITIVE_ONLY`, default off) for after the hackathon, along with two untested alternatives (count only when ≥ 2 items agree; raise the per-item scale).
 - **Known live limit:** with the full live crime set, 5 sample articles match more than one same-category crime; fixed by the post-freeze full generator.
 - **Related:** D-017 · [LANES](LANES.md)
+
+## D-034 · Model timeout is 180 s, not the spec's 90 s (chief, 2026-10-26)
+- **Spec NFR-06** says model 90 s. `config.py` uses **180 s**, from the Meterless runtime contract.
+- **Why:** the reasoning lane (Nemotron Ultra) plans in ~28 s, but critique and dossier calls with larger budgets (#196, #234) can run past 90 s on a laptop-hosted Nightshift that serialises calls. A 90 s cut would turn slow-but-correct calls into degraded steps.
+- **Unchanged:** Zetaris 60 s, agent round cap 3, retries with a fresh query id (#225), and every timeout traced. Measured run times are cited in submission/EVIDENCE (single FIR ≈ 2–2.5 min end to end).
+
+## D-035 · Public CCTV tips accept stills, not video (chief, 2026-10-26)
+- **Spec PUB-03** allows CCTV uploads from the public. The portal accepts **stills only** and says so plainly on `/cctv`.
+- **Why:** video needs transcoding, frame sampling and a vision lane. Nightshift 1.2.7 refuses every image request (`no_vision_model`, WS2-05), so video would add risk with no analysis behind it. Stills are stored, screened and shown to analysts.
+- **Later:** video with server-side frame extraction once a vision lane routes.
+
