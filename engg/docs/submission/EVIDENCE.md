@@ -58,7 +58,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Receipt id: a `meterless-receipt*` header if present, else a `receipt*` field, else the response `id` | `adapters/nightshift.py::_receipt_id` | ✅ (say exactly this) |
 | JSONL trace per run at `logs/trace-<run_id>.jsonl`, also on stdout; copied to Supabase `trace_events` for the console | `app/tracing.py`; D-025; `tests/graph/test_trace_store.py` | ✅ |
 | Worker: `alert_decisions` → H-MEM; new tips → Tip Guard; un-featured crimes → graph | `app/worker.py`; `tests/graph/test_worker_store.py` | ✅ |
-| Eval vs rules-only baseline (WS2-14): agents P 0.5915 / R 0.8571 / F1 0.70 (148 alerts; HIGH 9/9 correct, MEDIUM 0.5639); baseline P 0.0866 / R 0.2959 / F1 0.1339 (341 alerts); 60 truth cases, 98 true pairs; 13 of 60 cases with model features; empty H-MEM, no model calls | `output_examples/eval_report.json` on main @ `ea75fff` (#258, nexus-2); **reproduced by nexus-7 from a fresh clone @ `ea75fff`: same agent and baseline figures, 119 s**, with `cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample/_truth --mo-cosine all` | ✅ |
+| Eval vs rules-only baseline (WS2-14): agents P 0.5915 / R 0.8571 / F1 0.70 (148 alerts; HIGH 10/10 correct, MEDIUM 0.5606 = 74 of 132 scored pairs; 6 alerts are flagged duplicates); baseline P 0.0866 / R 0.2959 / F1 0.1339 (341 alerts); 60 truth cases, 98 true pairs; 13 of 60 cases with model features; empty H-MEM, no model calls | `output_examples/eval_report.json` on main @ `b5c5374` (#275, re-run after the sample-mode date fix #270; nexus-2); **reproduced by nexus-7 from fresh clones @ `ea75fff` (119 s) and @ `b5c5374` (292 s), same figures as the committed report each time**, with `cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample/_truth --mo-cosine all` | ✅ |
 | Eval page `/console/system/eval` (admin) + P/R card on the System tab (LNK-10, #244) | `apps/web/app/console/(app)/system/eval/page.tsx`, `EvalSummary.tsx`; it renders the committed `output_examples/eval_report.json` (#258), and Vercel built #258 (nexus-6) ; **verified live 26 Oct by nexus-4** as demo admin (read-only pre-check): HTTP 200, 0 console errors; agents 59.2% / 85.7%, F1 70.0%, TP 84 / FP 58 / FN 14 vs baseline 8.7% / 29.6% (F1 13.4%); the provenance block and System-tab card render; no horizontal scroll at 375 px | ✅ verified live. The Tuesday morning dry run repeats it |
 
 ## Zetaris
@@ -121,7 +121,7 @@ Licences: `[PENDING: chief]` — read each package's licence from its metadata b
 - "Nemotron 3 Super 120B" as the reasoning model (SPEC L4, L5, M2, P7; `metadata.json` `nvidia[2]`). Main runs **Ultra 550B** (D-017). `metadata.json` is WS5-05, the chief's file.
 - "Super VL reads the CCTV still" (SPEC M2). Images are refused (D-021).
 - "12 named queries", "25 sources, 4+ storage types", "S3 CSV / S3 Parquet". See the Zetaris rows above.
-- ~~"Nexus beats a rules-only baseline"~~: now on main (WS2-14, P 0.59 vs 0.09, R 0.86 vs 0.30). Say it with the numbers and the 9/9 HIGH, 56% MEDIUM split, never as an unqualified accuracy claim.
+- ~~"Nexus beats a rules-only baseline"~~: now on main (WS2-14, P 0.59 vs 0.09, R 0.86 vs 0.30). Say it with the numbers and the 10/10 HIGH, 56% MEDIUM split, never as an unqualified accuracy claim.
 - `metadata.json` lists engines `["world_model", "hmem"]`; all four pass on main.
 
 ## Tracker drift seen while verifying (for the chief)
