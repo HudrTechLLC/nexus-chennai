@@ -39,4 +39,29 @@ Q_HEX_COUNTS = NamedQuery(
     columns=_HEX_COLUMNS,
 )
 
-N2_QUERIES: dict[str, NamedQuery] = {q.name: q for q in (Q_HEX_COUNTS,)}
+# Data-quality flags (WS1-14) for a list of crimes. `ids` is a comma-joined string of crime ids
+# (render() binds scalars only). Zetaris reads the nexus.dq_flags view from zetaris/20_dq.sql;
+# the DuckDB twin applies the same rule text (adapters/dq_rules.py) inline.
+def _dq_query() -> NamedQuery:
+    from ..config import get_settings, load_city
+    from . import dq_rules
+
+    bounds = dq_rules.city_bounds(load_city(get_settings().city))
+    return NamedQuery(
+        name="q_dq_flags",
+        lightning=(
+            "SELECT crime_id, rule, other_id, detail FROM nexus.dq_flags "
+            "WHERE array_contains(split(:ids, ','), crime_id)"
+        ),
+        sample=(
+            f"SELECT crime_id, rule, other_id, detail FROM ({dq_rules.flags_sql(dq_rules.DUCK, bounds)}) f "
+            "WHERE list_contains(string_split(:ids, ','), crime_id)"
+        ),
+        description="Data-quality flags (duplicate FIR, bad geo, time inconsistent, unmapped section) for crimes",
+        columns=dq_rules.COLUMNS,
+    )
+
+
+Q_DQ_FLAGS = _dq_query()
+
+N2_QUERIES: dict[str, NamedQuery] = {q.name: q for q in (Q_HEX_COUNTS, Q_DQ_FLAGS)}
