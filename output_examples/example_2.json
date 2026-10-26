@@ -1,0 +1,746 @@
+{
+  "run_id": "demo-002",
+  "status": "success",
+  "output": {
+    "alerts": [
+      {
+        "alert_id": "LA-2026-0F92ACDAA53B",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-KU-2025-000082"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6"
+        ],
+        "score": 0.9628,
+        "band": "medium",
+        "coverage": 0.42,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000082",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              }
+            ],
+            "reason": "Both crimes occurred 0.2 km apart on 2nd Cross Street and 8th Street in Kumaran Nagar, just 72 minutes apart (02:48 vs 04:00 on 2025-01-19).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000082",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              }
+            ],
+            "reason": "Each report describes exactly two offenders aged 30-40 with medium build.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000082",
+                "query": "q_case",
+                "query_id": "ec6e63d5-531a-4ab2-9042-49a7c071dfbc"
+              }
+            ],
+            "reason": "A cutter was used as the weapon in both house breaks.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "corroboration",
+            "weight": 0.07,
+            "value": 0.7769,
+            "evidence": [
+              {
+                "view": "v_tip_corroboration",
+                "row": "TIP-JEXKA4JE",
+                "query": "q_tip_corroboration",
+                "query_id": "e7f693f3-cdea-4a18-aa4a-b1b41170d405"
+              },
+              {
+                "view": "v_calls_near_crime",
+                "row": "C112-2025-01-19-52543",
+                "query": "q_calls_near",
+                "query_id": "495c56e0-638c-4029-8193-b5d9ad3fb7be"
+              },
+              {
+                "view": "v_calls_near_crime",
+                "row": "C112-2025-01-19-95267",
+                "query": "q_calls_near",
+                "query_id": "495c56e0-638c-4029-8193-b5d9ad3fb7be"
+              }
+            ],
+            "reason": "Tip TIP-JEXKA4JE and two emergency calls (C112-2025-01-19-52543, C112-2025-01-19-95267) were logged near the time and location of the crimes.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 1,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shows identical suspect descriptions, weapon use, and extremely close spatiotemporal proximity within the same neighborhood, with independent corroboration, indicating a high likelihood the same offenders committed both house breaks in quick succession.",
+        "recommended_action": "Investigate as a linked series; coordinate patrol and CCTV review in Kumaran Nagar for the night of 19 Jan 2025 focusing on two medium-build males aged 30-40 carrying cutters, and follow up on tip TIP-JEXKA4JE and the two emergency calls for witness leads.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-6E109F541ADE",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-MG-2025-000079"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-MGRNAGAR-R10"
+        ],
+        "score": 0.9056,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.7797,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes 1.3 km apart (2nd Cross Street, Kumaran Nagar vs 3rd Avenue, MGR Nagar) on same night 2025-01-19 within 59 minutes (02:48 vs 03:47).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "Identical suspect descriptions and weapon use with very close spatiotemporal proximity on the same night across neighboring areas suggest the same offenders committed both house breaks in quick succession.",
+        "recommended_action": "Treat as a linked series; coordinate investigation between PS-KUMARANNAGAR-R6 and PS-MGRNAGAR-R10, review CCTV along routes between Kumaran Nagar and MGR Nagar for the night of Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-49CD45EE8900",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-MG-2025-000077"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-MGRNAGAR-R10"
+        ],
+        "score": 0.901,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.7689,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes 1.3 km apart (2nd Cross Street, Kumaran Nagar vs 9th Main Road, MGR Nagar) on same night 2025-01-19 within 50 minutes (02:48 vs 03:38).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-MG-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "Identical suspect descriptions and weapon use with very close spatiotemporal proximity on the same night across neighboring areas indicate likely same offenders targeting multiple locations.",
+        "recommended_action": "Treat as a linked series; share intelligence between PS-KUMARANNAGAR-R6 and PS-MGRNAGAR-R10, review CCTV along routes between Kumaran Nagar and MGR Nagar for the night of Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-094729EC3174",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-AS-2025-000080"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-ASHOKNAGAR-R3"
+        ],
+        "score": 0.8852,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.7322,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AS-2025-000080",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes occurred 1.5 km apart (2nd Cross Street, Kumaran Nagar vs 7th Street, Ashok Nagar) on the same night (2025-01-19) within ~67 minutes (02:48 vs 03:55), showing close spatiotemporal proximity across adjacent neighborhoods.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AS-2025-000080",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build (count: 2, age_band: 30-40, build: medium).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AS-2025-000080",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as the weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shares identical suspect descriptions and weapon use with very close spatiotemporal proximity on the same night across neighboring areas, indicating likely same offenders targeting multiple locations.",
+        "recommended_action": "Treat as a linked series; share intelligence between PS-KUMARANNAGAR-R6 and PS-ASHOKNAGAR-R3, review CCTV along routes between Kumaran Nagar and Ashok Nagar for the night of Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-549161AB4A06",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-VI-2025-000079"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-VIRUGAMBAKKAM-R5"
+        ],
+        "score": 0.789,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.5076,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VI-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes occurred 2.6 km apart (2nd Cross Street, Kumaran Nagar vs 12th Cross Street, Virugambakkam) on the same night (2025-01-19) within ~38 minutes (02:48 vs 03:26), showing moderate spatiotemporal proximity across nearby neighborhoods.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VI-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build (count: 2, age_band: 30-40, build: medium).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VI-2025-000079",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as the weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shows identical suspect descriptions and weapon use with close temporal proximity on the same night across nearby neighborhoods, suggesting the same offenders may have committed both house breaks.",
+        "recommended_action": "Treat as a potential series; coordinate investigation between PS-KUMARANNAGAR-R6 and PS-VIRUGAMBAKKAM-R5, review CCTV along routes between Kumaran Nagar and Virugambakkam for the night of Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-9A777030F6EE",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-PO-2025-000068"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-PONDYBAZAAR-R4"
+        ],
+        "score": 0.7495,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.4154,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-PO-2025-000068",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes occurred 2.3 km apart (2nd Cross Street, Kumaran Nagar vs 6th Main Road, Pondy Bazaar) with a 4-day gap (Jan 15 03:28 vs Jan 19 02:48), showing moderate spatial but lower temporal proximity.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-PO-2025-000068",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-PO-2025-000068",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as the weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shares identical suspect descriptions and weapon use across nearby locations within a 4-day window, indicating possible same offenders operating in the area.",
+        "recommended_action": "Investigate as a linked series; share intelligence between PS-KUMARANNAGAR-R6 and PS-PONDYBAZAAR-R4, review CCTV in both areas for the nights of Jan 15 and Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-916017C794CB",
+        "kind": "pair",
+        "crimes": [
+          "CHN-KU-2025-000078",
+          "CHN-KA-2025-000077"
+        ],
+        "stations": [
+          "PS-KUMARANNAGAR-R6",
+          "PS-KODAMBAKKAM-R2"
+        ],
+        "score": 0.733,
+        "band": "medium",
+        "coverage": 0.35,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.377,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KA-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Crimes occurred 3.3 km apart (2nd Cross Street, Kumaran Nagar vs 9th Main Road, Kodambakkam) with a 1-day gap (Jan 18 03:33 vs Jan 19 02:48), showing moderate spatial but lower temporal proximity.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KA-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes describe two offenders aged 30-40 with medium build.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KU-2025-000078",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-KA-2025-000077",
+                "query": "q_case",
+                "query_id": "4c92a902-ea42-4fa8-ab1d-bead9b167a44"
+              }
+            ],
+            "reason": "Both crimes used a cutter as the weapon.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shares identical suspect descriptions and weapon use across nearby locations within a 1-day window, indicating possible same offenders operating in the area.",
+        "recommended_action": "Investigate as a linked series; share intelligence between PS-KUMARANNAGAR-R6 and PS-KODAMBAKKAM-R2, review CCTV in both areas for the nights of Jan 18 and Jan 19, and circulate description of two medium-build males aged 30-40 carrying cutters.",
+        "status": "pending"
+      }
+    ],
+    "series": [
+      {
+        "series_id": "SER-1AD97E57C6",
+        "kind": "series",
+        "crime_ids": [
+          "CHN-AS-2025-000080",
+          "CHN-KA-2025-000077",
+          "CHN-KU-2025-000078",
+          "CHN-KU-2025-000082",
+          "CHN-MG-2025-000077",
+          "CHN-MG-2025-000079",
+          "CHN-PO-2025-000068",
+          "CHN-VI-2025-000079"
+        ],
+        "stations": [
+          "PS-ASHOKNAGAR-R3",
+          "PS-KODAMBAKKAM-R2",
+          "PS-KUMARANNAGAR-R6",
+          "PS-MGRNAGAR-R10",
+          "PS-PONDYBAZAAR-R4",
+          "PS-VIRUGAMBAKKAM-R5"
+        ],
+        "alert_ids": [
+          "LA-2026-094729EC3174",
+          "LA-2026-0F92ACDAA53B",
+          "LA-2026-49CD45EE8900",
+          "LA-2026-549161AB4A06",
+          "LA-2026-6E109F541ADE",
+          "LA-2026-916017C794CB",
+          "LA-2026-9A777030F6EE"
+        ],
+        "min_score": 0.733,
+        "status": "candidate",
+        "name": "Night house breaks · 6 stations"
+      }
+    ],
+    "hotspots": [],
+    "errors": [],
+    "summary": "7 new links (0 high, 7 medium; 6 cross-station); 0 with factors struck by Skeptic; 0 dropped; 1/1 cases processed"
+  },
+  "agents": [
+    {
+      "name": "Scout Intent",
+      "role": "routes events and screens tips"
+    },
+    {
+      "name": "Tip Guard",
+      "role": "keeps unsafe public input away from agents"
+    },
+    {
+      "name": "Extractor",
+      "role": "reads narratives, statements and images into MO features"
+    },
+    {
+      "name": "Planner",
+      "role": "plans Zetaris queries"
+    },
+    {
+      "name": "Linker",
+      "role": "scores pairs in code and explains them"
+    },
+    {
+      "name": "Skeptic",
+      "role": "re-queries Zetaris and challenges links"
+    },
+    {
+      "name": "Alert writer",
+      "role": "writes approved link alerts"
+    },
+    {
+      "name": "Series analyst",
+      "role": "groups linked cases into series and builds dossiers"
+    }
+  ],
+  "engines": [
+    "world_model",
+    "hmem",
+    "scout_intent",
+    "markovian"
+  ],
+  "trace_id": "trace-demo-002",
+  "log_file": "logs/trace-demo-002.jsonl",
+  "execution_time_seconds": 1045.86
+}

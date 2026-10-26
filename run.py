@@ -24,6 +24,10 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.once:
+        # UTF-8 whatever the console code page: `run.py --once x.json > out.json 2> trace.log` on Windows
+        # would otherwise write cp1252 (an en dash as byte 0x96) and the result would not parse as JSON.
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
         # Keep stdout = the JSON result only (pipe-friendly); trace lines go to stderr and logs/.
         os.environ.setdefault("NEXUS_TRACE_STREAM", "stderr")
 

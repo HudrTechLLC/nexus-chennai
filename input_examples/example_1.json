@@ -1,0 +1,9 @@
+{
+  "run_id": "demo-001",
+  "input": {
+    "kind": "case",
+    "crime_id": "CHN-AD-2026-001182",
+    "note": "Chain snatching on LB Road, Adyar: the Red Pulsar Duo hero case (synthetic)."
+  },
+  "options": {"sample_mode": true}
+}

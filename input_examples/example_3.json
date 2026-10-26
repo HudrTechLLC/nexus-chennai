@@ -1,0 +1,9 @@
+{
+  "run_id": "demo-003",
+  "input": {
+    "kind": "batch",
+    "crime_ids": ["CHN-GU-2025-000945", "CHN-GU-2025-001149", "CHN-AM-2025-000865"],
+    "note": "Night Cab: fake cab, knife, white Swift Dzire. Three night robberies across stations, linked in one batch (synthetic)."
+  },
+  "options": {"sample_mode": true}
+}

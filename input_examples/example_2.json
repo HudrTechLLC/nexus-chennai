@@ -1,0 +1,9 @@
+{
+  "run_id": "demo-002",
+  "input": {
+    "kind": "case",
+    "crime_id": "CHN-KU-2025-000078",
+    "note": "Night house break with a grille cutter in Pongal week 2025: the Grille Cutters series across 6 stations (synthetic)."
+  },
+  "options": {"sample_mode": true}
+}

@@ -1,0 +1,755 @@
+{
+ "lane": "reason",
+ "recorded_from": "nightshift",
+ "response": {
+  "id": "chatcmpl-3caefadd-a60f-4af8-9052-000d8dd5730c",
+  "object": "chat.completion",
+  "created": 1793028956,
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "The user wants me to plan evidence queries for round 2 based on the skeptic feedback. The skeptic has identified four pairs with issues - all have null MO on the second crime and generic suspect descriptions. The skeptic wants:\n1. MO details on CHN-MG-2025-000079, CHN-MG-2025-000077, CHN-AS-2025-000080, CHN-VI-2025-000079\n2. Check for additional crimes along corridors (Kumaran Nagar-MGR Nagar, Kumaran Nagar-Ashok Nagar, etc.)\n3. A wider sweep for that night (Jan 19, 2025)\n\nI need to create a JSON with steps. First step must be q_candidates. Since this is round 2 and the skeptic is asking for more specific searches, I should consider narrower searches. The skeptic mentions checking for other crimes along the corridor and a wider sweep for that night.\n\nThe instruction says: \"q_candidates is the recall step: at least days 45 and ring 6 (narrower only when the Skeptic asks)\". The skeptic is asking to \"check for additional crimes along the corridor\" and \"a wider sweep for that night\". This suggests we might need multiple q_candidates calls with different parameters.\n\nHowever, I can only use the named queries provided. I cannot directly query MO details for specific crime IDs - the queries available are q_candidates, q_vehicle_trail, q_offender_return, q_calls_near, q_tip_corroboration, q_news, q_context, q_dq_flags.\n\nq_context takes a crime_id parameter - but looking at the schema, it only takes the main crime_id (CHN-KU-2025-000078) based on the case data. But the skeptic mentions specific other crime IDs. The planner might not have access to those IDs in the case data, but the skeptic feedback mentions them.\n\nLooking at prior vetted answers, in round 1 they used q_candidates with days=45, ring=6. For round 2, the prior vetted answer shows a plan that includes q_candidates again but with narrower parameters? Actually the first prior answer is cut off. Let me look at the second prior answer - it's a skeptic evaluation, not a plan. The third prior answer is also skeptic evaluation.\n\nI need to create a fresh plan. Since the skeptic wants MO details on specific crimes and corridor checks, I should:\n1. Run q_candidates with narrower ring to focus on corridors? But the rule says at least days 45 and ring 6 unless skeptic asks. The skeptic is asking to check corridors, which might imply narrower searches.\n\nActually, re-reading: \"q_candidates is the recall step: at least days 45 and ring 6 (narrower only when the Skeptic asks)\". The skeptic feedback says \"check for additional crimes along the Kumaran Nagar\u2013Ashok Nagar corridor\" and \"check for other crimes along the corridor between Kumaran Nagar and MGR Nagar\". This is essentially asking for narrower geographic searches along specific corridors.\n\nBut q_candidates takes a ring parameter (radius in km) around the main crime. To search along a corridor, we might need multiple q_candidates with different centers? But we only have the main crime_id. The other crimes have different locations.\n\nPerhaps the best approach is to run q_candidates with the main crime but with a smaller ring (e.g., 3 km) to focus on the immediate corridor area? But the main crime is in Kumaran Nagar (ward 139). The other crimes are in MGR Nagar (1.3 km), Ashok Nagar (1.5 km), Villivakkam (2.6 km). A ring of 3 km would cover all of them. But the default ring 6 already covers them. The issue is that q_candidates returns similar crimes based on scoring, not just distance.\n\nThe skeptic wants MO details on those specific crimes. Since we can't query MO details directly, maybe we should use q_offender_return with the MO tags from the main crime to find offenders with similar MO in those wards? But we don't know the wards of the other crimes.\n\nAlternatively, we could run q_candidates with days=1 (same night) and ring=3 to focus on that specific night and immediate area. The skeptic mentions \"a wider sweep for that night\" - so maybe days=1, ring=6 or larger?\n\nLet me think about what queries to include:\n\n1. q_candidates (required first) - I'll use days=45, ring=6 as baseline, but the skeptic wants narrower corridor searches. Since the skeptic explicitly asks to \"check for additional crimes along the corridor\", I think this qualifies as \"narrower only when the Skeptic asks\". So I could run q_candidates with ring=3 to focus on the immediate corridor area.\n\n2. q_context - but this only takes the main crime_id. However, maybe I can use it to get more context on the main crime?\n\n3. q_offender_return - with MO tags from the main crime (cut_window_grille, on_foot, etc.) and ward 139 (Kumaran Nagar) to find offenders with similar MO in that area.\n\n4. q_calls_near - for the main crime to see if there were calls near the other crime locations?\n\n5. q_tip_corroboration - for the main crime?\n\n6. q_news - for the main crime?\n\n7. q_dq_flags - for the crime IDs mentioned? But we don't have those IDs in the case data.\n\nActually, looking at the queries more carefully:\n- q_candidates(crime_id, days, ring) - finds similar crimes\n- q_vehicle_trail(plate_pattern, t0, t1, cells) - vehicle tracking\n- q_offender_return(mo_tags, ward, since) - finds offenders with similar MO in a ward\n- q_calls_near(crime_id) - calls near a crime\n- q_tip_corroboration(crime_id) - tip corroboration\n- q_news(crime_id) - news about a crime\n- q_context(crime_id) - context about a crime\n- q_dq_flags(ids) - data quality flags for IDs\n\nThe skeptic wants MO details on specific crimes. We can't directly query those crimes' MO. But we could:\n- Use q_offender_return with the MO tags from the main crime to see if there are known offenders with that MO in the relevant wards\n- Use q_candidates with narrower ring to find more crimes in the corridor\n- Use q_candidates with days=1 (same night) to do a \"wider sweep for that night\"\n\nThe skeptic mentions \"check for additional crimes along the Kumaran Nagar\u2013Ashok Nagar corridor\" and \"check for other crimes along the corridor between Kumaran Nagar and MGR Nagar\". This suggests searching along those corridors. Since q_candidates searches in a radius around the main crime, a ring of 3 km would cover both MGR Nagar (1.3 km) and Ashok Nagar (1.5 km). Villivakkam is 2.6 km, so ring=3 would cover it too.\n\nBut the skeptic also says \"a wider sweep for that night\" - so maybe days=1, ring=6 or larger?\n\nI think the plan should be:\n1. q_candidates with days=45, ring=3 (narrower corridor search as skeptic asks)\n2. q_candidates with days=1, ring=6 (wider sweep for that night)\n3. q_offender_return with MO tags from main crime, ward 139, since maybe 2024-01-01 (to find offenders with similar MO in the area)\n4. q_calls_near for main crime\n5. q_tip_corroboration for main crime\n6. q_context for main crime\n7. q_dq_flags for the main crime ID? Or maybe for the other crime IDs? But we don't have them in case data.\n\nWait, the case data only has the main crime_id. The other crime IDs are mentioned in skeptic feedback but not in case data. The planner can only use the case data crime_id for queries that require crime_id. So q_calls_near, q_tip_corroboration, q_news, q_context, q_dq_flags would all use CHN-KU-2025-000078.\n\nBut the skeptic wants MO details on the other crimes. We can't get that directly. However, q_offender_return might help find if there are known offenders with that MO in those areas.\n\nLet me check the MO tags from the main crime: approach: \"cut_window_grille\", escape: \"on_foot\", offender_count: 2, place_type: [\"residential_area\"], target: \"residential_property\", target_item: \"gold_jewellery_and_cash\", time_band: \"night\", violence: \"none\"\n\nFor q_offender_return, mo_tags is an array of strings. I should include the key MO tags: [\"cut_window_grille\", \"on_foot\", \"night\", \"residential_property\", \"gold_jewellery_and_cash\"]\n\nWard: 139 (Kumaran Nagar). Since: maybe \"2024-01-01\" to look for offenders in the past year.\n\nNow, for q_candidates: the skeptic wants \"check for additional crimes along the corridor\" - this suggests a narrower ring search. And \"a wider sweep for that night\" suggests a days=1 search.\n\nI'll create two q_candidates steps: one with ring=3 (narrower corridor) and one with days=1, ring=6 (wider sweep for that night). But the rule says q_candidates must come first. I can have multiple q_candidates steps? The instruction says \"q_candidates must come first\" - singular. But I can have multiple steps, with the first being q_candidates.\n\nActually, looking at the prior vetted answers (though cut off), they might have multiple q_candidates calls. Let me think: the first step must be q_candidates. Then I can have other steps including another q_candidates? The instruction says \"at most 8 steps\". It doesn't forbid multiple q_candidates.\n\nBut the instruction also says: \"q_candidates is the recall step: at least days 45 and ring 6 (narrower only when the Skeptic asks)\". This suggests the primary recall step should be days=45, ring=6, but if skeptic asks for narrower, we can do narrower. The skeptic is asking for corridor checks, which is narrower.\n\nI think the best is:\n1. q_candidates with days=45, ring=3 (narrower corridor search as skeptic asks)\n2. q_candidates with days=1, ring=6 (wider sweep for that night)\n3. q_offender_return with MO tags, ward 139, since 2024-01-01\n4. q_calls_near for main crime\n5. q_tip_corroboration for main crime\n6. q_context for main crime\n7. q_dq_flags for main crime ID\n\nBut wait, the skeptic also mentions \"check for additional crimes along the Kumaran Nagar\u2013Ashok Nagar corridor\" and \"check for other crimes along the corridor between Kumaran Nagar and MGR Nagar\". These are two corridors. A single ring=3 around Kumaran Nagar covers both. But maybe we should also search around the other crime locations? We don't have their coordinates in the case data.\n\nAlternatively, we could use q_offender_return for other wards? But we don't know the ward numbers for MGR Nagar, Ashok Nagar, Villivakkam.\n\nGiven the constraints, I'll proceed with the plan above.\n\nLet me write the JSON.</think>{\n  \"steps\": [\n    {\n      \"name\": \"q_candidates\",\n      \"params\": {\n        \"crime_id\": \"CHN-KU-2025-000078\",\n        \"days\": 45,\n        \"ring\": 3\n      },\n      \"why\": \"Narrower corridor search (3 km) around Kumaran Nagar to find additional crimes along the Kumaran Nagar\u2013MGR Nagar and Kumaran Nagar\u2013Ashok Nagar corridors as the Skeptic requested, focusing on the immediate geographic cluster where the four paired crimes occurred.\"\n    },\n    {\n      \"name\": \"q_candidates\",\n      \"params\": {\n        \"crime_id\": \"CHN-KU-2025-000078\",\n        \"days\": 1,\n        \"ring\": 6\n      },\n      \"why\": \"Wider same-night sweep (1 day, 6 km) for 19 Jan 2025 to capture any other house breaks that night across the broader area, testing whether the three crimes (78, 77, 80) are part of a larger single-night series.\"\n    },\n    {\n      \"name\": \"q_offender_return\",\n      \"params\": {\n        \"mo_tags\": [\n          \"cut_window_grille\",\n          \"on_foot\",\n          \"night\",\n          \"residential_property\",\n          \"gold_jewellery_and_cash\"\n        ],\n        \"ward\": 139,\n        \"since\": \"2024-01-01\"\n      },\n      \"why\": \"Identify known offenders in Kumaran Nagar (ward 139) with the same MO signature (cut window grille, on-foot escape, night residential targeting gold/cash) to see if a specific crew links the null-MO crimes.\"\n    },\n    {\n      \"name\": \"q_calls_near\",\n      \"params\": {\n        \"crime_id\": \"CHN-KU-2025-000078\"\n      },\n      \"why\": \"Check for emergency or patrol calls near the main crime location that might also cover the adjacent MGR Nagar, Ashok Nagar, and Villivakkam areas, providing temporal corroboration.\"\n    },\n    {\n      \"name\": \"q_tip_corroboration\",\n      \"params\": {\n        \"crime_id\": \"CHN-KU-2025-000078\"\n      },\n      \"why\": \"Seek any tips or informant reports linked to the main crime that might mention the same suspect description (two males 30-40, cutter) or connect to the other three crime IDs.\"\n    },\n    {\n      \"name\": \"q_context\",\n      \"params\": {\n        \"crime_id\": \"CHN-KU-2025-000078\"\n      },\n      \"why\": \"Pull full contextual details (narrative, evidence, investigator notes) for the anchor crime to compare with the null-MO crimes when those records become available.\"\n    },\n    {\n      \"name\": \"q_dq_flags\",\n      \"params\": {\n        \"ids\": [\n          \"CHN-KU-2025-000078\"\n        ]\n      },\n      \"why\": \"Flag any data-quality issues on the anchor crime (missing MO fields, suspect description completeness) that could affect linkage scoring.\"\n    }\n  ]\n}"
+    },
+    "finish_reason": "stop"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 3960,
+   "completion_tokens": 3319,
+   "total_tokens": 7279
+  },
+  "meterless": {
+   "schema": "meterless.compute_receipt.v1",
+   "receipt_id": "rcpt_req_rp8es0w2",
+   "decision_id": "req_rp8es0w2",
+   "requested_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "provider_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "routed_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "winning_route": {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "label": "Nemotron 3 Ultra 550B A55B",
+    "provider": "nvidia",
+    "kind": "cloud",
+    "tier": "C"
+   },
+   "requires_review": false,
+   "phases": [
+    {
+     "phase": "final_synthesis",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "ms": 83332,
+     "tokensIn": 3960,
+     "tokensOut": 3319,
+     "outputTps": 39.82863725819613,
+     "coherence": null,
+     "tier": "C",
+     "reflex_decided_in_ms": 0.2
+    }
+   ],
+   "usage": {
+    "input_tokens": 3960,
+    "output_tokens": 3319,
+    "total_tokens": 7279,
+    "output_tps": 39.82863725819613,
+    "latency_ms": 83332
+   },
+   "cost": {
+    "actual_usd": 0,
+    "naive_usd": 0,
+    "baseline": {
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "label": "Nemotron 3 Ultra 550B A55B",
+     "source": "mode-default-frontier"
+    },
+    "verifier_usd": 0,
+    "race_overhead_usd": 0
+   },
+   "savings": {
+    "amount": 0,
+    "currency": "USD",
+    "vs": "Nemotron 3 Ultra 550B A55B",
+    "baseline_source": "mode-default-frontier"
+   },
+   "cache": {
+    "status": "miss",
+    "losers_reclaimed": 0,
+    "partials_reclaimed": 0
+   },
+   "privacy": {
+    "path": "cloud-ok",
+    "redaction": {
+     "applied": false,
+     "spans": 0
+    }
+   },
+   "from_cache": false,
+   "losers_reclaimed": 0,
+   "receipt": {
+    "app": "nexus-chennai",
+    "app_policy": {
+     "app": "nexus-chennai",
+     "cross_check": "auto",
+     "has_rule": true,
+     "lanes": null,
+     "mode_coerced": false,
+     "premium_budget": null,
+     "privacy": "cloud-ok",
+     "race_width": 6,
+     "requested_mode": "auto",
+     "routed_mode": "auto"
+    },
+    "autopilot": {
+     "ctx_dropped": [],
+     "ctx_unfilterable": false,
+     "envelope": {
+      "allocatable_mb": 0,
+      "pressure": "unknown",
+      "remaining_mb": 0,
+      "used_mb": 0
+     },
+     "needs": {
+      "coding": true,
+      "tools": false,
+      "vision": false
+     },
+     "prompt_tokens": 696,
+     "scout": {
+      "candidates": [
+       {
+        "id": "COVERAGE_ANALYZER",
+        "score": 8
+       },
+       {
+        "id": "CODE_SPLITTER",
+        "score": 8
+       },
+       {
+        "id": "TREND_ANALYZER",
+        "score": 7
+       }
+      ],
+      "category": "Mission",
+      "confident": false,
+      "mode": "COVERAGE_ANALYZER",
+      "ms": 2.43,
+      "score": 8,
+      "source": "detected",
+      "tier": "B"
+     },
+     "tier_hint": null,
+     "why": [
+      "scout read COVERAGE_ANALYZER (not confident \u2014 no tier opinion)",
+      "a coder is preferred",
+      "~696 prompt tokens \u2014 lanes whose slot cannot hold them are not asked"
+     ]
+    },
+    "bar": null,
+    "budget_degrade": null,
+    "cache": {
+     "losers_reclaimed": 0,
+     "partials_reclaimed": 0,
+     "status": "miss"
+    },
+    "consensus": {
+     "agree": 1,
+     "coherence": null,
+     "detail": "answered by a top-tier model",
+     "label": "frontier answer",
+     "level": "solo",
+     "raced": 1,
+     "tone": "blue",
+     "verified": null
+    },
+    "consensus_escalation": null,
+    "cost": {
+     "actual_usd": 0,
+     "baseline": {
+      "label": "Nemotron 3 Ultra 550B A55B",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "mode-default-frontier"
+     },
+     "naive_usd": 0,
+     "race_overhead_usd": 0,
+     "verifier_usd": 0
+    },
+    "created_at": 1793028956726,
+    "cross_check": {
+     "app": "nexus-chennai",
+     "blocking": false,
+     "checks": [
+      {
+       "message": "No destructive ops detected.",
+       "status": "passed",
+       "type": "destructive_action"
+      },
+      {
+       "message": "No PII/credential detected in response.",
+       "status": "passed",
+       "type": "pii_guard"
+      },
+      {
+       "message": "Not a tool call.",
+       "status": "skipped",
+       "type": "schema_validity"
+      }
+     ],
+     "destructive": false,
+     "raw_risk": "low",
+     "recommended_action": "allow",
+     "reflex_ms": 0.29,
+     "requires_review": false,
+     "risk_level": "low",
+     "status": "passed",
+     "verifier": "deterministic/schema+regex",
+     "verifier_error": null,
+     "verifier_model": null,
+     "verifier_ms": 0,
+     "verifier_ran": false,
+     "verifier_tokens": null,
+     "verifier_verdict": null
+    },
+    "debate": null,
+    "decision_id": "req_rp8es0w2",
+    "deliberation": null,
+    "egress": {
+     "coverage": "pattern_floor",
+     "destination": "nvidia",
+     "never_eligible": [],
+     "sent": {
+      "context_sources": [
+       "messages",
+       "hmem:3 records"
+      ],
+      "prompt_chars": 2014,
+      "redacted": []
+     },
+     "withheld": []
+    },
+    "eligible": null,
+    "error": "",
+    "fusion": null,
+    "gen_verifier": null,
+    "graded_weight": null,
+    "hmem": {
+     "ids": [
+      "mem_mvpf3h0k_y8mv",
+      "mem_mvpe0haa_2ct4",
+      "mem_mvp8yu7c_1y1x"
+     ],
+     "injected": 3,
+     "reason": "retrieved 3 memories",
+     "strategy": "comprehensive",
+     "top_score": 0.888
+    },
+    "host_pressure": {
+     "battery": null,
+     "pressure": {
+      "battery": {
+       "hard": 0.5,
+       "label": "nominal",
+       "score": 0.18,
+       "sensor": "battery%, charging",
+       "soft": 0.3
+      },
+      "cpu": {
+       "hard": 0.9,
+       "label": "nominal",
+       "score": 0.34,
+       "sensor": "30s load avg",
+       "soft": 0.7
+      },
+      "gpu": {
+       "hard": 0.92,
+       "label": "nominal",
+       "score": 0.38,
+       "sensor": "GPU + VRAM",
+       "soft": 0.75
+      },
+      "memory": {
+       "hard": 0.85,
+       "label": "warm",
+       "score": 0.51,
+       "sensor": "committed/swap",
+       "soft": 0.7
+      },
+      "network": {
+       "hard": 0.85,
+       "label": "nominal",
+       "score": 0.12,
+       "sensor": "RTT to providers",
+       "soft": 0.5
+      },
+      "quota": {
+       "hard": 0.95,
+       "label": "nominal",
+       "score": 0.28,
+       "sensor": "per-key window",
+       "soft": 0.8
+      },
+      "thermal": {
+       "hard": 0.8,
+       "label": "nominal",
+       "score": 0.22,
+       "sensor": "thermal API",
+       "soft": 0.55
+      }
+     },
+     "thermal": "nominal"
+    },
+    "job": null,
+    "mcp": null,
+    "method": null,
+    "mode": "auto",
+    "optimistic": null,
+    "phases": [
+     {
+      "coherence": null,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "ms": 83332,
+      "outputTps": 39.82863725819613,
+      "phase": "final_synthesis",
+      "reflex_decided_in_ms": 0.2,
+      "tier": "C",
+      "tokensIn": 3960,
+      "tokensOut": 3319
+     }
+    ],
+    "privacy": {
+     "path": "cloud-ok",
+     "redaction": {
+      "applied": false,
+      "spans": 0
+     }
+    },
+    "prompt_preview": "{\"case\": {\"crime_id\": \"CHN-KU-2025-000078\", \"category\": \"house_break\", \"sub_type\": \"night_house_break\", \"station_id\": \"PS-KUMARANNAGAR-R6\", \"occurred_from\": \"2025-01-19T02:48:00+05",
+    "quality_race": null,
+    "reasoning_scaffold": null,
+    "receipt_id": "rcpt_req_rp8es0w2",
+    "refine": null,
+    "request_id": "chatcmpl-3caefadd-a60f-4af8-9052-000d8dd5730c",
+    "requested_mode": "meterless/auto",
+    "routing": {
+     "confidence": null,
+     "escalated": null,
+     "escalated_on_divergence": false,
+     "hedge": null,
+     "hedges_skipped": 0,
+     "of": 1,
+     "policy": "learned-router",
+     "predicted": "nvidia/nemotron-3-ultra-550b-a55b",
+     "reason": "single-candidate",
+     "width": 1,
+     "winner": "nvidia/nemotron-3-ultra-550b-a55b"
+    },
+    "savings": {
+     "amount": 0,
+     "baseline_source": "mode-default-frontier",
+     "currency": "USD",
+     "vs": "Nemotron 3 Ultra 550B A55B"
+    },
+    "schema": "meterless.compute_receipt.v1",
+    "score": null,
+    "scorecard": null,
+    "status": "ok",
+    "summary": "ok \u00b7 Nemotron 3 Ultra 550B A55B \u00b7 miss \u00b7 $0.0000 saved",
+    "synthesis": null,
+    "test_time_compute": null,
+    "tool_degraded": null,
+    "unmet": null,
+    "usage": {
+     "input_tokens": 3960,
+     "latency_ms": 83332,
+     "output_tokens": 3319,
+     "output_tps": 39.82863725819613,
+     "total_tokens": 7279
+    },
+    "verdict": null,
+    "verification": null,
+    "winning_route": {
+     "kind": "cloud",
+     "label": "Nemotron 3 Ultra 550B A55B",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "provider": "nvidia",
+     "tier": "C"
+    }
+   },
+   "receipt_envelope": {
+    "body": {
+     "llama_cpp_ref": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+     "manifest_hash": "",
+     "receipt": {
+      "app": "nexus-chennai",
+      "app_policy": {
+       "app": "nexus-chennai",
+       "cross_check": "auto",
+       "has_rule": true,
+       "lanes": null,
+       "mode_coerced": false,
+       "premium_budget": null,
+       "privacy": "cloud-ok",
+       "race_width": 6,
+       "requested_mode": "auto",
+       "routed_mode": "auto"
+      },
+      "autopilot": {
+       "ctx_dropped": [],
+       "ctx_unfilterable": false,
+       "envelope": {
+        "allocatable_mb": 0,
+        "pressure": "unknown",
+        "remaining_mb": 0,
+        "used_mb": 0
+       },
+       "needs": {
+        "coding": true,
+        "tools": false,
+        "vision": false
+       },
+       "prompt_tokens": 696,
+       "scout": {
+        "candidates": [
+         {
+          "id": "COVERAGE_ANALYZER",
+          "score": 8
+         },
+         {
+          "id": "CODE_SPLITTER",
+          "score": 8
+         },
+         {
+          "id": "TREND_ANALYZER",
+          "score": 7
+         }
+        ],
+        "category": "Mission",
+        "confident": false,
+        "mode": "COVERAGE_ANALYZER",
+        "ms": 2.43,
+        "score": 8,
+        "source": "detected",
+        "tier": "B"
+       },
+       "tier_hint": null,
+       "why": [
+        "scout read COVERAGE_ANALYZER (not confident \u2014 no tier opinion)",
+        "a coder is preferred",
+        "~696 prompt tokens \u2014 lanes whose slot cannot hold them are not asked"
+       ]
+      },
+      "bar": null,
+      "budget_degrade": null,
+      "cache": {
+       "losers_reclaimed": 0,
+       "partials_reclaimed": 0,
+       "status": "miss"
+      },
+      "consensus": {
+       "agree": 1,
+       "coherence": null,
+       "detail": "answered by a top-tier model",
+       "label": "frontier answer",
+       "level": "solo",
+       "raced": 1,
+       "tone": "blue",
+       "verified": null
+      },
+      "consensus_escalation": null,
+      "cost": {
+       "actual_usd": 0,
+       "baseline": {
+        "label": "Nemotron 3 Ultra 550B A55B",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "source": "mode-default-frontier"
+       },
+       "naive_usd": 0,
+       "race_overhead_usd": 0,
+       "verifier_usd": 0
+      },
+      "created_at": 1793028956726,
+      "cross_check": {
+       "app": "nexus-chennai",
+       "blocking": false,
+       "checks": [
+        {
+         "message": "No destructive ops detected.",
+         "status": "passed",
+         "type": "destructive_action"
+        },
+        {
+         "message": "No PII/credential detected in response.",
+         "status": "passed",
+         "type": "pii_guard"
+        },
+        {
+         "message": "Not a tool call.",
+         "status": "skipped",
+         "type": "schema_validity"
+        }
+       ],
+       "destructive": false,
+       "raw_risk": "low",
+       "recommended_action": "allow",
+       "reflex_ms": 0.29,
+       "requires_review": false,
+       "risk_level": "low",
+       "status": "passed",
+       "verifier": "deterministic/schema+regex",
+       "verifier_error": null,
+       "verifier_model": null,
+       "verifier_ms": 0,
+       "verifier_ran": false,
+       "verifier_tokens": null,
+       "verifier_verdict": null
+      },
+      "debate": null,
+      "decision_id": "req_rp8es0w2",
+      "deliberation": null,
+      "egress": {
+       "coverage": "pattern_floor",
+       "destination": "nvidia",
+       "never_eligible": [],
+       "sent": {
+        "context_sources": [
+         "messages",
+         "hmem:3 records"
+        ],
+        "prompt_chars": 2014,
+        "redacted": []
+       },
+       "withheld": []
+      },
+      "eligible": null,
+      "error": "",
+      "fusion": null,
+      "gen_verifier": null,
+      "graded_weight": null,
+      "hmem": {
+       "ids": [
+        "mem_mvpf3h0k_y8mv",
+        "mem_mvpe0haa_2ct4",
+        "mem_mvp8yu7c_1y1x"
+       ],
+       "injected": 3,
+       "reason": "retrieved 3 memories",
+       "strategy": "comprehensive",
+       "top_score": 0.888
+      },
+      "host_pressure": {
+       "battery": null,
+       "pressure": {
+        "battery": {
+         "hard": 0.5,
+         "label": "nominal",
+         "score": 0.18,
+         "sensor": "battery%, charging",
+         "soft": 0.3
+        },
+        "cpu": {
+         "hard": 0.9,
+         "label": "nominal",
+         "score": 0.34,
+         "sensor": "30s load avg",
+         "soft": 0.7
+        },
+        "gpu": {
+         "hard": 0.92,
+         "label": "nominal",
+         "score": 0.38,
+         "sensor": "GPU + VRAM",
+         "soft": 0.75
+        },
+        "memory": {
+         "hard": 0.85,
+         "label": "warm",
+         "score": 0.51,
+         "sensor": "committed/swap",
+         "soft": 0.7
+        },
+        "network": {
+         "hard": 0.85,
+         "label": "nominal",
+         "score": 0.12,
+         "sensor": "RTT to providers",
+         "soft": 0.5
+        },
+        "quota": {
+         "hard": 0.95,
+         "label": "nominal",
+         "score": 0.28,
+         "sensor": "per-key window",
+         "soft": 0.8
+        },
+        "thermal": {
+         "hard": 0.8,
+         "label": "nominal",
+         "score": 0.22,
+         "sensor": "thermal API",
+         "soft": 0.55
+        }
+       },
+       "thermal": "nominal"
+      },
+      "job": null,
+      "mcp": null,
+      "method": null,
+      "mode": "auto",
+      "optimistic": null,
+      "phases": [
+       {
+        "coherence": null,
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "ms": 83332,
+        "outputTps": 39.82863725819613,
+        "phase": "final_synthesis",
+        "reflex_decided_in_ms": 0.2,
+        "tier": "C",
+        "tokensIn": 3960,
+        "tokensOut": 3319
+       }
+      ],
+      "privacy": {
+       "path": "cloud-ok",
+       "redaction": {
+        "applied": false,
+        "spans": 0
+       }
+      },
+      "prompt_preview": "{\"case\": {\"crime_id\": \"CHN-KU-2025-000078\", \"category\": \"house_break\", \"sub_type\": \"night_house_break\", \"station_id\": \"PS-KUMARANNAGAR-R6\", \"occurred_from\": \"2025-01-19T02:48:00+05",
+      "quality_race": null,
+      "reasoning_scaffold": null,
+      "receipt_id": "rcpt_req_rp8es0w2",
+      "refine": null,
+      "request_id": "chatcmpl-3caefadd-a60f-4af8-9052-000d8dd5730c",
+      "requested_mode": "meterless/auto",
+      "routing": {
+       "confidence": null,
+       "escalated": null,
+       "escalated_on_divergence": false,
+       "hedge": null,
+       "hedges_skipped": 0,
+       "of": 1,
+       "policy": "learned-router",
+       "predicted": "nvidia/nemotron-3-ultra-550b-a55b",
+       "reason": "single-candidate",
+       "width": 1,
+       "winner": "nvidia/nemotron-3-ultra-550b-a55b"
+      },
+      "savings": {
+       "amount": 0,
+       "baseline_source": "mode-default-frontier",
+       "currency": "USD",
+       "vs": "Nemotron 3 Ultra 550B A55B"
+      },
+      "schema": "meterless.compute_receipt.v1",
+      "score": null,
+      "scorecard": null,
+      "status": "ok",
+      "summary": "ok \u00b7 Nemotron 3 Ultra 550B A55B \u00b7 miss \u00b7 $0.0000 saved",
+      "synthesis": null,
+      "test_time_compute": null,
+      "tool_degraded": null,
+      "unmet": null,
+      "usage": {
+       "input_tokens": 3960,
+       "latency_ms": 83332,
+       "output_tokens": 3319,
+       "output_tps": 39.82863725819613,
+       "total_tokens": 7279
+      },
+      "verdict": null,
+      "verification": null,
+      "winning_route": {
+       "kind": "cloud",
+       "label": "Nemotron 3 Ultra 550B A55B",
+       "model": "nvidia/nemotron-3-ultra-550b-a55b",
+       "provider": "nvidia",
+       "tier": "C"
+      }
+     },
+     "signer": "meterlessd",
+     "ts_ms": 1793028956732
+    },
+    "pubkey_b64": "4QtJ0bdprDo+qYz5/C0Ngb7B9VSyrLlFWznE/WlIliU=",
+    "sig_b64": "h/jKMCZWxPuV1YLlEZo+wvZcuE2rBU67Og+lmiwxPqb/S0ToSWIBJESIVSwt34tj2UfxyZuGLwlvnG0TVeljCg=="
+   },
+   "mcp": null,
+   "job": {
+    "id": "job_mvouqerc01",
+    "kind": "app_stream",
+    "lane": "auto",
+    "turn": 892,
+    "cluster": 3
+   },
+   "egress": {
+    "destination": "nvidia",
+    "coverage": "pattern_floor",
+    "sent": {
+     "prompt_chars": 2014,
+     "context_sources": [
+      "messages",
+      "hmem:3 records"
+     ],
+     "redacted": []
+    },
+    "withheld": [],
+    "never_eligible": []
+   },
+   "consensus": {
+    "level": "solo",
+    "raced": 1,
+    "agreed": null,
+    "coherence": null,
+    "label": "frontier answer",
+    "basis": "lexical"
+   },
+   "lineage": {
+    "families": [
+     "unknown"
+    ],
+    "distinct": 1,
+    "note": "1 distinct lineages across 1 panelists"
+   },
+   "app": "nexus-chennai",
+   "mode": "auto",
+   "scope": "user"
+  },
+  "meterless_cross_check": {
+   "status": "passed",
+   "risk_level": "low",
+   "raw_risk": "low",
+   "verifier": "deterministic/schema+regex",
+   "reflex_ms": 0.29,
+   "verifier_ms": 0,
+   "verifier_ran": false,
+   "verifier_model": null,
+   "verifier_verdict": null,
+   "verifier_error": null,
+   "verifier_tokens": null,
+   "checks": [
+    {
+     "type": "destructive_action",
+     "status": "passed",
+     "message": "No destructive ops detected."
+    },
+    {
+     "type": "pii_guard",
+     "status": "passed",
+     "message": "No PII/credential detected in response."
+    },
+    {
+     "type": "schema_validity",
+     "status": "skipped",
+     "message": "Not a tool call."
+    }
+   ],
+   "recommended_action": "allow",
+   "blocking": false,
+   "app": "nexus-chennai",
+   "destructive": false,
+   "requires_review": false
+  }
+ }
+}

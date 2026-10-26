@@ -1,0 +1,283 @@
+{
+  "run_id": "demo-003",
+  "status": "success",
+  "output": {
+    "alerts": [
+      {
+        "alert_id": "LA-2026-AADAAC3869AB",
+        "kind": "pair",
+        "crimes": [
+          "CHN-GU-2025-000945",
+          "CHN-NA-2025-000990"
+        ],
+        "stations": [
+          "PS-GUINDY-J3",
+          "PS-NANDAMBAKKAM-S4"
+        ],
+        "score": 0.7321,
+        "band": "medium",
+        "coverage": 0.5,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.3269,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-000945",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-NA-2025-000990",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              }
+            ],
+            "reason": "1.6 km between near Hilton Chennai Guindy (00:11) and near Amma Unavagam Nandambakkam (23:20), 11 days apart, both night-time",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "vehicle",
+            "weight": 0.15,
+            "value": 0.78,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-000945",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-NA-2025-000990",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              }
+            ],
+            "reason": "Both used white Maruti Swift Dzire; plates TN22??7312 and TN22C?73?? share TN22 prefix and 73 digits",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-000945",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-NA-2025-000990",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              }
+            ],
+            "reason": "Identical: 3 offenders, heavy build, age 25-35",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-000945",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-NA-2025-000990",
+                "query": "q_case",
+                "query_id": "8d81902e-302a-4f16-8438-e1be55faf4d0"
+              }
+            ],
+            "reason": "Both involved knife",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 1,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "Strong vehicle plate overlap and identical suspect description link two cab robberies 1.6 km apart within 11 days, though MO details missing for the second crime.",
+        "recommended_action": "Run ANPR trail for TN22??7312/TN22C?73?? around both locations 2025-08-18 to 2025-08-28; obtain full MO for CHN-NA-2025-000990 to confirm posed_as_ride_hailing_cab approach.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-769B056A2D32",
+        "kind": "pair",
+        "crimes": [
+          "CHN-GU-2025-001149",
+          "CHN-ST-2025-001108"
+        ],
+        "stations": [
+          "PS-GUINDY-J3",
+          "PS-STTHOMASMOUNT-S1"
+        ],
+        "score": 0.6317,
+        "band": "medium",
+        "coverage": 0.5,
+        "factors": [
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.2724,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-001149",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-ST-2025-001108",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              }
+            ],
+            "reason": "2.3 km between near Hilton Chennai Guindy (01:09) and near Saint Thomas Mount (00:30), 10 days apart, both night-time",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "vehicle",
+            "weight": 0.15,
+            "value": 0.5,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-001149",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-ST-2025-001108",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0285340",
+                "query": "q_vehicle_trail",
+                "query_id": "20042e55-ee39-4c5b-8945-05588e687485"
+              }
+            ],
+            "reason": "Both used white Maruti Swift Dzire; plates not recorded for either crime, ANPR-R0285340 provides trail evidence",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-001149",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-ST-2025-001108",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              }
+            ],
+            "reason": "Identical: 3 offenders, heavy build, age 25-35",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "weapon_tool",
+            "weight": 0.08,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-GU-2025-001149",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-ST-2025-001108",
+                "query": "q_case",
+                "query_id": "179e8799-6b46-43b9-98a6-6a6422547cdd"
+              }
+            ],
+            "reason": "Both involved knife",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 3,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "Strong suspect description and weapon match link two cab robberies 2.3 km apart within 10 days, but missing plate details and MO for the second crime limit confidence.",
+        "recommended_action": "Obtain plate details for both crimes; check ANPR-R0285340 for vehicle movements around both locations 2025-09-27 to 2025-10-07; get full MO for CHN-ST-2025-001108 to confirm posed_as_ride_hailing_cab approach.",
+        "status": "pending"
+      }
+    ],
+    "series": [],
+    "hotspots": [],
+    "errors": [],
+    "summary": "2 new links (0 high, 2 medium; 2 cross-station); 0 with factors struck by Skeptic; 1 dropped; 3/3 cases processed"
+  },
+  "agents": [
+    {
+      "name": "Scout Intent",
+      "role": "routes events and screens tips"
+    },
+    {
+      "name": "Tip Guard",
+      "role": "keeps unsafe public input away from agents"
+    },
+    {
+      "name": "Extractor",
+      "role": "reads narratives, statements and images into MO features"
+    },
+    {
+      "name": "Planner",
+      "role": "plans Zetaris queries"
+    },
+    {
+      "name": "Linker",
+      "role": "scores pairs in code and explains them"
+    },
+    {
+      "name": "Skeptic",
+      "role": "re-queries Zetaris and challenges links"
+    },
+    {
+      "name": "Alert writer",
+      "role": "writes approved link alerts"
+    },
+    {
+      "name": "Series analyst",
+      "role": "groups linked cases into series and builds dossiers"
+    }
+  ],
+  "engines": [
+    "world_model",
+    "hmem",
+    "scout_intent",
+    "markovian"
+  ],
+  "trace_id": "trace-demo-003",
+  "log_file": "logs/trace-demo-003.jsonl",
+  "execution_time_seconds": 315.21
+}
