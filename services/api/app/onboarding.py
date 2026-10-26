@@ -182,13 +182,22 @@ class Onboarder:
         self.tz = load_city(settings.city)["timezone"]
 
     def process(self) -> int:
-        """One uploaded run and one approved run per pass. Nothing to do -> no Zetaris or model call at all."""
+        """One uploaded run and one approved run per pass. Nothing to do -> no Zetaris or model call at all.
+
+        Each run is CLAIMED before any work: one conditional update (status still `uploaded` -> `profiling`, or
+        `approved` -> `registering`) that returns the row only to the worker that changed it. A second worker that
+        read the same row gets nothing back and skips it, so a run is never staged, mapped or registered twice."""
         done = 0
-        for status, step in (("uploaded", self._propose), ("approved", self._register)):
+        for status, claimed_as, step in (("uploaded", "profiling", self._propose),
+                                         ("approved", "registering", self._register)):
             rows = self.sb.select("onboarding_runs", {"select": "*", "status": f"eq.{status}",
                                                       "order": "created_at.asc", "limit": "1"})
             for run in rows:
-                self._with_run(run, step)
+                claimed = self.sb.update("onboarding_runs", {"run_id": f"eq.{run['run_id']}", "status": f"eq.{status}"},
+                                         {"status": claimed_as, "error": None})
+                if not claimed:  # another worker claimed it between our read and our update
+                    continue
+                self._with_run(claimed[0], step)
                 done += 1
         return done
 
@@ -222,7 +231,7 @@ class Onboarder:
     def _propose(self, run: dict[str, Any], tracer: Tracer) -> None:
         key = zo.check_key(run["source_key"])
         match = {"run_id": f"eq.{run['run_id']}"}
-        self.sb.update("onboarding_runs", match, {"status": "profiling", "trace_run_id": tracer.run_id, "error": None})
+        self.sb.update("onboarding_runs", match, {"trace_run_id": tracer.run_id})  # claimed as 'profiling' in process()
         data = SAMPLE_FILE.read_bytes() if run.get("use_sample") else self.sb.download("onboarding", run["file_path"])
         headers = read_headers(data)  # reject bad headers before anything reaches Zetaris
         station_id, station_name = station_for(self.settings, run)
@@ -310,7 +319,7 @@ class Onboarder:
     def _register(self, run: dict[str, Any], tracer: Tracer) -> None:
         key = zo.check_key(run["source_key"])
         match = {"run_id": f"eq.{run['run_id']}"}
-        self.sb.update("onboarding_runs", match, {"status": "registering", "trace_run_id": tracer.run_id})
+        self.sb.update("onboarding_runs", match, {"trace_run_id": tracer.run_id})  # claimed as 'registering' in process()
         rows = self.sb.select("onboarding_mappings", {"select": "source_col,unified_field,transform",
                                                       "run_id": f"eq.{run['run_id']}", "order": "source_col.asc"})
         station_id, _ = station_for(self.settings, run)

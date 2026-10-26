@@ -190,3 +190,20 @@ unreachable. It contains:
 - the full legacy CCTNS and archive.
 
 `data/sample/README.md` explains what is in it and how to rebuild it.
+
+
+## New source onboarding (WS1-23)
+
+The console's "Onboard a source" flow (`/console/system/sources/onboard`) is carried out by the main worker
+(`python -m app.worker`, step `process_onboarding`). That worker must run **on the host**, not in the compose
+`--profile worker` container: it stages each export with `docker cp` / `docker exec` into the Zetaris driver
+container (`ZETARIS_DRIVER_CONTAINER`, default `zetaris-driver-1`), and the compose worker has no docker CLI or socket.
+It also needs a live Zetaris key, and the Nightshift fast lane for the mapping (without it, header rules map the
+columns and the run says `mapping_source = rules`). Each onboarding run is claimed atomically (a conditional update on its status), so a second worker can never process the same run twice; the worker's other queues (decisions, tips) are not claimed that way, so run one worker in any case.
+
+A run whose worker stopped mid-step stays in `profiling` or `registering`, and the console keeps polling it. Reset it with the service role: set `status` back to `uploaded` (from `profiling`) or `approved` (from `registering`) on that `onboarding_runs` row, and the next pass claims it again. Re-running is safe: staging overwrites the same file, the raw table creation tolerates "already exists" and the view is CREATE OR REPLACE.
+
+The bundled sample is
+`data/onboarding/sample_new_station.csv` (synthetic, from `cities/<city>/onboarding_sample.yaml`; regenerate with
+`python -m data.onboarding.generate_sample`). A registered source is a Zetaris view `onboard_<key>`: registered,
+not linked (it is not part of `v_crime_unified`).
