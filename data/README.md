@@ -136,7 +136,51 @@ their sha256.
 © OpenStreetMap contributors (ODbL). Ward boundaries © DataMeet / Transparent Chennai (CC BY-SA
 2.5 IN). Weather data by Open-Meteo.com (CC BY 4.0)."
 
-## 5. Sample bundle (`data/sample/`)
+## 5. Live mode on your own Zetaris (no Supabase)
+
+All crime data can live in your own Zetaris instead of our hosted Supabase. The named queries return
+the same answers either way; `tests/zetaris/test_files_parity_live.py` checks this on the judge cases.
+
+**You need:**
+- A local Zetaris in Docker. The Participant Setup Guide has everyone run Zetaris locally in Docker,
+  and files are copied into its container.
+- Its API key in a file.
+- Python with `services/api/requirements-dev.txt` installed.
+
+**Steps:**
+
+    export ZETARIS_API_KEY_FILE=/path/to/your/zetaris.key   # the path only, never the key itself
+    # optional, if yours differ: ZETARIS_REST_URL (http://localhost:8888/api/v1.0), ZETARIS_ORG_ID (1),
+    #                            ZETARIS_DRIVER_CONTAINER (zetaris-driver-1)
+    python -m data.setup_live          # a few minutes; add --dry-run to see every step and SQL statement first
+
+Then run the API with `ZETARIS_DATA=files`, plus your Nightshift settings.
+
+`setup_live` does the following:
+1. Generates the city with `python -m data.generator`. It is deterministic (seed 42) and identical to the
+   rows we seeded.
+2. Renders the synthetic CCTV stills.
+3. Exports the crime data as Parquet (`data/fs_export.py`), using the same names, columns and Spark types
+   as the Supabase objects. It adds the committed model-output fixtures in `data/fixtures/` (MO features
+   and Tip Guard verdicts), so nothing needs re-extracting.
+4. Copies everything into Zetaris's file store (`zetaris/stage_files.py --fs`).
+5. Registers it with `zetaris/register.py --data files`. This creates database `nexus_fs` (11 tables) and
+   the views in container `nexusfs`, next to the 12 file tables of §3.
+6. Smoke-tests the hero case through the named queries.
+
+Nothing it generates is committed (`data/generated/` is gitignored). Re-running it is safe.
+
+`ZETARIS_DATA` switches the source (`services/api/app/adapters/zetaris_sources.py`):
+
+| `ZETARIS_DATA` | Crime data | Views |
+|---|---|---|
+| `supabase` (default) | `sb` datasource on our Supabase | container `nexus` |
+| `files` | Parquet in `nexus_fs` | container `nexusfs` |
+
+Two kinds of data exist only in a live system, so a fresh file store starts without them. Link alerts
+are written by agent runs, and FIRs filed in the console are not part of the generator.
+
+## 6. Sample bundle (`data/sample/`)
 
 `data/sample/` is a committed subset of about 1.4 MB, used when `SAMPLE_MODE=true` and Zetaris is
 unreachable. It contains:

@@ -31,9 +31,16 @@ LAYOUT = [
 ]
 
 
-def plan(src: Path) -> list[tuple[Path, str]]:
+# The crime data as files (WS1-19, data/fs_export.py), one folder per nexus_fs table (zetaris/02_fs.sql).
+FS_TABLES = ("crimes", "statements", "crime_vehicles", "evidence_media", "forensics", "crime_features_v",
+             "tips_v", "section_map", "stations", "link_alerts", "case_bundle_v")
+FS_LAYOUT = [(f"fs/{t}/part-0.parquet", f"fs/{t}") for t in FS_TABLES]
+
+
+def plan(src: Path, fs: bool = False, only_fs: bool = False) -> list[tuple[Path, str]]:
     out = []
-    for pattern, folder in LAYOUT:
+    layout = (FS_LAYOUT if only_fs else LAYOUT + (FS_LAYOUT if fs else []))
+    for pattern, folder in layout:
         files = sorted(src.glob(pattern))
         if not files:
             raise SystemExit(f"no files for {pattern} under {src}")
@@ -45,8 +52,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="src", default="data/generated")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--fs", action="store_true", help="also stage the nexus_fs tables from <from>/fs (WS1-19)")
+    ap.add_argument("--only-fs", action="store_true", help="stage only the nexus_fs tables")
     a = ap.parse_args()
-    items = plan(Path(a.src))
+    items = plan(Path(a.src), a.fs, a.only_fs)
     total = 0
     for f, folder in items:
         total += f.stat().st_size
