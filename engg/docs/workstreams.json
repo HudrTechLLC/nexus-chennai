@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T11:36:34+05:30",
+  "updated": "2026-10-26T11:39:56+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -157,9 +157,10 @@
           "id": "WS1-18",
           "phase": "P1",
           "title": "Domain models (Pydantic, spec D3) + core schema 0002 with RLS (all Part I tables)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "nexus-1: models + 0002_core (branch feat/n1-models)"
+          "note": "models D3 + 0002_core applied; live RLS 4/4; crimes_citywide summary-only",
+          "ref": "#10"
         }
       ]
     },

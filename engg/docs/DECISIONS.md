@@ -23,6 +23,7 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-018 | 2026-10-26 | ✅ | Schema deviations: tip_messages.sender, factor weapon_tool, history-sheet columns, anon revoked in public (RPCs grant explicitly) |
 | D-017 | 2026-10-26 | ✅ | Nightshift live: fast=Lightning 30B, reason=Ultra 550B (Super 120B not served to our key), vision=Super VL excluded (opt-in pending); token read from runtime file |
 | D-016 | 2026-10-26 | ✅ | Scoring details from PR #8 + evidence-coverage guard (single-factor pairs cannot reach high) |
 | D-015 | 2026-10-26 | ✅ | Four build lanes (nexus-1…4) with full scope; engines run as the TypeScript references in a sidecar so official conformance runs (revises D-008) |
@@ -227,3 +228,15 @@ Each lane was tested with a real chat request:
 - never use `meterless/auto` (R2).
 
 The sponsor text names Ultra 550B as the reasoning model, because it is what actually runs.
+
+## D-018 · Schema deviations from the spec text (PR #10, nexus-1) (2026-10-26)
+- **`tip_messages`:** the sender column is named `sender`, not `from`, because `from` is a reserved word.
+- **Weapon factor:** named `weapon_tool` everywhere, following F2 and the scoring code. D3.11's example says `weapon`.
+- **History sheets:** D3.10 gives no columns, so these were chosen: `sheet_id`, `person_ref`, `station_id`, `opened_on`, `category`, `mo_tags`, `residence_ward`, `active`.
+- **Anon access:** `0002` revokes anon in schema `public`, including default privileges. Every public RPC must `grant execute ... to anon` explicitly.
+- **One copy of the weights:** `app.models` imports the F2 weights and bands from `app.scoring`.
+- **`crimes_citywide`:** a `security_invoker` view over a definer function. Columns: crime_id, station_id, category, sub_type, cell (H3 r8), week, mo_tags, visual_tags.
+- **Live RLS tests pass 4/4:**
+  - anon sees 0 relations and 0 functions;
+  - an officer sees only own-station crimes;
+  - the citywide view hides narrative and address.
