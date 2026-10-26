@@ -55,7 +55,10 @@ export async function POST(req: Request, { params }: { params: { crimeId: string
   const capturedAt = (typed && cityLocalToIso(typed, CITY.timezone)) || (exif && cityLocalToIso(exif, CITY.timezone)) || null;
   const camera = String(form.get("camera_id") ?? "").trim().slice(0, 40) || null;
   const { data: recordedId, error } = await sb.rpc("record_evidence", {
-    p: { crime_id: crimeId, path, sha256, target, kind, bytes: bytes.length, captured_at: capturedAt, camera_id: camera },
+    p: {
+      crime_id: crimeId, path, sha256, target, kind, bytes: bytes.length, captured_at: capturedAt, camera_id: camera,
+      captured_from: capturedAt ? (typed && cityLocalToIso(typed, CITY.timezone) ? "officer" : "exif") : null,
+    },
   });
   if (error) return bad(500, `Saved the file but not the ${target === "statement" ? "statement" : "evidence record"}: ${error.message}`);
   if (target === "statement") return NextResponse.json({ ok: true, path, sha256 });
