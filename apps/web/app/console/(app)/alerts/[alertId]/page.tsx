@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { coverageOf, decisionState, factorRows, latestDecision, pct, queryIds, REASON_LABEL } from "@/lib/alerts";
+import { coverageCapLine, coverageOf, decisionState, factorRows, latestDecision, pct, queryIds, REASON_LABEL } from "@/lib/alerts";
 import { audit, crimeBriefs, crimeTitle, fetchAlert, officerNames, type CrimeBrief } from "@/lib/alertsData";
 import { canDecideAlerts } from "@/lib/roles";
 import { BandPill, FactorBars, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
@@ -78,6 +78,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
               <> · <Link className="text-signal hover:underline" href={`/console/system/trace/${encodeURIComponent(alert.run_id)}`}>run {alert.run_id}</Link></>
             )}
           </p>
+          {coverageCapLine(alert) && <p className="mt-1 text-xs text-muted">{coverageCapLine(alert)}</p>}
         </div>
       </header>
 

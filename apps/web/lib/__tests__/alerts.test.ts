@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  coverageCap, coverageCapLine,
   coverageOf, decisionState, factorRows, latestDecision, parseSort, parseTab, queryIds, sortAlerts,
   validateDecision, type AlertDecision, type LinkFactor,
 } from "../alerts";
@@ -77,5 +78,27 @@ describe("tabs and sorting", () => {
     expect(sortAlerts(rows, "score").map((r) => r.alert_id)).toEqual(["b", "c", "a"]);
     expect(sortAlerts(rows, "newest").map((r) => r.alert_id)).toEqual(["c", "a", "b"]);
     expect(sortAlerts(rows, "stations")[0].alert_id).toBe("b");
+  });
+});
+
+describe("coverageCap (D-016)", () => {
+  const f = (factor: string, weight: number, value: number | null, struck = false) =>
+    ({ alert_id: "A", factor, weight, value, evidence: [], reason: "", struck_by_skeptic: struck }) as never;
+  const capped = { band: "medium" as const, score: 1, coverage: 0.35,
+    link_factors: [f("space_time", 0.2, 1), f("mo_similarity", 0.15, 1), f("vehicle", 0.15, 0, true)] };
+
+  it("explains a high score held at medium by low coverage", () => {
+    expect(coverageCap(capped)).toEqual({ withData: 2, total: 9, coverage: 0.35 });
+    expect(coverageCapLine(capped)).toBe("Capped at medium: only 2 of 9 factors had data (coverage 35%)");
+  });
+  it("says nothing when the score was medium on its own merits", () => {
+    expect(coverageCapLine({ ...capped, score: 0.7 })).toBeNull();
+  });
+  it("says nothing when coverage was enough or the band is high", () => {
+    expect(coverageCapLine({ ...capped, coverage: 0.5 })).toBeNull();
+    expect(coverageCapLine({ ...capped, band: "high" })).toBeNull();
+  });
+  it("forensic matches are exempt from the cap", () => {
+    expect(coverageCapLine({ ...capped, link_factors: [...capped.link_factors, f("forensic", 0.1, 1)] })).toBeNull();
   });
 });
