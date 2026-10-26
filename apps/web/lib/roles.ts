@@ -62,6 +62,7 @@ export const NAV: NavItem[] = [
   { href: "/console/memory", label: "Memory", access: "analyst+" },
   { href: "/console/notifications", label: "Notifications", access: "all", desktop: "bell" },
   { href: "/console/system", label: "System", access: "admin", desktop: "manage" },
+  { href: "/console/system/sources", label: "Data sources", access: "admin", desktop: "manage" }, // WS3-27
   { href: "/console/admin", label: "Admin", access: "admin", desktop: "manage" },
 ];
 
