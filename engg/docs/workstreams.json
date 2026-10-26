@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T20:21:36+05:30",
+  "updated": "2026-10-26T20:24:52+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -322,9 +322,9 @@
           "id": "WS2-14",
           "phase": "P4",
           "title": "Evaluation vs rules-only baseline (eval_report.json)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-3",
-          "note": "Eval code + tests merged; real eval_report.json run waits on nexus-1 _truth (lands with judge-path PR)",
+          "note": "nexus-2 · sample eval: agents F1 0.70 vs rules 0.13; HIGH 9/9; eval_report.json (#256, #258)",
           "ref": "#29"
         },
         {
@@ -382,9 +382,9 @@
           "id": "WS2-21",
           "phase": "P4",
           "title": "Embed lane (E2): similar-MO + text search vectors via Nightshift embed, TF-IDF fallback",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-2",
-          "note": "similarity.py merged (TF-IDF fallback, D-027); Linker wiring behind flag (nexus-3)",
+          "note": "nexus-2 · fixed-IDF MO similarity behind NEXUS_MO_TFIDF (off; no gain on sample) (#254)",
           "ref": "#75"
         },
         {
