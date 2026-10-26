@@ -12,6 +12,7 @@ import { AlertsLive } from "@/components/console/alerts/AlertsLive";
 import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
 import { describeGap, sceneGap, trailOf, type Scene, type TrailRead } from "@/lib/alertMap";
 import { memberLonLat } from "@/lib/series";
+import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
 
 export const dynamic = "force-dynamic";
 
@@ -189,6 +190,8 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
           <p className="mt-1 text-sm">{alert.recommended_action}</p>
         </section>
       )}
+
+      <PublicTipsBlock crimeIds={alert.crimes} label={(id) => crimeTitle(crimes[id], id)} />
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-lg font-bold">Decision</h2>
