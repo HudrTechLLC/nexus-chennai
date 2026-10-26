@@ -240,3 +240,20 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
   - anon sees 0 relations and 0 functions;
   - an officer sees only own-station crimes;
   - the citywide view hides narrative and address.
+
+## D-019 · Pulse Map layers come from display-only projection tables (nexus-1, approved) (2026-10-26)
+- **The problem:** the Pulse Map (G3) needs CCTV/ANPR cameras, ANPR reads, 112 calls and release density. Those live in the generated S3-style files (D1), which Zetaris federates. The Vercel app cannot reach Zetaris.
+- **The decision:** `0003_map_layers.sql` adds the projection tables `map_cctv_cameras`, `map_anpr_cameras`, `map_anpr_reads` (only reads linked to a crime or alert), `map_call_cells` (H3 r9 × category × hour) and `map_release_density` (per ward). The seed loads them from the same generated files. Police read them under RLS; anon cannot.
+- **The rule:** these tables are a **UI cache, never an agent source**. Agents read the originals only through Zetaris (R1), just as `public_map_cells` serves the public map (D-003).
+
+## D-020 · Engine state persisted in `public` with `wm_` / `hmem_` tables (nexus-2, approved) (2026-10-26)
+- **Where:** `0005_01_engines.sql` creates `wm_entities`, `wm_edges`, `wm_observations`, `hmem_memories` and `hmem_ledger` in `public`, not in the `wm` / `hmem` schemas. PostgREST exposes only `public`, and project settings stay unchanged.
+- **Access:** RLS is on and anon is revoked. Analyst, supervisor and admin read all `wm_*`. A station officer reads only entities and edges attached to a crime they can read. Any police role can read `hmem_*`.
+- **Integrity:** `hmem_ledger` is append-only; a trigger rejects UPDATE and DELETE.
+- **Writes:** only the API's service role writes, through `ENGINES_PERSIST=supabase` (off by default and in tests). `alert_id` is plain text, with no foreign key.
+
+## D-021 · Official rules checked; vision lane finding (2026-10-26)
+- **Rules:** checked all four official HackOS documents against the plan; see [RULES_CHECK](hackathon/RULES_CHECK.md). Every hard requirement is met by design. Five process gaps have owners: a root Dockerfile, input/output examples, a sample-mode test with services stopped, a secret check of the video and deck, and testing the video link logged out. The organiser PDFs stay local and are gitignored, because the repo goes public.
+- **Super VL is now enabled.** The `NVIDIA_SUPER_VL` gate is read from Nightshift's engine-kv store, not from the environment. The value was set with Nightshift stopped, and a backup of the store was kept.
+- **Images still fail.** Text calls to `nvidia/nemotron-3.5-super-vl-120b-a12b` succeed. **Every request with an image is refused by Nightshift with `no_vision_model`, on every route**, including local PaddleOCR-VL. This has been reported to Meterless.
+- **Effect on the product:** the Extractor records an honest "vision unavailable" trace and falls back to the caption text, so no visual extraction is ever faked. Vision is not a rule requirement.

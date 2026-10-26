@@ -5,7 +5,7 @@ tags: [nexus, plan]
 # Submission deliverables checklist
 
 What we hand in, and what must be true for the entry to be eligible. Source: [SPEC Part L](SPEC.md#deliverables), [Part M](SPEC.md#demo) and [hackathon digest](hackathon/DIGEST.md).
-Related: [PROGRESS](PROGRESS.md) · [SPONSOR_TECH](SPONSOR_TECH.md) · [00-INDEX](00-INDEX.md)
+Related: [PROGRESS](PROGRESS.md) · [RULES_CHECK](hackathon/RULES_CHECK.md) · [SPONSOR_TECH](SPONSOR_TECH.md) · [00-INDEX](00-INDEX.md)
 
 ## A. Submitted on HackOS
 
