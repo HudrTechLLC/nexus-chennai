@@ -22,6 +22,7 @@ from .agents import AgentError, Briefer, Sanitiser, SeriesAnalyst
 from .agents.base import crime_from_row, features_from_row
 from .agents.series import dossier_record
 from .graph.runner import CaseNotFound, agent_deps, default_store, run_request
+from .graph.local_store import LocalStore, store_kind
 from .graph.store import SupabaseStore
 from .tracing import new_run_id
 
@@ -82,9 +83,15 @@ def _probe_nightshift(s: Settings) -> dict[str, Any]:
 
 
 def _probe_supabase(s: Settings) -> dict[str, Any]:
+    try:
+        kind = store_kind(s)
+    except ValueError as exc:  # a bad NEXUS_STORE: say so instead of failing every run silently
+        return {"state": "down", "error": f"BadStoreConfig: {exc}"[:200]}
     sb = SupabaseClient(s)
     try:
-        if not sb.configured:  # sample runs keep results in memory
+        if not sb.configured:
+            if kind == "local":  # live runs keep results in data/local/ (WS2-22)
+                return {"state": "not_configured", "store": "local", "detail": "not_configured (local store)"}
             return {"state": "sample" if s.sample_mode else "down", "error": "NotConfigured"}
         sb._client.timeout = httpx.Timeout(HEALTH_PROBE_SECONDS)
         return {"state": "live"} if sb.health() else {"state": "down", "error": "HealthCheckFailed"}
@@ -202,7 +209,7 @@ def series_dossier(series_id: str, body: DossierBody) -> dict[str, Any]:
             try:  # series.dossier for the console (Vercel cannot call this API); a stored series row only
                 store = default_store(s, deps.tracer)
                 persisted = store.write_dossier(series_id, dossier_record(out, run_id)) and isinstance(
-                    store, SupabaseStore)
+                    store, (SupabaseStore, LocalStore))
             except Exception as exc:
                 deps.tracer.emit("Series analyst", "dossier_save_failed", input_summary=series_id,
                                  output_summary=str(exc)[:300], status="error")
