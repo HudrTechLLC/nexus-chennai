@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T22:14:50+05:30",
+  "updated": "2026-10-26T22:42:28+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -726,8 +726,8 @@
           "id": "WS4-11",
           "phase": "P8",
           "title": "Public map: per-crime cards and detail view on hex click (privacy-safe fields)",
-          "status": "in_progress",
-          "note": "nexus-5 · 0007_11 PR #287 approved"
+          "status": "done",
+          "note": "nexus-5 · 0007_11 #287 + UI #296"
         },
         {
           "id": "WS4-12",
@@ -740,8 +740,8 @@
           "id": "WS4-13",
           "phase": "P8",
           "title": "Appeal pages: area map + \"See on crime map\" link",
-          "status": "in_progress",
-          "note": "nexus-4 · draft PR #282"
+          "status": "done",
+          "note": "nexus-4 · #282 + \"View location\" on list cards #300"
         },
         {
           "id": "WS4-14",
