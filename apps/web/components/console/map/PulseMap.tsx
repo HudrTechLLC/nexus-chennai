@@ -9,7 +9,7 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  boundsOf, cone, isoWeek, padRing, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  boundsOf, cone, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
@@ -54,6 +54,23 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   const [constellation, setConstellation] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toggles, setToggles] = useState<Toggles>({ arcs: true, hulls: true, hex: false, stations: false, wards: false, rejected: false, glyphs: false, cctv: false, anpr: false, tips: false, calls: false, release: false });
+  // DASH-04 "More filters": station, zone, status (client-side) + weapon, vehicle, MO (map_facets, fetched on first open)
+  const [facets, setFacets] = useState<Facets | null>(null);
+  const [facetsMsg, setFacetsMsg] = useState<string | null>(null);
+  const [fStation, setFStation] = useState("");
+  const [fZone, setFZone] = useState("");
+  const [fStatus, setFStatus] = useState("");
+  const [fWeapon, setFWeapon] = useState("");
+  const [fVehicle, setFVehicle] = useState("");
+  const [fMo, setFMo] = useState("");
+  const loadFacets = async () => {
+    if (facets || facetsMsg === "Loading filters…") return;
+    setFacetsMsg("Loading filters…");
+    const { data: f, error } = await consoleBrowserClient().rpc("map_facets");
+    if (error) { setFacetsMsg("Filters unavailable: " + error.message); return; }
+    setFacets(decodeFacets(f));
+    setFacetsMsg(null);
+  };
   const [trail, setTrail] = useState<Trail | null>(null);
   const [trailMsg, setTrailMsg] = useState<string | null>(null);
 
@@ -117,19 +134,35 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
 
   const byId = useMemo(() => new Map(data.crimes.map((c) => [c.id, c])), [data.crimes]);
 
+  // One set of extra filters, used by the dots, the histograms and the clock dial alike.
+  const extra = useMemo(() => {
+    let stations = new Set<string>();
+    if (fStation) stations = new Set([fStation]);
+    else if (fZone && facets) {
+      stations = zoneStations(facets.stations, new Set([fZone]));
+      if (stations.size === 0) stations = new Set(["(none)"]); // a zone with no stations matches nothing
+    }
+    const one = (v: string) => (v ? new Set([v]) : new Set<string>());
+    const ids = facets ? facetIds(facets, { weapon: one(fWeapon), vehicle: one(fVehicle), mo: one(fMo) }) : null;
+    return { stations, statuses: one(fStatus), ids };
+  }, [facets, fStation, fZone, fStatus, fWeapon, fVehicle, fMo]);
+  const moreActive = [fStation, fZone, fStatus, fWeapon, fVehicle, fMo].filter(Boolean).length;
+  const statusOptions = useMemo(() => Array.from(new Set(data.crimes.map((c) => c.status))).filter(Boolean).sort(), [data.crimes]);
+  const zoneOptions = useMemo(() => (facets ? Array.from(new Set(facets.stations.map((s) => s.zone ?? UNKNOWN_ZONE))).sort() : []), [facets]);
+
   const filter: CrimeFilter | null = win
-    ? { cats, from: win[0], to: win[1], clock, linkedOnly, seriesOnly, stations: new Set(), statuses: new Set() }
+    ? { cats, from: win[0], to: win[1], clock, linkedOnly, seriesOnly, ...extra }
     : null;
 
   // Everything that passes the filters except the time window (feeds the histograms).
   const catFiltered = useMemo(
-    () => data.crimes.filter((c) => passes(c, { cats, from: -Infinity, to: Infinity, clock, linkedOnly, seriesOnly, stations: new Set(), statuses: new Set() })),
-    [data.crimes, cats, clock, linkedOnly, seriesOnly],
+    () => data.crimes.filter((c) => passes(c, { cats, from: -Infinity, to: Infinity, clock, linkedOnly, seriesOnly, ...extra })),
+    [data.crimes, cats, clock, linkedOnly, seriesOnly, extra],
   );
   const visible = useMemo(() => (filter ? data.crimes.filter((c) => passes(c, filter)) : []),
     // filter is rebuilt each render from these values
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data.crimes, cats, win, clock, linkedOnly, seriesOnly]);
+    [data.crimes, cats, win, clock, linkedOnly, seriesOnly, extra]);
 
   const playhead = win?.[1] ?? 0;
   const recent = useMemo(() => visible.filter((c) => {
@@ -148,8 +181,8 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   }, [catFiltered, data.extent]);
 
   const hourBins = useMemo(() => binHours(
-    data.crimes.filter((c) => win && passes(c, { cats, from: win[0], to: win[1], clock: null, linkedOnly, seriesOnly, stations: new Set(), statuses: new Set() })).map((c) => c.mod),
-  ), [data.crimes, cats, win, linkedOnly, seriesOnly]);
+    data.crimes.filter((c) => win && passes(c, { cats, from: win[0], to: win[1], clock: null, linkedOnly, seriesOnly, ...extra })).map((c) => c.mod),
+  ), [data.crimes, cats, win, linkedOnly, seriesOnly, extra]);
 
   const visibleIds = useMemo(() => new Set(visible.map((c) => c.id)), [visible]);
 
@@ -389,6 +422,30 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
           <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Filters</p>
           <label className="flex items-center gap-2 py-0.5"><input type="checkbox" checked={linkedOnly} onChange={() => setLinkedOnly((v) => !v)} /> Linked only</label>
           <label className="flex items-center gap-2 py-0.5"><input type="checkbox" checked={seriesOnly} onChange={() => setSeriesOnly((v) => !v)} /> In a series</label>
+          <details className="mt-1" onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) void loadFacets(); }}>
+            <summary className="cursor-pointer py-0.5 text-muted hover:text-ink">More filters{moreActive ? ` (${moreActive})` : ""}</summary>
+            <div className="mt-1 space-y-1.5">
+              {facetsMsg && <p className="text-[11px] text-muted">{facetsMsg}</p>}
+              <FilterSelect label="Zone" value={fZone} onChange={(v) => { setFZone(v); setFStation(""); }} options={zoneOptions.map((z) => [z, z])} />
+              <FilterSelect label="Station" value={fStation} onChange={setFStation}
+                options={(facets?.stations ?? []).filter((st) => !fZone || (st.zone ?? UNKNOWN_ZONE) === fZone).map((st) => [st.id, st.name])} />
+              <FilterSelect label="Status" value={fStatus} onChange={setFStatus} options={statusOptions.map((v) => [v, v.replace(/_/g, " ")])} />
+              <FilterSelect label="Weapon" value={fWeapon} onChange={setFWeapon} options={Array.from(facets?.weapon.keys() ?? []).sort().map((v) => [v, v])} />
+              <FilterSelect label="Vehicle" value={fVehicle} onChange={setFVehicle} options={Array.from(facets?.vehicle.keys() ?? []).sort().map((v) => [v, v])} />
+              <label className="block">
+                <span className="text-[11px] text-muted">MO tag{facets ? ` · ${facets.mo.size} tags from extracted MOs` : ""}</span>
+                <input list="mo-tags" value={fMo} onChange={(e) => setFMo(e.target.value.trim().toLowerCase())} placeholder="type to search, e.g. black helmet"
+                  className="mt-0.5 w-full rounded border border-line bg-surface px-2 py-1 text-xs" />
+                <datalist id="mo-tags">{Array.from(facets?.mo.keys() ?? []).sort().map((t) => <option key={t} value={t} />)}</datalist>
+              </label>
+              {(fWeapon || fVehicle) && role === "station_officer" && (
+                <p className="text-[11px] leading-snug text-muted">Weapon and vehicle are known only for cases you can read, so other stations&apos; dots are hidden.</p>
+              )}
+              {moreActive > 0 && (
+                <button type="button" className="text-xs underline" onClick={() => { setFZone(""); setFStation(""); setFStatus(""); setFWeapon(""); setFVehicle(""); setFMo(""); }}>Clear more filters</button>
+              )}
+            </div>
+          </details>
           <label className="block py-0.5">
             Arc score ≥ <span className="font-mono">{minScore.toFixed(2)}</span>
             <input type="range" min={0.55} max={1} step={0.01} value={minScore} onChange={(e) => setMinScore(+e.target.value)} className="w-full" />
@@ -439,5 +496,19 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       )}
       {selected && <CrimeDrawer crime={selected} links={data.links} byId={byId} onClose={() => setSelected(null)} onShowTrail={() => void showTrail(selected.id)} />}
     </div>
+  );
+}
+
+function FilterSelect({ label, value, onChange, options }: {
+  label: string; value: string; onChange: (v: string) => void; options: [string, string][];
+}) {
+  return (
+    <label className="block">
+      <span className="text-[11px] text-muted">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-0.5 w-full rounded border border-line bg-surface px-2 py-1 text-xs">
+        <option value="">All</option>
+        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      </select>
+    </label>
   );
 }

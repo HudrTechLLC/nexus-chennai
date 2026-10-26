@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   arcPath, binDaily, binHours, catKey, cone, convexHull, decodeCrimes, DAY_MS, hhmm, inClockArc, km, localDay,
-  boundsOf, monthWindows, padRing, passes, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
+  boundsOf, decodeFacets, facetIds, monthWindows, padRing, passes, UNKNOWN_ZONE, zoneStations, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
 } from "../pulse";
 
 describe("catKey", () => {
@@ -162,5 +162,66 @@ describe("boundsOf", () => {
     const b = boundsOf([[80.25, 13.0]], 0.02)!;
     [80.23, 12.98, 80.27, 13.02].forEach((v, i) => expect(b[i]).toBeCloseTo(v, 6));
     expect(boundsOf([])).toBeNull();
+  });
+});
+
+// =====================
+// DASH-04 filters (station, zone, status, weapon, vehicle, MO tag)
+// =====================
+
+describe("zoneStations", () => {
+  const st = [{ id: "PS-ADYAR-J2", zone: "Adyar" }, { id: "PS-VELACHERY-J7", zone: "Adyar" }, { id: "PS-GUINDY-J3", zone: "Alandur" }, { id: "PS-X", zone: null }];
+  it("expands zones to their stations; a station without a zone is in Unknown", () => {
+    expect(Array.from(zoneStations(st, new Set(["Adyar"]))).sort()).toEqual(["PS-ADYAR-J2", "PS-VELACHERY-J7"]);
+    expect(Array.from(zoneStations(st, new Set([UNKNOWN_ZONE])))).toEqual(["PS-X"]);
+  });
+  it("no zones selected means no restriction", () => {
+    expect(zoneStations(st, new Set()).size).toBe(0);
+  });
+});
+
+describe("decodeFacets", () => {
+  it("reads a well-formed payload and lower-cases nothing it is not asked to", () => {
+    const f = decodeFacets({ stations: [["PS-ADYAR-J2", "Adyar", "Adyar"], ["PS-X", "X", null]], weapon: { knife: ["C1", "C2"] }, vehicle: { motorcycle: ["C1"] }, mo: { "two wheeler from behind": ["C3"] } });
+    expect(f.stations).toEqual([{ id: "PS-ADYAR-J2", name: "Adyar", zone: "Adyar" }, { id: "PS-X", name: "X", zone: null }]);
+    expect(Array.from(f.weapon.get("knife") ?? [])).toEqual(["C1", "C2"]);
+    expect(f.vehicle.get("motorcycle")?.has("C1")).toBe(true);
+    expect(f.mo.get("two wheeler from behind")?.has("C3")).toBe(true);
+  });
+  it("survives junk and missing kinds", () => {
+    for (const bad of [null, undefined, 42, "x", [], { weapon: "nope", mo: { t: "notarray" }, stations: [[1, 2]] }]) {
+      const f = decodeFacets(bad);
+      expect(f.weapon.size + f.vehicle.size + f.mo.size).toBe(0);
+      expect(Array.isArray(f.stations)).toBe(true);
+    }
+  });
+});
+
+describe("facetIds", () => {
+  const f = decodeFacets({ weapon: { knife: ["A", "B"], cutter: ["C"] }, vehicle: { motorcycle: ["A", "C", "D"] }, mo: { grille: ["C", "E"] } });
+  it("is null when nothing is selected (no restriction)", () => {
+    expect(facetIds(f, { weapon: new Set(), vehicle: new Set(), mo: new Set() })).toBeNull();
+  });
+  it("ORs within a kind and ANDs across kinds", () => {
+    expect(Array.from(facetIds(f, { weapon: new Set(["knife", "cutter"]), vehicle: new Set(), mo: new Set() })!).sort()).toEqual(["A", "B", "C"]);
+    expect(Array.from(facetIds(f, { weapon: new Set(["knife", "cutter"]), vehicle: new Set(["motorcycle"]), mo: new Set() })!).sort()).toEqual(["A", "C"]);
+    expect(Array.from(facetIds(f, { weapon: new Set(["cutter"]), vehicle: new Set(["motorcycle"]), mo: new Set(["grille"]) })!)).toEqual(["C"]);
+  });
+  it("an unknown value matches nothing rather than everything", () => {
+    expect(facetIds(f, { weapon: new Set(["sword"]), vehicle: new Set(), mo: new Set() })!.size).toBe(0);
+  });
+});
+
+describe("passes with DASH-04 filters", () => {
+  const c = decodeCrimes({ t: [1000], id: ["A"], st: ["PS-ADYAR-J2"], cat: ["robbery"], sub: ["chain_snatching"], lat: [13], lon: [80.2], mod: [1200], sev: [3], linked: [false], series: [null], status: ["registered"] })[0];
+  const base: CrimeFilter = { cats: new Set(["robbery"] as CatKey[]), from: 0, to: 2000, clock: null, linkedOnly: false, seriesOnly: false, stations: new Set(), statuses: new Set(), ids: null };
+  it("empty filters let everything through", () => {
+    expect(passes(c, base)).toBe(true);
+  });
+  it("station, status and facet ids each restrict", () => {
+    expect(passes(c, { ...base, stations: new Set(["PS-VELACHERY-J7"]) })).toBe(false);
+    expect(passes(c, { ...base, statuses: new Set(["closed_undetected"]) })).toBe(false);
+    expect(passes(c, { ...base, ids: new Set(["B"]) })).toBe(false);
+    expect(passes(c, { ...base, stations: new Set(["PS-ADYAR-J2"]), statuses: new Set(["registered"]), ids: new Set(["A"]) })).toBe(true);
   });
 });

@@ -239,8 +239,9 @@ export type CrimeFilter = {
   clock: [number, number] | null;     // minute-of-day arc, null = all day
   linkedOnly: boolean;
   seriesOnly: boolean;
-  stations: Set<string>;              // empty = all
+  stations: Set<string>;              // empty = all (a zone filter arrives here as its stations)
   statuses: Set<string>;              // empty = all
+  ids?: Set<string> | null;           // weapon / vehicle / MO matches (facetIds); null or absent = all
 };
 
 export function passes(c: MapCrime, f: CrimeFilter): boolean {
@@ -251,6 +252,7 @@ export function passes(c: MapCrime, f: CrimeFilter): boolean {
   if (f.seriesOnly && !c.series) return false;
   if (f.stations.size && !f.stations.has(c.st)) return false;
   if (f.statuses.size && !f.statuses.has(c.status)) return false;
+  if (f.ids && !f.ids.has(c.id)) return false;
   return true;
 }
 
@@ -291,4 +293,65 @@ export function boundsOf(points: LonLat[], pad = 0.01): [number, number, number,
     if (lon < w) w = lon; if (lon > e) e = lon; if (lat < s) s = lat; if (lat > n) n = lat;
   }
   return [w - pad, s - pad, e + pad, n + pad];
+}
+
+// =====================
+// DASH-04: station / zone / status / weapon / vehicle / MO filters
+// =====================
+
+/** Bucket for stations with no zone in the registry, so they can still be chosen. */
+export const UNKNOWN_ZONE = "Unknown";
+
+export type FacetStation = { id: string; name: string; zone: string | null };
+export type Facets = {
+  stations: FacetStation[];
+  weapon: Map<string, Set<string>>;
+  vehicle: Map<string, Set<string>>;
+  mo: Map<string, Set<string>>;
+};
+export type FacetSelection = { weapon: Set<string>; vehicle: Set<string>; mo: Set<string> };
+
+/** The stations of the chosen zones; an empty set when no zone is chosen (no restriction). */
+export function zoneStations(stations: { id: string; zone: string | null }[], zones: Set<string>): Set<string> {
+  const out = new Set<string>();
+  if (zones.size === 0) return out;
+  for (const st of stations) if (zones.has(st.zone ?? UNKNOWN_ZONE)) out.add(st.id);
+  return out;
+}
+
+function idMap(v: unknown): Map<string, Set<string>> {
+  const m = new Map<string, Set<string>>();
+  if (!v || typeof v !== "object" || Array.isArray(v)) return m;
+  for (const [k, ids] of Object.entries(v as Record<string, unknown>)) {
+    if (Array.isArray(ids)) m.set(k, new Set(ids.filter((x): x is string => typeof x === "string")));
+  }
+  return m;
+}
+
+/** map_facets() payload (0004_12) to typed sets; anything malformed becomes empty, never an exception. */
+export function decodeFacets(raw: unknown): Facets {
+  const o = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const stations = Array.isArray(o.stations)
+    ? o.stations.flatMap((r) => (Array.isArray(r) && typeof r[0] === "string"
+      ? [{ id: r[0], name: typeof r[1] === "string" ? r[1] : r[0], zone: typeof r[2] === "string" && r[2] ? r[2] : null }]
+      : []))
+    : [];
+  return { stations, weapon: idMap(o.weapon), vehicle: idMap(o.vehicle), mo: idMap(o.mo) };
+}
+
+/**
+ * Crime ids matching the weapon / vehicle / MO choices: any chosen value within a kind (OR), every kind
+ * that has a choice (AND). null when nothing is chosen, so the filter does not restrict at all.
+ */
+export function facetIds(f: Facets, sel: FacetSelection): Set<string> | null {
+  const kinds: [keyof FacetSelection, Set<string>][] = [["weapon", sel.weapon], ["vehicle", sel.vehicle], ["mo", sel.mo]];
+  const perKind: Set<string>[] = [];
+  for (const [kind, chosen] of kinds) {
+    if (chosen.size === 0) continue;
+    const any = new Set<string>();
+    for (const v of Array.from(chosen)) for (const id of Array.from(f[kind].get(v) ?? [])) any.add(id);
+    perKind.push(any);
+  }
+  if (perKind.length === 0) return null;
+  return perKind.reduce((acc, ids) => new Set(Array.from(acc).filter((id) => ids.has(id))));
 }
