@@ -66,7 +66,7 @@ def main() -> int:
             check(f"nightshift lane {lane}", one)
 
     def sample():
-        ss = Settings(**{**s.model_dump(), "sample_mode": True, "zetaris_api_key": ""})
+        ss = Settings(**{**s.model_dump(), "sample_mode": True, "zetaris_api_key": "", "zetaris_api_key_file": ""})
         r = ZetarisClient(ss).named("q_ping", agent="smoke")
         return ("PASS" if r.source == "sample" else "FAIL"), f"q_ping via {r.source}"
 

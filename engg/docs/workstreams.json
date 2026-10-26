@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T09:26:15+05:30",
+  "updated": "2026-10-26T10:43:29+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -60,14 +60,15 @@
           "id": "WS1-05",
           "phase": "P0",
           "title": "Install Zetaris platform locally",
-          "status": "in_progress",
-          "note": "Registry sign-in done; images downloading"
+          "status": "done",
+          "note": "Running locally; verify.sh 8/9 (bootstrap sample load in progress)"
         },
         {
           "id": "WS1-06",
           "phase": "P0",
           "title": "Zetaris API token + organisation ID; live SELECT 1",
-          "status": "todo"
+          "status": "done",
+          "note": "Org ID 1; token in ~/.secrets/nexus-zetaris.key; live SELECT 1 PASS"
         },
         {
           "id": "WS1-07",
