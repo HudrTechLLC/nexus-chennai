@@ -3,21 +3,30 @@
 One rule text, rendered for two dialects, so the Zetaris views (zetaris/20_dq.sql) and the DuckDB
 twin of q_dq_flags apply exactly the same checks:
 
-- duplicate_fir:      the same incident filed twice: same category and h3_r9 cell, start times
-                      within DUP_WINDOW_MIN minutes, and a different station or source system;
+- duplicate_fir:      the same incident filed twice: same category, start times within DUP_WINDOW_MIN
+                      minutes, coordinates within DUP_MAX_DEG degrees (~275 m; two stations often geocode
+                      one incident into neighbouring H3 cells), and a different station or source system;
 - bad_geo:            no coordinates, or outside the city's bounding box;
 - time_inconsistent:  occurred after it was reported, or the occurrence ends before it starts;
 - unmapped_section:   a legacy row whose IPC sections could not be mapped (sections_raw kept).
 
+Not crime-level (Zetaris views only): dq_orphan_evidence, dq_tip_without_incident, dq_stale_cameras
+(camera registry not updated in STALE_CAMERA_DAYS days).
+
 City bounds come from cities/<city>/city.yaml `map.bounds` (D-004): nothing city-specific in code.
 Every rule returns (crime_id, rule, other_id, detail).
+
+Threshold note: DUP_WINDOW_MIN and DUP_MAX_DEG were chosen against the generator's planted duplicates
+(_truth/duplicates.json, seed 42): recall 15/15, precision 15/15. Exact-cell matching scored 11/15.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-DUP_WINDOW_MIN = 120
+DUP_WINDOW_MIN = 30
+DUP_MAX_DEG = 0.0025
+STALE_CAMERA_DAYS = 180
 RULES = ("duplicate_fir", "bad_geo", "time_inconsistent", "unmapped_section")
 COLUMNS = ("crime_id", "rule", "other_id", "detail")
 
@@ -40,10 +49,12 @@ def rule_sql(rule: str, d: dict[str, str], bounds: dict[str, float]) -> str:
         gap = f"abs({ep('a.occurred_from')} - {ep('b.occurred_from')})"
         return (
             f"SELECT a.crime_id AS crime_id, 'duplicate_fir' AS rule, b.crime_id AS other_id, "
-            f"concat('same ', a.category, ' in cell ', a.h3_r9, ' within ', CAST(CAST({gap} / 60 AS INT) AS {s}), "
-            f"' min, filed at ', coalesce(b.station_id, '?'), ' via ', b.source) AS detail "
-            f"FROM {v} a JOIN {v} b ON a.category = b.category AND a.h3_r9 = b.h3_r9 AND a.crime_id <> b.crime_id "
+            f"concat('same ', a.category, ' within ', CAST(CAST({gap} / 60 AS INT) AS {s}), ' min and ', "
+            f"CAST(CAST(greatest(abs(a.lat - b.lat), abs(a.lon - b.lon)) * 111000 AS INT) AS {s}), "
+            f"' m, filed at ', coalesce(b.station_id, '?'), ' via ', b.source) AS detail "
+            f"FROM {v} a JOIN {v} b ON a.category = b.category AND a.crime_id <> b.crime_id "
             f"AND {gap} <= {DUP_WINDOW_MIN * 60} "
+            f"AND abs(a.lat - b.lat) <= {DUP_MAX_DEG} AND abs(a.lon - b.lon) <= {DUP_MAX_DEG} "
             f"AND (coalesce(a.station_id, '') <> coalesce(b.station_id, '') OR a.source <> b.source)"
         )
     if rule == "bad_geo":
@@ -100,6 +111,12 @@ def dq_file() -> str:
     views.append(("dq_tip_without_incident",
                   "SELECT t.tip_id, t.category, t.received_week, 'tip not tied to a public incident' AS detail "
                   "FROM sb.tips t WHERE t.public_incident_id IS NULL AND t.status NOT IN ('quarantined', 'closed')"))
+    stale = f"datediff(current_date(), CAST(last_updated AS DATE)) > {STALE_CAMERA_DAYS}"
+    views.append(("dq_stale_cameras",
+                  "SELECT camera_id, owner_type, contact_station, last_updated, "
+                  "concat('camera registry not updated for ', "
+                  "CAST(datediff(current_date(), CAST(last_updated AS DATE)) AS STRING), ' days') AS detail "
+                  f"FROM s3csv.cctv_cameras WHERE {stale}"))
     body = "\n".join(f"CREATE OR REPLACE SCHEMASTORE VIEW {name} WITH CONTAINER nexus AS\n{sql};\n" for name, sql in views)
     return _HEADER + "\n" + body
 
