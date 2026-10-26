@@ -425,3 +425,40 @@ FROM c CROSS JOIN pa LEFT JOIN cal ON cal.date = CAST(CAST(c.lt AS DATE) AS VARC
 
 Q_CONTEXT = _q_context()
 N2_SPECS[Q_CONTEXT["name"]] = Q_CONTEXT
+
+
+# ---------------------------------------------------------------------------- q_cases (batch of q_case)
+# The Planner fetches up to 25 candidates and the Skeptic re-reads pairs; each q_case is a Zetaris->Supabase
+# trip (~1-3 s). q_cases reads the same contract for up to CASES_MAX ids in one trip: an IN list over
+# sb.case_bundle_v, which Zetaris pushes down to Postgres (EXPLAIN: PushedFilters In(crime_id, [...])).
+# render() binds scalars only, so the list is CASES_MAX fixed slots; cases_params() fills them ('' pads).
+CASES_MAX = 25
+_SLOTS = [f"id{i:02d}" for i in range(1, CASES_MAX + 1)]
+
+
+def cases_params(ids) -> list[dict[str, str]]:
+    """q_cases parameter dicts for any number of ids (deduplicated, chunked by CASES_MAX)."""
+    uniq = list(dict.fromkeys(str(i) for i in ids if i))
+    out = []
+    for start in range(0, len(uniq), CASES_MAX):
+        chunk = uniq[start:start + CASES_MAX]
+        out.append({slot: (chunk[n] if n < len(chunk) else "") for n, slot in enumerate(_SLOTS)})
+    return out
+
+
+def _q_cases() -> dict:
+    from .case_bundle import q_case_lightning
+
+    slots = ", ".join(f":{s}" for s in _SLOTS)
+    one = q_case_lightning(CASE_COLUMNS)
+    assert one.endswith("WHERE crime_id = :crime_id")
+    lightning = one.replace("WHERE crime_id = :crime_id", f"WHERE crime_id IN ({slots}) ORDER BY crime_id")
+    sample = (f"SELECT * FROM ({_CASE_SAMPLE.strip().replace('crime_id = :crime_id', f'crime_id IN ({slots})')}) q "
+              "ORDER BY crime_id")
+    return dict(name="q_cases", lightning=lightning, sample=sample, columns=CASE_COLUMNS,
+                description="q_case for up to 25 crimes in one trip (Planner candidates, Skeptic pairs)")
+
+
+Q_CASES = _q_cases()
+N2_SPECS[Q_CASES["name"]] = Q_CASES
+TWINS["q_cases"] = (Q_CASES["sample"], CASE_COLUMNS)
