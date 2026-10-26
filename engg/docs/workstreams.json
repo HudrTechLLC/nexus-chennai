@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T21:45:36+05:30",
+  "updated": "2026-10-26T21:55:23+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -419,8 +419,8 @@
           "id": "WS2-25",
           "phase": "P3",
           "title": "Address guard on MO tags (privacy, J5)",
-          "status": "in_progress",
-          "note": "nexus-5 code (PR #271, named places only) · nexus-3 re-clean of stored rows, no re-extract"
+          "status": "done",
+          "note": "nexus-5 · #271 (named places only); re-clean of 12 stored rows by nexus-3"
         },
         {
           "id": "WS2-26",
@@ -726,15 +726,15 @@
           "id": "WS4-11",
           "phase": "P8",
           "title": "Public map: per-crime cards and detail view on hex click (privacy-safe fields)",
-          "status": "todo",
-          "note": "nexus-5 · 0007_11 RPCs; opaque public ids, no narratives/places/persons"
+          "status": "in_progress",
+          "note": "nexus-5 · 0007_11 PR #287 approved"
         },
         {
           "id": "WS4-12",
           "phase": "P8",
           "title": "\"Add a tip\" prefilled from a crime card or an appeal",
-          "status": "todo",
-          "note": "nexus-5 (shared /tip/new prefill) + nexus-4 (appeal pages)"
+          "status": "in_progress",
+          "note": "nexus-2 (moved from nexus-5) · ?appeal= / ?about="
         },
         {
           "id": "WS4-13",
@@ -747,8 +747,15 @@
           "id": "WS4-14",
           "phase": "P8",
           "title": "Synthetic published appeals from several stations",
-          "status": "in_progress",
-          "note": "nexus-2 · seed through the live publish guard; hero/judge cases excluded"
+          "status": "done",
+          "note": "nexus-2 · #278; 8 published through the live guard"
+        },
+        {
+          "id": "WS4-15",
+          "phase": "P8",
+          "title": "Tip form: smaller area choice (r8/r9/r10) + address search that places the area",
+          "status": "todo",
+          "note": "nexus-2 · user request; area not point (J1); geocode via our server, query never stored"
         }
       ]
     },
