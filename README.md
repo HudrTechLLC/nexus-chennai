@@ -208,7 +208,24 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 
 ## Evaluation
 
-`python -m app.eval` (from `services/api`) compares the linker against a rules-only baseline (same category, ≤ 2 km, ≤ 14 days) on the planted ground truth. It makes no model calls. Results: `[PENDING: WS2-14]` (`output_examples/eval_report.json`).
+`python -m app.eval` compares the linker against a rules-only baseline (same category, ≤ 2 km, ≤ 14 days) on the planted ground truth. It runs with empty memory (H-MEM) and makes no model calls: models only explain. The report is `output_examples/eval_report.json`.
+
+| | Precision | Recall | F1 |
+|---|---|---|---|
+| **Nexus agents** | **0.59** | **0.86** | **0.70** |
+| Rules-only baseline | 0.09 | 0.30 | 0.13 |
+
+- 60 synthetic truth cases, 98 planted true pairs.
+- **HIGH-band alerts were correct 9 of 9 times.** MEDIUM-band alerts were correct 56% of the time (75 of 133 pairs; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
+- Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
+- Two similar-MO variants were trialled and left off: a feature cosine without IDF (more false positives) and a fixed-IDF TF-IDF (no change on this set).
+
+Reproduce from a fresh clone (after Setup, about 2 minutes):
+
+```bash
+cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample/_truth --mo-cosine all
+```
+
 
 ## Limitations
 
