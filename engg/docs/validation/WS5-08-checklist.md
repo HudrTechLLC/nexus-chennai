@@ -144,6 +144,7 @@ EOF
 | 10.3 | Frame-by-frame scan of the video and every deck screenshot | No Nightshift Providers/Console tab, no terminal env output, no Supabase dashboard, no token, no `.env` |
 | 10.4 | Compare the video narration with [VIDEO_SCRIPT](../submission/VIDEO_SCRIPT.md)'s "facts to re-check" table | Every spoken number matches the screen |
 | 10.5 | `grep -rn 'PENDING:' engg/docs/submission/` | Only items the team chose to leave; none pasted into the form |
+| 10.6 | Demo console logins (the 5 `@nexus.demo` accounts) | Before submission, decide with Ravee whether to rotate the demo passwords to stronger ones for judges. Credentials go only in the submission form, never in the repo |
 
 ## Result
 

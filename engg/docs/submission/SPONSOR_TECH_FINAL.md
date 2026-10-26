@@ -38,7 +38,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_offender_return`: offenders released in the last 60 days whose earlier MO shares the case's MO tags, home ward first;
   - `q_calls_near`: 112 emergency calls within a set distance and time of a crime.
   - Live check: all 14 return rows live on Zetaris (26 Oct); all 14 run on DuckDB twins in sample mode.
-  - Semantic view live: `v_crime_unified`, one view over every crime record shape; the other semantic views are `[PENDING: WS1-13]`.
+  - Semantic layer live: 13 views in the `nexus` container. `v_crime_unified` puts every crime record shape in one view (Supabase FIRs + legacy CCTNS CSV + Parquet archive, 19,540 rows). 8 data-quality views are summed up by `dq_flags`. 4 feed views include `v_news_mentions`, which `q_news` reads. Vehicle trail, offender return, tip corroboration and calls-near are named queries that join sources directly, not views.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
