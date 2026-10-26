@@ -278,3 +278,14 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
 The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_hex_counts`: crime counts per H3 cell per time window, read through Zetaris, with a DuckDB twin.
 - **Statistics:** a Poisson upper-tail test against each cell's own baseline of 8 windows, shrunk toward the citywide rate. No model is involved.
 - **Code:** it lives in `adapters/zetaris_queries_n2.py` and is merged into `NAMED_QUERIES`, a file split agreed between nexus-1 and nexus-2.
+
+## D-025 · Traces and system status are stored in Supabase for the web console (nexus-3, migration 0006) (2026-10-26)
+- **The problem:** the Vercel console cannot read the laptop's `logs/trace-*.jsonl`.
+- **The decision:** `0006` adds two tables.
+  - `trace_events`: key `(run_id, seq)`. It holds every D3.12 field (agent, action, model, routed model, receipt id, Zetaris query ids, engine, confidence, retry count, status).
+  - `system_status`: one row per component, with its state and the time it was checked.
+- **Who can access them:** police roles can read; anon cannot; only the service role writes.
+- **How rows are written:** they are **copied from the tracer's JSONL by `SupabaseStore.finish_run`, never hand-made** (R3).
+  - Before upsert, summaries go through redaction: no secrets, no tip passphrases, and no raw tip text.
+  - The worker writes a heartbeat into `system_status` on every pass. A failed heartbeat never fails the pass.
+- **Ownership:** the `0006` migration range is assigned to nexus-3.
