@@ -28,25 +28,19 @@ The hosted setup (cloud Supabase + Vercel, [D-003](DECISIONS.md)) becomes one de
 
 ## 3. Backlog (WS6, from the tracker)
 
-### First after the freeze: live data-quality flags in scoring
+### Live data-quality flags: shipped before the freeze; one follow-up
 
-Today live scoring runs **without** data-quality flags (README Known limitations). The Planner's `q_dq_flags`
-step times out on every live case run, even with Zetaris idle. Since #334 it is given 30 s, traced
-`step_degraded`, and skipped. The hero numbers were produced the same way, so they stand. Sample mode, the DQ views
-and the console pages are unaffected.
+Live `q_dq_flags` used to time out on every case run. It filtered `nexus.dq_flags` by id, and Zetaris cannot push
+that filter through the sorted UNION of rule views and the duplicate-FIR self-join (D-031), so each call computed
+every flag (55–80 s). Ravee and the chief brought the fix forward (#348, migration 0007_14, applied 27 Oct):
+`app.dq_status` stores every crime-level flag in `public.dq_flags_snapshot` after a live pass. `q_dq_flags` reads
+that table through Zetaris with a literal `crime_id IN (...)` that pushes down to Postgres: 60 ids in about 1.5 s.
+The run trace carries the snapshot time (`as_of=`). Files mode and sample mode still read the rule views. The hero's
+stored scores were not re-run.
 
-- **Why it is slow:** `q_dq_flags` filters `array_contains(split(:ids, ','), crime_id)` on top of
-  `nexus.dq_flags`, a UNION of four sorted rule views (the sort is required by D-031). One of them is the
-  duplicate-FIR self-join of `v_crime_unified` (about 19,500 rows) against `sb.crimes`. Zetaris cannot push the id
-  filter through the sorted UNION and self-join, so every call computes every flag: the full pass takes
-  55–80 s live (`q_dq_summary`).
-- **Fix (chosen, option A):** `app.dq_status` already runs the full pass. It should also write the resulting flags
-  (a few hundred rows) to a small Supabase snapshot table, with read access for the API role only, so the Planner
-  reads them in one fast lookup, stamped with the snapshot time. This needs one migration, which is why it waited
-  for after the freeze.
-- **Rejected for now:** rewriting `q_dq_flags` to filter inside each rule (B). Zetaris allows one reference to a
-  schema-store view per query, so legacy-to-legacy duplicates would drop out. Leaving it degraded (C) is the
-  freeze decision, not the end state.
+- **Follow-up (post-freeze):** a FIR filed after the last `dq_status` pass is not in the snapshot, so it comes back
+  with no flags, which reads the same as "clean". Return an explicit "not checked yet" for ids newer than the
+  snapshot, or refresh the snapshot from the worker after each new FIR.
 
 ### First agent-speed item: end the Skeptic send-back loop when a re-score brings nothing new
 
