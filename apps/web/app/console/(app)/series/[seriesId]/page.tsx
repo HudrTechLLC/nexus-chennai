@@ -8,7 +8,7 @@ import { audit, crimeTitle } from "@/lib/alertsData";
 import { pct } from "@/lib/alerts";
 import { allows } from "@/lib/roles";
 import { alertsTouching, briefsChunked, fetchMemberIds, fetchSeries, taskforcesFor } from "@/lib/seriesData";
-import { dossierAuthor, memberLonLat, parseDossier, seriesHull, splitCitations, timeline, tokenSaving, type MemberPoint } from "@/lib/series";
+import { dossierAuthor, memberLonLat, parseDossier, savingLabel, seriesHull, splitCitations, timeline, type MemberPoint } from "@/lib/series";
 import { BandPill, StatusPill } from "@/components/console/alerts/AlertBits";
 import { SeriesStatusPill } from "@/components/console/series/SeriesBits";
 import { TfStatusPill } from "@/components/console/taskforces/TfBits";
@@ -49,7 +49,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
   const stations = Array.from(new Set(members.map((m) => m.station_name).filter((s) => s !== "—")));
   const dossier = parseDossier(series.dossier);
   const cites = dossier ? splitCitations(dossier.cited_ids, memberIds) : null;
-  const saving = dossier ? tokenSaving(dossier) : null;
+  const saving = dossier ? savingLabel(dossier) : null;
   const hidden = members.filter((m) => !m.full).length;
   const isAdmin = allows(officer.role, "admin");
 
@@ -91,7 +91,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
               <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
                 <div><dt className="text-muted">Records · chunks</dt><dd className="font-mono tabular-nums">{dossier.record_count ?? "?"} · {dossier.chunks}</dd></div>
                 <div><dt className="text-muted">Tokens (projected → actual)</dt><dd className="font-mono tabular-nums">{dossier.tokens_projected ?? "?"} → {dossier.tokens_actual ?? "?"}</dd></div>
-                <div><dt className="text-muted">Saving</dt><dd className="font-mono tabular-nums">{saving == null ? "—" : pct(saving)}</dd></div>
+                <div><dt className="text-muted">Saving</dt><dd className="font-mono tabular-nums" title={saving?.hint ?? undefined}>{saving?.text ?? "—"}</dd></div>
                 <div><dt className="text-muted">Built</dt><dd>{fmt(dossier.generated_at) ?? "—"}</dd></div>
               </dl>
               <div className="prose prose-sm prose-slate mt-4 max-w-none dark:prose-invert">

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { latLngToCell } from "h3-js";
 import {
-  bbox, dossierAuthor, chunk, constellation, isoWeekStart, memberLonLat, memberSortKey, parseDossier, seriesHull, splitCitations,
+  bbox, dossierAuthor, savingLabel, chunk, constellation, isoWeekStart, memberLonLat, memberSortKey, parseDossier, seriesHull, splitCitations,
   timeline, tokenSaving, weekSpan, type MemberPoint,
 } from "../series";
 
@@ -122,5 +122,20 @@ describe("small helpers", () => {
   it("chunks ids", () => {
     expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
     expect(chunk([], 2)).toEqual([]);
+  });
+});
+
+describe("savingLabel", () => {
+  it("shows a positive saving as fewer tokens", () => {
+    expect(savingLabel({ chunks: 4, tokens_projected: 12000, tokens_actual: 4800 }).text).toBe("60% fewer tokens");
+  });
+  it("never shows a negative saving; explains a single chunk instead", () => {
+    const l = savingLabel({ chunks: 1, tokens_projected: 1969, tokens_actual: 2369 }); // the live hero dossier
+    expect(l.text).toBe("none");
+    expect(l.hint).toMatch(/one chunk/);
+    expect(savingLabel({ chunks: 3, tokens_projected: 100, tokens_actual: 100 }).hint).toMatch(/single read/);
+  });
+  it("is a dash when token counts are missing", () => {
+    expect(savingLabel({ chunks: 2, tokens_projected: null, tokens_actual: 5 }).text).toBe("—");
   });
 });
