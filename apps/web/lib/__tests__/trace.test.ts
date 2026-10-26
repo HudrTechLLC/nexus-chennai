@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isRunId, queryRows, querySource, stateTone, stepKind, summarise, type TraceRow } from "../trace";
+import { isRunId, queryRows, querySource, runTone, stateTone, stepKind, summarise, type TraceRow } from "../trace";
 
 function row(over: Partial<TraceRow>): TraceRow {
   return {
@@ -72,5 +72,14 @@ describe("helpers", () => {
     expect(isRunId("demo-001")).toBe(true);
     expect(isRunId("x,y)")).toBe(false);
     expect(isRunId("")).toBe(false);
+  });
+});
+
+describe("runTone", () => {
+  it("interrupted runs are amber, not red like failures", () => {
+    expect(runTone("interrupted")).toBe("warn");
+    expect(runTone("failed")).toBe("bad");
+    expect(runTone("success")).toBe("good");
+    expect(runTone("running")).toBe("muted");
   });
 });
