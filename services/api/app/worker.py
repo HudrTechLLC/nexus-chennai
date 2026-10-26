@@ -15,6 +15,8 @@ worker picks the work up:
 2c. `series` with no dossier -> Series analyst (Markovian), stored in `series.dossier`.
 3. New crimes (reported_at <= now) without `crime_features` -> the agent graph (extract -> link ->
    Skeptic -> alerts); the run row carries subject = crime_id so the console can link its trace.
+4. Stale runs: a run still 'running' with no trace event for STALE_RUN_MINUTES (its process was
+   stopped) becomes 'interrupted' (0006_04), with a run_interrupted event and its trace copied.
 
 Queue and state rows come from Supabase. The crime facts behind an H-MEM memory are read
 through Zetaris named queries (R1).
@@ -23,9 +25,11 @@ through Zetaris named queries (R1).
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from . import engines
@@ -43,6 +47,11 @@ from .tracing import IST, Tracer, new_run_id
 BATCH = 25
 STATUS_FOR_DECISION = {"approve": "approved", "reject": "rejected"}
 TIP_STATUS = {"clean": "screened", "quarantine": "quarantined", "urgent": "urgent"}
+STALE_RUN_MINUTES = 15
+# A run whose trace file is not on this machine (another lane's checkout) shows no live events here:
+# trace_events reach the DB only at finish_run. Only call it interrupted after this long.
+STALE_UNSEEN_RUN_HOURS = 6
+SWEEP_EVERY_SECONDS = 60
 
 
 def _now() -> str:
@@ -64,6 +73,8 @@ class Worker:
                                                              store_factory=lambda s, t: SupabaseStore(sb, t)))
         self.deps = AgentDeps(tracer=self.tracer, zetaris=self.zetaris, nightshift=self.nightshift, engines=engines)
         self._dossier_failed: set[str] = set()
+        self._last_sweep = 0.0
+        self.logs_dir = Path(settings.logs_dir)  # where runs on this machine write their live trace files
 
     # ----- 1. analyst decisions -> H-MEM ---------------------------------------------
 
@@ -243,10 +254,60 @@ class Worker:
             self.tracer.emit("Worker", "heartbeat_failed", output_summary=str(exc)[:300], status="error")
             return 0
 
+    # ----- 5. stale runs -> interrupted (0006_04) ----------------------------------------
+
+    def _last_event_at(self, run: dict[str, Any]) -> tuple[datetime, bool]:
+        """(newest sign of life, seen live). The run's local trace file is written live; trace_events
+        reach the DB only at finish_run, so without the file we fall back to its newest stored event,
+        else when it started, and say the run was not seen live."""
+        path = self.logs_dir / f"trace-{run['run_id']}.jsonl"
+        if path.is_file():
+            for line in reversed(path.read_text(encoding="utf-8", errors="replace").splitlines()):
+                try:
+                    return datetime.fromisoformat(json.loads(line)["timestamp"]), True
+                except (ValueError, KeyError, TypeError):
+                    continue
+        rows = self.sb.select("trace_events", {"select": "ts", "run_id": f"eq.{run['run_id']}",
+                                               "order": "ts.desc", "limit": "1"})
+        if rows and rows[0].get("ts"):
+            return datetime.fromisoformat(str(rows[0]["ts"])), False
+        return datetime.fromisoformat(str(run["started"])), False
+
+    def sweep_stale_runs(self, now: str | None = None) -> int:
+        """Mark runs whose process was stopped as 'interrupted'. Never fails a worker pass."""
+        at = datetime.fromisoformat(now) if now else datetime.now(IST)
+        swept = 0
+        try:
+            for run in self.sb.select("runs", {"select": "run_id,kind,started", "status": "eq.running"}):
+                last, seen = self._last_event_at(run)
+                limit = timedelta(minutes=STALE_RUN_MINUTES) if seen else timedelta(hours=STALE_UNSEEN_RUN_HOURS)
+                if at - last < limit:
+                    continue
+                rid = run["run_id"]
+                last_iso = last.isoformat(timespec="seconds")
+                run_tracer = Tracer(rid, self.logs_dir, echo=False)
+                run_tracer.emit("Worker", "run_interrupted", input_summary=rid,
+                                output_summary=json.dumps({"last_event_at": last_iso}),
+                                status="interrupted")
+                # Only a run that is still 'running' (it may have finished meanwhile).
+                self.sb.update("runs", {"run_id": f"eq.{rid}", "status": "eq.running"},
+                               {"status": "interrupted", "finished": at.isoformat(timespec="seconds")})
+                SupabaseStore(self.sb, run_tracer).copy_trace(rid)
+                self.tracer.emit("Worker", "run_interrupted", input_summary=rid,
+                                 output_summary=f"no trace event since {last_iso}", status="interrupted")
+                swept += 1
+        except Exception as exc:
+            self.tracer.emit("Worker", "sweep_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300],
+                             status="error")
+        return swept
+
     def run_once(self) -> dict[str, int]:
         """One pass. New cases (a just-filed FIR) run before dossiers, and a pass that ran a case skips the
         dossier step, so a FIR never waits behind up to DOSSIER_SECONDS of reason-lane chunks."""
         self.heartbeat()
+        if time.monotonic() - self._last_sweep >= SWEEP_EVERY_SECONDS:
+            self._last_sweep = time.monotonic()
+            self.sweep_stale_runs()
         with engines.use_tracer(self.tracer):
             out = {"decisions": self.process_decisions(), "tips": self.process_tips(),
                    "appeals": self.process_appeal_requests()}
