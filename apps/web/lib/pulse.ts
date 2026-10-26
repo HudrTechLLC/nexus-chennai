@@ -295,6 +295,52 @@ export function boundsOf(points: LonLat[], pad = 0.01): [number, number, number,
   return [w - pad, s - pad, e + pad, n + pad];
 }
 
+/**
+ * The opening camera frame: the crimes the role can see in the window (outliers trimmed to the
+ * 2nd-98th percentile once there are enough to trim), plus every arc end and series member so the
+ * links on screen are never cut off. null when there is nothing to frame (keep the city view).
+ */
+export function initialFrame(points: LonLat[], linked: LonLat[], pad = 0.008): [number, number, number, number] | null {
+  let core = points;
+  if (points.length > 40) {
+    const q = (xs: number[], f: number) => xs[Math.min(xs.length - 1, Math.max(0, Math.floor(f * (xs.length - 1))))];
+    const lons = points.map((p) => p[0]).sort((a, b) => a - b), lats = points.map((p) => p[1]).sort((a, b) => a - b);
+    const w = q(lons, 0.02), e = q(lons, 0.98), s = q(lats, 0.02), n = q(lats, 0.98);
+    core = points.filter(([lon, lat]) => lon >= w && lon <= e && lat >= s && lat <= n);
+  }
+  return boundsOf(core.concat(linked), pad);
+}
+
+export type Box = { left: number; top: number; right: number; bottom: number };
+export type Padding = { top: number; bottom: number; left: number; right: number };
+
+/**
+ * Camera padding that keeps a fitted frame clear of the map's floating panels. Each panel pads the
+ * side it hugs (the cheapest of its four), plus a margin; if the panels would leave less than a
+ * share of the map, that axis is scaled down so the frame never collapses (phones).
+ */
+export function overlayPadding(box: Box, panels: Box[], margin = 16, minShare = 0.4): Padding {
+  const W = box.right - box.left, H = box.bottom - box.top;
+  const p: Padding = { top: margin, bottom: margin, left: margin, right: margin };
+  for (const r of panels) {
+    if (r.right <= box.left || r.left >= box.right || r.bottom <= box.top || r.top >= box.bottom) continue;
+    const c: [keyof Padding, number, number][] = [
+      ["top", r.bottom - box.top, W], ["bottom", box.bottom - r.top, W],
+      ["left", r.right - box.left, H], ["right", box.right - r.left, H],
+    ];
+    // cost = map area given up by padding that side
+    const [side, d] = c.reduce((best, x) => (x[1] * x[2] < best[1] * best[2] ? x : best));
+    p[side] = Math.max(p[side], d + margin);
+  }
+  const fit = (a: keyof Padding, b: keyof Padding, total: number) => {
+    const room = total * (1 - minShare);
+    if (p[a] + p[b] > room) { const k = room / (p[a] + p[b]); p[a] = Math.round(p[a] * k); p[b] = Math.round(p[b] * k); }
+  };
+  fit("left", "right", W);
+  fit("top", "bottom", H);
+  return p;
+}
+
 // =====================
 // DASH-04: station / zone / status / weapon / vehicle / MO filters
 // =====================

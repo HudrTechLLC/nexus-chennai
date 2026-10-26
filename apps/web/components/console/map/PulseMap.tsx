@@ -9,7 +9,7 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  boundsOf, byCount, cone, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  boundsOf, byCount, cone, initialFrame, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
@@ -261,6 +261,21 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
     return boundsOf(series.flatMap((s) => s.pts.map((x) => x.p)));
   }, [constellation, seriesOnly, series]);
 
+  // Opening frame: once the default window has loaded (newest months load first), frame what this
+  // role can see: its crimes plus arc ends and series members. Computed once; MapCanvas skips it if
+  // the user has already moved the map.
+  const [openFrame, setOpenFrame] = useState<[number, number, number, number] | null>(null);
+  const frameDone = useRef(false);
+  useEffect(() => {
+    if (frameDone.current || !win || data.totalMonths === 0) return;
+    if (data.loadedMonths < Math.min(2, data.totalMonths)) return;
+    frameDone.current = true;
+    const linked = arcs.flatMap((a) => [a.path[0], a.path[a.path.length - 1]]).concat(series.flatMap((s) => s.pts.map((x) => x.p)));
+    setOpenFrame(initialFrame(visible.map((c) => c.pos), linked));
+  }, [win, data.loadedMonths, data.totalMonths, visible, arcs, series]);
+
+  const [panelOpen, setPanelOpen] = useState(false); // phones only: the layers panel starts closed
+
   const dim = constellation ? 0.25 : 1;
   const loopT = (now % 2400) / 2400; // travelling dash: one pass every 2.4 s
 
@@ -384,15 +399,19 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
 
   return (
     <div className="relative h-[calc(100vh-9rem)] min-h-[560px] overflow-hidden rounded-xl border border-line bg-black">
-      <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} focus={seriesFocus} />
+      <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} focus={seriesFocus} initialFocus={openFrame} />
 
       {/* category chips */}
-      <div className="absolute left-3 top-3 z-10 flex max-w-[60%] flex-wrap gap-1.5">
+      <div data-map-overlay className="absolute left-3 top-3 z-10 flex max-w-[60%] flex-wrap gap-1.5 max-md:max-w-[calc(100%-4.5rem)] max-md:flex-nowrap max-md:overflow-x-auto">
+        <button onClick={() => setPanelOpen((v) => !v)} aria-expanded={panelOpen}
+          className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-medium text-ink shadow md:hidden">
+          {panelOpen ? "Close" : "Layers"}
+        </button>
         {CAT_KEYS.map((k) => (
           <button
             key={k} aria-pressed={cats.has(k)}
             onClick={() => setCats((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; })}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium shadow ${cats.has(k) ? "bg-surface text-ink" : "bg-[color-mix(in_srgb,var(--surface)_50%,transparent)] text-muted line-through"}`}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium shadow ${cats.has(k) ? "bg-surface text-ink" : "bg-[color-mix(in_srgb,var(--surface)_50%,transparent)] text-muted line-through"}`}
           >
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: `rgb(${CAT_COLOUR[k].join(",")})` }} />
             <span aria-hidden>{CAT_GLYPH[k]}</span> {CAT_LABEL[k]}
@@ -401,7 +420,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* layers + filters */}
-      <div className="absolute right-12 top-3 z-10 max-h-[calc(100%-9.5rem)] w-56 space-y-3 overflow-y-auto rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur">
+      <div data-map-overlay className={`${panelOpen ? "" : "max-md:hidden"} absolute right-12 top-3 z-10 max-h-[calc(100%-9.5rem)] w-56 space-y-3 overflow-y-auto rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur max-md:top-12`}>
         <div>
           <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Layers</p>
           {([
@@ -461,7 +480,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* status line */}
-      <div className="absolute left-3 top-14 z-10 rounded-md bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-2 py-1 text-xs shadow backdrop-blur">
+      <div data-map-overlay className="absolute left-3 top-14 z-10 rounded-md bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-2 py-1 text-xs shadow backdrop-blur">
         {data.error ? <span className="text-red-600">Map data error: {data.error}</span>
           : !data.ready
             ? <span className="text-muted">Loading crimes…</span>
@@ -475,13 +494,13 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* clock dial */}
-      <div className="absolute bottom-28 left-3 z-10">
+      <div data-map-overlay className="absolute bottom-28 left-3 z-10 max-md:bottom-40 max-md:origin-bottom-left max-md:scale-[0.6]">
         <ClockDial arc={clock} onChange={setClock} hours={hourBins} />
       </div>
 
       {/* scrubber */}
       {data.extent && win && (
-        <div className="absolute inset-x-3 bottom-3 z-10">
+        <div data-map-overlay className="absolute inset-x-3 bottom-3 z-10">
           <TimeScrubber
             min={data.extent.min} max={data.extent.max} from={win[0]} to={win[1]} bins={dayBins} playing={playing}
             onWindow={(f, t) => { setPlaying(false); setWin([f, t]); }} onPlay={togglePlay} speedMsPerDay={SPEED_MS_PER_DAY}
