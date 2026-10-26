@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # Sponsor technology explanation: final draft (WS5-04)
 
-This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `c686f0c` (rechecked at `a97f1c8`: no change). Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
+This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Each claim below names the PR or test behind it. Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
@@ -42,7 +42,8 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - Semantic layer live: 13 views in the `nexus` container. `v_crime_unified` puts every crime record shape in one view (Supabase FIRs + legacy CCTNS CSV + Parquet archive, 19,540 rows). 8 data-quality views are summed up by `dq_flags`. 4 feed views include `v_news_mentions`, which `q_news` reads. Vehicle trail, offender return, tip corroboration and calls-near are named queries that join sources directly, not views.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
-- **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
+- **The Skeptic uses Zetaris too.** It runs its own named queries to re-check the Linker's pairs, then critiques each one. It can send a pair back for a narrower search or drop it before a human sees it. On the judge path, example 3 shows a drop: different crime types, 4.1 km apart, day vs night (`output_examples/example_3.json`, #283).
+- **Judges can load the same data into their own Zetaris.** `python -m data.setup_live` generates the dataset, stages it in Zetaris's file store and registers it, so agents read with no Supabase (`ZETARIS_DATA=files`; #280, `data/README.md` §5). `[PENDING: WS1-19]`: its model-output fixtures and a clean-machine run are not yet confirmed.
 
 ## Meterless engines: all four, each in a feature, each with a passing test
 
@@ -66,6 +67,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 - **Pinned lanes, never `meterless/auto`.** The adapter refuses an unpinned or auto model. Each agent role uses a fixed lane.
 - **Every call is traced:** the lane, the pinned model, the model Nightshift reports back, a receipt id (a Meterless receipt header if present, otherwise the response id), the latency and the status. The trace goes to `logs/trace-<run_id>.jsonl`, to stdout and to the console's trace viewer.
 - **Failures are honest.** Transport errors and 5xx responses are retried, up to 3 attempts with backoff. After that, the agent degrades to a traced code-only path. Sample mode replays output recorded from live Nightshift calls, labelled `replayed`. It never invents an answer.
+- **Judges can check every model step without Nightshift.** `output_examples/` holds three runs recorded live through Nightshift, and `data/sample/model_fixtures/` holds their 45 model responses (#283). The sample-mode Docker container answers all three examples with **no network at all** (`--network none`) and matches the recorded outputs exactly. CI job `judge-offline` checks this on every push to main (#285). Replay is time-zone safe: sample data runs in the city's time zone, not the host's (#290).
 
 ## NVIDIA Nemotron: where it contributes
 
@@ -83,6 +85,10 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 ## Cursor
 
 Not used. Nexus was built with Claude Code as a development tool. Claude Code is not in the product's request path.
+
+## Measured result
+
+On 60 synthetic cases with planted ground truth, the agents link with **precision 0.59, recall 0.86 (F1 0.70)**, against 0.09 / 0.30 (F1 0.13) for a rules-only baseline (same category, ≤ 2 km, ≤ 14 days). **HIGH-band alerts were correct 10 of 10 times**; MEDIUM 56%, which is why an analyst decides every alert. The eval makes no model calls (`output_examples/eval_report.json`, #275; reproducible from a fresh clone with `python -m app.eval`).
 
 ## What was unique about our use of the sponsor technology
 
