@@ -10,7 +10,7 @@ the same offender or group committed both crimes. It's scored against the full s
 with the same truth**. Everything below is fixed before any model call. The result is published whatever
 it shows.
 
-Related: [00-INDEX](../00-INDEX.md) · [EVIDENCE](../submission/EVIDENCE.md) · [DECISIONS](../DECISIONS.md) · [AGENTS](../AGENTS.md)
+Related: [00-INDEX](../00-INDEX.md) · [EVIDENCE](../submission/EVIDENCE.md) · [NEMOTRON_ALONE_RESULTS](NEMOTRON_ALONE_RESULTS.md) · [DECISIONS](../DECISIONS.md) · [AGENTS](../AGENTS.md)
 
 ## 1. What is held fixed
 

@@ -40,6 +40,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [PLANTED_SKEPTIC_PREREG](eval/PLANTED_SKEPTIC_PREREG.md): planted false-link test for the Skeptic, pre-registered before any model call (paired: 8 twins over 16 distinct crimes in 5 series + 24 single-fact near-misses; primary = near-miss dropped while its twin is approved). **Run 27 Oct: FAIL, 0/24.** The Skeptic never chose drop; results in the note and `output_examples/planted_skeptic.json`
 - [WS5-08 results](validation/WS5-08-2026-10-27.md): the checklist run; part 1 pre-run (secrets incl. full history, hygiene, README, licences, vendored engines), part 2 on Tuesday
 - [NEMOTRON_ALONE_PREREG](eval/NEMOTRON_ALONE_PREREG.md): pre-registered baseline, Nemotron Ultra alone vs the full system on the same 182 headline pairs (case list, prompt, scoring and stop rules fixed before any call)
+- [NEMOTRON_ALONE_RESULTS](eval/NEMOTRON_ALONE_RESULTS.md): the run: same 182 pairs, Ultra alone F1 0.80 vs full system 0.69 (14 positives, McNemar n.s.); under the 10-pair budget cap the model reached 14/49 true links vs the system's 41/49
 
 ## Hackathon
 - [DIGEST](hackathon/DIGEST.md): rules, scoring, disqualifiers, resource links
