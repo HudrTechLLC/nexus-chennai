@@ -37,11 +37,13 @@ export async function requestDraft(crimeId: string): Promise<ActionResult> {
  */
 export async function saveAppeal(
   id: string,
-  input: { title: string; summary: string; looking_for: string; action: "save" | "publish" | "withdraw" },
+  input: { title: string; area_label: string; summary: string; looking_for: string; action: "save" | "publish" | "withdraw" },
 ): Promise<ActionResult> {
   const w = await writer();
   if ("error" in w) return { ok: false, error: w.error as string };
-  const edit = { title: input.title.trim(), summary: input.summary.trim(), looking_for: parseLookingFor(input.looking_for) };
+  const edit = {
+    title: input.title.trim(), area_label: input.area_label.trim(), summary: input.summary.trim(), looking_for: parseLookingFor(input.looking_for),
+  };
   const sb = consoleServerClient();
   if (input.action !== "withdraw") {
     const problem = validateAppeal(edit, await appealCaseTerms(sb, id));
