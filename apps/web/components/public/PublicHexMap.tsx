@@ -4,7 +4,7 @@ import maplibregl from "maplibre-gl";
 import { cellToBoundary } from "h3-js";
 import { CITY } from "@/lib/city";
 import type { PublicCell } from "@/lib/publicData";
-import type { MapAt } from "@/lib/publicCards";
+import { framePadding, type MapAt } from "@/lib/publicCards";
 import { cellBounds } from "@/lib/publicArea";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -49,7 +49,7 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
       container: el.current, style: "/map/light.json",
       center: initialAt ? [initialAt[0], initialAt[1]] : CITY.map.center, zoom: initialAt ? initialAt[2] : CITY.map.zoom,
       // opened on one hex with no saved view (/map?cell= from an appeal): start framed on it, neighbourhood around
-      ...(!initialAt && fb ? { bounds: [[fb[0], fb[1]], [fb[2], fb[3]]] as [[number, number], [number, number]], fitBoundsOptions: { padding: 120, maxZoom: 14 } } : {}),
+      ...(!initialAt && fb ? { bounds: [[fb[0], fb[1]], [fb[2], fb[3]]] as [[number, number], [number, number]], fitBoundsOptions: { padding: framePadding(el.current.clientWidth, el.current.clientHeight), maxZoom: 14 } } : {}),
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");

@@ -103,3 +103,18 @@ export function weekLabel(week: string): string {
   const m = /^(\d{4})-W(\d{2})$/.exec(week);
   return m ? `Week ${Number(m[2])}, ${m[1]}` : week;
 }
+
+/** Panel width on md+ screens (HexPanel: md:w-96 = 24rem) plus its offset. */
+const PANEL_PX = 384 + 24;
+
+/**
+ * Padding for framing a selected hexagon so the HexPanel never covers it: room for the panel on the left on
+ * desktop (md+), and above the bottom sheet on mobile. Capped so a small map can still show the hexagon.
+ */
+export function framePadding(width: number, height: number): { top: number; bottom: number; left: number; right: number } {
+  if (width >= 768) {
+    const left = Math.min(PANEL_PX + 12, Math.max(0, width - 260));
+    return { top: 40, bottom: 40, left, right: 40 };
+  }
+  return { top: 30, bottom: Math.min(Math.round(height * 0.5), Math.max(0, height - 150)), left: 30, right: 30 };
+}
