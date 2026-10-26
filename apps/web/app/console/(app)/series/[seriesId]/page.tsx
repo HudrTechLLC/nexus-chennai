@@ -1,3 +1,4 @@
+import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
@@ -201,6 +202,8 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
           </ul>
         )}
       </section>
+
+      <PublicTipsBlock crimeIds={memberIds} label={(id) => id} />
     </div>
   );
 }
