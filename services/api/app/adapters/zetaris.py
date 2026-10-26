@@ -73,6 +73,11 @@ NAMED_QUERIES: dict[str, NamedQuery] = {
     "q_ping": NamedQuery("q_ping", "SELECT 1", "SELECT 1", "Connectivity check", ("one",)),
 }
 
+# Engines-lane queries (q_hex_counts, q_dq_flags, q_news): owned by nexus-2, agreed with nexus-1.
+from .zetaris_queries_n2 import N2_QUERIES  # noqa: E402  (needs NamedQuery defined above)
+
+NAMED_QUERIES.update(N2_QUERIES)
+
 _PARAM = re.compile(r":([a-z_][a-z0-9_]*)")
 
 
