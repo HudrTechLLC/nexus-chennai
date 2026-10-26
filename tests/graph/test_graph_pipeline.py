@@ -76,7 +76,7 @@ def test_send_back_loop_respects_caps(tmp_path):
     assert len(sends) == MAX_SEND_BACKS and all(e["target_agent"] == "Planner" for e in sends)
     # The Skeptic's narrower window reached the Planner's q_candidates call.
     cand_calls = [c[2] for c in deps.zetaris.calls if c[0] == "q_candidates"]
-    assert cand_calls[-1]["days"] == 10 and cand_calls[-1]["ring"] == 0
+    assert cand_calls[-1]["days"] == 10 and cand_calls[-1]["ring"] == 1  # Skeptic asked 0 km: clamped to 1
     assert state["status"] == "success" and len(state["alerts"]) == 1  # cap reached -> stands
 
 

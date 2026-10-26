@@ -36,6 +36,7 @@ from ..agents import (
     TipGuard,
 )
 from ..agents.base import crime_from_row, features_from_row, short
+from ..agents.planner import CLAMPS as PLAN_CLAMPS
 
 MAX_PLAN_ROUNDS = 3
 MAX_SEND_BACKS = 2
@@ -233,7 +234,8 @@ class AgentGraph:
                 if step.name == "q_candidates":
                     for k in ("days", "ring"):
                         if rq.get(k) is not None:
-                            step.params[k] = int(rq[k])
+                            lo, hi = PLAN_CLAMPS[k]
+                            step.params[k] = max(lo, min(hi, int(rq[k])))
             support = self.planner.execute(plan)
             cands = self._fetch_candidates(support.get("q_candidates", {}).get("rows", []), case["crime_id"])
         except DeadlineExceeded:

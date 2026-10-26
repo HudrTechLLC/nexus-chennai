@@ -29,11 +29,11 @@ def test_validate_steps_allowlist_clamp_and_case_id():
     steps, notes = validate_steps([
         {"name": "q_news", "params": {"crime_id": "OTHER"}},
         {"name": "DROP TABLE", "params": {}},
-        {"name": "q_candidates", "params": {"crime_id": "X", "days": 400, "ring": 9}},
+        {"name": "q_candidates", "params": {"crime_id": "X", "days": 400, "ring": 40}},
         {"name": "q_vehicle_trail", "params": {"plate_pattern": "TN09"}},  # missing params
     ], CASE)
     assert [s.name for s in steps] == ["q_candidates", "q_news"]
-    assert steps[0].params == {"crime_id": ADYAR["crime_id"], "days": 90, "ring": 2}
+    assert steps[0].params == {"crime_id": ADYAR["crime_id"], "days": 90, "ring": 10}  # ring = km, max 10
     assert steps[1].params["crime_id"] == ADYAR["crime_id"]  # never model-supplied
     assert any("unknown" in n for n in notes) and any("clamped" in n for n in notes)
 
@@ -331,3 +331,21 @@ def test_mo_cosine_flag_default_off(monkeypatch):
     from app.agents.base import features_from_row
     a, b = features_from_row(as_row(fa)), features_from_row(as_row(fb))
     assert F.mo_similarity(a, b, text_cosine=mo_cosine) != F.mo_similarity(a, b)
+
+
+def test_default_plan_finds_hero_pair_in_sample_bundle(tmp_path):
+    """Regression (nexus-7 judge's-eye run): ring is a radius in KM for q_candidates; the default plan used 1,
+    so VL-000877 (3.46 km from AD-001182) was never a candidate and the hero pair could not alert."""
+    from app.adapters.zetaris import ZetarisClient
+    from app.config import Settings
+    from app.tracing import Tracer
+    s = Settings(_env_file=None, sample_mode=True, zetaris_api_key="")
+    z = ZetarisClient(s, Tracer("t", tmp_path, echo=False))
+    try:
+        case = crime_from_row(z.named("q_case", agent="t", crime_id="CHN-AD-2026-001182").dicts()[0])
+        step = default_plan(case, None)[0]
+        assert step.name == "q_candidates" and step.params["ring"] == 6
+        ids = {r["crime_id"] for r in z.named("q_candidates", agent="t", **step.params).dicts()}
+    finally:
+        z.close()
+    assert "CHN-VL-2026-000877" in ids
