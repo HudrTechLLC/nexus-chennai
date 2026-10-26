@@ -259,6 +259,7 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
 - **Super VL is now enabled.** The `NVIDIA_SUPER_VL` gate is read from Nightshift's engine-kv store, not from the environment. The value was set with Nightshift stopped, and a backup of the store was kept.
 - **Images still fail.** Text calls to `nvidia/nemotron-3.5-super-vl-120b-a12b` succeed. **Every request with an image is refused by Nightshift with `no_vision_model`, on every route**, including local PaddleOCR-VL. This has been reported to Meterless.
 - **Effect on the product:** the Extractor records an honest "vision unavailable" trace and falls back to the caption text, so no visual extraction is ever faked. Vision is not a rule requirement.
+- **Resolved by D-036 (27 Oct):** the cause was that no vision lane was seated; a cloud Super VL lane now serves images.
 
 ## D-022 · Zetaris file storage is Supabase Storage, not AWS (2026-10-26)
 - **What:** the generated CSV and Parquet files live in a private Supabase Storage bucket, `nexus-chennai-data`, on `nexus-qa`. Zetaris registers them in place through the S3-compatible endpoint (`https://ukrujnsjucwvytnokbtw.storage.supabase.co/storage/v1/s3`, path-style, `ap-southeast-1`), using its `s3Endpoint` and `useS3PathStyleAccess` options. Recommended by nexus-1 and approved.
@@ -379,3 +380,13 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Why:** video needs transcoding, frame sampling and a vision lane. Nightshift 1.2.7 refuses every image request (`no_vision_model`, WS2-05), so video would add risk with no analysis behind it. Stills are stored, screened and shown to analysts.
 - **Later:** video with server-side frame extraction once a vision lane routes.
 
+
+## D-036 · Vision works through a seated Nightshift cloud lane (chief, Ravee) (2026-10-27)
+- **Resolves** D-021 and WS2-05.
+- **Cause:** Nightshift serves images only from a *seated vision lane*. Enabling Super VL in the model catalogue (the `NVIDIA_SUPER_VL` gate, D-021) is not enough. Before the lane (26 Oct ~23:05), a 64×64 solid red PNG with the prompt "What colour is this image? One word." to `POST 127.0.0.1:8088/v1/chat/completions` returned HTTP 502 `no_vision_model: request has image attachments but no configured vision-capable model admits them`, for both `nvidia/nemotron-3.5-super-vl-120b-a12b` and `meterless/vision`.
+- **Fix (Nightshift v1.2.7 UI):** LANES → Lanes & memory → + Add lane → Vision → "Analyze images" → Find a model → Where it runs: Cloud model → "Nemotron 3.5 Super VL (Free)" (OpenRouter · free, model `openrouter/nvidia/nemotron-3.5-super-vl:free`) → add an OpenRouter key → Duty: RACE (default) → Add lane. Lane id `nemotron-3-5-super-vl-fr`, shown as "CLOUD · OPENROUTER · ready". The key is held only in Nightshift.
+- **Result:** with `max_tokens=1500`, the same request returns 200, content "Red", model `nvidia/nemotron-3.5-super-vl-120b-a12b`, `finish_reason` stop (also via `openrouter/nvidia/nemotron-3.5-super-vl:free`). Requests keep naming `nvidia/nemotron-3.5-super-vl-120b-a12b`, and Nightshift serves it through the lane. `meterless/vision` (the auto class) does **not** route there: HTTP 400 `no_provider_configured`.
+- **Gotcha, small `max_tokens`:** with `max_tokens=20` the lane returns HTTP 502 `provider_error`, `nvidia/nemotron-3.5-super-vl-120b-a12b_empty_response` (the same via the OpenRouter id). Use a normal budget; the Extractor's vision call uses the default 2048.
+- **Scope of the claim:** this verifies the lane, not yet the product. Image extraction inside Nexus is claimed only once a live trace shows a vision `model_call` (nexus-3). Sample mode and the judge path still use the caption fallback: they are offline, and the fixtures hold no vision call.
+- **Data routing:** the lane sends images to a third party (OpenRouter). That is fine for synthetic stills; real evidence would need an in-house vision lane.
+- **Related:** D-021 · D-017 · [LANES](LANES.md)

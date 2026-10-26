@@ -22,7 +22,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ## Changes from SPEC M2 (on purpose)
 
-- **No "Super VL reads the CCTV still".** Nightshift refuses image input (D-021). Segment 3 shows the honest caption fallback, traced as `vision_unavailable`.
+- **"Super VL reads the CCTV still" only with a real trace.** Since D-036 a Nightshift cloud lane serves Super VL, but say it on camera only if the recorded run's trace shows a vision `model_call` (variant A in segment 3). Otherwise use variant B, the caption fallback.
 - **Reasoning model is Nemotron Ultra 550B**, not Super 120B (D-017).
 - **Eval numbers are on main** (`output_examples/eval_report.json`: P 0.59 / R 0.86 vs rules-only 0.09 / 0.30; HIGH 10/10). The close doesn't depend on them. If you say one, say it with the baseline, never as a bare accuracy figure.
 - **One story**, not a tour: the public-tip and appeal segments are cut to keep under 3:40. They are covered in the deck.
@@ -51,7 +51,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 5. **1080p (OBS), browser zoom 110–125%, terminal font enlarged.**
 6. **Open the Pulse Map at least 30 s before recording segment 1** (it took ~25 s to load in nexus-4's dry run).
 7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
-8. **Segment 3 needs a real `vision_unavailable` trace step.** It comes only from a live FIR filed with a CCTV still (nexus-3 / nexus-5 are producing one). Note its `run_id`. If there is no such trace when you record, cut the CCTV-still sentence from the segment 3 narration.
+8. **Segment 3 needs a real vision step in the trace.** File the live FIR with a CCTV still, and check the trace. A vision `model_call` (lane `vision`, Super VL, a receipt) means narrate **variant A**; `vision_unavailable` means **variant B**. The free route is rate-limited and can refuse during recording, so check the trace of the take you use. `[PENDING: nexus-3]`: no product trace with a vision call is on record yet.
 9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. There is only one series in the database (SER-B687C36CFC), so **rehearse without writing**: in dry run #2, walk up to the *Propose task force* dialog and stop (cancel; nothing is created). The first real creation happens on camera. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
 
 ## Script
@@ -78,7 +78,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
   - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines. The CCTV-still sentence needs the `vision_unavailable` step from a live FIR filed with a still (Before recording, step 8).
 - **Narration:**
-  > An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
+  > An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. [A] Nexus reads the CCTV still with Nemotron Super VL. [B] This time the vision model couldn't be reached, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
 - **Check no secrets visible:**
   - the terminal shows only the `curl` command and its trace lines;
   - no shell history with `env`, `echo $…` or token paths being read;
@@ -179,7 +179,7 @@ Chennai's police stations each see only their own cases. A gang that snatches a 
 Case files, legacy exports, ANPR reads and live feeds stay where they are. Zetaris federates them, and agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give agents memory.
 
 [seg_03]
-An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
+An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. [A] Nexus reads the CCTV still with Nemotron Super VL. [B] This time the vision model couldn't be reached, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
 
 [seg_04]
 Here is the same question in Zetaris: same-category crimes within a few kilometres and days of the Adyar case, across every station. One query over the federated sources, no warehouse. The Planner chooses queries like this, and each query's id is kept as evidence.
@@ -208,7 +208,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
 | Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, **high 0.7887, pending** (nexus-3 DB read, 26 Oct 22:56, after rp7). **Judge path (sample mode, fresh clone @ `de8e666`):** the same pair, high 0.789 (the top link there is Adyar ↔ Thiruvanmiyur, high 0.819) | Read the score shown on screen; never the number from this table |
 | "across three stations" | Live series SER-B687C36CFC, "Red two-wheeler chain snatchings · 3 stations": 9 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-3 DB read, 26 Oct 22:56, after D-033 removed test FIR AD-2026-001231 and the naming fix #245) | Say the station count shown on screen, or just "across stations" |
-| Seg 3: "The CCTV still can't be read today…" | a `vision_unavailable` step in the live FIR-with-still run (none yet at the dry run) | Cut that sentence |
+| Seg 3: variant A "Nexus reads the CCTV still with Nemotron Super VL" / variant B "…couldn't be reached…" | A: a vision `model_call` (Super VL, receipt) in the recorded take's trace. B: a `vision_unavailable` step | Say only the variant the trace shows; read one sentence, not both. If the trace has neither, cut the sentence |
 | Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
 | Seg 6: "ages don't match… shop theft… two-wheeler theft… nothing else overlaps… drops the link" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |

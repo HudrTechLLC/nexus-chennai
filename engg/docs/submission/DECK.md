@@ -112,7 +112,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 | fast | Nemotron 3.5 Lightning 30B | MO extraction, appeal drafts, briefings |
 | reason | Nemotron 3 Ultra 550B | query planning, per-factor reasons, the Skeptic |
 
-  "Every trace line names the model that handled the request." Footnote: "Vision (Super VL) is configured; Nightshift currently refuses image input, so the Extractor falls back to the officer's caption, traced as `vision_unavailable`."
+  "Every trace line names the model that handled the request." Footnote: "Vision: Nemotron Super VL through a Nightshift cloud lane (verified 27 Oct). If the lane can't be reached, the Extractor uses the officer's caption, traced as `vision_unavailable`." Say "reads CCTV stills" only once nexus-3's trace shows a vision call.
 - **Visual:** trace viewer (`/console/system/trace/[runId]`) with the model column showing `nvidia/nemotron-3-ultra-550b-a55b` on a Skeptic line.
 - **Check no secrets visible:** trace summaries are redacted (D-025), but scan for any token-like string anyway.
 
@@ -158,14 +158,14 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 13 · Future enhancements + limitations (point 8)
 
 - **Next:**
-  - vision on CCTV stills once Nightshift accepts image input;
+  - vision on an in-house lane instead of a third-party free route;
   - Zetaris reading files straight from object storage (fix the S3 TLS handshake);
   - more named queries and semantic views across sources `[drop the ones that land before freeze]`;
   - a pilot on real, consented data with police oversight;
   - multilingual FIRs (Tamil).
 - **Limitations (stated plainly):**
   - synthetic data;
-  - vision refused by Nightshift today;
+  - vision runs on a rate-limited third-party free route (fine for synthetic stills, not for real evidence);
   - the reasoning lane is Ultra 550B because Super 120B isn't served to our key;
   - bcrypt instead of Argon2id for tip passphrases;
   - model-written explanations can be imperfect, but the numbers can't (code computes them).
