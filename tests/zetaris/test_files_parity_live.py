@@ -133,3 +133,24 @@ def test_dq_summary_differs_only_by_console_rows(clients, console_ids):
         assert sb[rule] == fs[rule], rule
     for rule in sb:
         assert 0 <= int(sb[rule]) - int(fs[rule]) <= 2 * max(len(console_ids), 1) + 6, rule
+
+
+STRICT_IDS = ["CHN-AD-2026-001182", HERO_PAIR, "CHN-KU-2025-000078", "CHN-GU-2025-000945"]  # KU = house break
+
+
+def test_q_cases_text_forms_match_live_exactly(clients):
+    """One q_cases read feeds the Planner, D-033 (narrative) and series naming (sub_type, category, station_id,
+    vehicles, features.mo): every column must be the same TEXT as live, not just the same parsed value."""
+    params = cases_params(sorted(STRICT_IDS))[0]
+    sb = {r[0]: r for r in clients["supabase"].named("q_cases", agent="parity", **params).rows}
+    fs = {r[0]: r for r in clients["files"].named("q_cases", agent="parity", **params).rows}
+    cols = clients["files"].registry["q_cases"].columns
+    assert set(STRICT_IDS) <= set(sb) and set(STRICT_IDS) <= set(fs)
+    bad = [(cid, c, sb[cid][i], fs[cid][i]) for cid in STRICT_IDS for i, c in enumerate(cols) if sb[cid][i] != fs[cid][i]]
+    assert not bad, "\n".join(f"{cid}.{c}:\n sb={str(a)[:300]}\n fs={str(b)[:300]}" for cid, c, a, b in bad[:5])
+
+
+def test_tip_corroboration_on_files_returns_summary_and_week(clients):
+    rows = clients["files"].named("q_tip_corroboration", agent="parity", crime_id="CHN-AD-2026-001182").dicts()
+    assert rows, "hero tip corroboration is empty on files"
+    assert all(r["summary"] and r["received_week"] for r in rows)

@@ -1,0 +1,18 @@
+{
+ "exported_at": "2026-10-26T16:42:34+00:00",
+ "commit": "8fbbd86",
+ "crime_features": 419,
+ "extractor_versions": {
+  "mo-v3": 403,
+  "mo-v4": 16
+ },
+ "tips": 40,
+ "tip_status": {
+  "quarantined": 4,
+  "reviewed": 1,
+  "screened": 34,
+  "urgent": 1
+ },
+ "note": "exported after nexus-3's named-place re-clean reclean_dec947e4 (21:54 IST, guard from #271 b54d389): 12 rows' target/place_type cleaned",
+ "synthetic": true
+}
