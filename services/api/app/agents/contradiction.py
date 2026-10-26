@@ -32,7 +32,9 @@ RECONCILE_MIN = 0.5  # a reconciling factor must be confirmed at >= this value (
 
 UNKNOWN = {"", "unknown", "not seen", "not known", "unclear", "unidentified", "n/a", "na", "none recorded", "nil",
            "not noted", "not stated"}
-NEGATED = {"no helmet", "without helmet", "without a helmet", "no", "none", "bare head", "bareheaded"}
+# Helmet ABSENCE only. "no visor" or "no sticker" describes a helmet; it is not "no helmet" (nexus-5 review).
+NEGATED_RE = re.compile(r"^(?:no|none|nil|bare[ -]?head(?:ed)?|"
+                        r"(?:no|without|not wearing)(?: an?| any)? helmets?)$")
 FILLER = {"a", "an", "the", "with", "and", "helmet", "helmets", "colour", "color", "coloured", "colored", "of",
           "in", "on", "type", "model", "bike", "motorcycle", "scooter", "two", "wheeler", "two-wheeler", "vehicle"}
 COLOUR_ALIASES = {"gray": "grey", "silver grey": "silver", "maroon red": "maroon", "golden": "gold", "navy": "blue",
@@ -53,8 +55,7 @@ def _words(x: Any) -> frozenset[str]:
 
 
 def _negated(x: Any) -> bool:
-    n = _norm(x)
-    return n in NEGATED or n.startswith(("no ", "without "))
+    return bool(NEGATED_RE.match(_norm(x)))
 
 
 def text_compatible(x: Any, y: Any) -> bool:
@@ -76,11 +77,27 @@ def colour_compatible(x: Any, y: Any) -> bool:
     return text_compatible(cx, cy)
 
 
+POINT_AGE_SLACK = 5  # a single stated age ("about 25", "25") is read as 20-30
+
+
 def band(x: Any) -> tuple[int, int] | None:
-    nums = [int(n) for n in re.findall(r"\d+", str(x or ""))]
+    """An age description as an inclusive range. "20-30" / "20 to 30" -> (20, 30); "20s" -> (20, 29);
+    "30+" / "above 30" -> (30, 99); "under 18" -> (0, 18); a single number -> +/- POINT_AGE_SLACK."""
+    t = _norm(x)
+    nums = [int(n) for n in re.findall(r"\d+", t)]
     if not nums:
         return None
-    return (nums[0], nums[-1]) if nums[0] <= nums[-1] else (nums[-1], nums[0])
+    if len(nums) >= 2:
+        lo, hi = nums[0], nums[-1]
+        return (lo, hi) if lo <= hi else (hi, lo)
+    n = nums[0]
+    if re.search(rf"\b{n}\s*'?s\b", t):
+        return (n, n + 9)
+    if re.search(rf"\b{n}\s*\+", t) or re.search(r"\b(above|over|older than|more than)\b", t):
+        return (n, 99)
+    if re.search(r"\b(under|below|younger than|less than)\b", t):
+        return (0, n)
+    return (max(0, n - POINT_AGE_SLACK), n + POINT_AGE_SLACK)
 
 
 def age_compatible(x: Any, y: Any) -> bool:
@@ -96,12 +113,17 @@ def count_compatible(x: Any, y: Any) -> bool:
     return x <= 0 or y <= 0 or x == y
 
 
+PLATE_TAIL_MIN = 4  # the trailing number of an Indian plate (4 digits or '?')
+
+
 def plate_compatible(x: Any, y: Any) -> bool:
     """Partial plates ('?' = unread), right-aligned. Two or more positions read in both, and any of them
-    differing, is a conflict."""
+    differing, is a conflict. Right-alignment is only valid when both plates end in the plate's number (a
+    trailing run of >= 4 digits or '?'); a prefix-only plate ("TN09B", "TN 09") is never compared (nexus-5)."""
     a = re.sub(r"[^A-Z0-9?]", "", str(x or "").upper())
     b = re.sub(r"[^A-Z0-9?]", "", str(y or "").upper())
-    if not a or not b:
+    tail = re.compile(r"[0-9?]{%d,}$" % PLATE_TAIL_MIN)
+    if not a or not b or not tail.search(a) or not tail.search(b):
         return True
     n = min(len(a), len(b))
     known = [(p, q) for p, q in zip(a[-n:], b[-n:]) if p != "?" and q != "?"]

@@ -190,3 +190,39 @@ def test_a_code_drop_is_decided_and_counts_as_a_drop():
     assert s["planted_decided"] == 2 and s["planted_drop_rate"] == 0.5 and s["planted_dropped_by_code"] == 1
     assert s["twin_false_drops"] == 1 and s["twin_false_drop_rate"] == 0.5
     assert s["primary_dropped_while_twin_approved"] == 1 and s["near_misses_scored"] == 2
+
+
+# =====================
+# nexus-5 review: real-FIR wordings that must not read as contradictions
+# =====================
+
+@pytest.mark.parametrize("x,y,ok", [
+    ("20s", "25-30", True), ("20s", "35-40", False),
+    ("30+", "35-40", True), ("30+", "20-25", False),
+    ("about 25", "20-30", True), ("25", "40-50", False),
+    ("above 40", "45-50", True), ("under 18", "16-20", True), ("under 18", "30-40", False),
+    ("20 to 30", "28-35", True),
+])
+def test_age_wordings(x, y, ok):
+    assert K.age_compatible(x, y) is ok and K.age_compatible(y, x) is ok
+
+
+@pytest.mark.parametrize("x", ["TN09B", "TN 09", "TN09", "KA"])
+def test_a_prefix_only_plate_is_never_compared(x):
+    assert K.plate_compatible(x, "TN09B?4471") and K.plate_compatible("TN09B?4471", x)
+
+
+def test_full_plates_still_conflict():
+    assert not K.plate_compatible("TN09B?4471", "??9788")
+    assert not K.plate_compatible("TN09B?4471", "TN09B?9788")
+
+
+@pytest.mark.parametrize("x", ["no visor", "no sticker", "black, no visor"])
+def test_no_visor_describes_a_helmet_not_its_absence(x):
+    assert not K._negated(x)
+    assert K.text_compatible(f"black helmet, {x}", "black helmet")  # extra detail, not a contradiction
+
+
+@pytest.mark.parametrize("x", ["no helmet", "without a helmet", "not wearing helmet", "bare head", "none"])
+def test_helmet_absence_phrases(x):
+    assert K._negated(x) and not K.text_compatible(x, "black with red stripe")
