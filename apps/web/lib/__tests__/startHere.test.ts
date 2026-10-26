@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HERO_ALERT_ID, HERO_SERIES_ID, heroSteps, startHereMode, stationPending, WHAT_NEXUS_DOES } from "../startHere";
+import { HERO_ALERT_ID, HERO_SERIES_ID, heroSteps, readDismissed, startHereKey, startHereMode, stationPending, WHAT_NEXUS_DOES, writeDismissed } from "../startHere";
 import type { AlertRow } from "../overview";
 
 const alert = (alert_id: string, stations: string[], status = "pending", created_at = "2026-10-26T10:00:00Z"): AlertRow => ({
@@ -47,5 +47,31 @@ describe("stationPending", () => {
   });
   it("is empty for an officer without a station", () => {
     expect(stationPending([alert("LA-1", ["PS-A"])], null)).toEqual({ rows: [], total: 0 });
+  });
+});
+
+describe("dismiss storage", () => {
+  const mem = () => {
+    const m = new Map<string, string>();
+    return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) };
+  };
+  const throwing = { getItem: () => { throw new Error("SecurityError"); }, setItem: () => { throw new Error("QuotaExceeded"); }, removeItem: () => { throw new Error("x"); } };
+
+  it("is per user and defaults to shown", () => {
+    const s = mem();
+    expect(startHereKey("u1")).not.toBe(startHereKey("u2"));
+    expect(readDismissed(s, startHereKey("u1"))).toBe(false);
+    writeDismissed(s, startHereKey("u1"), true);
+    expect(readDismissed(s, startHereKey("u1"))).toBe(true);
+    expect(readDismissed(s, startHereKey("u2"))).toBe(false);
+    writeDismissed(s, startHereKey("u1"), false);
+    expect(readDismissed(s, startHereKey("u1"))).toBe(false);
+  });
+
+  it("shows the strip when storage is missing or throws (private mode)", () => {
+    expect(readDismissed(null, "k")).toBe(false);
+    expect(readDismissed(undefined, "k")).toBe(false);
+    expect(readDismissed(throwing, "k")).toBe(false);
+    expect(() => writeDismissed(throwing, "k", true)).not.toThrow();
   });
 });

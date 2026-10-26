@@ -54,3 +54,27 @@ export function stationPending(alerts: AlertRow[], stationId: string | null, lim
     .sort((a, b) => b.created_at.localeCompare(a.created_at) || a.alert_id.localeCompare(b.alert_id));
   return { rows: mine.slice(0, limit), total: mine.length };
 }
+
+/** Per-user localStorage key for a dismissed Start-here strip. */
+export const startHereKey = (userId: string) => `nexus.startHere.dismissed.${userId}`;
+
+type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+/** True only when this user dismissed the strip. Missing or throwing storage (private mode) means shown. */
+export function readDismissed(storage: StorageLike | null | undefined, key: string): boolean {
+  try {
+    return storage?.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Remember (or forget) a dismissal; storage errors are ignored, so the strip simply comes back next visit. */
+export function writeDismissed(storage: StorageLike | null | undefined, key: string, dismissed: boolean): void {
+  try {
+    if (dismissed) storage?.setItem(key, "1");
+    else storage?.removeItem(key);
+  } catch {
+    /* private mode or blocked storage: nothing to remember */
+  }
+}

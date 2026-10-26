@@ -79,8 +79,6 @@ export default async function Overview({ searchParams }: { searchParams: { denie
       </div>
       {errors.length > 0 && <p role="alert" className="text-sm text-red-600">Some figures could not load: {errors.join("; ")}</p>}
 
-      <StartHereCard sb={sb} officer={officer} alerts={alertRows} />
-
       <section aria-label="Key figures" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Tile label={`Open cases · ${scopeLabel}`} value={n(open.count)} sub={`registered or under investigation · ${n(undetected.count)} closed as undetected`} />
         <Tile label="New link alerts · last 7 days" value={n(week.newAlerts)} sub="city-wide" />
@@ -92,6 +90,8 @@ export default async function Overview({ searchParams }: { searchParams: { denie
         <Tile label="Cross-station links · last 7 days" value={n(week.crossStation)} sub="alerts spanning two or more stations" />
         <Tile label="Joint task forces" value={n(taskforces.count)} sub="active" />
       </section>
+
+      <StartHereCard sb={sb} officer={officer} alerts={alertRows} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-line bg-surface p-5">

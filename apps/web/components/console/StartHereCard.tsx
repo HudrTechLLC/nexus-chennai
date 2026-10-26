@@ -2,42 +2,52 @@ import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Officer } from "@/lib/auth";
 import type { AlertRow } from "@/lib/overview";
-import { HERO_ALERT_ID, HERO_SERIES_ID, heroSteps, startHereMode, stationPending, WHAT_NEXUS_DOES } from "@/lib/startHere";
+import { HERO_ALERT_ID, HERO_SERIES_ID, heroSteps, startHereKey, startHereMode, stationPending, WHAT_NEXUS_DOES } from "@/lib/startHere";
+import { DismissibleStrip } from "./DismissibleStrip";
+
+/** Station ids shown inline in the one-row strip; the rest fold into "N more in Alerts". */
+const INLINE_ALERTS = 3;
 
 /**
- * "Start here" (WS3-29) on console home. Analysts and up: what Nexus does, then three steps to the hero case.
- * Station officers: the pending link alerts on their station. View only: it links to the hero alert and
- * never decides it or reads more than its id.
+ * "Start here" (WS3-29) on console home: one compact, dismissible row below the KPI tiles.
+ * Analysts and up: what Nexus does, then three linked steps to the hero case. Station officers: the pending
+ * link alerts on their station. View only: it links to the hero alert and never decides it or reads more than its id.
  */
 export async function StartHereCard({ sb, officer, alerts }: { sb: SupabaseClient; officer: Officer; alerts: AlertRow[] }) {
+  const key = startHereKey(officer.userId);
+
   if (startHereMode(officer.role) === "station") {
-    const { rows, total } = stationPending(alerts, officer.stationId);
+    const { rows, total } = stationPending(alerts, officer.stationId, INLINE_ALERTS);
+    const station = officer.stationId ? officer.stationId.replace(/^PS-/, "") : "your station";
     return (
-      <section className="rounded-xl border border-signal bg-surface p-5" aria-labelledby="start-here">
-        <h2 id="start-here" className="font-semibold">Start here · your station&apos;s pending links</h2>
-        {rows.length === 0 ? (
-          <p className="mt-1 text-sm text-muted">
-            No link alerts are waiting on {officer.stationId ?? "your station"}. When the agents link one of your cases to another
-            station&apos;s, it appears here and in <Link href="/console/alerts" className="underline">Alerts</Link>.
-          </p>
-        ) : (
-          <>
-            <ul className="mt-2 divide-y divide-line text-sm">
-              {rows.map((a) => (
-                <li key={a.alert_id} className="flex flex-wrap items-baseline gap-3 py-1.5">
-                  <Link href={`/console/alerts/${encodeURIComponent(a.alert_id)}`} className="font-mono text-xs underline-offset-2 hover:underline">{a.alert_id}</Link>
-                  <span className="text-xs text-muted">{a.kind} · {(a.stations ?? []).map((s) => s.replace(/^PS-/, "")).join(" ↔ ")}</span>
-                </li>
-              ))}
-            </ul>
-            {total > rows.length && (
-              <p className="mt-1 text-xs text-muted">
-                {total - rows.length} more in <Link href="/console/alerts" className="underline">Alerts</Link>.
-              </p>
-            )}
-          </>
-        )}
-      </section>
+      <DismissibleStrip storageKey={key}>
+        <section aria-labelledby="start-here" className="flex items-center gap-x-4 overflow-hidden whitespace-nowrap text-sm">
+          <h2 id="start-here" className="shrink-0 font-semibold">Start here</h2>
+          {rows.length === 0 ? (
+            <p className="min-w-0 truncate text-muted">
+              No link alerts are waiting on {station}. New cross-station links to your cases appear here and in{" "}
+              <Link href="/console/alerts" className="underline">Alerts</Link>.
+            </p>
+          ) : (
+            <>
+              <span className="shrink-0 text-muted">{total} pending on {station}:</span>
+              <ul className="flex min-w-0 items-center gap-x-3 overflow-hidden">
+                {rows.map((a) => (
+                  <li key={a.alert_id} className="shrink-0">
+                    <Link href={`/console/alerts/${encodeURIComponent(a.alert_id)}`} className="font-mono text-xs text-signal underline-offset-2 hover:underline"
+                      title={`${a.kind} · ${(a.stations ?? []).map((s) => s.replace(/^PS-/, "")).join(" ↔ ")}`}>
+                      {a.alert_id}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {total > rows.length && (
+                <Link href="/console/alerts" className="shrink-0 text-xs underline">{total - rows.length} more in Alerts</Link>
+              )}
+            </>
+          )}
+        </section>
+      </DismissibleStrip>
     );
   }
 
@@ -50,19 +60,20 @@ export async function StartHereCard({ sb, officer, alerts }: { sb: SupabaseClien
     heroSeries: (series.data as { series_id: string; name: string | null } | null) ?? null,
   });
   return (
-    <section className="rounded-xl border border-signal bg-surface p-5" aria-labelledby="start-here">
-      <h2 id="start-here" className="font-semibold">Start here</h2>
-      <p className="mt-1 text-sm">{WHAT_NEXUS_DOES}</p>
-      <ol className="mt-3 grid gap-3 md:grid-cols-3">
-        {steps.map((s) => (
-          <li key={s.n} className="rounded-lg border border-line p-3 text-sm">
-            <div className="text-xs text-muted">Step {s.n}</div>
-            <div className="font-medium">{s.title}</div>
-            <p className="mt-1 text-xs text-muted">{s.body}</p>
-            <Link href={s.href} className="mt-2 inline-block font-mono text-xs text-signal underline-offset-2 hover:underline">{s.cta} →</Link>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <DismissibleStrip storageKey={key}>
+      <section aria-labelledby="start-here" className="flex items-center gap-x-4 overflow-hidden whitespace-nowrap text-sm">
+        <h2 id="start-here" className="shrink-0 font-semibold">Start here</h2>
+        <p className="min-w-0 truncate text-muted" title={WHAT_NEXUS_DOES}>{WHAT_NEXUS_DOES}</p>
+        <ol className="flex shrink-0 items-center gap-x-3">
+          {steps.map((s) => (
+            <li key={s.n}>
+              <Link href={s.href} title={s.body} className="text-signal underline-offset-2 hover:underline">
+                <span className="text-muted">{s.n}.</span> {s.title} →
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </DismissibleStrip>
   );
 }
