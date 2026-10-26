@@ -32,7 +32,7 @@ Agents that link crimes across police stations by querying fragmented records th
 
 ## Short description (≈ 50 words)
 
-Each police station sees only its own cases, so a gang working across a city looks like unrelated crimes. Nexus reads case files and live feeds through Zetaris, scores likely links in code, and explains each one with Nemotron. A Skeptic re-checks every link against the data, and analysts decide. Their decisions teach the system.
+Each police station sees only its own cases, so a gang working across a city looks like unrelated crimes. Nexus reads case files, legacy exports and ANPR records through Zetaris, scores likely links in code, and explains each one with Nemotron. A Skeptic re-checks every link against the data, and analysts decide. Their decisions teach the system.
 
 ## Long description
 
@@ -40,7 +40,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 
 **What Nexus does.** For each new case, a LangGraph team of agents finds candidate cases city-wide, scores each pair on nine factors in code (modus operandi, place and time, vehicle, suspect description, weapon, target, forensics, corroboration, offender return), and writes a link alert. Each alert carries a plain reason for every factor and the Zetaris query and row behind it. The models write labels, plans and reasons; they never set a number.
 
-**It checks its own work.** Before any human sees an alert, a Skeptic agent runs its own Zetaris queries, strikes factors its rows don't support, and can send a pair back for a narrower search or drop it. Only what survives reaches an analyst, who approves or rejects. That decision goes to the Meterless H-MEM engine, so the next similar pair is scored with it, within a hard ±0.08 bound, and the alert says "memory applied".
+**It checks its own work.** Before any human sees an alert, a Skeptic agent runs its own Zetaris queries, critiques each pair, and can send it back for a narrower search or drop it. Only what survives reaches an analyst, who approves or rejects. That decision goes to the Meterless H-MEM engine, so the next similar pair is scored with it, within a hard ±0.08 bound, and the alert says "memory applied".
 
 **The public can help safely.** Anyone can send an anonymous tip through the public portal. Photos are stripped of metadata, and the tipster gets a tip code. The Meterless Scout Intent engine (Tip Guard) screens every tip for injection, threats and spam before any agent reads it, and fails closed.
 

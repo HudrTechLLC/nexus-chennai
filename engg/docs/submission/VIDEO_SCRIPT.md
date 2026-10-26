@@ -32,7 +32,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 0. **The hero alert must be `pending` when recording starts.** LA-2026-E38C6B38B865 (Adyar ↔ Velachery) is decided **on camera only**. Nobody approves or rejects it beforehand, and no test touches it. Check its status in `/console/alerts` just before recording.
 0b. **Pause background extraction before filing the live FIR.** Ask nexus-3, or stop them yourself: the backfill (`python -m app.graph.backfill`) and any series batch run. Nightshift serves one model call at a time, so a running batch makes the FIR's calls wait behind it. **Keep the worker running** (`python -m app.worker` with `ENGINES_PERSIST=supabase`). It picks up a new FIR on its next pass, 15 s between passes by default (`--interval`). Measured end-to-end times (filed → features → alert) come from nexus-3 after their worker change; quote only those, never an estimate.
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
-2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** The live hero pair has **no** strike (Skeptic approved it in 1 round), so segment 6 must show a different pair from a run that has one. Narrate that pair, not the hero. **Never stage or edit a trace.**
+2. **Segment 6 uses the live Skeptic drop in `run_da0092da`** (`/console/system/trace/run_da0092da`): CHN-CM-2025-000450 ↔ CHN-CM-2025-000461, 0.694 medium, dropped, no alert written. **No factor strike has occurred anywhere, so never show, say or caption a strike.** Backup beat: decoy TU-425 ↔ TU-431, sent back twice, rejected by the analyst (LA-2026-266EFBCEEBBE). Hold any line about the hero's Skeptic re-check until nexus-3 re-runs it with verified ANPR.
 3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. The API and worker must share `logs/hmem/`. Plain Python from one checkout does this, and so does `docker compose --profile worker up`, because the worker mounts `./logs` too since #97.
 
    **Recipe:**
@@ -65,7 +65,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 - **Screen:** architecture diagram (`engg/docs/diagrams/c1-layers.svg`), with each layer highlighted as named.
 - **Narration:**
-  > Case files live in Supabase, legacy exports and ANPR reads in files, news in live feeds. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+  > Case files live in Supabase, legacy exports and ANPR reads in files, weather in a live feed. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
 - **Check no secrets visible:** a static diagram. Nothing to check beyond desktop notifications.
 
 ### 3 · A new case arrives · 0:40–1:05 (25 s, ~60 words)
@@ -104,9 +104,9 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 6 · The Skeptic drops a false link · 1:45–2:15 (30 s, ~70 words)
 
-- **Screen:** trace viewer, Skeptic section: its own Zetaris query ids, a `strike_factor` event on one pair, the rescored pair falling below the bar and dropped. Then the surviving pair approved for review.
+- **Screen:** trace viewer `/console/system/trace/run_da0092da`, Skeptic section: its own Zetaris query ids, then the **drop** of CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium) with its reason; the run writes no alert for that pair.
 - **Narration:**
-  > The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work. It runs its own Zetaris queries, and here it strikes a factor its rows don't support. The pair's score falls, and the link is dropped before any human sees it. Only links that survive the Skeptic reach an analyst.
+  > The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work with its own Zetaris queries. Here, two thefts near the CMBT bus terminus scored medium, but the Skeptic dropped the link: only proximity, a vague description, very different ages. No alert was written. Only links that survive reach an analyst.
 - **Check no secrets visible:** the trace summaries are redacted by design (D-025). Scan the expanded rows for any key-shaped string anyway.
 
 ### 7 · The analyst decides, and H-MEM learns · 2:15–2:50 (35 s, ~80 words)
@@ -145,7 +145,7 @@ Paste each block into `demo/script.md` for `demo/narrate.py` (SPEC M1). Settings
 Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 
 [seg_02]
-Case files live in Supabase, legacy exports and ANPR reads in files, news in live feeds. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
+Case files live in Supabase, legacy exports and ANPR reads in files, weather in a live feed. Zetaris federates them all in place, and our agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give the agents memory and shared context.
 
 [seg_03]
 An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
@@ -157,7 +157,7 @@ Here is the same question in Zetaris: same-category crimes within a few kilometr
 Every model call is accountable. This request went through Nightshift on the pinned reasoning lane. The trace records the model we asked for, Nemotron Ultra, the model Nightshift says answered, and its receipt. The NVIDIA key lives only inside Nightshift, never in our app.
 
 [seg_06]
-The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work. It runs its own Zetaris queries, and here it strikes a factor its rows don't support. The pair's score falls, and the link is dropped before any human sees it. Only links that survive the Skeptic reach an analyst.
+The Linker scores each pair on nine factors, in code, not by the model. Then the Skeptic checks the Linker's work with its own Zetaris queries. Here, two thefts near the CMBT bus terminus scored medium, but the Skeptic dropped the link: only proximity, a vague description, very different ages. No alert was written. Only links that survive reach an analyst.
 
 [seg_07]
 The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
@@ -177,7 +177,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
 | Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `7534e9e`):** the same pair, high 0.787 | Read the score shown on screen; never the number from this table |
 | "five stations" | `SER-RED-PULSAR` `stations: [J2, J7, J6, J3, J5]`; only true if all members are linked | Say "across stations" |
-| "strikes a factor… dropped" | a real `strike_factor` + drop in the recorded run | Narrate exactly what the trace shows (send-back, or a strike without a drop) |
+| "the Skeptic dropped the link" (CMBT pair) | `run_da0092da`: CHN-CM-2025-000450 ↔ 000461, 0.694, dropped | If the recorded trace differs, narrate exactly what it shows (drop or send-back). **Never a strike** |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
 | Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
 
