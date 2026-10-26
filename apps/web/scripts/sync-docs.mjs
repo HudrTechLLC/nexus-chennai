@@ -69,5 +69,8 @@ for (const f of fs.readdirSync(path.join(docs, "diagrams"))) {
 }
 fs.copyFileSync(path.join(docs, "workstreams.json"), path.join(outContent, "workstreams.json"));
 
-fs.writeFileSync(path.join(outContent, "index.json"), JSON.stringify({ tabs, notes }, null, 2));
+fs.writeFileSync(
+  path.join(outContent, "index.json"),
+  JSON.stringify({ tabs, notes, builtAt: new Date().toISOString() }, null, 2),
+);
 console.log(`sync-docs: ${tabs.length} spec tabs, ${notes.length} notes`);

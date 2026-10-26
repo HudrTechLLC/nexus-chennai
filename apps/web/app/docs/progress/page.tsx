@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Countdown } from "@/components/Countdown";
-import { getTracker, type Task, type TaskStatus } from "@/lib/docs";
+import { getIndex, getTracker, type Task, type TaskStatus } from "@/lib/docs";
 
 export const metadata: Metadata = { title: "Progress · Nexus Engg Docs" };
 
@@ -75,7 +75,10 @@ export default function ProgressPage() {
   const blockers = all.filter((x) => x.status === "blocked");
   const active = all.filter((x) => x.status === "in_progress");
   const phases = Object.keys(t.phases);
-  const updated = new Date(t.updated).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+  const ist = (iso: string) =>
+    new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+  const updated = ist(t.updated);
+  const built = ist(getIndex().builtAt);
 
   return (
     <div className="grid gap-8">
@@ -83,7 +86,8 @@ export default function ProgressPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-accent">Workstreams · progress</p>
         <h1 className="text-4xl font-bold">Where we are</h1>
         <p className="text-sm text-muted">
-          Updated {updated} IST. Source: <code>engg/docs/workstreams.json</code>, updated as work lands and redeployed on every merge.
+          Tasks last updated {updated} IST · site built {built} IST. Source: <code>engg/docs/workstreams.json</code>,
+          stamped automatically by <code>scripts/tracker.py</code> and redeployed on every merge.
         </p>
       </section>
 

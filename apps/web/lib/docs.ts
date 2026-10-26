@@ -7,7 +7,7 @@ const CONTENT = path.join(process.cwd(), "content");
 
 export interface SpecTab { id: string; label: string; title: string }
 export interface Note { slug: string; file: string; label: string }
-export interface DocsIndex { tabs: SpecTab[]; notes: Note[] }
+export interface DocsIndex { tabs: SpecTab[]; notes: Note[]; builtAt: string }
 
 export type TaskStatus = "done" | "in_progress" | "blocked" | "todo" | "cut";
 export interface Task { id: string; phase: string; title: string; status: TaskStatus; note?: string; ref?: string }
