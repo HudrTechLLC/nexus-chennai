@@ -143,6 +143,11 @@ def test_tips_screened_before_anything_reads_them(tmp_path):
     t = {r["tip_id"]: r for r in sb.tables["tips"]}
     assert t["T1"]["status"] == "quarantined" and t["T1"]["guard"]["verdict"] == "quarantine"
     assert t["T2"]["status"] == "screened" and t["T2"]["guard"]["verdict"] == "clean"
+    # Zetaris sees tips only via tips_v: a short vocabulary summary + tags, never the raw text (R8)
+    assert t["T2"]["guard"]["tags"] == ["red", "motorcycle", "tea shop", "evening", "repeated sightings"]
+    assert t["T2"]["guard"]["summary"].startswith("Tip mentions: red, motorcycle")
+    assert "2nd Avenue" not in t["T2"]["guard"]["summary"] and "redacted_text" not in t["T2"]["guard"]
+    assert t["T1"]["guard"]["summary"] is None and t["T1"]["guard"]["tags"] == []
     assert "guard" not in t["T3"]
     assert w.nightshift.calls == []  # no model saw a tip
 
