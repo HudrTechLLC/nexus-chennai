@@ -1,4 +1,4 @@
-"""Verify Nightshift compute receipts for every model call Nexus traced.
+"""Verify the Nightshift compute receipt of every model call Nexus traced (and count calls without one).
 
     SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY_FILE=~/.secrets/<key> \
         python scripts/verify_receipts.py [--log <receipts.jsonl>] [--out logs/receipts_verification.json]
@@ -16,17 +16,20 @@ Nightshift: the key travels inside each receipt and is not independently publish
 report states where the key was seen (every log line, the committed fixtures).
 
 Inputs (all read-only):
-  - trace_events.receipt_id from Supabase (SELECT only, service-role key read from a file path);
+  - trace_events rows that are model calls (action 'model_call') or cite a receipt id, from Supabase (SELECT only,
+    service-role key read from a file path);
   - the local Nightshift receipt log;
   - the receipts embedded in the committed sample-mode fixtures (data/sample/model_fixtures);
   - optionally (--runtime), the runtime's own /v1/meterless/receipts, to confirm it serves the same key. The runtime
     token is read from a file path (METERLESS_RUNTIME_TOKEN_FILE), like the Supabase key.
-Buckets are counted separately and never merged:
-  - live: trace rows with status 'ok' (a real Nightshift reply in a live run);
-  - degraded: trace rows with status 'degraded' (a live call that fell back; it may or may not carry a receipt);
-  - replayed_trace: trace rows with status 'replayed' (sample mode reusing a recorded reply);
+Buckets are counted separately and never merged. The denominator is every traced model call:
+  - live: model calls with status 'ok' (a real Nightshift reply in a live run);
+  - degraded: model calls with status 'degraded';
+  - replayed_trace: model calls with status 'replayed' (sample mode reusing a recorded reply);
+  - model_calls_without_receipt: model calls that carry no receipt id, by status (e.g. 'error': no reply came back);
+  - other_events_citing_receipts: non-model-call events (e.g. extract_features) that cite a receipt id, checked too;
   - replayed_fixtures: the receipts inside the committed fixtures (sample mode's recorded replies).
-Ids are distinct per bucket. An id that is both a fixture id and a live trace id is reported as an overlap.
+Ids are distinct per bucket. Overlaps (fixture ids among live ids; ids in both live and degraded) are reported.
 
 The output holds counts, ids and the public key only: never a receipt body, prompt text or any secret.
 """
@@ -149,7 +152,7 @@ def load_fixtures(folder: Path) -> list[dict[str, Any]]:
 
 
 def load_trace(url: str, key: str) -> list[dict[str, Any]]:
-    """trace_events rows that carry a receipt id. Read-only: GET (SELECT) through PostgREST, nothing else."""
+    """trace_events rows that are model calls or carry a receipt id. Read-only: GET (SELECT) through PostgREST, nothing else."""
     import httpx
 
     rows: list[dict[str, Any]] = []
@@ -157,7 +160,8 @@ def load_trace(url: str, key: str) -> list[dict[str, Any]]:
     with httpx.Client(base_url=url.rstrip("/") + "/rest/v1", headers=headers, timeout=60) as c:
         offset = 0
         while True:
-            r = c.get("/trace_events", params={"select": "receipt_id,status", "receipt_id": "not.is.null",
+            r = c.get("/trace_events", params={"select": "receipt_id,status,action",
+                                                "or": "(action.eq.model_call,receipt_id.not.is.null)",
                                                 "order": "seq", "offset": offset, "limit": 1000})
             if r.status_code != 200:
                 raise RuntimeError(f"trace_events read failed: HTTP {r.status_code}")
@@ -212,6 +216,16 @@ def check_fixtures(envs: list[dict[str, Any]], log: dict[str, list[dict[str, Any
     return out
 
 
+def claim_text(n_keys: int) -> str:
+    """What a verified receipt shows, worded from how many distinct keys were seen."""
+    keys = ("every receipt uses the same key (fingerprint below)" if n_keys == 1
+            else f"the receipts use {n_keys} different keys (listed below)")
+    return (f"Signatures verify against the receipt's embedded Ed25519 public key, and {keys}: each verified receipt "
+            "was signed by the holder of its key and is unaltered since. The key ships inside the receipts; we found "
+            "no separately published copy (meterless.ai docs unreachable when written), so this does not by itself "
+            "prove whose key it is.")
+
+
 def build_report(trace: list[dict[str, Any]] | None, log: dict[str, list[dict[str, Any]]] | None,
                  log_info: dict[str, Any] | None, fixtures: list[dict[str, Any]]) -> dict[str, Any]:
     keys = Counter(e["pubkey_b64"] for e in fixtures)
@@ -221,10 +235,7 @@ def build_report(trace: list[dict[str, Any]] | None, log: dict[str, list[dict[st
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "method": ("Ed25519 signature over the receipt body as compact key-sorted UTF-8 JSON, checked with the public "
                    "key carried in each receipt. No private key is read."),
-        "claim": ("Signatures verify against the receipt's embedded Ed25519 public key, and every receipt uses the "
-                  "same key (fingerprint below): each verified receipt was signed by the holder of that key and is "
-                  "unaltered since. The key ships inside the receipts; we found no separately published copy "
-                  "(meterless.ai docs unreachable when written), so this does not by itself prove whose key it is."),
+        "claim": claim_text(len(keys)),
         "note": ("The replayed fixtures (data/sample/model_fixtures, committed) carry the synthetic prompt previews "
                  "inside their signed receipt bodies; they are kept as recorded, since removing them would break the "
                  "signatures. This report itself holds no receipt body or prompt text."),
@@ -236,17 +247,31 @@ def build_report(trace: list[dict[str, Any]] | None, log: dict[str, list[dict[st
         report["nightshift_log"] = log_info["facts"]
     if trace is not None and log is not None:
         buckets: dict[str, set[str]] = defaultdict(set)
-        for r in trace:
+        without: Counter = Counter()
+        calls = [r for r in trace if r.get("action", "model_call") == "model_call"]
+        for r in calls:
+            if not r["receipt_id"]:
+                without[r["status"]] += 1
+                continue
             name = {"ok": "live", "degraded": "degraded", "replayed": "replayed_trace"}.get(r["status"], f"other:{r['status']}")
             buckets[name].add(r["receipt_id"])
-        report["trace_rows_with_receipt"] = len(trace)
+        citing = {r["receipt_id"] for r in trace if r.get("action", "model_call") != "model_call" and r["receipt_id"]}
+        with_receipt = [r for r in calls if r["receipt_id"]]
+        distinct = {r["receipt_id"] for r in with_receipt}
+        report["trace_model_calls"] = {"rows": len(calls), "rows_with_receipt": len(with_receipt),
+                                       "distinct_receipt_ids": len(distinct),
+                                       "rows_repeating_an_id": len(with_receipt) - len(distinct)}
         for name in ("live", "degraded", "replayed_trace"):
             report[name] = check_ids(buckets.get(name, set()), log)
+        report["model_calls_without_receipt"] = dict(without)
         others = {k: len(v) for k, v in buckets.items() if k.startswith("other:")}
         if others:
             report["other_status_ids"] = others
+        report["other_events_citing_receipts"] = {**check_ids(citing, log),
+                                                  "also_a_live_model_call": len(citing & buckets.get("live", set()))}
         fixture_ids = {request_id(e) for e in fixtures}
         report["overlap_fixture_and_live_ids"] = sorted(fixture_ids & buckets.get("live", set()))
+        report["overlap_live_and_degraded_ids"] = sorted(buckets.get("live", set()) & buckets.get("degraded", set()))
     return report
 
 
@@ -306,7 +331,11 @@ def main(argv: list[str] | None = None) -> int:
     a.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     fx = report["replayed_fixtures"]
     print(f"replayed fixtures: {fx['signature_valid']}/{fx['receipts']} signatures valid")
-    for name in ("live", "degraded", "replayed_trace"):
+    if "trace_model_calls" in report:
+        t = report["trace_model_calls"]
+        print(f"traced model calls: {t['rows']} rows, {t['rows_with_receipt']} with a receipt id "
+              f"({t['distinct_receipt_ids']} distinct); without a receipt id: {report['model_calls_without_receipt'] or 0}")
+    for name in ("live", "degraded", "replayed_trace", "other_events_citing_receipts"):
         if name in report:
             b = report[name]
             print(f"{name}: {b['verified']}/{b['ids']} distinct ids found in the Nightshift log with a valid signature"

@@ -54,6 +54,8 @@ def test_live_degraded_and_replayed_are_counted_apart():
         {"receipt_id": "chatcmpl-missing", "status": "ok"},
         {"receipt_id": vr.request_id(b), "status": "degraded"},
         {"receipt_id": vr.request_id(b), "status": "replayed"},
+        {"receipt_id": None, "status": "error", "action": "model_call"},
+        {"receipt_id": vr.request_id(a), "status": "degraded", "action": "extract_features"},
     ]
     r = vr.build_report(trace, log, {"facts": {}, "keys": {}}, FIXTURES)
     assert (r["live"]["ids"], r["live"]["verified"]) == (3, 1)
@@ -64,6 +66,18 @@ def test_live_degraded_and_replayed_are_counted_apart():
     assert r["replayed_fixtures"]["signature_valid"] == len(FIXTURES)
     # a fixture id seen in a live trace row is reported as an overlap, not hidden
     assert vr.request_id(a) in r["overlap_fixture_and_live_ids"]
+    # a model call with no receipt id stays in the denominator; another event citing a receipt is its own bucket
+    assert r["model_calls_without_receipt"] == {"error": 1}
+    assert r["trace_model_calls"] == {"rows": 7, "rows_with_receipt": 6, "distinct_receipt_ids": 4,
+                                      "rows_repeating_an_id": 2}
+    citing = r["other_events_citing_receipts"]
+    assert (citing["verified"], citing["also_a_live_model_call"]) == (1, 1)
+    assert r["overlap_live_and_degraded_ids"] == []
+
+
+def test_claim_names_the_number_of_keys():
+    assert "every receipt uses the same key" in vr.claim_text(1)
+    assert "2 different keys" in vr.claim_text(2) and "same key" not in vr.claim_text(2)
 
 
 def test_report_holds_no_receipt_body_or_prompt_text():
