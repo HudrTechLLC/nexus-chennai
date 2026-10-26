@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:24:49+05:30",
+  "updated": "2026-10-26T12:27:53+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -418,8 +418,10 @@
           "id": "WS3-09",
           "phase": "P7",
           "title": "Pulse Map (lean): hex layer, crime-type filter, time scrubber",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-4",
+          "note": "Slices A+B live (dots, arcs, hulls, hex heat, scrubber); slice C (CCTV/ANPR/112/tips/release layers) + live check after seed",
+          "ref": "#33"
         },
         {
           "id": "WS3-10",
@@ -454,7 +456,7 @@
           "id": "WS4-02",
           "phase": "P8",
           "title": "Public RPCs: submit_tip, tip_status, public incidents, map cells",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-4"
         },
         {
