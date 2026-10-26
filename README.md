@@ -239,6 +239,13 @@ The web app is deployed on Vercel at <https://nexus-chennai.vercel.app>. It read
 
 Demo police accounts (station officer, analyst, supervisor) are provided to judges in the submission form.
 
+**What the police console does** (beyond alerts and the map):
+- **Case file:** narrative and statements, with phone and Aadhaar numbers masked; vehicles; an evidence gallery; the MO that Nemotron extracted, with officer corrections stored separately; linked alerts, series, similar cases and the World Model graph; case diary and status.
+- **Evidence:** stored with its original bytes. A sha256 is taken at upload, and each upload adds a custody entry; a check confirms each stored file equals its recorded hash (`apps/web/scripts/evidence-check.mjs`).
+- **FIR form** (`/console/cases/new`): one atomic `file_fir` call saves the crime, vehicles and statements together, and the worker then picks the case up and extracts its MO.
+- **Search:** one box for a case id, FIR number, plate fragment (`?` for an unread character) or free words, with facets (zone, weapon, MO or visual tag, time of day, linked). It lists every table it read, with row counts. Web search reads Supabase under row-level security, not Zetaris (D-029); agents still read only through Zetaris.
+- **Privacy:** victims, witnesses and complainants are never named; lists show the ward, not the address; `audit_log` is append-only for every role (D-030).
+
 | Area | Routes |
 |---|---|
 | **Public portal** (no sign-in) | `/` home · `/appeals` and `/appeals/<id>` public appeals · `/map` fuzzed crime map · `/cctv` · `/tip/new` → `/tip/sent` → `/tip/status` anonymous tips · `/about/privacy` |
