@@ -23,6 +23,7 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-016 | 2026-10-26 | ✅ | Scoring details from PR #8 + evidence-coverage guard (single-factor pairs cannot reach high) |
 | D-015 | 2026-10-26 | ✅ | Four build lanes (nexus-1…4) with full scope; engines run as the TypeScript references in a sidecar so official conformance runs (revises D-008) |
 | D-014 | 2026-10-26 | ✅ | Supabase project is **`nexus-qa`** (`ukrujnsjucwvytnokbtw`) in **Singapore** (`ap-southeast-1`), HUDR LLC org; Vercel functions moved to `sin1` |
 | D-013 | 2026-10-26 | ✅ | Engg Docs (16 spec tabs, notes, progress tracker) published in the web app at `/docs`; production URL public, previews need Vercel login |
@@ -187,3 +188,18 @@ The team asked to deliver the whole spec with nothing cut, using four Claude Cod
 **D-008 revised.** The official Meterless conformance runners expect a TypeScript implementation module, so the engines are **vendored TypeScript references run as a local sidecar** instead of Python ports. The conformance suites then run unchanged, and the Python agents call the sidecar through `app.engines`.
 
 **Merge rights.** Lanes merge their own PRs when CI is green and the diff stays in their owned paths. Migrations are applied only after merge, by the owning lane. Vercel deploys `main` automatically.
+
+## D-016 · Scoring details (from PR #8, nexus-3) (2026-10-26)
+- **Struck factors:** a struck factor keeps its weight with value 0, so a Skeptic strike can never raise a score.
+- **Order of operations:** base weighted score → H-MEM delta (summed, capped ±0.08) → forensic floor 0.8 → clamp to [0,1] → round to 4 dp → band (high ≥ 0.75, medium ≥ 0.55).
+- **Space–time:** the same time band gives a ×1.2 boost on space_time.
+- **Vehicle:**
+  - partial plate = 0.6 + 0.3 × known/len;
+  - ANPR at both scenes = 0.85;
+  - a match on description only is capped at 0.5.
+- **Missing data:** corroboration and offender_return return `None` (no data), not 0, when nothing is found, so missing evidence doesn't count against a pair.
+- **Evidence-coverage guard** (added by the chief): coverage is the sum of the weights of factors that have data.
+  - If coverage < 0.50, the band is capped at medium.
+  - If fewer than 2 factors have data, no alert is raised.
+  - Coverage is shown on the alert.
+  - Why: renormalisation could otherwise let a pair with a single factor reach "high". This is a guard, not a weight change.
