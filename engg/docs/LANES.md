@@ -7,10 +7,11 @@ tags: [nexus, plan]
 Four Claude Code lanes build Nexus in parallel; **nexus-chief** coordinates. Every lane reads this note first and again after any restart. It is the single source for ownership, interfaces and rules.
 Related: [workstreams.json](workstreams.json) (live chart at `/docs/progress`) · [SPEC](SPEC.md) · [DECISIONS](DECISIONS.md) · [00-INDEX](00-INDEX.md)
 
-**Goal: deliver the whole spec.** Nothing is cut. Deadline is 27 Oct 23:45 UTC, and the team submits at **Tue 27 Oct 23:15 IST**. The freeze is split (Ravee, 27 Oct; latest timeline):
-- **Feature cut-off 13:30 IST:** features merged by then.
-- **13:30–15:30:** video dry-run #2.
-- **On-camera screens and UI:** frozen at **15:30 IST**; recording starts at 15:30 (narration takes the final numbers).
+**Goal: deliver the whole spec.** Nothing is cut. Deadline is 27 Oct 23:45 UTC, and the team submits at **Tue 27 Oct 23:15 IST**. The freeze is split (Ravee, 27 Oct; latest timeline, with dry-run #3):
+- **Features:** all merged (Ask Nexus, source onboarding); dry-run #2 done.
+- **Until 10:00 IST:** visual-only UI polish (no copy or flow changes, so the narration stays).
+- **10:30 IST:** video dry-run #3; its timings finalise the cut-sheet.
+- **On-camera screens and UI:** frozen at **15:30 IST**; recording starts at 15:30.
 - **Off-camera evidence** (test results, receipt counts, docs): may land until the **hard freeze at 19:00 IST**.
 - **19:00–23:15:** deck, form, repo public, submit.
 
