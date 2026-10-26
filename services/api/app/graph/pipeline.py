@@ -206,7 +206,14 @@ class AgentGraph:
         feats = {r.get("crime_id"): features_from_row(r) for r in frows}
         out = []
         for cid in ids:
-            crows, cqid = self.deps.query("q_case", agent="Planner", crime_id=cid)
+            try:
+                crows, cqid = self.deps.query("q_case", agent="Planner", crime_id=cid)
+            except DeadlineExceeded:
+                raise
+            except Exception as exc:  # one unreadable candidate must not lose the case's other links
+                self.deps.tracer.emit("Planner", "candidate_failed", input_summary=cid,
+                                      output_summary=str(exc)[:300], status="error")
+                continue
             if crows:
                 out.append(Candidate(crime_from_row(crows[0]), feats.get(cid),
                                      query_ids={"q_case": cqid, "q_features": fqid}))

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agents"))
-from agents_fixtures import ADYAR, VELACHERY, FakeEngines, FakeNightshift, FakeZetaris, default_handlers  # noqa: E402
+from agents_fixtures import ADYAR, HOUSEBREAK, VELACHERY, FakeEngines, FakeNightshift, FakeZetaris, default_handlers  # noqa: E402
 
 from app import engines  # noqa: E402
 from app.agents import AgentDeps, MemoryStore  # noqa: E402
@@ -174,3 +174,28 @@ def test_run_endpoint_wires_runner(monkeypatch):
 def test_graph_compiles_routes(tmp_path, kind):
     g, _ = graph(tmp_path, eng=engines)
     assert g.graph is not None
+
+
+def test_batch_survives_one_case_failure_and_candidate_read_errors(tmp_path, monkeypatch):
+    """Live 26 Oct: a Zetaris error on one candidate's q_case (mid re-seed) killed a whole series batch."""
+    s = Settings(_env_file=None)
+    monkeypatch.setattr(Settings, "logs_dir", property(lambda self: tmp_path / "logs"))
+    handlers = default_handlers()
+    base_case = handlers["q_case"]
+    calls = {"n": 0}
+
+    def flaky_case(p):
+        if p["crime_id"] == "CHN-XX-2026-000001":
+            raise RuntimeError("Spark job aborted")  # the batch case itself cannot be read
+        if p["crime_id"] == HOUSEBREAK["crime_id"]:
+            calls["n"] += 1
+            raise RuntimeError("Spark job aborted")  # a candidate cannot be read
+        return base_case(p)
+
+    handlers["q_case"] = flaky_case
+    out = run_request("batch", {"crime_ids": ["CHN-XX-2026-000001", ADYAR["crime_id"]]}, {}, s,
+                      zetaris=FakeZetaris(handlers), nightshift=FakeNightshift(responder()))
+    assert out["status"] == "partial"
+    assert len(out["output"]["alerts"]) == 1  # the hero link still comes out
+    assert any(e.startswith("CHN-XX-2026-000001") for e in out["output"]["errors"])
+    assert calls["n"] >= 1

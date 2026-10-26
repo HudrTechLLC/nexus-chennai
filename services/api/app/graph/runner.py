@@ -17,7 +17,7 @@ from .. import engines
 from ..adapters.nightshift import NightshiftClient
 from ..adapters.supabase import SupabaseClient
 from ..adapters.zetaris import ZetarisClient
-from ..agents import AgentDeps, MemoryStore, Store, detect_series
+from ..agents import AgentDeps, DeadlineExceeded, MemoryStore, Store, detect_series
 from ..config import Settings
 from ..tracing import Tracer, new_run_id
 from .pipeline import AgentGraph
@@ -201,7 +201,19 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
         statuses = []
         case_dates: list[str] = []
         for cid in ids:
-            state = graph.run("case", {"crime_id": cid}, options)
+            try:
+                state = graph.run("case", {"crime_id": cid}, options)
+            except DeadlineExceeded:
+                raise
+            except Exception as exc:
+                if kind == "case":
+                    raise  # a single-case /run keeps its 422/503 mapping
+                # batch: record the case's failure and keep going (status ends "partial")
+                graph.deps.tracer.emit("api", "case_failed", input_summary=cid,
+                                       output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
+                errors.append(f"{cid}: {type(exc).__name__}: {str(exc)[:200]}")
+                statuses.append("failed")
+                continue
             if (state.get("case") or {}).get("occurred_from"):
                 case_dates.append(str(state["case"]["occurred_from"])[:10])
             a, s, d = _case_output(state)
