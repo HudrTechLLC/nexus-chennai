@@ -23,6 +23,7 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-015 | 2026-10-26 | ✅ | Four build lanes (nexus-1…4) with full scope; engines run as the TypeScript references in a sidecar so official conformance runs (revises D-008) |
 | D-014 | 2026-10-26 | ✅ | Supabase project is **`nexus-qa`** (`ukrujnsjucwvytnokbtw`) in **Singapore** (`ap-southeast-1`), HUDR LLC org; Vercel functions moved to `sin1` |
 | D-013 | 2026-10-26 | ✅ | Engg Docs (16 spec tabs, notes, progress tracker) published in the web app at `/docs`; production URL public, previews need Vercel login |
 
@@ -172,3 +173,17 @@ The team created the project in the dashboard:
 - **Secret key:** `~/.secrets/nexus-service-role.key`.
 
 The backend reads keys through `*_FILE` settings, so no secret sits in a repo `.env`.
+
+## D-015 · Four build lanes, full scope, engines as a TypeScript sidecar (2026-10-26)
+The team asked to deliver the whole spec with nothing cut, using four Claude Code lanes (nexus-1…4). nexus-chief coordinates. Ownership, interfaces and merge rights are in [LANES](LANES.md).
+
+**Scope.** All tasks previously marked "cut" are back in scope. These were added:
+- domain models + core schema;
+- storage for Zetaris;
+- the engines sidecar;
+- Hotspot, Sanitiser and Briefer agents;
+- series/memory/graph pages.
+
+**D-008 revised.** The official Meterless conformance runners expect a TypeScript implementation module, so the engines are **vendored TypeScript references run as a local sidecar** instead of Python ports. The conformance suites then run unchanged, and the Python agents call the sidecar through `app.engines`.
+
+**Merge rights.** Lanes merge their own PRs when CI is green and the diff stays in their owned paths. Migrations are applied only after merge, by the owning lane. Vercel deploys `main` automatically.
