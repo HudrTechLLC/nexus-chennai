@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getAppeal } from "@/lib/publicData";
+import { APPEAL_IMAGE_ALT, appealImageUrl } from "@/lib/appealImages";
 
 export const revalidate = 60;
 
 export default async function AppealDetail({ params }: { params: { publicId: string } }) {
   const a = await getAppeal(decodeURIComponent(params.publicId));
   if (!a) notFound();
+  const stills = (a.images ?? []).flatMap((img) => {
+    const url = appealImageUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, img.path);
+    return url ? [{ url, width: img.width ?? 640, height: img.height ?? 360 }] : [];
+  });
   return (
     <article className="mx-auto max-w-2xl space-y-5">
       <Link href="/appeals" className="text-sm text-muted hover:text-ink">← All appeals</Link>
@@ -21,8 +27,18 @@ export default async function AppealDetail({ params }: { params: { publicId: str
           <ul className="mt-2 list-disc space-y-1 pl-5">{a.looking_for.map((l, i) => <li key={i}>{l}</li>)}</ul>
         </section>
       )}
-      {a.images.length > 0 && (
-        <p className="text-sm text-muted">{a.images.length} blurred still{a.images.length === 1 ? "" : "s"} attached to this appeal.</p>
+      {stills.length > 0 && (
+        <section aria-label="Blurred stills" className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {stills.map((s) => (
+              <figure key={s.url} className="overflow-hidden rounded-xl border border-line bg-surface">
+                <Image src={s.url} alt={APPEAL_IMAGE_ALT} width={s.width} height={s.height}
+                  sizes="(min-width: 640px) 336px, 100vw" className="h-auto w-full" />
+              </figure>
+            ))}
+          </div>
+          <p className="text-xs text-muted">Whole images are blurred before publishing, so no face or plate can be read.</p>
+        </section>
       )}
       <section className="rounded-xl border border-line bg-surface p-5 text-sm">
         <h2 className="font-semibold">Timeline</h2>
