@@ -16,13 +16,15 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-003 | 2026-10-26 | ✅ | Web app (public portal + police console + Pulse Map) **deployed on Vercel**; agents stay local |
 | D-004 | 2026-10-26 | ✅ | All city-specific data and settings go in a **city pack** (`cities/<city>/`), selected by `CITY` |
 | D-005 | 2026-10-26 | 🟡 | Claim **H-MEM + World Model** first; Scout Intent and Markovian only if built *and* tested |
-| D-006 | 2026-10-26 | ⏳ | Nightshift model ids: confirm on `GET /v1/models` whether pinned `nvidia/*` ids are accepted |
+| D-006 | 2026-10-26 | ✅ (see D-017) | Nightshift model ids: confirm on `GET /v1/models` whether pinned `nvidia/*` ids are accepted |
 | D-007 | 2026-10-26 | ✅ | Repo `HudrTechLLC/nexus-chennai`, **private until submission**, then public |
 | D-008 | 2026-10-26 | ✅ | Meterless engines are **ported to Python** from the Apache-2.0 TypeScript references at commit `1742dec` |
 | D-009 | 2026-10-26 | 🟡 | Scope for the deadline: P0–P6 + **P7 (Pulse Map, lean)** + **P8 (portal, lean)** + P10; cut data-source breadth first |
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-018 | 2026-10-26 | ✅ | Schema deviations: tip_messages.sender, factor weapon_tool, history-sheet columns, anon revoked in public (RPCs grant explicitly) |
+| D-017 | 2026-10-26 | ✅ | Nightshift live: fast=Lightning 30B, reason=Ultra 550B (Super 120B not served to our key), vision=Super VL excluded (opt-in pending); token read from runtime file |
 | D-016 | 2026-10-26 | ✅ | Scoring details from PR #8 + evidence-coverage guard (single-factor pairs cannot reach high) |
 | D-015 | 2026-10-26 | ✅ | Four build lanes (nexus-1…4) with full scope; engines run as the TypeScript references in a sidecar so official conformance runs (revises D-008) |
 | D-014 | 2026-10-26 | ✅ | Supabase project is **`nexus-qa`** (`ukrujnsjucwvytnokbtw`) in **Singapore** (`ap-southeast-1`), HUDR LLC org; Vercel functions moved to `sin1` |
@@ -203,3 +205,38 @@ The team asked to deliver the whole spec with nothing cut, using four Claude Cod
   - If fewer than 2 factors have data, no alert is raised.
   - Coverage is shown on the alert.
   - Why: renormalisation could otherwise let a pair with a single factor reach "high". This is a guard, not a weight change.
+
+## D-017 · Nightshift lanes verified on the live runtime (2026-10-26)
+**Setup.** Nightshift 1.2.7 runs locally at `http://127.0.0.1:8088/v1`, with the NVIDIA provider connected.
+- The app reads the runtime's own token file through `METERLESS_RUNTIME_TOKEN_FILE=%LOCALAPPDATA%/ai.meterless.runtime/proxy-token`. Nobody copies the token by hand.
+- `GET /v1/models` lists 86 ids: `meterless/*` routing modes, `local-runtime/*`, and 13 `nvidia/*` models.
+- **This settles D-006: pinned `nvidia/*` ids are accepted, and the response's `model` field echoes the pinned id.**
+
+Each lane was tested with a real chat request:
+
+| Lane | Pinned model | Result |
+|---|---|---|
+| fast | `nvidia/nemotron-3.5-lightning-30b-a3b` | ✅ 200, about 7 s for one sentence (reasoning model: about 435 completion tokens) |
+| reason | `nvidia/nemotron-3-ultra-550b-a55b` | ✅ 200, about 1–3 s. **Replaces** `nvidia/nemotron-3-super-120b-a12b`, which returns 404 "not served to the configured key" |
+| vision | `nvidia/nemotron-3.5-super-vl-120b-a12b` | ❌ 400: Nightshift has excluded it after repeated NVIDIA failures. Opt-in via `NVIDIA_SUPER_VL=true` is pending. Until then the E2 fallback applies (officer caption, logged as degraded) |
+| embed | `nvidia/nemotron-3.5-embed-1b` | available |
+
+**Agent call rules (for all agents):**
+- `max_tokens` ≥ 1024;
+- ask for JSON only and parse the last JSON object in the content;
+- retry a 502 `provider_error` once, then degrade;
+- never use `meterless/auto` (R2).
+
+The sponsor text names Ultra 550B as the reasoning model, because it is what actually runs.
+
+## D-018 · Schema deviations from the spec text (PR #10, nexus-1) (2026-10-26)
+- **`tip_messages`:** the sender column is named `sender`, not `from`, because `from` is a reserved word.
+- **Weapon factor:** named `weapon_tool` everywhere, following F2 and the scoring code. D3.11's example says `weapon`.
+- **History sheets:** D3.10 gives no columns, so these were chosen: `sheet_id`, `person_ref`, `station_id`, `opened_on`, `category`, `mo_tags`, `residence_ward`, `active`.
+- **Anon access:** `0002` revokes anon in schema `public`, including default privileges. Every public RPC must `grant execute ... to anon` explicitly.
+- **One copy of the weights:** `app.models` imports the F2 weights and bands from `app.scoring`.
+- **`crimes_citywide`:** a `security_invoker` view over a definer function. Columns: crime_id, station_id, category, sub_type, cell (H3 r8), week, mo_tags, visual_tags.
+- **Live RLS tests pass 4/4:**
+  - anon sees 0 relations and 0 functions;
+  - an officer sees only own-station crimes;
+  - the citywide view hides narrative and address.

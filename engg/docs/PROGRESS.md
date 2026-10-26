@@ -13,7 +13,7 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 
 | Phase | Scope | Status |
 |---|---|---|
-| P0 | Foundations: skeleton, adapters, smoke test, Supabase, Vercel | 🟡 code done; waiting on Supabase project, Vercel link, live Zetaris/Nightshift |
+| P0 | Foundations: skeleton, adapters, smoke test, Supabase, Vercel | 🟡 smoke: all PASS except vision lane (Super VL opt-in pending) |
 | P1 | Synthetic Chennai generator | ⏳ |
 | P2 | Zetaris data layer | ⏳ blocked: Zetaris install |
 | P3 | Extraction + World Model (+ Scout Intent) | ⏳ blocked: Nightshift |
@@ -27,10 +27,10 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 
 ## Blockers
 
+| Vision lane: Nightshift excludes Super VL after NVIDIA failures | Team: opt in via `NVIDIA_SUPER_VL=true`, restart Nightshift | P3 vision extraction |
+
 | Blocker | Owner | Needed for |
 |---|---|---|
-| meterless.ai resets the connection, so Nightshift can't be downloaded | Team: ask in HackOS Help Meterless | P0 smoke, P3+ |
-| Nightshift may need a dedicated GPU; the laptop has an integrated Intel Arc | Team: confirm cloud lanes (NVIDIA hosted) work from Nightshift | P3+ |
 | NVIDIA API key (`nvapi-…`): created; to be entered in Nightshift only | Team | P3+ |
 | AWS S3 bucket `nexus-chennai-data` (or a Zetaris-supported alternative) | Team | P2 |
 

@@ -60,7 +60,7 @@ def main() -> int:
                 continue
 
             def one(lane=lane):
-                r = n.chat(lane, [{"role": "user", "content": "Reply with the single word OK."}], agent="smoke", max_tokens=5)
+                r = n.chat(lane, [{"role": "user", "content": "Reply with the single word OK."}], agent="smoke", max_tokens=1024)
                 return "PASS", f"pinned={r.model} routed={r.routed_model} receipt={r.receipt_id}"
 
             check(f"nightshift lane {lane}", one)
