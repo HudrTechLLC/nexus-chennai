@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T21:16:57+05:30",
+  "updated": "2026-10-26T21:45:36+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -347,9 +347,9 @@
           "id": "WS2-16",
           "phase": "P6",
           "title": "Judge path: real /run, 3 input examples, real outputs, sample mode end to end",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-3",
-          "note": "First live /run OK (run_fb8044bf -> LA-2026-C802D4F2E02B); waits on sample bundle for judge path",
+          "note": "nexus-3 · #283 (3 input examples, real outputs, verify_replay PASS)",
           "ref": "#27"
         },
         {
@@ -625,8 +625,15 @@
           "id": "WS3-23",
           "phase": "P7",
           "title": "Admin nav on one line; eval page self-link",
+          "status": "done",
+          "note": "nexus-4 · #269"
+        },
+        {
+          "id": "WS3-24",
+          "phase": "P7",
+          "title": "Tip detail: \"View on map\" (approximate area) and \"See crime on map\" for linked crimes",
           "status": "todo",
-          "note": "nexus-4"
+          "note": "nexus-4 · user request; tips keep only an H3 r8 cell by design (J1)"
         }
       ]
     },
@@ -733,8 +740,8 @@
           "id": "WS4-13",
           "phase": "P8",
           "title": "Appeal pages: area map + \"See on crime map\" link",
-          "status": "todo",
-          "note": "nexus-4"
+          "status": "in_progress",
+          "note": "nexus-4 · draft PR #282"
         },
         {
           "id": "WS4-14",
@@ -838,8 +845,8 @@
           "id": "WS5-12",
           "phase": "P10",
           "title": "Offline proof: judge image runs with --network none",
-          "status": "todo",
-          "note": "nexus-7 · WS5-08 checklist §3b, Tue morning"
+          "status": "in_progress",
+          "note": "nexus-6 (moved from nexus-7)"
         },
         {
           "id": "WS5-13",
