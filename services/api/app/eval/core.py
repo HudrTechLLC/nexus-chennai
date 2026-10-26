@@ -125,9 +125,12 @@ def series_purity(edges: Iterable[tuple[str, str]], series: list[dict[str, Any]]
 
 
 class Evaluator:
-    def __init__(self, deps: AgentDeps, truth: Truth) -> None:
+    def __init__(self, deps: AgentDeps, truth: Truth, exclude: Iterable[str] = ()) -> None:
         self.deps = deps
         self.truth = truth
+        # Crimes outside the generated dataset (console-filed FIRs): truth knows nothing about them, so a
+        # link to one would count as a false positive. They are skipped as cases and as candidates.
+        self.exclude = set(exclude)
         self.linker = Linker(deps)
         self.skeptic = Skeptic(deps)
         self.planner = Planner(deps)
@@ -152,7 +155,7 @@ class Evaluator:
         cands = []
         for r in cand_rows:
             b = r.get("crime_id")
-            if not b or b == cid:
+            if not b or b == cid or b in self.exclude:
                 continue
             if b not in cache:
                 cache[b] = self._case(b)
@@ -176,6 +179,7 @@ class Evaluator:
         best: dict[tuple[str, str], Predicted] = {}
         baseline: set[tuple[str, str]] = set()
         times = []
+        crime_ids = [c for c in crime_ids if c not in self.exclude]
         for cid in crime_ids:
             preds, base, secs = self.evaluate_case(cid, cache)
             times.append(secs)
@@ -203,12 +207,21 @@ class Evaluator:
             type_pos[c or "unknown"].add((a, b))
         by_crime_type = {t: pair_metrics(ks, type_pos.get(t, set()), dups) for t, ks in sorted(by_type.items())}
         false_alerts = agent["fp"]
+        feats_by_case = {c: (cache.get(c) or (None, None))[1] for c in crime_ids}
+        live = sorted(c for c, f in feats_by_case.items() if f and f.get("model") and f.get("receipt_id"))
         return {
             "synthetic": True,
             "weights_version": WEIGHTS_VERSION,
             "method": "blocking (q_candidates, default plan) -> F2 code scoring -> Skeptic re-query/strike; "
                       "no model calls (models only explain, R7)",
             "cases_evaluated": len(crime_ids),
+            "features": {  # chief: live-model features vs fallback, per case
+                "with_live_model_features": len(live),
+                "without_features": sorted(c for c, f in feats_by_case.items() if not f),
+                "features_without_receipt": sorted(c for c, f in feats_by_case.items()
+                                                   if f and not (f.get("model") and f.get("receipt_id"))),
+            },
+            "excluded_non_generated": sorted(self.exclude),
             "truth_positive_pairs": len(positives),
             "agent": {**agent, "alerts": len(best), "by_band": by_band, "by_crime_type": by_crime_type,
                       "false_alerts_per_100_cases": round(100 * false_alerts / max(1, len(crime_ids)), 2),
