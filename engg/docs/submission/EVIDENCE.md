@@ -58,6 +58,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Vision: lane works; product use pending | Before 27 Oct `no_vision_model` on every image request. Now a seated cloud lane serves Super VL (chief's direct test: red image → "Red", 200). Product trace with a vision `model_call` `[PENDING: nexus-3]`; judge path and sample mode still use the caption fallback | D-036; README Limitations | 🟡 |
 | Worker Supabase-only | `/run` local store `NEXUS_STORE=local` (#273, `tests/graph/test_local_store.py`); worker + console need Supabase | `services/api/app/graph/local_store.py` docstring | ✅ |
 | Zetaris pushdown workaround | deterministic `ORDER BY` before every limit (#170, #174); `zetaris_result_truncated` event; live parity test | D-031 | ✅ |
+| Live DQ flags not applied in scoring | live `q_dq_flags` 55–80 s vs the 30 s Planner budget; traced `step_degraded`, run continues; the hero numbers were produced without live DQ, so they stand | #334 (`7dbd555`); nexus-2, 27 Oct (decision C for the freeze) | ✅ stated |
 
 ## Agents, graph and traces
 

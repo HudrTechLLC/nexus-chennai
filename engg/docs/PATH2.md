@@ -32,6 +32,7 @@ All are marked `cut` for the hackathon and parked here.
 
 | Task | What | Why |
 |---|---|---|
+| post-freeze, first | Live DQ flags in scoring via a snapshot table written by `app.dq_status` | The live `q_dq_flags` query takes 55–80 s against a 30 s Planner budget, so live runs skip it today (#334) |
 | WS6-01 | Local Supabase stack in compose | The console runs without our cloud; cloud Supabase becomes one deploy target |
 | WS6-02 | Full 14k dataset in sample mode; fixtures and eval rebuilt | The sample bundle is a 1,275-crime slice; eval numbers today are on that slice |
 | WS6-03 | Positive-only corroboration rule | One corroborating news item can lower a strong pair's score; the rule was evaluated and parked ([D-032](DECISIONS.md)) |
@@ -49,7 +50,7 @@ All are marked `cut` for the hackathon and parked here.
 
 ## 5. Phases (rough order)
 
-1. **Move the worker off Supabase** (WS1-19 done: #280, #293, clean-machine run #325; WS2-22 done in #273). Live mode with only Zetaris and Nightshift. Everything later builds on this.
+1. **Live DQ flags back in scoring** (a snapshot table written by `app.dq_status`, so the Planner reads it in one fast query). Then **move the worker off Supabase** (WS1-19 done: #280, #293, clean-machine run #325; WS2-22 done in #273). Live mode with only Zetaris and Nightshift. Everything later builds on this.
 2. **Local Supabase in compose (WS6-01).** Migrations on start, seed into a volume, Auth with the demo roles, Storage buckets. Same env names as the cloud, so switching target is a `.env` change.
 3. **Full dataset everywhere (WS6-02).** Rebuild fixtures and re-run the eval on 14k crimes; publish both slices' numbers.
 4. **Safety items (WS6-05, WS6-06, WS6-08).** Close the known limits the README lists.
