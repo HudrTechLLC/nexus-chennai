@@ -119,3 +119,9 @@ def test_offender_return_ranks_the_planted_offender_first(client):
     top = rows[0]
     assert top["person_ref"] == "P-90001" and top["near_home"] is True and top["mo_overlap"] == 1.0
     assert 0 <= top["days_since_release"] <= 60
+
+
+def test_calls_near_the_adyar_hero(client):
+    rows = client.named("q_calls_near", agent="test", crime_id="CHN-AD-2026-001182").dicts()
+    assert any(r["category"] == "chain_snatching" and r["km_from_scene"] <= 1.0 for r in rows)
+    assert all(-120 - 10 <= r["minutes_from_start"] for r in rows)
