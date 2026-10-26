@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T16:05:01+05:30",
+  "updated": "2026-10-26T16:26:53+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -478,6 +478,23 @@
           "title": "Joint task forces page (LNK-09, DASH-07)",
           "status": "in_progress",
           "note": "nexus-6 · /console/taskforces; tables in 0002; write path via RPC if needed"
+        },
+        {
+          "id": "WS3-14",
+          "phase": "P7",
+          "title": "Admin: users, stations, scoring weights (read-only, versioned)",
+          "status": "done",
+          "owner": "nexus-5",
+          "note": "No edit path (R12); weights_version on link_alerts via 0007_07, NULL = pre-versioning",
+          "ref": "#175, #177, #181"
+        },
+        {
+          "id": "WS3-15",
+          "phase": "P7",
+          "title": "Command overview: KPIs, alert funnel, top series, today's briefing (DASH-07)",
+          "status": "in_progress",
+          "owner": "nexus-5",
+          "note": "Chief decisions 26 Oct: open = registered + under_investigation; briefing is code-generated, no LLM"
         }
       ]
     },
