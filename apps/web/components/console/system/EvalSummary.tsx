@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { beatsText, deltaPts, NO_REPORT, pctOrDash, type EvalReport } from "@/lib/evalReport";
 
-/** System tab card (LNK-10): agents vs rules-only baseline, linking to the full report. */
-export function EvalSummary({ report }: { report: EvalReport | null }) {
+/** System tab card (LNK-10): agents vs rules-only baseline, linking to the full report (not on that page itself). */
+export function EvalSummary({ report, link = true }: { report: EvalReport | null; link?: boolean }) {
   return (
     <section className="rounded-xl border border-line bg-surface p-5" aria-labelledby="eval-summary">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="eval-summary" className="font-semibold">Linking quality vs rules-only baseline</h2>
-        <Link href="/console/system/eval" className="text-sm text-accent underline-offset-2 hover:underline">Full evaluation →</Link>
+        {link && <Link href="/console/system/eval" className="text-sm text-accent underline-offset-2 hover:underline">Full evaluation →</Link>}
       </div>
       {!report ? (
         <p className="text-sm text-muted">{NO_REPORT}</p>

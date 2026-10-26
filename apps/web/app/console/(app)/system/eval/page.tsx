@@ -31,7 +31,7 @@ export default async function EvalPage() {
         <section className="rounded-xl border border-line bg-surface p-5"><p className="text-sm text-muted">{NO_REPORT}</p></section>
       ) : (
         <>
-          <EvalSummary report={r} />
+          <EvalSummary report={r} link={false} />
 
           <section className="rounded-xl border border-line bg-surface p-5">
             <h2 className="mb-3 font-semibold">Agents vs baseline, pair level</h2>

@@ -37,8 +37,13 @@ export function canDecideAlerts(role: Role | null | undefined): boolean {
   return allows(role, ["analyst", "supervisor", "admin"]);
 }
 
-/** `hidden`: the screen is not built yet, so the link is not shown (main must never link to a 404). */
-export type NavItem = { href: string; label: string; access: Access; hidden?: boolean };
+/**
+ * `hidden`: the screen is not built yet, so the link is not shown (main must never link to a 404).
+ * `desktop`: where the item sits in the wide (md+) bar so it stays on one line at 1080p:
+ * "bell" = left out, the header bell already links there; "manage" = under the Manage menu.
+ * The phone menu always lists every item.
+ */
+export type NavItem = { href: string; label: string; access: Access; hidden?: boolean; desktop?: "bell" | "manage" };
 
 /** Console navigation in G2 order. Items the role cannot open are hidden. */
 export const NAV: NavItem[] = [
@@ -52,16 +57,21 @@ export const NAV: NavItem[] = [
   { href: "/console/appeals", label: "Appeals", access: ["station_officer", "supervisor", "admin"] },
   { href: "/console/tips", label: "Tips", access: ["station_officer", "analyst", "supervisor", "admin"] },
   { href: "/console/graph", label: "Graph", access: "analyst+" },
-  { href: "/console/stations", label: "Stations", access: "supervisor+" },
+  { href: "/console/stations", label: "Stations", access: "supervisor+", desktop: "manage" },
   { href: "/console/taskforces", label: "Task forces", access: "all" },
   { href: "/console/memory", label: "Memory", access: "analyst+" },
-  { href: "/console/notifications", label: "Notifications", access: "all" },
-  { href: "/console/system", label: "System", access: "admin" },
-  { href: "/console/admin", label: "Admin", access: "admin" },
+  { href: "/console/notifications", label: "Notifications", access: "all", desktop: "bell" },
+  { href: "/console/system", label: "System", access: "admin", desktop: "manage" },
+  { href: "/console/admin", label: "Admin", access: "admin", desktop: "manage" },
 ];
 
 export function navFor(role: Role | null | undefined): NavItem[] {
   return NAV.filter((n) => !n.hidden && allows(role, n.access));
+}
+
+/** The wide-screen bar: inline links, and the ones grouped under "Manage" (empty = no menu). */
+export function desktopNav(items: NavItem[]): { inline: NavItem[]; manage: NavItem[] } {
+  return { inline: items.filter((n) => !n.desktop), manage: items.filter((n) => n.desktop === "manage") };
 }
 
 /** Access rule for a console path (longest matching prefix in NAV); unknown paths need any police role. */
