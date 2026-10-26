@@ -1,0 +1,153 @@
+# Planted structure (spec D2 "Planted structure"). Ground truth goes to _truth/, never read at runtime.
+counts:
+  series: 30          # named below + generated
+  decoys: 25
+  duplicates: 15
+
+# Named demo series. `stations` are codes; members walk between them, each member within
+# `step_km` and `step_days` of the previous so every member passes q_candidates blocking.
+named:
+  - series_id: SER-RED-PULSAR
+    name: Red Pulsar Duo
+    crime_type: chain_snatching
+    stations: [J2, J7, J6, J3, J5]
+    size: 9
+    hours: [19.0, 21.5]
+    step_km: [1.5, 3.5]
+    step_days: [2, 9]
+    anchors: {bus_stop: 1}
+    mo:
+      approach: two_wheeler_from_behind
+      offender_count: 2
+      target: lone_pedestrian_woman
+      target_item: gold_chain
+      escape: two_wheeler_towards_main_road
+      violence: push
+      place_type: [bus_stop, main_road]
+      disguise: [helmet]
+    vehicle: {type: motorcycle, make_model: Bajaj Pulsar 150, colour: red, plate: "TN 09 BX 4471",
+              witnessed: ["TN 09 ?? 4471", "TN 09 B? 4471", "?? 4471", null]}
+    offenders: {count: 2, helmet: black with red stripe, build: thin, age_band: "20-30"}
+    victim: {gender: F, age_band: ["40-50", "50-60"]}
+    # The spec's own example pair (D3.1, D3.4, D3.8, D3.9, D3.11), planted verbatim as input data.
+    hero:
+      - crime_id: CHN-AD-2026-001182
+        station: J2
+        fir_no: 1182/2026
+        occurred_from: "2026-10-14T19:40:00+05:30"
+        occurred_to: "2026-10-14T19:50:00+05:30"
+        reported_at: "2026-10-14T21:05:00+05:30"
+        lat: 13.0012
+        lon: 80.2565
+        address: LB Road near Adyar bus depot
+        property: [{type: gold_chain, weight_g: 24, value_inr: 152000}]
+        plate_witnessed: "TN 09 ?? 4471"
+        victim: {gender: F, age_band: "50-60"}
+      - crime_id: CHN-VL-2026-000877
+        station: J7
+        fir_no: 877/2026
+        occurred_from: "2026-10-16T19:55:00+05:30"
+        occurred_to: "2026-10-16T20:02:00+05:30"
+        reported_at: "2026-10-16T21:20:00+05:30"
+        lat: 12.9822
+        lon: 80.2312
+        address: Velachery Main Road near Vijaya Nagar bus stop
+        property: [{type: gold_chain, weight_g: 18, value_inr: 114000}]
+        plate_witnessed: "TN 09 B? 4471"
+        victim: {gender: F, age_band: "40-50"}
+
+  - series_id: SER-GRILLE-CUTTERS
+    name: Grille Cutters
+    crime_type: night_house_break
+    stations: [R1, R3, R6, R10, R8]
+    size: 8
+    hours: [2.0, 4.0]
+    festival_only: true
+    step_km: [1.0, 3.0]
+    step_days: [1, 40]
+    anchors: {residential: 1}
+    mo:
+      approach: window_grille_cut
+      offender_count: 2
+      target: locked_house
+      target_item: gold_jewellery
+      escape: on_foot
+      violence: none
+      place_type: [residential]
+      disguise: [mask]
+    tool: cutter
+    offenders: {count: 2, build: medium, age_band: "30-40"}
+    victim: {gender: M, age_band: ["40-50", "60-70"]}
+
+  - series_id: SER-NIGHT-CAB
+    name: Night Cab
+    crime_type: cab_robbery
+    stations: [S1, S4, T3, S6]
+    size: 6
+    hours: [23.0, 26.0]
+    step_km: [1.5, 4.0]
+    step_days: [5, 20]
+    anchors: {hotel: 1, railway_station: 1}
+    mo:
+      approach: fake_ride_hailing_cab
+      offender_count: 3
+      target: lone_passenger
+      target_item: cash_and_phone
+      escape: car
+      violence: knife_threat
+      place_type: [main_road, hotel]
+      disguise: []
+    vehicle: {type: car, make_model: Maruti Swift Dzire, colour: white, plate: "TN 22 CK 7312",
+              witnessed: ["TN 22 ?? 7312", "TN 22 C? 73??", null]}
+    weapon: knife
+    offenders: {count: 3, build: heavy, age_band: "25-35"}
+    victim: {gender: M, age_band: ["30-40", "20-30"]}
+
+  - series_id: SER-LIGATURE
+    name: Ligature pair
+    crime_type: murder
+    stations: [T13, S6]
+    size: 2
+    hours: [21.0, 23.5]
+    step_km: [2.0, 4.0]
+    step_days: [10, 30]
+    anchors: {residential: 1}
+    mo:
+      approach: acquaintance_lure
+      offender_count: 1
+      target: lone_man
+      target_item: none
+      escape: on_foot
+      violence: ligature
+      place_type: [residential]
+      disguise: []
+    weapon: ligature
+    offenders: {count: 1, build: medium, age_band: "30-40"}
+    victim: {gender: M, age_band: ["30-40", "40-50"]}
+
+# Building blocks for the generated series (30 - named). Each picks one crime type and one
+# distinctive signature, so members are alike and unlike everything else.
+generated:
+  crime_types: [chain_snatching, mobile_snatching, night_house_break, day_house_break, two_wheeler_theft,
+                street_robbery, pickpocket, shop_theft, cheating]
+  size: [3, 12]
+  stations: [2, 5]
+  step_km: [1.0, 3.5]
+  step_days: [2, 25]
+  signatures:
+    vehicle_colours: [black, blue, grey, white, maroon, green, yellow, silver]
+    motorcycles: [Honda Shine, TVS Apache, Hero Splendor, Yamaha FZ, Royal Enfield Classic, Suzuki Access, Honda Activa]
+    helmets: [white full-face, blue open-face, red, grey with sticker, no helmet, yellow]
+    approaches:
+      chain_snatching: [two_wheeler_from_behind, asked_for_directions, posed_as_courier]
+      mobile_snatching: [two_wheeler_from_behind, on_foot_snatch_and_run, auto_pillion]
+      night_house_break: [door_lock_broken, back_door_pried, roof_sheet_removed]
+      day_house_break: [posed_as_eb_staff, posed_as_gas_delivery, duplicate_key]
+      two_wheeler_theft: [handle_lock_broken, wire_bypass, duplicate_key]
+      street_robbery: [knife_threat_two_men, auto_lure, fake_police_check]
+      pickpocket: [crowd_jostle, bus_door_press, distraction_by_spill]
+      shop_theft: [distraction_pair, fake_bill_swap, trial_room_switch]
+      cheating: [atm_card_swap, fake_kyc_call, gold_loan_fraud]
+    distinctive: [scar on left cheek, wears a saffron thread on wrist, speaks Telugu, red cap,
+                  limps slightly, tattoo of an anchor on forearm, wears spectacles, sports shoes with neon laces,
+                  carries a black backpack, has a bandage on right hand]

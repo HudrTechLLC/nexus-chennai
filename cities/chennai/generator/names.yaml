@@ -1,0 +1,10 @@
+# Seeded name lists for synthetic people (spec D2 rule 4). Common Tamil given names and
+# initials; combinations are random, so no row describes a real person.
+male: [Arun, Karthik, Senthil, Murugan, Vignesh, Prakash, Suresh, Ramesh, Ganesh, Balaji, Dinesh, Saravanan,
+       Manikandan, Rajesh, Vijay, Ashok, Kumar, Selvam, Anand, Bharath, Gokul, Hari, Jagan, Lokesh, Mohan,
+       Naveen, Pandian, Raghu, Sathish, Tamil, Udhay, Venkat, Yuvan, Elango, Ilango, Kannan, Muthu, Siva]
+female: [Lakshmi, Priya, Divya, Kavitha, Meena, Revathi, Saranya, Deepa, Anitha, Bhuvana, Chitra, Gayathri,
+         Jayanthi, Kalaivani, Malathi, Nandhini, Padma, Radha, Sangeetha, Thenmozhi, Uma, Vasuki, Yamuna,
+         Abirami, Bhavani, Dhanalakshmi, Eswari, Geetha, Janaki, Kamala, Mala, Nirmala, Pavithra, Selvi]
+initials: [A, B, C, D, E, G, J, K, M, N, P, R, S, T, V]
+io_ranks: [SI, SI, SI, Inspector, HC]
