@@ -38,3 +38,4 @@ next-env.d.ts
 # generated from engg/docs by scripts/sync-docs.mjs
 /content/
 /public/engg-docs/
+/lib/city.generated.json
