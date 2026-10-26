@@ -40,6 +40,8 @@ Band = Literal["high", "medium"]
 class EvidenceRef(NexusModel):
     view: str  # Zetaris view the row came from, e.g. v_crime_features
     row: str  # source row id
+    query: str | None = None  # named query that returned the row, e.g. q_vehicle_trail
+    query_id: str | None = None  # Zetaris query id of that run (shown per evidence row, G2)
 
 
 class LinkFactor(NexusModel):
@@ -84,6 +86,7 @@ class LinkAlert(NexusModel):
     stations: list[str] = []
     score: float = Field(ge=0, le=1)
     band: Band
+    coverage: float | None = Field(default=None, ge=0, le=1)  # D-016: weight share of factors with data
     factors: list[LinkFactor] = []
     memory_applied: list[MemoryApplied] = []
     skeptic: SkepticReview | None = None

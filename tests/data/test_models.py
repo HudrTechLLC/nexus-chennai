@@ -190,3 +190,15 @@ def test_tip_week_format():
     raw["received_week"] = "2026-10-14"
     with pytest.raises(ValidationError):
         m.Tip.model_validate(raw)
+
+
+def test_evidence_ref_carries_query_and_alert_coverage():
+    raw = _example("11")
+    for f in raw["factors"]:
+        if f["factor"] == "weapon":
+            f["factor"] = "weapon_tool"
+        for ev in f["evidence"]:
+            ev.update(query="q_vehicle_trail", query_id="q_8812")
+    raw["coverage"] = 0.63
+    a = m.LinkAlert.model_validate(raw)
+    assert a.coverage == 0.63 and a.factors[0].evidence[0].query_id == "q_8812"
