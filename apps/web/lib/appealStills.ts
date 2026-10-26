@@ -4,7 +4,7 @@
  * these keep the editor and the server action consistent with it.
  */
 
-import { BLUR_METHOD } from "@/lib/stillBlur";
+import type { BLUR_METHOD } from "@/lib/stillBlur"; // type only: no runtime dependency on the image libraries
 
 export const APPEAL_BUCKET = "appeal-public";
 export const MAX_STILLS = 8; // same cap as public_incidents_images_guard

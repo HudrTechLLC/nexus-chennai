@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getOfficer } from "@/lib/auth";
 import { audit } from "@/lib/alertsData";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { blurStill, hasMetadata, StillError } from "@/lib/stillBlur";
+import { blurStill, hasMetadata, StillError } from "@/lib/stillBlur.server";
 import { APPEAL_BUCKET, attachable, attachProblem, parseImages, stillPath, withoutStill, withStill, type EvidenceRow, type StillEntry } from "@/lib/appealStills";
 
 /**
