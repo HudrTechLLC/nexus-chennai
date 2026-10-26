@@ -217,7 +217,7 @@ export function RunView({ initialRun, initialMappings, fields }: {
                 <tbody className="divide-y divide-line">
                   {run.dq.map((f, i) => (
                     <tr key={`${f.rule}-${i}`}>
-                      <td className={`${cell} font-mono text-xs`}>{f.rule}</td>
+                      <td className={cell}><div className="font-mono text-xs">{f.rule}</div>{f.detail && <div className="text-xs text-muted">{clip(f.detail, 160)}</div>}</td>
                       <td className={cell}>{f.severity}</td>
                       <td className={`${cell} tabular-nums`}>{Number(f.count).toLocaleString("en-IN")}</td>
                       <td className={`${cell} text-xs text-muted`}>{(f.sample_rows ?? []).slice(0, 2).map((r) => clip(r, 50)).join(" · ")}</td>

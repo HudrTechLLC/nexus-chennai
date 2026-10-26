@@ -27,7 +27,7 @@ export const TRANSFORM_LABEL: Record<Transform, string> = {
 };
 
 export type ProfileColumn = { column: string; type?: string; non_null?: number; distinct?: number; examples?: unknown[] };
-export type DqFinding = { rule: string; severity: string; count: number; sample_rows?: unknown[] };
+export type DqFinding = { rule: string; severity: string; count: number; sample_rows?: unknown[]; detail?: string | null };
 
 export type OnboardingRun = {
   run_id: string;
