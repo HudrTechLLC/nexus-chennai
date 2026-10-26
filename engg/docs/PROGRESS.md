@@ -5,7 +5,7 @@ tags: [nexus, plan]
 # Progress
 
 Updated at the end of every session (spec O2). Newest first. Phase definitions: [SPEC Part K](SPEC.md#phases).
-Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-INDEX](00-INDEX.md)
+Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-INDEX](00-INDEX.md) · [PATH2](PATH2.md)
 
 **Deadline:** 27 Oct 2026 23:45 UTC (28 Oct 05:15 IST). **Target submit:** 27 Oct 17:45 UTC or earlier.
 

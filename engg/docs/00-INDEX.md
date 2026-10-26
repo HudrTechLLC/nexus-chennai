@@ -28,6 +28,7 @@ Entry point for every project document. **Start here, then read the note for you
 - **[workstreams.json](workstreams.json)**: every workstream and task with its status; rendered as the live progress chart at `/docs/progress` in the web app
 - [PROGRESS](PROGRESS.md): phase status, blockers, session log
 - [DELIVERABLES](DELIVERABLES.md): submission and eligibility checklist
+- [PATH2](PATH2.md): after the hackathon: a self-contained `docker compose up` stack (local Supabase + Zetaris + Nexus), the WS6 backlog and phases
 
 ## Runbooks
 - [SETUP](SETUP.md): accounts, services, environment variables, Nightshift and Zetaris contracts
