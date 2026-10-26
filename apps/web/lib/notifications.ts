@@ -22,7 +22,7 @@ export type OutboxRow = {
   outbox_id: number;
   channel: "email" | "whatsapp" | "in_app";
   recipient: string;
-  payload: { notification_id?: number; kind?: string; title?: string; body?: string | null; link?: string | null; backfilled?: boolean };
+  payload: { notification_id?: number; kind?: string; title?: string; body?: string | null; link?: string | null; backfilled?: boolean; error?: string };
   status: "queued" | "sent" | "failed";
   created_at: string;
   user_id: string | null;

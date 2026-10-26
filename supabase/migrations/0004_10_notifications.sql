@@ -49,8 +49,15 @@ begin
       values ('whatsapp', coalesce(v_name, 'officer') || ' (mock: no number on file)', v_payload, new.user_id);
     end if;
   exception when others then
-    -- the mock outbox must never block a real notification
+    -- the mock outbox must never block a real notification; leave a visible 'failed' row instead
     raise warning 'notification_to_outbox skipped for notification %: %', new.notification_id, sqlerrm;
+    begin
+      insert into public.outbox (channel, recipient, payload, status, user_id)
+      values ('in_app', 'outbox trigger', jsonb_build_object('notification_id', new.notification_id, 'kind', new.kind,
+              'title', new.title, 'mock', true, 'error', left(sqlerrm, 500)), 'failed', new.user_id);
+    exception when others then
+      raise warning 'notification_to_outbox could not record its failure: %', sqlerrm;
+    end;
   end;
   return new;
 end;

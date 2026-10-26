@@ -107,7 +107,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
                     <td className="py-2 pr-3">{CHANNEL_LABEL[o.channel] ?? o.channel}</td>
                     <td className="py-2 pr-3 font-mono text-xs">{o.recipient}</td>
                     <td className="py-2 pr-3">{o.payload?.title ?? "—"}</td>
-                    <td className="py-2 pr-3 text-xs">{o.status === "queued" ? "queued · not sent" : o.status}{o.payload?.backfilled ? " · backfilled" : ""}</td>
+                    <td className="py-2 pr-3 text-xs">{o.status === "queued" ? "queued · not sent" : o.status}{o.payload?.backfilled ? " · backfilled" : ""}{o.status === "failed" && o.payload?.error ? <span className="block text-red-600">{o.payload.error}</span> : null}</td>
                     <td className="py-2 text-xs text-muted">{fmt(o.created_at)}</td>
                   </tr>
                 ))}
