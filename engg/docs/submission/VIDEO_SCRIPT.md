@@ -29,16 +29,18 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ## Before recording
 
-0. **Pause background extraction before filing the live FIR.** Ask nexus-3, or stop them yourself: the backfill (`python -m app.graph.backfill`) and any series batch run. Nightshift serves one model call at a time, so a running batch makes the FIR's calls wait behind it. **Keep the worker running** (`python -m app.worker` with `ENGINES_PERSIST=supabase`). It picks up a new FIR on its next pass, 15 s between passes by default (`--interval`). Measured end-to-end times (filed → features → alert) come from nexus-3 after their worker change; quote only those, never an estimate.
+0. **The hero alert must be `pending` when recording starts.** LA-2026-E38C6B38B865 (Adyar ↔ Velachery) is decided **on camera only**. Nobody approves or rejects it beforehand, and no test touches it. Check its status in `/console/alerts` just before recording.
+0b. **Pause background extraction before filing the live FIR.** Ask nexus-3, or stop them yourself: the backfill (`python -m app.graph.backfill`) and any series batch run. Nightshift serves one model call at a time, so a running batch makes the FIR's calls wait behind it. **Keep the worker running** (`python -m app.worker` with `ENGINES_PERSIST=supabase`). It picks up a new FIR on its next pass, 15 s between passes by default (`--interval`). Measured end-to-end times (filed → features → alert) come from nexus-3 after their worker change; quote only those, never an estimate.
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
-2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** If the hero case gives no drop, use a run that does and narrate that pair. **Never stage or edit a trace.**
+2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** The live hero pair has **no** strike (Skeptic approved it in 1 round), so segment 6 must show a different pair from a run that has one. Narrate that pair, not the hero. **Never stage or edit a trace.**
 3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. The API and worker must share `logs/hmem/`. Plain Python from one checkout does this, and so does `docker compose --profile worker up`, because the worker mounts `./logs` too since #97.
 
    **Recipe:**
    1. Start the API and the worker: `python run.py` + `python -m app.worker` from one checkout, or `docker compose --profile worker up`.
-   2. Approve the Adyar–Velachery alert in the console, and let the worker pass once (it calls `hmem.record_decision`).
-   3. Run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
-   4. Check that alert's "Memory applied" section in the console is non-empty. If it is empty, use the ledger fallback in segment 7.
+   2. **Record segment 7's approval on camera** (the hero must still be pending, see step 0). Then let the worker pass once off camera (it calls `hmem.record_decision`).
+   3. Off camera, run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
+   4. Check that alert's "Memory applied" section in the console is non-empty, then record the cut for the end of segment 7. If it is empty, use the ledger fallback in segment 7.
+   - **Never rehearse step 2 on the hero.** If you must rehearse, use another pending alert.
 4. **Hide everything that can hold a secret** before you press record:
    - Nightshift's Providers and Console tabs;
    - the Supabase dashboard;
@@ -173,7 +175,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 |---|---|---|
 | "Adyar on a Wednesday evening… Velachery two days later" | hero pair in `series.yaml`: CHN-AD-2026-001182 on Wed 14 Oct 19:40 IST, CHN-VL-2026-000877 on Fri 16 Oct 19:55 IST (checked) | Change the weekday words to match the dates on screen |
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
-| Hero alert is Adyar ↔ Velachery, high | judge path @ `7534e9e`: CHN-AD-2026-001182 ↔ CHN-VL-2026-000877, high 0.787, cross-station; live demo alert id LA-2026-E38C6B38B865 (nexus-3) | Read the score shown on screen; never the number from this table |
+| Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `7534e9e`):** the same pair, high 0.787 | Read the score shown on screen; never the number from this table |
 | "five stations" | `SER-RED-PULSAR` `stations: [J2, J7, J6, J3, J5]`; only true if all members are linked | Say "across stations" |
 | "strikes a factor… dropped" | a real `strike_factor` + drop in the recorded run | Narrate exactly what the trace shows (send-back, or a strike without a drop) |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
