@@ -9,6 +9,7 @@ import { buildTimeline, canWriteCase, describe, humanise, maskPii, moRows, type 
 import { fetchCaseFile, fetchCitywide, type CaseFile } from "@/lib/casesData";
 import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { AppealButton } from "../_components/AppealButton";
+import { EvidenceUpload } from "../_components/EvidenceUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,12 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
   const otherIds = file.alerts.flatMap((a) => a.crimes).filter((id) => id !== crime.crime_id);
   const [names, briefs] = await Promise.all([stationNames(sb, [crime.station_id]), crimeBriefs(sb, otherIds)]);
   const station = names[crime.station_id] ?? crime.station_id;
+  // Audio statements play from short-lived links signed as this officer (storage policy: can_read_crime).
+  const audioPaths = file.statements.map((s) => s.audio_path).filter((p): p is string => !!p);
+  const audioUrls: Record<string, string> = audioPaths.length
+    ? Object.fromEntries(((await sb.storage.from("evidence").createSignedUrls(audioPaths, 600)).data ?? [])
+        .filter((s) => s.signedUrl && s.path).map((s) => [s.path as string, s.signedUrl]))
+    : {};
 
   const timeline = buildTimeline([
     { at: crime.occurred_from, kind: "occurred", label: `Occurred${crime.address ? ` at ${crime.address}` : ""}` },
@@ -101,7 +108,7 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
             <p className="text-muted">{humanise(crime.category)}{crime.sub_type ? ` · ${humanise(crime.sub_type)}` : ""} · severity {crime.severity}/5 · {humanise(crime.status)}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
-            <a href="#evidence" className="rounded-md border border-line px-3 py-1.5 hover:bg-bg">Evidence ({file.evidence.length})</a>
+            <Link href={`/console/cases/${encodeURIComponent(crime.crime_id)}/evidence`} className="rounded-md border border-line px-3 py-1.5 hover:bg-bg">Evidence gallery ({file.evidence.length})</Link>
             <Link href={`/console/map`} className="rounded-md border border-line px-3 py-1.5 hover:bg-bg">Pulse Map</Link>
             {canWrite && <AppealButton crimeId={crime.crime_id} />}
           </div>
@@ -137,11 +144,15 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
                 {file.statements.map((s) => (
                   <li key={s.statement_id} className="border-l-2 border-line pl-3">
                     <p className="text-xs text-muted">{s.witness_ref} · {humanise(s.mode)} · {fmt(s.recorded_at)}{s.transcript_model ? ` · transcribed by ${s.transcript_model}` : ""}</p>
-                    {s.text ? <p className="mt-1 whitespace-pre-wrap">{maskPii(s.text)}</p> : <p className="mt-1 text-muted">Audio only{s.audio_path ? "" : " (file missing)"}.</p>}
+                    {s.text ? <p className="mt-1 whitespace-pre-wrap">{maskPii(s.text)}</p> : null}
+                    {s.audio_path && audioUrls[s.audio_path] ? <audio src={audioUrls[s.audio_path]} controls className="mt-1 w-full" /> : null}
+                    {!s.text && !(s.audio_path && audioUrls[s.audio_path]) ? <p className="mt-1 text-muted">Audio only{s.audio_path ? " (file not in the evidence store)" : " (file missing)"}.</p> : null}
+                    {s.mode === "audio" && !s.text ? <p className="mt-1 text-xs text-muted">Not transcribed yet.</p> : null}
                   </li>
                 ))}
               </ul>
             )}
+            {canWrite && <div className="mt-3"><EvidenceUpload crimeId={crime.crime_id} target="statement" /></div>}
           </Card>
 
           <Card title="Vehicles" count={file.vehicles.length}>
@@ -171,6 +182,10 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
                 ))}
               </ul>
             )}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Link href={`/console/cases/${encodeURIComponent(crime.crime_id)}/evidence`} className="text-signal hover:underline">Open the gallery (previews, vision tags, custody) →</Link>
+            </div>
+            {canWrite && <div className="mt-3"><EvidenceUpload crimeId={crime.crime_id} /></div>}
           </Card>
 
           <Card title="Persons" count={file.persons.length}>
