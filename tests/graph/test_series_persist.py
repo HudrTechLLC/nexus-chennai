@@ -80,3 +80,12 @@ def test_worker_writes_missing_dossiers(tmp_path):
     assert d["model"] is None  # the test model never wrote a valid chunk: extractive fallback, said so
     assert sb.tables["series"][1]["dossier"] == {"text": "done"}
     assert w.process_dossiers() == 0
+
+
+def test_new_case_pickup_can_be_limited_to_recent_filings(tmp_path):
+    sb = FakeSB({"crimes": [{"crime_id": "C1"}], "crime_features": []})
+    w = worker(tmp_path, sb)
+    w.new_cases_since = "2026-10-26T15:00:00+05:30"
+    w.process_new_cases()
+    params = next(p for op, t, p in sb.log if op == "select" and t == "crimes")
+    assert params["created_at"] == "gt.2026-10-26T15:00:00+05:30"
