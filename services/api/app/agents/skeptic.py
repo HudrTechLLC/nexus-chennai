@@ -16,6 +16,11 @@ For each scored pair the Skeptic:
    - approve: otherwise.
    The `reason` lane writes the critique and may downgrade approve to send_back or drop,
    but it can never upgrade a pair (R7).
+4. Hard contradiction (review() only, before the critique; pre-registered in
+   engg/docs/eval/SKEPTIC_CONTRADICTION_PREREG.md): if the Skeptic's own rows for A and B state different
+   values for a distinctive descriptor (agents/contradiction.py), the pair is dropped in code, unless a
+   forensic or offender_return factor the Skeptic confirmed reconciles it. `check()` is unchanged, so the
+   linking eval (eval/core.py) does not include this step.
 """
 
 from __future__ import annotations
@@ -25,6 +30,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..scoring import PairScore, strike
+from . import contradiction as K
 from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, DeadlineExceeded, chat_json, chunked, reason_budget, crime_from_row, features_from_row, short
 from .linker import CORROBORATION_QUERIES, ScoredPair, compute_factors, corroboration_items, factor_payload
 
@@ -57,6 +63,10 @@ class SkepticResult:
     # Pairs that went to the model critique: applied | unavailable (call failed or no answer for this
     # pair: the code verdict stands, and the alert says so) | skipped (deadline reserve). None otherwise.
     model_critique: str | None = None
+    # The Skeptic's own fresh A/B rows (for the contradiction step) and what that step found.
+    rows: tuple[dict[str, Any], dict[str, Any]] | None = field(default=None, repr=False)
+    contradictions: list[dict[str, Any]] = field(default_factory=list)
+    drop_source: str | None = None  # "contradiction" when the code step dropped the pair
 
     def review_block(self) -> dict[str, Any]:
         """The D3.11 `skeptic` object."""
@@ -64,6 +74,9 @@ class SkepticResult:
                                  "verdict": VERDICT_TO_STATUS[self.verdict]}
         if self.model_critique:
             block["model_critique"] = self.model_critique
+        if self.drop_source:
+            block["drop_source"] = self.drop_source
+            block["contradictions"] = [dict(c) for c in self.contradictions]
         return block
 
 
@@ -85,7 +98,7 @@ class Skeptic:
 
     # ----- independent re-query ------------------------------------------
 
-    def _fresh(self, sp: ScoredPair) -> tuple[dict[str, float | None], list[str]]:
+    def _fresh(self, sp: ScoredPair) -> tuple[dict[str, float | None], list[str], tuple[dict[str, Any], dict[str, Any]] | None]:
         ida, idb = sp.crimes
         used = {f.factor for f in sp.score.factors if f.value is not None and not f.struck_by_skeptic}
         qids: list[str] = []
@@ -112,7 +125,7 @@ class Skeptic:
         case_a = q("q_case", crime_id=ida)
         case_b = q("q_case", crime_id=idb)
         if not case_a or not case_b:
-            return {}, qids  # nothing supports anything: every factor is struck
+            return {}, qids, None  # nothing supports anything: every factor is struck
         a, b = crime_from_row(case_a[0]), crime_from_row(case_b[0])
         feats = {r.get("crime_id"): features_from_row(r) for r in q("q_features", ids=f"{ida},{idb}")}
         fa, fb = feats.get(ida), feats.get(idb)
@@ -149,13 +162,13 @@ class Skeptic:
         for f in sp.score.factors:  # could not re-check: keep the Linker's value rather than strike on no data
             if f.factor in unverified:
                 out[f.factor] = f.value
-        return out, qids
+        return out, qids, (a, b)
 
     # ----- review ---------------------------------------------------------
 
     def check(self, sp: ScoredPair, round_no: int = 1) -> SkepticResult:
         """Re-query, strike, rescore. The verdict here is code-only; `review` adds the model's critique."""
-        rechecked, qids = self._fresh(sp)
+        rechecked, qids, rows = self._fresh(sp)
         to_strike = factors_to_strike(sp.score, rechecked)
         before = sp.score.score
         for name in to_strike:
@@ -167,11 +180,33 @@ class Skeptic:
                                f"score {before}→{sp.score.score}",
                 target_agent="Linker", zetaris_query_ids=qids, status="needs_revision")
         verdict = "approve" if sp.score.alert else "drop"
-        return SkepticResult(sp, verdict, struck=to_strike, rechecked=rechecked, query_ids=qids, round=round_no)
+        return SkepticResult(sp, verdict, struck=to_strike, rechecked=rechecked, query_ids=qids, round=round_no,
+                             rows=rows)
+
+    def contradiction_step(self, r: SkepticResult) -> None:
+        """Drop an approved pair whose own fresh rows state a hard contradiction, unless reconciled."""
+        if r.verdict != "approve" or r.rows is None:
+            return
+        found = K.contradictions(*r.rows)
+        if not found:
+            return
+        r.contradictions = found
+        why = K.describe(found)
+        by = K.reconciled_by(r.rechecked, r.struck)
+        if by:
+            self.deps.tracer.emit(AGENT, "contradiction_reconciled", input_summary=f"pair {r.pair.pair_id}",
+                                  output_summary=short(f"{why}; reconciled by confirmed {', '.join(by)}"),
+                                  zetaris_query_ids=r.query_ids, status="ok")
+            return
+        r.verdict, r.drop_source = "drop", "contradiction"
+        r.critique = short(f"Hard contradiction (code): {why}. No confirmed forensic or offender_return evidence "
+                           f"reconciles it, so the link is not credible.", 400)
 
     def review(self, pairs: Sequence[ScoredPair], round_no: int = 1, critique: bool = True) -> list[SkepticResult]:
         """Check every pair; `critique=False` (deadline reserve) keeps the code verdicts only."""
         results = [self.check(sp, round_no) for sp in pairs]
+        for r in results:
+            self.contradiction_step(r)
         live = [r for r in results if r.verdict == "approve"]
         if live and critique:
             self._critique(live, round_no)

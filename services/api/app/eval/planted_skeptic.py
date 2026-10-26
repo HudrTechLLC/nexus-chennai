@@ -607,7 +607,10 @@ def review_case(settings: Settings, case: Mapping[str, Any], near: Mapping[str, 
     Linker(deps).explain([sp])
     res = Skeptic(deps).review([sp], round_no=1, critique=True)[0]
     calls = [e for e in deps.tracer.read() if e["action"] == "model_call"]
-    out.update(verdict=res.verdict, critique=res.critique, model_critique=res.model_critique, struck=res.struck,
+    # A pair the code contradiction step dropped never goes to the model: it is decided, not "unavailable".
+    out.update(verdict=res.verdict, critique=res.critique, struck=res.struck, drop_source=res.drop_source,
+               contradictions=res.contradictions,
+               model_critique="not_sent" if res.drop_source else res.model_critique,
                rationale=sp.rationale, payload_b=factor_payload(sp)["b"],
                model_calls=[{"purpose": e["input_summary"], "model": e.get("model"), "routed": e.get("routed_model"),
                              "receipt": e.get("receipt_id"), "status": e["status"]} for e in calls])
@@ -632,13 +635,19 @@ def summarise(results: list[dict[str, Any]]) -> dict[str, Any]:
     return out
 
 
+def decided(r: Mapping[str, Any] | None) -> bool:
+    """An arm has a verdict to count: the model critique was applied, or the code contradiction step dropped it
+    (SKEPTIC_CONTRADICTION_PREREG). Only a failed or missing critique is 'unavailable'."""
+    return bool(r) and (r.get("model_critique") == "applied" or r.get("drop_source") == "contradiction")
+
+
 def _metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
-    """Primary: near-misses DROPPED while their twin was APPROVED, over arms where both critiques were applied."""
+    """#370 primary: near-misses DROPPED while their twin was APPROVED, over arms where both are decided.
+    SKEPTIC_CONTRADICTION_PREREG adds: the planted drop rate (any source) and the twin false-drop guard."""
     twins = {r["case_id"]: r for r in results if r["arm"] == "twin"}
     near = [r for r in results if r["arm"] == "planted"]
-    unavailable = [r["id"] for r in results if r.get("model_critique") != "applied"]
-    clean = [(p, twins[p["case_id"]]) for p in near if p.get("model_critique") == "applied"
-             and (twins.get(p["case_id"]) or {}).get("model_critique") == "applied"]
+    unavailable = [r["id"] for r in results if not decided(r)]
+    clean = [(p, twins[p["case_id"]]) for p in near if decided(p) and decided(twins.get(p["case_id"]))]
     n = len(clean)
     hit = sum(p["verdict"] == "drop" and t["verdict"] == "approve" for p, t in clean)
     by_kind: dict[str, dict[str, int]] = {}
@@ -648,8 +657,14 @@ def _metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
         k["dropped_twin_approved"] += int(p["verdict"] == "drop" and t["verdict"] == "approve")
         k["dropped"] += int(p["verdict"] == "drop")
         k["sent_back"] += int(p["verdict"] == "send_back")
-    tw = [t for t in twins.values() if t.get("model_critique") == "applied"]
-    return {"near_misses_scored": n, "unavailable": unavailable,
+    tw = [t for t in twins.values() if decided(t)]
+    pd = [p for p in near if decided(p)]
+    dropped = sum(p["verdict"] == "drop" for p in pd)
+    false_drops = sum(t["verdict"] == "drop" for t in tw)
+    return {"planted_decided": len(pd), "planted_drop_rate": None if not pd else round(dropped / len(pd), 3),
+            "planted_dropped_by_code": sum(p.get("drop_source") == "contradiction" for p in pd),
+            "twin_false_drops": false_drops, "twin_false_drop_rate": None if not tw else round(false_drops / len(tw), 3),
+            "near_misses_scored": n, "unavailable": unavailable,
             "primary_dropped_while_twin_approved": hit, "primary_rate": None if not n else round(hit / n, 3),
             "planted_dropped": sum(p["verdict"] == "drop" for p, _ in clean),
             "planted_dropped_or_sent_back": sum(p["verdict"] in ("drop", "send_back") for p, _ in clean),
@@ -658,7 +673,8 @@ def _metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
             "twins_dropped": sum(t["verdict"] == "drop" for t in tw), "by_plant_kind": by_kind}
 
 
-def run(settings: Settings, cases_path: Path, expect_sha: str, out_path: Path) -> dict[str, Any]:
+def run(settings: Settings, cases_path: Path, expect_sha: str, out_path: Path,
+        prereg: str = "engg/docs/eval/PLANTED_SKEPTIC_PREREG.md") -> dict[str, Any]:
     _guard(settings)
     sha = sha256_of(cases_path)
     if sha != expect_sha:
@@ -683,7 +699,7 @@ def run(settings: Settings, cases_path: Path, expect_sha: str, out_path: Path) -
     def git(*a: str) -> str:
         return subprocess.run(["git", *a], cwd=REPO_ROOT, capture_output=True, text=True).stdout.strip()
 
-    report = {"prereg": "engg/docs/eval/PLANTED_SKEPTIC_PREREG.md", "cases_sha256": sha, "run_id": run_id,
+    report = {"prereg": prereg, "cases_sha256": sha, "run_id": run_id,
               "sample_dir": have,
               "code_sha": git("rev-parse", "HEAD"), "code_dirty": bool(git("status", "--porcelain", "services/api")),
               "lane_reason": settings.lanes.get("reason"), "summary": summarise(results),
@@ -705,6 +721,8 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--cases", type=Path, required=True)
     r.add_argument("--expect-sha", required=True)
     r.add_argument("--out", type=Path, required=True)
+    r.add_argument("--prereg", default="engg/docs/eval/PLANTED_SKEPTIC_PREREG.md",
+                   help="the pre-registration this run answers (recorded in the report)")
     args = ap.parse_args(argv)
     settings = get_settings()
     if args.cmd == "prepare":
@@ -717,7 +735,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(spec['cases'])} twins, {len(nm)} near-misses ({sum(not n['reaches_skeptic'] for n in nm)} "
               f"stopped by the Linker), {len(spec['skipped'])} skipped; sha256 {sha256_of(args.out)}")
         return 0
-    report = run(settings, args.cases, args.expect_sha, args.out)
+    report = run(settings, args.cases, args.expect_sha, args.out, prereg=args.prereg)
     print(json.dumps(report["summary"], indent=1))
     return 0
 
