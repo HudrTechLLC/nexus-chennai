@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:44:34+05:30",
+  "updated": "2026-10-26T13:01:13+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -121,8 +121,10 @@
           "id": "WS1-12",
           "phase": "P2",
           "title": "Register sources in Zetaris (Supabase, S3 CSV, S3 Parquet, REST)",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "Supabase source sb live in Zetaris (17 tables + views); file sources via internal store next",
+          "ref": "#50"
         },
         {
           "id": "WS1-13",
@@ -142,8 +144,9 @@
           "id": "WS1-15",
           "phase": "P2",
           "title": "12 named queries + DuckDB sample equivalents",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "q_case + q_features live; DuckDB twins by nexus-2 (#48)"
         },
         {
           "id": "WS1-16",
@@ -462,49 +465,55 @@
           "id": "WS4-02",
           "phase": "P8",
           "title": "Public RPCs: submit_tip, tip_status, public incidents, map cells",
-          "status": "in_progress",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#47"
         },
         {
           "id": "WS4-03",
           "phase": "P8",
           "title": "Appeals list and detail",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#47"
         },
         {
           "id": "WS4-04",
           "phase": "P8",
           "title": "Public hex map (fuzzed, min-count cutoff)",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#47"
         },
         {
           "id": "WS4-05",
           "phase": "P8",
           "title": "Anonymous tip form with metadata (EXIF) stripping and tip code",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#47"
         },
         {
           "id": "WS4-06",
           "phase": "P8",
           "title": "Tip status and police replies",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#47"
         },
         {
           "id": "WS4-07",
           "phase": "P8",
           "title": "Sanitiser draft + officer publish flow",
-          "status": "todo",
-          "owner": "nexus-4"
+          "status": "in_progress",
+          "owner": "nexus-3",
+          "note": "Moved to nexus-3"
         },
         {
           "id": "WS4-08",
           "phase": "P8",
           "title": "Tip triage in console (quarantined tips visible)",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-4"
         }
       ]
@@ -589,8 +598,10 @@
           "id": "WS5-11",
           "phase": "P6",
           "title": "Early clean-clone dry run (Mon): root Dockerfile, docker run via host.docker.internal, curl /run x3, SAMPLE_MODE with empty .env and services stopped",
-          "status": "todo",
-          "owner": "nexus-chief"
+          "status": "in_progress",
+          "owner": "nexus-chief",
+          "note": "Root Dockerfile + CI docker-judge-path (sample mode, no creds) green; live host.docker.internal run pending",
+          "ref": "#49"
         }
       ]
     }
