@@ -268,14 +268,14 @@ class ZetarisClient:
                     if used != query_id:  # a retry answered: cite its id, keep the retry count
                         self._retries[used] = self._retries.pop(query_id, 0)
                         query_id = used
-            if len(batches) > 1:  # each batch is ordered; keep the merged answer in one order too (D-031)
-                rows.sort(key=lambda r: tuple("" if v is None else str(v) for v in r))
-                rows = rows[:limit] if limit else rows
             if q.as_of_column and not files_sql:
                 stamps = [str(r[-1]) for r in rows if r and r[-1] is not None]
                 # A row whose first column is NULL is the query's freshness marker, not data: drop it.
                 rows = [r[:-1] for r in rows if r and r[0] is not None]
                 source = f"zetaris as_of={max(stamps)}" if stamps else "zetaris as_of=none"
+            if len(batches) > 1:  # each batch is ordered; keep the merged answer in one order too (D-031)
+                rows.sort(key=lambda r: tuple("" if v is None else str(v) for v in r))
+                rows = rows[:limit] if limit else rows  # after the markers are gone, so no real row is lost
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
             if fast is not None and isinstance(exc, httpx.TimeoutException):
                 self._tripped[name] = time.monotonic() + BREAKER_SECONDS
