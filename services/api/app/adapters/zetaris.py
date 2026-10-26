@@ -21,7 +21,7 @@ import re
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 import duckdb
 import httpx
@@ -59,6 +59,16 @@ class NamedQuery:
     timeout_s: float | None = None
     # Values for optional parameters; the caller's params override them.
     defaults: dict[str, Any] | None = None
+    # Live-only hooks (q_dq_flags, 0007_14; agreed with nexus-1). None of them touches the sample path, so sample
+    # mode stays byte-identical.
+    # expand: params -> one or more param dicts for the Lightning SQL (e.g. a comma-joined id list into fixed
+    # :id01.. slots so `IN (...)` pushes down to Postgres); several dicts run as several calls whose rows are merged.
+    expand: Callable[[dict[str, Any]], list[dict[str, Any]]] | None = None
+    # lightning_files: the Lightning SQL to use instead when ZETARIS_DATA=files (still localised).
+    lightning_files: str | None = None
+    # as_of_column: `lightning` returns one extra last column (a freshness time) that is not part of `columns`;
+    # it is stripped from the rows and its latest value goes into the trace as as_of=...
+    as_of_column: bool = False
 
 
 # After a fail-fast query times out, skip it for this long (per client; a client lives for one run).
@@ -230,6 +240,7 @@ class ZetarisClient:
         caps = [t for t in (q.timeout_s, timeout_s) if t is not None]
         fast = min(caps) if caps else None
         query_id = str(uuid.uuid4())
+        earlier: list[str] = []  # query ids of earlier batches (expand), cited in the trace with the last one
         started = time.perf_counter()
         source = "zetaris"
         if fast is not None and self._tripped.get(name, 0.0) > time.monotonic():
@@ -239,14 +250,30 @@ class ZetarisClient:
         try:
             if self.settings.sample_mode and not self.settings.zetaris_api_key:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
-            sql = render(localise(q.lightning, self.settings.zetaris_data), params)
-            if fast is not None:
-                rows = self._post(sql, query_id, limit, fast)
-            else:
-                rows, used = self._run_rest(sql, query_id, limit)
-                if used != query_id:  # a retry answered: cite its id, keep the retry count
-                    self._retries[used] = self._retries.pop(query_id, 0)
-                    query_id = used
+            files_sql = bool(q.lightning_files) and self.settings.zetaris_data == "files"
+            template = localise(q.lightning_files if files_sql else q.lightning, self.settings.zetaris_data)
+            batches = q.expand(params) if q.expand else [params]
+            rows = []
+            for n, batch in enumerate(batches):
+                if n:
+                    earlier.append(query_id)
+                    query_id = str(uuid.uuid4())
+                sql = render(template, batch)
+                if fast is not None:
+                    rows += self._post(sql, query_id, limit, fast)
+                else:
+                    got, used = self._run_rest(sql, query_id, limit)
+                    rows += got
+                    if used != query_id:  # a retry answered: cite its id, keep the retry count
+                        self._retries[used] = self._retries.pop(query_id, 0)
+                        query_id = used
+            if len(batches) > 1:  # each batch is ordered; keep the merged answer in one order too (D-031)
+                rows.sort(key=lambda r: tuple("" if v is None else str(v) for v in r))
+                rows = rows[:limit] if limit else rows
+            if q.as_of_column and not files_sql:
+                stamps = [str(r[-1]) for r in rows if r and r[-1] is not None]
+                rows = [r[:-1] for r in rows]
+                source = f"zetaris as_of={max(stamps)}" if stamps else "zetaris as_of=none"
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
             if fast is not None and isinstance(exc, httpx.TimeoutException):
                 self._tripped[name] = time.monotonic() + BREAKER_SECONDS
@@ -265,7 +292,8 @@ class ZetarisClient:
             msg = f"'{name}' returned {len(bad)} columns via {source}, declared {len(q.columns)}"
             self._trace(agent, name, query_id, len(rows), ms, "error", msg)
             raise ZetarisError(msg)
-        self._trace(agent, name, query_id, len(rows), ms, "ok", source)
+        self._trace(agent, name, query_id, len(rows), ms, "ok", source, earlier)
+        source = source.split(" ", 1)[0]  # the as_of note is for the trace; results say "zetaris" or "sample"
         if limit and len(rows) >= limit and self.tracer is not None:
             # D-031: Zetaris pushes the REST limit into the JDBC scan before filters it cannot push
             # down, so a full page may be a truncated scan rather than a complete answer. Never silent.
@@ -274,7 +302,7 @@ class ZetarisClient:
                              zetaris_query_ids=[query_id], status="error")
         return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source, columns=q.columns)
 
-    def _trace(self, agent, name, query_id, rows, ms, status, note) -> None:
+    def _trace(self, agent, name, query_id, rows, ms, status, note, earlier: list[str] | None = None) -> None:
         retries = self._retries.pop(query_id, 0)
         if self.tracer is None:
             return
@@ -283,7 +311,7 @@ class ZetarisClient:
             "zetaris_query",
             input_summary=name,
             output_summary=f"rows={rows} ms={ms} via={note}" + (f" retries={retries}" if retries else ""),
-            zetaris_query_ids=[query_id],
+            zetaris_query_ids=[*(earlier or []), query_id],
             status=status,
             retry_count=retries,
         )

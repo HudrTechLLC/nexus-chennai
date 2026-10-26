@@ -34,6 +34,7 @@ INPUTS = {
                  "station_id": "", "status": ""},
     "q_context": {"crime_id": HERO},
     "q_source_counts": {},
+    "q_dq_flags_all": {},
 }
 SMALL, LARGE = 1000, 50000
 # Callers that pass their own limit (the answer is legitimately larger than the default page).

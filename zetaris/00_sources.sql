@@ -31,3 +31,9 @@ CREATE DATASOURCE VIEW crime_features_v FROM sb AS SELECT crime_id, extractor_ve
 -- Tips: only the columns zetaris_reader is granted (0003_zetaris_reader_tips). No raw text, no
 -- passphrase hash. Agents use the Tip Guard output in `guard`.
 CREATE DATASOURCE VIEW tips_v FROM sb AS SELECT tip_id, public_incident_id, channel, category, guard::text AS guard, approx_cell, received_week, status, source, source_row_id, synthetic FROM public.tips;
+
+-- Data-quality flags snapshot (0007_14, nexus-2; chief-approved registration). app.dq_status writes it after each
+-- full pass; live q_dq_flags reads it with `crime_id IN (...)`, which pushes down to Postgres. Its own statement so
+-- `register.py --file 00_sources.sql --only N` can add it without re-running the table list above. Plain columns
+-- only (no geometry, no jsonb). Supabase only: files mode keeps reading the rule views (no FILE_TABLES entry).
+REGISTER DATASOURCE TABLES ("dq_flags_snapshot") FROM sb;

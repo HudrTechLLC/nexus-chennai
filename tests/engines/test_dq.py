@@ -120,7 +120,8 @@ def test_live_views_are_sorted_and_dq_flags_reads_the_rule_views():
     assert "v_crime_unified" not in flags
     for name in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections"):
         assert f"FROM nexus.{name}" in flags
-    assert NAMED_QUERIES["q_dq_flags"].lightning.endswith("ORDER BY crime_id, rule")
+    assert NAMED_QUERIES["q_dq_flags"].lightning.endswith("ORDER BY crime_id, rule, other_id")  # snapshot (0007_14)
+    assert NAMED_QUERIES["q_dq_flags"].lightning_files.endswith("ORDER BY crime_id, rule")
 
 
 @pytest.mark.parametrize("name", ["20_dq.sql", "40_feeds.sql"])
