@@ -23,7 +23,7 @@ from .redact import redact_event
 FEATURE_COLUMNS = ("crime_id", "extractor_version", "mo", "visual_tags", "entities", "model", "receipt_id",
                    "confidence", "synthetic")
 ALERT_COLUMNS = ("alert_id", "kind", "crimes", "stations", "score", "band", "coverage", "memory_applied", "skeptic",
-                 "rationale", "recommended_action", "run_id", "synthetic")
+                 "rationale", "recommended_action", "run_id", "synthetic", "weights_version")
 FACTOR_COLUMNS = ("factor", "weight", "value", "evidence", "reason", "struck_by_skeptic")
 TRACE_COLUMNS = ("input_summary", "output_summary", "target_agent", "model", "routed_model", "receipt_id",
                  "engine", "confidence", "retry_count", "status", "extra")

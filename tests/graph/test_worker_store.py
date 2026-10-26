@@ -174,3 +174,12 @@ def test_supabase_store_never_writes_alert_status(tmp_path):
     assert sb.tables["runs"][0]["status"] == "failed" and sb.tables["runs"][0]["finished"]
     order = [(op, t) for op, t, _ in sb.log]
     assert order.index(("upsert", "runs")) < order.index(("upsert", "link_alerts"))
+
+
+def test_supabase_store_writes_weights_version_never_status(tmp_path):
+    sb = FakeSB({"link_alerts": [{"alert_id": "LA-9", "status": "approved", "score": 0.7}]})
+    st = SupabaseStore(sb, Tracer("s", tmp_path, echo=False))
+    st.write_alert({"alert_id": "LA-9", "kind": "pair", "crimes": ["A", "B"], "score": 0.8, "band": "high",
+                    "status": "pending", "run_id": "run_1", "weights_version": "f2-default-v1", "factors": []})
+    alert = sb.tables["link_alerts"][0]
+    assert alert["weights_version"] == "f2-default-v1" and alert["status"] == "approved"

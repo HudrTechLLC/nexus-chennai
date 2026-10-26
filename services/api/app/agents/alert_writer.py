@@ -93,6 +93,7 @@ class AlertWriter:
             alert = build_alert(res, self.deps.tracer.run_id)
             row = alert.model_dump(mode="json")
             row["synthetic"] = bool(res.pair.crime_a.get("synthetic", True) or res.pair.crime_b.get("synthetic", True))
+            row["weights_version"] = res.pair.score.weights_version  # link_alerts.weights_version (0007_07)
             stored = self.deps.store.write_alert(row)
             self.deps.store.notify([
                 {"station_id": st, "kind": "link_alert", "title": f"New {alert.band} link alert {alert.alert_id}",
