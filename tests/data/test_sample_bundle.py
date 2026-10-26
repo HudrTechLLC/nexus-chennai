@@ -125,3 +125,14 @@ def test_calls_near_the_adyar_hero(client):
     rows = client.named("q_calls_near", agent="test", crime_id="CHN-AD-2026-001182").dicts()
     assert any(r["category"] == "chain_snatching" and r["km_from_scene"] <= 1.0 for r in rows)
     assert all(-120 - 10 <= r["minutes_from_start"] for r in rows)
+
+
+def test_every_judge_series_station_has_a_place_alias():
+    """q_news matches articles to crimes through ref/place_aliases.csv, so each judge station needs a row."""
+    import csv
+
+    aliases = {r["station_id"] for r in csv.DictReader((SAMPLE / "ref" / "place_aliases.csv").open(encoding="utf-8"))}
+    series = json.loads((SAMPLE / "_truth" / "series.json").read_text(encoding="utf-8"))
+    judge = [s for s in series if set(s["crime_ids"]) & set(JUDGE_IDS)]
+    missing = {st for s in judge for st in s["stations"]} - aliases
+    assert not missing, missing
