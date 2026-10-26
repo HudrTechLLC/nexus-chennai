@@ -68,7 +68,13 @@ The chief announces the live base URL and token file when ready.
    - Make a fresh `.venv` per worktree (`python -m venv .venv` + `pip install -r services/api/requirements-dev.txt`).
    - For web: `npm ci` in `apps/web`, so it's a real folder, not a junction.
 2. **Stay in your owned paths.** You may make additive one-line edits to `services/api/requirements*.txt` and `.env.example`. Anything else outside your paths: message **nexus-chief** first.
-3. **Merge and deploy rights.** Merge your own PR (squash) when CI is green, your branch is rebased on main, and the diff stays in your paths. Vercel deploys `main` automatically.
+3. **Merge and deploy rights.** Merge your own PR (squash) when **all** of these hold (rule updated 26 Oct, because main moves faster than a rebase-and-CI round):
+   - CI is green on your diff;
+   - commits on main since your merge base touch **none** of your files (`git diff --name-only <merge-base> origin/main`);
+   - the full suite passes locally on your tree rebased onto current main;
+   - the diff stays in your paths.
+
+   If main's CI after the merge goes red because of your change, fixing it is your **first** priority. Vercel deploys `main` automatically.
    - Apply a migration to Supabase **only after it is merged**, with `scripts/db_migrate.py`, and only the owning lane does it.
    - Don't change Vercel or Supabase project settings. Ask the chief.
 4. **Don't edit** `workstreams.json`, `PROGRESS.md`, `DECISIONS.md` or `LANES.md`. Send the chief the task ids you finished and any decision you need. The chief updates the tracker with `scripts/tracker.py`.
