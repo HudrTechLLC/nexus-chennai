@@ -11,7 +11,8 @@ const PublicHexMap = dynamic(() => import("./PublicHexMap"), {
 const label = (c: string) => c.replaceAll("_", " ").replace(/^./, (x) => x.toUpperCase());
 
 /** Filters (crime type, last 7 / 30 / 90 days) around the public hex map. */
-export function PublicMapView({ map, days }: { map: PublicMap; days: number }) {
+/** `focus`: a public cell to open on, selected (from /map?cell=, e.g. an appeal's "See on crime map"). */
+export function PublicMapView({ map, days, focus = null }: { map: PublicMap; days: number; focus?: string | null }) {
   const [category, setCategory] = useState<string | null>(null);
   const categories = useMemo(() => {
     const s = new Set<string>();
@@ -23,7 +24,7 @@ export function PublicMapView({ map, days }: { map: PublicMap; days: number }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {[7, 30, 90].map((d) => (
-          <Link key={d} href={`/map?days=${d}`} className={`rounded-full border px-3 py-1 ${d === days ? "border-signal bg-signal-soft" : "border-line"}`}>Last {d} days</Link>
+          <Link key={d} href={`/map?days=${d}${focus ? `&cell=${focus}` : ""}`} className={`rounded-full border px-3 py-1 ${d === days ? "border-signal bg-signal-soft" : "border-line"}`}>Last {d} days</Link>
         ))}
         <span className="mx-1 text-muted">·</span>
         <button onClick={() => setCategory(null)} className={`rounded-full border px-3 py-1 ${!category ? "border-signal bg-signal-soft" : "border-line"}`}>All types</button>
@@ -31,7 +32,7 @@ export function PublicMapView({ map, days }: { map: PublicMap; days: number }) {
           <button key={c} onClick={() => setCategory(c)} className={`rounded-full border px-3 py-1 ${category === c ? "border-signal bg-signal-soft" : "border-line"}`}>{label(c)}</button>
         ))}
       </div>
-      <PublicHexMap cells={map.cells} category={category} />
+      <PublicHexMap cells={map.cells} category={category} focus={focus} />
       <p className="text-xs text-muted">
         Each hexagon is about 0.7 km². Areas with fewer than {map.min_count} reported crimes are hidden, and there are no exact locations or victim details.
         Outlined hexagons have an open police appeal.
