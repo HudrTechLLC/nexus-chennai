@@ -95,9 +95,12 @@ def test_feeds_sql_shape():
     sql = (ROOT / "zetaris" / "40_feeds.sql").read_text(encoding="utf-8")
     code = "\n".join(line for line in sql.splitlines() if not line.lstrip().startswith("--"))
     statements = [s.strip() for s in re.split(r";\s*(?:\n|$)", code) if s.strip()]
-    assert len(statements) == 6
-    assert statements[0].startswith("CREATE LIGHTNING DATABASE nexus_feeds")
-    assert all("WITH CONTAINER nexus AS" in s for s in statements[3:])
+    heads = [re.match(r"CREATE (?:OR REPLACE )?(?:LIGHTNING|SCHEMASTORE) (?:DATABASE|REST TABLE|VIEW) (\w+)", s).group(1)
+             for s in statements]
+    assert heads == ["nexus_feeds", "rest_news", "rest_social", "news_items", "social_posts", "v_news_mentions",
+                     "rest_weather", "weather_hourly"]
+    views = [s for s in statements if "SCHEMASTORE VIEW" in s]
+    assert len(views) == 4 and all("WITH CONTAINER nexus AS" in s for s in views)
     assert "{{since}}" in sql and "{{until}}" in sql and "mock-feeds/news" in sql and "mock-feeds/social" in sql
     assert "INTERVAL 4 DAYS" in sql and "s3csv.place_aliases" in sql
     assert not re.search(r"(sb_secret|Bearer |api[_-]?key)", sql, re.I)

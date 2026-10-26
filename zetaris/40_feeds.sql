@@ -48,3 +48,19 @@ JOIN (SELECT article_id, headline, outlet, published_at, url, place
   ON lower(trim(n.place)) = lower(trim(a.alias))
 WHERE n.published_at >= c.occurred_from AND n.published_at < c.occurred_from + INTERVAL 4 DAYS
 GROUP BY c.crime_id, n.article_id, c.occurred_from;
+
+-- Hourly weather for v_context / q_context (spec D1 #18: Open-Meteo, real, no key). One series for the city
+-- centre from the city pack; timezone=auto returns local times ("2026-10-10T21:00"), so `hour` joins on the
+-- crime's local hour. Needs outbound HTTPS from the Zetaris container. Window = register.py --since/--until.
+CREATE LIGHTNING REST TABLE rest_weather FROM nexus_feeds REQUEST (
+  endpoint "https://api.open-meteo.com/v1/forecast?latitude={{city:map.center.1}}&longitude={{city:map.center.0}}&hourly=temperature_2m,precipitation,weather_code&timezone=auto&start_date={{since}}&end_date={{until}}",
+  method "GET",
+  http_encoding "URLENCODED",
+  response_type "JSON",
+  insecure_ssl "false"
+) HEADER () BODY ();
+
+CREATE OR REPLACE SCHEMASTORE VIEW weather_hourly WITH CONTAINER nexus AS
+SELECT substring(t, 1, 13) AS hour, hourly.temperature_2m[i] AS temperature_c,
+       hourly.precipitation[i] AS precipitation_mm, hourly.weather_code[i] AS weather_code
+FROM nexus_feeds.rest_weather LATERAL VIEW posexplode(hourly.time) e AS i, t;
