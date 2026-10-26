@@ -279,3 +279,16 @@ export function isoWeek(ms: number, offsetMinutes: number): string {
 export function weekInRange(week: string, from: string, to: string): boolean {
   return week >= from && week <= to;
 }
+
+/**
+ * [west, south, east, north] around the points, padded by `pad` degrees (a single point still gets an area);
+ * null when there are no points.
+ */
+export function boundsOf(points: LonLat[], pad = 0.01): [number, number, number, number] | null {
+  if (points.length === 0) return null;
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  for (const [lon, lat] of points) {
+    if (lon < w) w = lon; if (lon > e) e = lon; if (lat < s) s = lat; if (lat > n) n = lat;
+  }
+  return [w - pad, s - pad, e + pad, n + pad];
+}

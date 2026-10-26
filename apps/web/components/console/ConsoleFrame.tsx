@@ -13,7 +13,8 @@ export function ConsoleFrame({ officer, unread = 0, children }: { officer: Offic
   ));
   const who = (
     <div className="flex flex-wrap items-center gap-3 text-sm">
-      <span className="text-muted">{officer.name}</span>
+      {/* the role pill already says who is signed in; the name only shows on wide screens so the nav stays on one line at 1080p + zoom */}
+      <span className="text-muted md:hidden min-[1700px]:inline">{officer.name}</span>
       <span className="rounded-full bg-signal-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-signal">
         {ROLE_LABEL[officer.role]}
         {officer.stationId ? ` · ${officer.stationId}` : ""}
@@ -31,7 +32,7 @@ export function ConsoleFrame({ officer, unread = 0, children }: { officer: Offic
             Nexus <span className="text-muted">· Console</span>
           </Link>
           {/* md and up: inline nav + who is signed in */}
-          <nav className="hidden flex-1 flex-wrap gap-x-4 gap-y-1 text-sm text-muted md:flex">
+          <nav className="hidden flex-1 flex-wrap gap-x-3 gap-y-1 text-sm text-muted md:flex xl:gap-x-4">
             {links}
           </nav>
           <div className="hidden md:flex">{who}</div>

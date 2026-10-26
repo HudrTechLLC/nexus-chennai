@@ -9,7 +9,7 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  cone, isoWeek, padRing, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  boundsOf, cone, isoWeek, padRing, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
@@ -222,6 +222,12 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   const releaseByWard = useMemo(() => new Map(data.layers.release.map((r) => [r[0], r[1]] as [number, number])), [data.layers.release]);
   const releaseMax = Math.max(1, ...Array.from(releaseByWard.values()));
 
+  // Constellation / "In a series": bring the series members into view (they can sit off the default view).
+  const seriesFocus = useMemo((): [number, number, number, number] | null => {
+    if (!constellation && !seriesOnly) return null;
+    return boundsOf(series.flatMap((s) => s.pts.map((x) => x.p)));
+  }, [constellation, seriesOnly, series]);
+
   const dim = constellation ? 0.25 : 1;
   const loopT = (now % 2400) / 2400; // travelling dash: one pass every 2.4 s
 
@@ -345,7 +351,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
 
   return (
     <div className="relative h-[calc(100vh-9rem)] min-h-[560px] overflow-hidden rounded-xl border border-line bg-black">
-      <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} />
+      <MapCanvas view={{ center: CITY.map.center, zoom: CITY.map.zoom, bounds: CITY.map.bounds }} layers={layers} theme={theme} onClick={onClick} focus={seriesFocus} />
 
       {/* category chips */}
       <div className="absolute left-3 top-3 z-10 flex max-w-[60%] flex-wrap gap-1.5">
@@ -400,6 +406,8 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       {/* status line */}
       <div className="absolute left-3 top-14 z-10 rounded-md bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-2 py-1 text-xs shadow backdrop-blur">
         {data.error ? <span className="text-red-600">Map data error: {data.error}</span>
+          : !data.ready
+            ? <span className="text-muted">Loading crimes…</span>
           : !data.extent && data.totalMonths === 0 && data.loadedMonths === 0 && data.crimes.length === 0
             ? <span className="text-muted">No crimes visible to your role yet.</span>
             : <span>
