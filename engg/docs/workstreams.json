@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T22:42:28+05:30",
+  "updated": "2026-10-26T23:04:00+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -632,8 +632,43 @@
           "id": "WS3-24",
           "phase": "P7",
           "title": "Tip detail: \"View on map\" (approximate area) and \"See crime on map\" for linked crimes",
-          "status": "in_progress",
-          "note": "nexus-1 (moved from nexus-4) · console map only"
+          "status": "done",
+          "note": "nexus-1 · #306 (console map only)"
+        },
+        {
+          "id": "WS3-25",
+          "phase": "P7",
+          "title": "Alert detail: \"How this alert was made\" — agent, Nemotron model and receipt per step; vision lane status shown honestly",
+          "status": "todo",
+          "note": "nexus-5 · UI/read-only, no migrations; cut if not green by 09:00 Tue"
+        },
+        {
+          "id": "WS3-26",
+          "phase": "P7",
+          "title": "Skeptic review panel (critique / send back / drop with reasons) + Dropped links list",
+          "status": "todo",
+          "note": "nexus-1 · UI/read-only, no migrations; cut if not green by 09:00 Tue"
+        },
+        {
+          "id": "WS3-27",
+          "phase": "P7",
+          "title": "Console Data sources page: federated sources, row counts, freshness, DQ flags",
+          "status": "todo",
+          "note": "nexus-2 · UI/read-only, no migrations; cut if not green by 09:00 Tue"
+        },
+        {
+          "id": "WS3-28",
+          "phase": "P7",
+          "title": "\"From the public\": linked tips on alert and series pages",
+          "status": "todo",
+          "note": "nexus-6 · UI/read-only, no migrations; cut if not green by 09:00 Tue"
+        },
+        {
+          "id": "WS3-29",
+          "phase": "P7",
+          "title": "Console home \"Start here\" card (role-aware path to the hero case)",
+          "status": "todo",
+          "note": "nexus-5 · UI/read-only, no migrations; cut if not green by 09:00 Tue"
         }
       ]
     },
@@ -733,8 +768,8 @@
           "id": "WS4-12",
           "phase": "P8",
           "title": "\"Add a tip\" prefilled from a crime card or an appeal",
-          "status": "in_progress",
-          "note": "nexus-2 (moved from nexus-5) · ?appeal= / ?about="
+          "status": "done",
+          "note": "nexus-2 · #292 (?appeal=) + #301 (?about=)"
         },
         {
           "id": "WS4-13",
@@ -756,6 +791,13 @@
           "title": "Tip form: smaller area choice (r8/r9/r10) + address search that places the area",
           "status": "in_progress",
           "note": "nexus-2 UI · nexus-7 geocode #291 (Photon, POST) · nexus-6 back-end r8 normalisation"
+        },
+        {
+          "id": "WS4-16",
+          "phase": "P8",
+          "title": "Public map: keyboard \"Areas with crimes\" list (accessibility)",
+          "status": "in_progress",
+          "note": "nexus-4 · migration 0007_13 approved · UI/read-only, no migrations; cut if not green by 09:00 Tue"
         }
       ]
     },
@@ -882,6 +924,13 @@
           "title": "Path 2 plan: engg/docs/PATH2.md",
           "status": "done",
           "note": "nexus-7 · #274"
+        },
+        {
+          "id": "WS5-17",
+          "phase": "P10",
+          "title": "Known limitations, impact framing, \"what is new\" paragraph, video beats",
+          "status": "todo",
+          "note": "nexus-7 · docs"
         }
       ]
     },
