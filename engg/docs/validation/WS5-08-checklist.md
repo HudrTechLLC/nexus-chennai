@@ -64,7 +64,7 @@ handoffs = [e["target_agent"] for e in ev if e.get("target_agent")]
 queries = [q for e in ev for q in (e.get("zetaris_query_ids") or [])]
 engines = collections.Counter(e["engine"] for e in ev if e.get("engine"))
 models = [e for e in ev if e.get("model")]
-critique = [e["action"] for e in ev if e["action"] in ("strike_factor", "send_back", "drop", "plan") or (e.get("retry_count") or 0) > 0]
+critique = [e["action"] for e in ev if e["action"] in ("send_back", "drop", "plan") or (e.get("retry_count") or 0) > 0]
 print("agents   ", dict(agents))
 print("handoffs ", len(handoffs), handoffs[:6])
 print("zetaris  ", len(queries), "query ids")
@@ -79,11 +79,11 @@ EOF
 |---|---|---|
 | 4.1 | ≥ 2 named agents | `agents` lists at least Extractor, Planner, Linker, Skeptic, Alert writer |
 | 4.2 | Handoffs | `handoffs` > 0 (e.g. Extractor → Zetaris → Skeptic → Alert writer) |
-| 4.3 | Critique / retry | Example 1 shows a Skeptic `strike_factor` or `send_back`, or a `drop`. This needs `q_vehicle_trail` (registered on main since #149). If `critique` shows only `plan`, FAIL. The video's Skeptic beat depends on it |
+| 4.3 | Critique / retry | At least one example shows a Skeptic `send_back` or `drop` (a `plan` round alone is not enough). Never expect or claim a `strike_factor`: none has occurred in any run |
 | 4.4 | Zetaris queries | `zetaris` > 0 query ids. In sample mode the `zetaris_query` lines say `via=sample` |
 | 4.5 | Engine activity | `engines` includes `hmem` (and `world_model` / `scout_intent` where used) |
 | 4.6 | Model per request | Every `models` entry names a pinned `nvidia/…` id. In sample mode with fixtures, the status is `replayed`, **not** `error`. Without fixtures, it's `error` + "no recorded fixture", which is a FAIL for this step |
-| 4.7 | No unexpected errors | `errors` has no `not a registered named query` and no `IO Error … news/articles.jsonl` |
+| 4.7 | No unexpected errors | `errors` has no `not a registered named query` and no `IO Error … news/articles.jsonl`. On a live run, `q_news` with 0 rows is expected until WS1-16 registers the news feed |
 | 4.8 | Trace also on stdout/stderr | `docker logs nexus` (before 3.7) shows trace lines. Locally, `run.py --once` sends them to stderr |
 
 ## 5 · No hardcoded outputs: outputs differ across inputs
@@ -132,7 +132,7 @@ EOF
 | 9.2 | `grep -n 'hackathon.genai.works/resources' README.md` | The Participant Setup Guide link is present (Zetaris + Nightshift setup) |
 | 9.3 | `grep -nE 'Python (3\.11\|3\.13)\|PowerShell\|tzdata' README.md \| head` | Dependencies and Windows notes present |
 | 9.4 | `grep -n 'PENDING' README.md` | **No output at submission.** Video link, examples and eval filled in, or the sentence removed |
-| 9.5 | `grep -niE 'tamper-proof\|cannot forge' README.md engg/docs/submission/*.md` | No output, unless 0007_06 (`record_evidence`) has merged (nexus-5) |
+| 9.5 | `grep -rniE 'tamper-proof\|cannot forge\|strikes? (a\|any\|the) factor' README.md engg/docs/submission/*.md \| grep -viE 'not (read this as )?tamper-proof\|never\|none has'` | No output: no tamper-proof claim (the README states the evidence limit) and no claim of a Skeptic factor strike |
 | 9.6 | Follow README "Setup → Option B" literally, as a new reader would | Every command works as written. Note any that needed a fix |
 
 ## 10 · Video, deck and links (manual)
