@@ -40,7 +40,7 @@ export const SOURCE_LABEL: Record<TipCrimeSource, string> = {
 };
 
 export const PUBLIC_TIPS_EMPTY =
-  "No public tips yet. Tips reach a case through its public appeal: an officer drafts one from the case file, " +
+  "No public tips yet. Tips sent from a public crime card or appeal appear here. Tips reach a case through its public appeal: an officer drafts one from the case file, " +
   "a supervisor approves it, and it then appears on the public site (appeals list and map), where anyone can " +
   "send a tip anonymously. The public can also send a tip from a crime card on the public map.";
 

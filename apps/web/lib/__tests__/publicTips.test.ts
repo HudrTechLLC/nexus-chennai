@@ -65,5 +65,6 @@ describe("linkPublicTips", () => {
   it("explains how tips reach a case", () => {
     expect(PUBLIC_TIPS_EMPTY).toMatch(/^No public tips yet\./);
     expect(PUBLIC_TIPS_EMPTY).toMatch(/appeal/);
+    expect(PUBLIC_TIPS_EMPTY).toMatch(/Tips sent from a public crime card or appeal appear here\./); // reads as a live feed
   });
 });
