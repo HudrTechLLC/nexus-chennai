@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     zetaris_org_id: str = "1"
     zetaris_api_key: str = ""
     zetaris_timeout_seconds: float = 60.0
+    # Where Zetaris reads crime data: "supabase" (the sb datasource, default) or "files" (the nexus_fs
+    # file store that `python -m data.setup_live` loads). See adapters/zetaris_sources.py.
+    zetaris_data: str = "supabase"
 
     meterless_base_url: str = "http://127.0.0.1:8088/v1"
     meterless_runtime_token: str = ""

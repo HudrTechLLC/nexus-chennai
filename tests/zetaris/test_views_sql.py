@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from data.generator.sample import UNIFIED_COLUMNS
-from zetaris.register import statements
+from zetaris.register import fill, statements
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -18,7 +18,8 @@ def _select_columns(sql: str) -> list[str]:
 
 
 def test_live_view_columns_match_the_sample_view():
-    stmts = statements((ROOT / "zetaris" / "10_views.sql").read_text(encoding="utf-8"))
+    stmts = [fill(s, {"timezone": "Asia/Kolkata"}, "x", "y", "supabase")[0]
+             for s in statements((ROOT / "zetaris" / "10_views.sql").read_text(encoding="utf-8"))]
     view = next(s for s in stmts if "VIEW v_crime_unified" in s)
     assert "WITH CONTAINER nexus" in view
     assert _select_columns(view.split(" AS\n", 1)[1]) == UNIFIED_COLUMNS

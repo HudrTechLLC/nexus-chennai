@@ -28,6 +28,7 @@ import httpx
 
 from ..config import Settings
 from ..tracing import Tracer
+from .zetaris_sources import localise
 
 
 class ZetarisError(RuntimeError):
@@ -225,7 +226,7 @@ class ZetarisClient:
         try:
             if self.settings.sample_mode and not self.settings.zetaris_api_key:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
-            sql = render(q.lightning, params)
+            sql = render(localise(q.lightning, self.settings.zetaris_data), params)
             if q.timeout_s is not None:
                 rows = self._post(sql, query_id, limit, q.timeout_s)
             else:
