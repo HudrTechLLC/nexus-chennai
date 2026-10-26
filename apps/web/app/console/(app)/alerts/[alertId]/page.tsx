@@ -15,6 +15,10 @@ import { memberLonLat } from "@/lib/series";
 import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
 import { SkepticPanel } from "@/components/console/alerts/SkepticPanel";
 import { alertTimeline, SKEPTIC_ACTIONS, skepticTraceFilter, type SkepticEventRow } from "@/lib/skeptic";
+import { AlertHowMade } from "@/components/console/alerts/AlertHowMade";
+import { alertSteps } from "@/lib/alertTrace";
+import { allows } from "@/lib/roles";
+import type { TraceRow } from "@/lib/trace";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +94,25 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
     : { data: [] };
   const skepticSteps = alertTimeline((skepticRows ?? []) as SkepticEventRow[], alert.crimes, critique);
   const anyStruck = rows.some((f) => f.struck_by_skeptic);
+  // How this alert was made (WS3-25): its run's steps, analyst+ only (trace_events RLS).
+  const canSeeTrace = allows(officer.role, "analyst+");
+  // Its run's steps and any later re-explanation run, fetched together (nexus-4).
+  const [traceRes, rexRunRes] = canSeeTrace
+    ? await Promise.all([
+        alert.run_id
+          ? sb.from("trace_events").select("run_id, seq, ts, agent_name, action, input_summary, output_summary, target_agent, model, routed_model, receipt_id, zetaris_query_ids, engine, confidence, retry_count, status").eq("run_id", alert.run_id).order("seq").limit(5000)
+          : Promise.resolve({ data: [] }),
+        sb.from("trace_events").select("run_id").eq("action", "rationale_reexplained").eq("input_summary", alert.alert_id).limit(10),
+      ])
+    : [{ data: [] }, { data: [] }];
+  const traceRows = (traceRes.data ?? []) as TraceRow[];
+  const rexRuns = Array.from(new Set(((rexRunRes.data ?? []) as { run_id: string }[]).map((r) => r.run_id)));
+  const rexRows = rexRuns.length
+    ? (((await sb.from("trace_events").select("run_id, seq, ts, agent_name, action, input_summary, output_summary, target_agent, model, routed_model, receipt_id, zetaris_query_ids, engine, confidence, retry_count, status")
+        .in("run_id", rexRuns).in("action", ["model_call", "rationale_reexplained"]).order("seq").limit(2000)).data ?? []) as TraceRow[])
+    : [];
+  const howSteps = alertSteps(traceRows, { alertId: alert.alert_id, crimes: alert.crimes }, rexRows);
+  const finalVerdict = (alert.skeptic as { verdict?: string } | null)?.verdict ?? null;
   const stationsLabel = alert.crimes.map((id) => crimes[id]?.station_name.replace(/^PS-/, "") ?? id).filter((v, i, a) => a.indexOf(v) === i).join(" and ");
 
   return (
@@ -142,6 +165,8 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
         )}
         <p className="mt-2 text-xs text-muted">A camera read is a sighting, not proof of involvement. Sources: crimes (your access), crimes_citywide, map_anpr_reads.</p>
       </section>
+
+      {canSeeTrace && <AlertHowMade steps={howSteps} runId={alert.run_id} verdict={finalVerdict} canOpenTrace={officer.role === "admin"} />}
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-lg font-bold">Factors</h2>
