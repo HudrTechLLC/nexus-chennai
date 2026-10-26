@@ -19,7 +19,7 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
   await audit(sb, "view_tip", "tip", tipId);
 
   const [{ data: messages }, { data: nearby }, appeal] = await Promise.all([
-    sb.from("tip_messages").select("message_id, sender, text, at").eq("tip_id", tipId).order("at"),
+    sb.from("tip_messages").select("message_id, sender, text, at").eq("tip_id", tipId).order("message_id"),
     sb.rpc("tip_nearby_crimes", { p_tip_id: tipId }),
     tip.public_incident_id
       ? sb.from("public_incidents").select("public_incident_id, title, crime_id").eq("public_incident_id", tip.public_incident_id).maybeSingle()
