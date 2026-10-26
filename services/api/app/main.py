@@ -21,7 +21,7 @@ from .feeds import router as feeds_router
 from .agents import AgentError, Briefer, Sanitiser, SeriesAnalyst
 from .agents.base import crime_from_row, features_from_row
 from .agents.series import dossier_record
-from .graph.runner import agent_deps, default_store, run_request
+from .graph.runner import CaseNotFound, agent_deps, default_store, run_request
 from .graph.store import SupabaseStore
 from .tracing import new_run_id
 
@@ -130,6 +130,9 @@ def run(req: RunRequest) -> dict[str, Any]:
     run_id = req.run_id or new_run_id()
     try:
         return run_request(req.input.kind, req.input.merged_payload(), req.options.model_dump(), s, run_id=run_id)
+    except CaseNotFound as exc:
+        raise HTTPException(status_code=404, detail={"run_id": run_id, "status": "not_found", "message": str(exc),
+                                                     "log_file": f"logs/trace-{run_id}.jsonl"})
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=422, detail={"run_id": run_id, "status": "bad_input", "message": str(exc)})
     except (ZetarisError, NightshiftError) as exc:

@@ -162,7 +162,8 @@ class AgentGraph:
         try:
             rows, qid = self.deps.query("q_case", agent="Extractor", crime_id=cid)
             if not rows:
-                return {"status": "error", "errors": [f"case {cid} not found"]}
+                self._trace("Extractor", "case_not_found", input_summary=cid, status="error")
+                return {"status": "not_found", "errors": [f"case {cid} not found"]}
             frows, fqid = self.deps.query("q_features", agent="Extractor", ids=cid)
         except DeadlineExceeded:
             return self._deadline(state, "load_case")
@@ -307,7 +308,7 @@ class AgentGraph:
 
     @staticmethod
     def _ok(state: RunState) -> str:
-        return "stop" if state.get("status") in ("deadline", "error") else "next"
+        return "stop" if state.get("status") in ("deadline", "error", "not_found") else "next"
 
     @staticmethod
     def _after_skeptic(state: RunState) -> str:

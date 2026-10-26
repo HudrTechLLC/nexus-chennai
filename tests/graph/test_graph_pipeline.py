@@ -97,7 +97,7 @@ def test_low_time_skips_model_calls_but_still_links(tmp_path):
 def test_unknown_case_is_an_error(tmp_path):
     g, _ = graph(tmp_path)
     state = g.run("case", {"crime_id": "NOPE"})
-    assert state["status"] == "error" and "not found" in state["errors"][0]
+    assert state["status"] == "not_found" and "not found" in state["errors"][0]
 
 
 def test_tip_path_quarantines_injection_before_any_model_call(tmp_path):
@@ -220,3 +220,26 @@ def test_search_runs_q_search_with_every_parameter(tmp_path, monkeypatch):
     assert out["status"] == "success" and res["results"], out["output"]
     assert "CHN-AD-2026-001182" in {r["crime_id"] for r in res["results"]}
     assert all("score" in r for r in res["results"]) and res["query_id"]
+
+
+def test_unknown_crime_id_is_404_not_partial(tmp_path, monkeypatch):
+    """nexus-7 judge's-eye run: an unknown crime_id answered 200 partial '1/1 cases processed'."""
+    from fastapi.testclient import TestClient
+
+    from app import main
+    from app.graph.runner import CaseNotFound
+    s = Settings(_env_file=None)
+    monkeypatch.setattr(Settings, "logs_dir", property(lambda self: tmp_path / "logs"))
+    kw = dict(zetaris=FakeZetaris(default_handlers()), nightshift=FakeNightshift(responder()))
+    with pytest.raises(CaseNotFound):
+        run_request("case", {"crime_id": "CHN-NO-2026-999999"}, {}, s, **kw)
+    out = run_request("batch", {"crime_ids": ["CHN-NO-2026-999999", ADYAR["crime_id"]]}, {}, s, **kw)
+    assert out["status"] == "partial" and "1/2 cases processed" in out["output"]["summary"]
+    assert any("not found: CHN-NO-2026-999999" in e for e in out["output"]["errors"])
+
+    def boom(*a, **k):
+        raise CaseNotFound("CHN-NO-2026-999999")
+
+    monkeypatch.setattr(main, "run_request", boom)
+    r = TestClient(main.app).post("/run", json={"input": {"kind": "case", "crime_id": "CHN-NO-2026-999999"}})
+    assert r.status_code == 404 and r.json()["detail"]["status"] == "not_found"
