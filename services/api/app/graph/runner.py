@@ -139,6 +139,32 @@ def _case_output(state: Mapping[str, Any]) -> tuple[list[dict], int, int]:
     return alerts, struck, len(state.get("dropped", []))
 
 
+HOTSPOT_WINDOW_DAYS = 7
+
+
+def _hotspots(graph: AgentGraph, case_dates: list[str], case_ids: set[str], options: Mapping[str, Any]
+              ) -> tuple[list[dict[str, Any]], list[str]]:
+    """Hotspots in the window ending at the latest processed case, kept if they contain a processed case."""
+    if options.get("hotspots") is False or not case_dates:
+        return [], []
+    from datetime import date, timedelta
+
+    from ..agents.hotspot import detect_hotspots
+    days = int(options.get("hotspot_days") or HOTSPOT_WINDOW_DAYS)
+    until = date.fromisoformat(max(case_dates)) + timedelta(days=1)
+    since = until - timedelta(days=days)
+    try:
+        found = detect_hotspots(graph.deps, since=since.isoformat(), until=until.isoformat())
+    except Exception as exc:  # hotspots are an extra; the link alerts stand without them
+        graph.deps.tracer.emit("Hotspot detector", "hotspots_failed", output_summary=str(exc)[:300],
+                               status="error")
+        return [], [f"hotspots: {exc}"]
+    relevant = [h for h in found if case_ids & set(h.get("crimes") or [])]
+    return [_alert_view(a) | {k: a.get(k) for k in ("cell", "category", "window", "observed", "expected",
+                                                    "p_value")}
+            for a in graph.writer.write_hotspots(relevant)], []
+
+
 def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options: Mapping[str, Any]
               ) -> tuple[dict[str, Any], str]:
     if kind in ("case", "batch"):
@@ -149,8 +175,11 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
         struck = dropped = 0
         errors: list[str] = []
         statuses = []
+        case_dates: list[str] = []
         for cid in ids:
             state = graph.run("case", {"crime_id": cid}, options)
+            if (state.get("case") or {}).get("occurred_from"):
+                case_dates.append(str(state["case"]["occurred_from"])[:10])
             a, s, d = _case_output(state)
             alerts += a
             struck += s
@@ -161,8 +190,10 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
                 break
         status = "success" if all(s == "success" for s in statuses) and len(statuses) == len(ids) else (
             "deadline" if "deadline" in statuses else "partial")
+        hotspots, herr = _hotspots(graph, case_dates, set(ids), options)
+        errors += herr
         series = detect_series(alerts)  # 3+ connected cases among this run's links (LNK-05)
-        return ({"alerts": alerts, "series": series, "hotspots": [], "errors": errors,
+        return ({"alerts": alerts, "series": series, "hotspots": hotspots, "errors": errors,
                  "summary": summarise(alerts, struck, dropped, f"{len(statuses)}/{len(ids)} cases processed")},
                 status)
     if kind == "tip":

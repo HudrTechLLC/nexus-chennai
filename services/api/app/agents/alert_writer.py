@@ -71,6 +71,16 @@ def build_alert(res: SkepticResult, run_id: str, now: datetime | None = None) ->
     )
 
 
+HOTSPOT_EXTRA = ("cell", "category", "window", "observed", "expected", "p_value", "zetaris_query_ids")
+
+
+def hotspot_id_for(h: dict[str, Any]) -> str:
+    """Stable per cell + category + window (agreed with nexus-2)."""
+    w = h.get("window") or {}
+    raw = "|".join(str(x) for x in (h.get("cell"), h.get("category"), w.get("since"), w.get("until")))
+    return f"HS-{str(w.get('until') or '')[:4] or 'X'}-{hashlib.sha1(raw.encode('utf-8')).hexdigest()[:12].upper()}"
+
+
 class AlertWriter:
     def __init__(self, deps: AgentDeps) -> None:
         self.deps = deps
@@ -94,4 +104,25 @@ class AlertWriter:
                                   output_summary=short(f"{alert.alert_id} {alert.band} {alert.score} "
                                                        f"stations={alert.stations}"),
                                   confidence=alert.score, status="ok")
+        return written
+
+    def write_hotspots(self, hotspots: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Write Hotspot detector results (code statistics, no model) as kind=hotspot alerts."""
+        written: list[dict[str, Any]] = []
+        now = datetime.now(IST)
+        for h in hotspots:
+            alert = LinkAlert(alert_id=hotspot_id_for(h), kind="hotspot", crimes=list(h["crimes"]),
+                              stations=list(h.get("stations") or []), score=h["score"], band=h["band"],
+                              factors=[], rationale=h["rationale"], status="pending",
+                              run_id=self.deps.tracer.run_id, created_at=now)
+            row = alert.model_dump(mode="json")
+            row["synthetic"] = True
+            stored = self.deps.store.write_alert(row)
+            self.deps.store.notify([
+                {"station_id": st, "kind": "hotspot", "title": f"Hotspot {alert.alert_id} ({alert.band})",
+                 "body": alert.rationale, "link": f"/console/alerts/{alert.alert_id}"} for st in alert.stations])
+            written.append({**stored, **{k: h.get(k) for k in HOTSPOT_EXTRA}})
+            self.deps.tracer.emit(AGENT, "write_hotspot", input_summary=str(h.get("cell")),
+                                  output_summary=short(f"{alert.alert_id} {alert.band} {alert.score}"),
+                                  zetaris_query_ids=list(h.get("zetaris_query_ids") or []), status="ok")
         return written

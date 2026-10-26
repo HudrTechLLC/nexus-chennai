@@ -24,6 +24,8 @@ Return ONE JSON object: {"briefing": str}. Output it once, then stop."""
 
 def briefing_facts(zone: str, day: str, alerts: Sequence[Mapping[str, Any]],
                    decisions: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    hot = [a for a in alerts if a.get("kind") == "hotspot" and a.get("status", "pending") == "pending"]
+    alerts = [a for a in alerts if a.get("kind", "pair") != "hotspot"]
     new = [a for a in alerts if a.get("status", "pending") == "pending"]
     cross = [a for a in new if len(set(a.get("stations") or [])) > 1]
     bands = Counter(a.get("band") for a in new)
@@ -40,6 +42,8 @@ def briefing_facts(zone: str, day: str, alerts: Sequence[Mapping[str, Any]],
         "approved": sum(1 for d in decisions if d.get("decision") == "approve"),
         "rejected": sum(1 for d in decisions if d.get("decision") == "reject"),
         "rejection_reasons": dict(reasons.most_common(3)),
+        "hotspots": len(hot),
+        "hotspot_notes": [h.get("rationale") for h in hot[:2]],
         "busiest_stations": [s for s, _ in stations.most_common(3)],
         "top_alerts": [{"alert_id": a.get("alert_id"), "band": a.get("band"), "rationale": a.get("rationale")}
                        for a in top],
@@ -65,6 +69,8 @@ def template_briefing(f: Mapping[str, Any]) -> str:
          f"{f['cross_station']} across stations. Analysts approved {f['approved']} and rejected {f['rejected']}.")
     if f["rejection_reasons"]:
         s += " Main rejection reasons: " + ", ".join(str(k).replace("_", " ") for k in f["rejection_reasons"]) + "."
+    if f.get("hotspots"):
+        s += f" {f['hotspots']} hotspot(s) flagged."
     if f["top_alerts"]:
         s += f" Start with {f['top_alerts'][0]['alert_id']}."
     return s
