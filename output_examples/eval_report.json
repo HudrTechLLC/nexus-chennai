@@ -71,15 +71,15 @@
     "alerts": 148,
     "by_band": {
       "high": {
-        "alerts": 9,
+        "alerts": 10,
         "precision": 1.0,
-        "tp": 9,
+        "tp": 10,
         "fp": 0
       },
       "medium": {
-        "alerts": 139,
-        "precision": 0.5639,
-        "tp": 75,
+        "alerts": 138,
+        "precision": 0.5606,
+        "tp": 74,
         "fp": 58
       }
     },
@@ -133,7 +133,7 @@
     "flagged_by_baseline": 6
   },
   "timing": {
-    "median_seconds_per_case": 0.502
+    "median_seconds_per_case": 0.83
   },
   "beats_baseline": {
     "precision": true,
@@ -188,11 +188,11 @@
   "hmem": "off: no memory adjusts any score (reproducible; live analyst decisions excluded)",
   "truth_dir": "data/sample/_truth",
   "sample_mode": true,
-  "run_id": "eval_c407165d",
-  "log_file": "logs/trace-eval_c407165d.jsonl",
+  "run_id": "eval_ad27b22c",
+  "log_file": "logs/trace-eval_ad27b22c.jsonl",
   "band_accuracy_text": {
-    "high": "alerts in the high band were correct 100% of the time on the evaluation set (9 alerts)",
-    "medium": "alerts in the medium band were correct 56% of the time on the evaluation set (139 alerts)"
+    "high": "alerts in the high band were correct 100% of the time on the evaluation set (10 alerts)",
+    "medium": "alerts in the medium band were correct 56% of the time on the evaluation set (138 alerts)"
   },
   "provenance": {
     "data": "sample bundle data/sample, DuckDB twins of the named queries (reproducible from a fresh clone)",
@@ -206,7 +206,7 @@
     "model_calls": 0,
     "console_firs_excluded": 0,
     "weights_version": "f2-default-v1",
-    "git_commit": "2049552",
-    "generated_at": "2026-10-26T14:46:25+00:00"
+    "git_commit": "8d8e789",
+    "generated_at": "2026-10-26T15:28:35+00:00"
   }
 }
