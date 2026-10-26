@@ -5,7 +5,7 @@ tags: [nexus, testcases]
 # WS5-08 · Final fresh-clone validation (L3): checklist
 
 This is the step-by-step run for **Tue 27 Oct, morning**, before the 12:00 IST freeze. It covers every item in the Disqualification Checklist ([RULES_CHECK](../hackathon/RULES_CHECK.md)) and SPEC [L3](../SPEC.md#deliverables). Each step gives the exact command and the result that counts as **PASS**. Write the results to `engg/docs/validation/WS5-08-2026-10-27.md` (one line per step: PASS/FAIL + evidence) and add a row to [validation/README](README.md).
-Related: [README](README.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [EVIDENCE](../submission/EVIDENCE.md) · [00-INDEX](../00-INDEX.md)
+Related: [README](README.md) · [Results](WS5-08-2026-10-27.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [EVIDENCE](../submission/EVIDENCE.md) · [00-INDEX](../00-INDEX.md)
 
 **Conventions**
 - Commands are bash (Git Bash on Windows). Run them from the fresh clone's root unless the step says otherwise.
