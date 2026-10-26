@@ -1,0 +1,24 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+# node
+node_modules/
+.next/
+out/
+.vercel/
+# data / runtime
+logs/*
+!logs/.gitkeep
+data/out/
+data/_truth/
+*.duckdb
+.DS_Store

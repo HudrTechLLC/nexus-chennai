@@ -1,0 +1,17 @@
+{
+  "project": "Nexus Chennai",
+  "track": "Solving Fragmented Intelligence",
+  "team": "Heisenbugs",
+  "status": "in development; claims below are updated only when tests and traces prove them",
+  "sponsor_technology": {
+    "zetaris": "Data layer: Supabase, S3 CSV, S3 Parquet and REST feeds federated into a semantic layer; agents read only through named queries",
+    "meterless_engines": ["world_model", "hmem"],
+    "meterless_nightshift": "Primary AI provider; pinned Nemotron lanes",
+    "nvidia": ["nemotron-3.5-lightning-30b-a3b", "nemotron-3.5-super-vl-120b-a12b", "nemotron-3-super-120b-a12b"],
+    "cursor": "not used"
+  },
+  "entry_point": "python run.py; POST /run",
+  "sample_mode": "SAMPLE_MODE=true",
+  "engine_tests": "pytest tests/engines -q",
+  "docs": "engg/docs/00-INDEX.md"
+}

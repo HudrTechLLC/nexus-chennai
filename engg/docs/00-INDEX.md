@@ -1,0 +1,38 @@
+---
+tags: [nexus, index]
+---
+
+# Nexus Chennai · engineering docs
+
+Entry point for every project document. **Start here, then read the note for your area.** Links are plain Markdown, so they work on GitHub and in Obsidian (open `engg/docs/` as a vault).
+
+**Project:** city-wide crime-linking agents for Chennai · Open Agent Hackathon 2026 · Track 1 (Solving Fragmented Intelligence) · team Heisenbugs
+**Deadline:** 27 Oct 2026 23:45 UTC. Submit ≥ 6 h early.
+
+## Specification
+- [SPEC](SPEC.md): the full product and build spec, all 16 parts. Single source of truth.
+  - [A Overview](SPEC.md#overview) · [P Products](SPEC.md#products) · [O Claude Code manual](SPEC.md#claude-code) · [B Requirements](SPEC.md#requirements)
+  - [C Architecture](SPEC.md#architecture) · [D Data](SPEC.md#data) · [E Agents & sponsors](SPEC.md#sponsors) · [F Linking](SPEC.md#linking)
+  - [G Screens](SPEC.md#screens) · [H API](SPEC.md#api) · [I Database](SPEC.md#database) · [J Security](SPEC.md#security)
+  - [K Phases](SPEC.md#phases) · [L Deliverables](SPEC.md#deliverables) · [M Demo](SPEC.md#demo) · [N Risks](SPEC.md#risks)
+
+## Design and decisions
+- [ARCHITECTURE](ARCHITECTURE.md): what runs where (Vercel + laptop + Supabase), diagrams, tip path
+- [DECISIONS](DECISIONS.md): every decision and verification (D-001…)
+- [CITY_PACKS](CITY_PACKS.md): how another city is added without code changes
+
+## Plan and status
+- [PROGRESS](PROGRESS.md): phase status, blockers, session log
+- [DELIVERABLES](DELIVERABLES.md): submission and eligibility checklist
+
+## Runbooks
+- [SETUP](SETUP.md): accounts, services, environment variables, Nightshift and Zetaris contracts
+- [TOOLING](TOOLING.md): Claude Code skills, subagents and hooks for this repo
+- [validation](validation/README.md): gate reports
+
+## Hackathon
+- [DIGEST](hackathon/DIGEST.md): rules, scoring, disqualifiers, resource links
+- [SPONSOR_TECH](SPONSOR_TECH.md): sponsor technology text for the form (draft, evidence-backed only)
+
+## Diagrams
+- `diagrams/c1-layers.svg` · `diagrams/c3-request-flow.svg` · `diagrams/c4-agent-graph.svg`
