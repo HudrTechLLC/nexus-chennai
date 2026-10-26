@@ -18,7 +18,8 @@ export type TipRow = {
   text: string;
   follow_up_enabled: boolean;
   guard: Guard;
-  approx_cell: string | null;
+  approx_cell: string | null; // H3 r8 (the parent when the tipster picked a finer area)
+  approx_cell_fine?: string | null; // H3 r8, r9 or r10 as picked (0007_12); absent on older rows
   received_week: string;
   status: TipStatus;
   synthetic: boolean;
@@ -82,4 +83,18 @@ export function validatePoliceReply(text: string, followUp: boolean): string | n
   if (t.length < 2) return "Write a reply.";
   if (t.length > 2000) return "Keep the reply under 2000 characters.";
   return null;
+}
+
+/** H3 resolution of a tip cell (r8, r9 or r10: the second hex digit 8, 9 or a), else null. Same rule as the 0007_12 check. */
+export function cellResolution(cell: string | null | undefined): number | null {
+  const m = /^8([89a])[0-9a-f]{13}$/.exec(cell ?? "");
+  return m ? parseInt(m[1], 16) : null;
+}
+
+/** The area a tip names, most precise first: the cell as picked (r9/r10), else the r8 cell. */
+export function tipAreaLabel(tip: Pick<TipRow, "approx_cell" | "approx_cell_fine">): string {
+  const cell = tip.approx_cell_fine || tip.approx_cell;
+  if (!cell) return "no area";
+  const r = cellResolution(cell);
+  return `area ${cell.slice(0, 9)}…${r !== null ? ` (r${r})` : ""}`;
 }

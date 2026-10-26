@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guardBadges, parseTipTab, statusesFor, validatePoliceReply, validateReview } from "../tips";
+import { cellResolution, guardBadges, parseTipTab, statusesFor, tipAreaLabel, validatePoliceReply, validateReview } from "../tips";
 
 describe("tabs", () => {
   it("maps tabs to statuses; quarantined tips have their own visible tab", () => {
@@ -33,5 +33,20 @@ describe("validation", () => {
   it("cannot reply to a fully anonymous tip", () => {
     expect(validatePoliceReply("thanks", false)).toMatch(/anonymity/);
     expect(validatePoliceReply("Thanks, can you share the CCTV time?", true)).toBeNull();
+  });
+});
+
+describe("tip area (WS4-15: r8-r10 cells)", () => {
+  it("reads the H3 resolution from the cell", () => {
+    expect(cellResolution("88618c4f41fffff")).toBe(8);
+    expect(cellResolution("89618c4f417ffff")).toBe(9);
+    expect(cellResolution("8a618c4f4107fff")).toBe(10);
+    expect(cellResolution("87618c4f4ffffff")).toBeNull();
+    expect(cellResolution(null)).toBeNull();
+  });
+  it("labels the finest cell the tip has", () => {
+    expect(tipAreaLabel({ approx_cell: "88618c4f41fffff", approx_cell_fine: "8a618c4f4107fff" })).toBe("area 8a618c4f4… (r10)");
+    expect(tipAreaLabel({ approx_cell: "88618c4f41fffff" })).toBe("area 88618c4f4… (r8)"); // older rows
+    expect(tipAreaLabel({ approx_cell: null, approx_cell_fine: null })).toBe("no area");
   });
 });
