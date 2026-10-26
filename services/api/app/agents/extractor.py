@@ -87,15 +87,28 @@ _VEHICLE_WORDS = ("bike", "motorcycle", "motorbike", "scooter", "pulsar", "activ
                   "two wheeler", "wheeler", "splendor", "rider", "pillion")
 
 
+_CLAUSE_SPLIT = re.compile(r"[.;:!?\n,]+|\bbut\b")
+_NEGATION = re.compile(r"\b(?:not|no|never|nor|neither|without|intact|undamaged|untouched|unbroken|unharmed)\b"
+                       r"|n't\b")
+
+
+def _affirmed_text(text: str) -> str:
+    """The text minus clauses that carry a negation cue: "all window grilles were intact" names grilles only to
+    rule them out, so it must not back a grille label (CHN-VL-2026-001221)."""
+    clauses = _CLAUSE_SPLIT.split((text or "").lower())
+    return " . ".join(c for c in clauses if not _NEGATION.search(c))
+
+
 def label_supported(label: Any, text: str) -> bool:
     """Does the text support this MO label? A vehicle label needs a vehicle word in the text; otherwise one
-    content word of the label must appear (prefix of 5 for long words, whole word for short ones)."""
+    content word of the label must appear (prefix of 5 for long words, whole word for short ones). Words in a
+    negated clause ("were intact", "not", "without") do not count."""
     if not label:
         return True
     toks = [t for t in re.split(r"[_\s]+", str(label).lower()) if t and t not in _STOPWORDS and not t.isdigit()]
     if not toks:
         return True
-    low = (text or "").lower()
+    low = _affirmed_text(text)
     if any(t in _VEHICLE_TOKENS for t in toks):
         return any(w in low for w in _VEHICLE_WORDS)
     for t in toks:
