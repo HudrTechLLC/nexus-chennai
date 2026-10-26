@@ -193,15 +193,29 @@ TWINS: dict[str, tuple[str, tuple[str, ...]]] = {
 # was published within NEWS_DAYS days after the crime. category_hint = the headline names the category's
 # first word (e.g. "chain" for chain_snatching); it is reported, not required. One row per article.
 NEWS_DAYS = 4
-NEWS_TIMEOUT_S = 8.0
+NEWS_TIMEOUT_S = 12.0  # warm ~2 s; a cold first call ~9 s (2026-10-26), so 8 s tripped the breaker
 NEWS_COLUMNS = ("crime_id", "article_id", "headline", "outlet", "published_at", "url", "matched_place",
                 "hours_after", "category_hint")
 
 Q_NEWS = dict(
     name="q_news",
+    # The v_news_mentions logic (zetaris/40_feeds.sql #7), but the crime comes from sb.crimes for this one id.
+    # v_crime_unified also unions the legacy CSV/parquet sources, where Zetaris cannot push the crime_id filter
+    # down, so the view scanned them on every call (14-17 s live). q_news only ever runs for sb.crimes ids
+    # (cases and q_candidates both read sb.crimes). Outer ORDER BY kept (D-031).
     lightning=(
-        "SELECT crime_id, article_id, headline, outlet, published_at, url, matched_place, hours_after, category_hint "
-        "FROM nexus.v_news_mentions WHERE crime_id = :crime_id ORDER BY published_at, article_id"
+        "SELECT c.crime_id, n.article_id, first(n.headline) AS headline, first(n.outlet) AS outlet, "
+        "first(n.published_at) AS published_at, first(n.url) AS url, min(a.canonical) AS matched_place, "
+        "CAST(floor((unix_timestamp(first(n.published_at)) - unix_timestamp(c.occurred_from)) / 3600) AS INT) "
+        "AS hours_after, max(instr(lower(n.headline), split(c.category, '_')[0]) > 0) AS category_hint "
+        "FROM (SELECT crime_id, station_id, ward_no, category, occurred_from FROM sb.crimes "
+        "WHERE crime_id = :crime_id) c "
+        "JOIN s3csv.place_aliases a ON (a.station_id = c.station_id OR a.ward_no = c.ward_no) "
+        "JOIN (SELECT article_id, headline, outlet, published_at, url, place "
+        "FROM nexus.news_items LATERAL VIEW explode(places_mentioned) p AS place) n "
+        "ON lower(trim(n.place)) = lower(trim(a.alias)) "
+        f"WHERE n.published_at >= c.occurred_from AND n.published_at < c.occurred_from + INTERVAL {NEWS_DAYS} DAYS "
+        "GROUP BY c.crime_id, n.article_id, c.occurred_from ORDER BY published_at, article_id"
     ),
     sample=f"""
 WITH c AS (
