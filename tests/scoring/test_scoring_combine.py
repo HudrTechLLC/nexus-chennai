@@ -154,7 +154,7 @@ def test_memory_applied_and_shown_on_score():
 
 
 def test_memory_can_drop_a_pair_below_the_alert_line():
-    fs = [FactorResult("mo_similarity", 0.57)]
+    fs = [FactorResult("mo_similarity", 0.57), FactorResult("space_time", 0.57)]
     assert score_pair(fs).alert is True
     assert score_pair(fs, memory=[{"delta": -0.05}]).alert is False
 
@@ -186,6 +186,45 @@ def test_struck_forensic_gives_no_floor():
 def test_forensic_mismatch_gives_no_floor():
     p = score_pair([FactorResult("forensic", 0.0), FactorResult("mo_similarity", 0.5)])
     assert p.score < 0.55 and p.alert is False
+
+
+# ----- evidence coverage guard (D-016) ------------------------------------------
+
+def test_single_factor_never_alerts():
+    p = score_pair([FactorResult("space_time", 0.95)])
+    assert p.score == pytest.approx(0.95)
+    assert p.band is None and p.alert is False and p.coverage_capped is True
+    assert p.factors_with_data == 1 and p.coverage == pytest.approx(0.15)
+
+
+def test_low_coverage_caps_band_at_medium():
+    p = score_pair([FactorResult("space_time", 0.95), FactorResult("vehicle", 0.9)])  # coverage 0.30
+    assert p.score >= 0.75
+    assert p.band == "medium" and p.alert is True and p.coverage_capped is True
+
+
+def test_enough_coverage_allows_high():
+    p = score_pair([FactorResult("mo_similarity", 0.9), FactorResult("space_time", 0.9),
+                    FactorResult("vehicle", 0.9)])  # coverage 0.55
+    assert p.coverage == pytest.approx(0.55)
+    assert p.band == "high" and p.coverage_capped is False
+
+
+def test_struck_and_missing_factors_do_not_count_toward_coverage():
+    base = score_pair([FactorResult("mo_similarity", 0.9), FactorResult("space_time", 0.9),
+                       FactorResult("vehicle", 0.9), FactorResult("forensic", None)])
+    after = strike(base, "mo_similarity")
+    assert after.coverage == pytest.approx(0.30) and after.factors_with_data == 2
+
+
+def test_forensic_match_exempt_from_coverage_guard():
+    p = score_pair([FactorResult("forensic", 1.0)])
+    assert p.alert is True and p.band == "high" and p.coverage_capped is False
+
+
+def test_coverage_on_serialised_pair():
+    d = score_pair([FactorResult("mo_similarity", 0.9), FactorResult("space_time", 0.9)]).to_dict()
+    assert {"coverage", "factors_with_data", "coverage_capped"} <= set(d)
 
 
 # ----- baseline -------------------------------------------------------------

@@ -10,6 +10,9 @@ Order of operations, fixed and tested:
    and always raises an alert (F2). It runs after memory, so memory cannot push a
    forensic pair below the alert line.
 4. Clamp to [0, 1], round to 4 dp, then band.
+5. Evidence-coverage guard (D-016): coverage = sum of default-or-given weights of
+   unstruck factors with data. Coverage < 0.50 caps the band at "medium"; fewer than
+   2 such factors means no alert. A forensic match is exempt: F2 says it always alerts.
 """
 
 from __future__ import annotations
@@ -19,13 +22,14 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from .weights import (
-    ALERT_THRESHOLD,
     BAND_HIGH,
     BAND_MEDIUM,
     DEFAULT_WEIGHTS,
     FACTORS,
     FORENSIC_FLOOR,
     HMEM_CAP,
+    MIN_COVERAGE_FOR_HIGH,
+    MIN_FACTORS_FOR_ALERT,
     SCORE_DECIMALS,
     WEIGHTS_VERSION,
 )
@@ -61,6 +65,9 @@ class PairScore:
     forensic_floor_applied: bool
     factors: list[FactorResult]
     weights_version: str
+    coverage: float = 0.0
+    factors_with_data: int = 0
+    coverage_capped: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -119,7 +126,8 @@ def score_pair(
     w = dict(weights if weights is not None else DEFAULT_WEIGHTS)
     version = weights_version or (WEIGHTS_VERSION if weights is None else "custom")
     out: list[FactorResult] = []
-    num = den = 0.0
+    num = den = coverage = 0.0
+    with_data = 0
     for f in factors:
         if f.factor not in FACTORS:
             raise ValueError(f"Unknown factor '{f.factor}'")
@@ -138,6 +146,8 @@ def score_pair(
         elif fr.value is not None:
             num += weight * fr.value
             den += weight
+            coverage += weight
+            with_data += 1
 
     if den <= 0.0:
         return PairScore(None, None, False, None, 0.0, [], False, out, version)
@@ -155,7 +165,14 @@ def score_pair(
 
     score = round(max(0.0, min(1.0, score)), SCORE_DECIMALS)
     band = band_for(score)
-    alert = forensic_hit or score >= ALERT_THRESHOLD
+    coverage = round(coverage, SCORE_DECIMALS)
+    capped = False
+    if not forensic_hit:
+        if band == "high" and coverage < MIN_COVERAGE_FOR_HIGH:
+            band, capped = "medium", True
+        if with_data < MIN_FACTORS_FOR_ALERT and band is not None:
+            band, capped = None, True
+    alert = forensic_hit or band is not None
     return PairScore(
         score=score,
         band=band,
@@ -166,6 +183,9 @@ def score_pair(
         forensic_floor_applied=floor_applied,
         factors=out,
         weights_version=version,
+        coverage=coverage,
+        factors_with_data=with_data,
+        coverage_capped=capped,
     )
 
 
