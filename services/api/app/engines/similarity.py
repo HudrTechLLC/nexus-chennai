@@ -222,3 +222,17 @@ def rank(query: str, docs: Sequence[str], *, purpose: str = "search", settings: 
     q, rest = v.vectors[0], v.vectors[1:]
     scored = [(i, cosine(q, d) or 0.0) for i, d in enumerate(rest)]
     return sorted(scored, key=lambda x: (-x[1], x[0]))
+
+
+def rank_rows(query: str | None, rows: Sequence[Mapping[str, Any]], *, text_key: str = "text",
+              purpose: str = "search", settings: Any = None,
+              transport: httpx.BaseTransport | None = None) -> list[dict[str, Any]]:
+    """Search rows re-ranked by text relevance to `query`; each row gains a `score`.
+
+    With no query (a filters-only search) the rows keep their order and score is None."""
+    rows = [dict(r) for r in rows]
+    if not (query or "").strip() or not rows:
+        return [{**r, "score": None} for r in rows]
+    order = rank(query or "", [str(r.get(text_key) or "") for r in rows], purpose=purpose, settings=settings,
+                 transport=transport)
+    return [{**rows[i], "score": s} for i, s in order]
