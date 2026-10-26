@@ -72,3 +72,28 @@ def test_backfill_writes_store_and_jsonl_then_resumes(make_deps, tmp_path):
     again = _backfill(deps, path).run(ids, concurrency=2)
     assert again["skipped"] == 2 and again["ok"] == 0
     assert len(path.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_export_jsonl_rebuilds_from_store_after_remap(tmp_path):
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from test_worker_store import FakeSB
+
+    from app.graph.backfill import export_jsonl, stored_ids
+    path = tmp_path / "crime_features.jsonl"
+    # local file written under the OLD id; Supabase row remapped to the NEW id, same receipt
+    path.write_text(json.dumps({"crime_id": "CHN-OLD-1", "receipt_id": "r1", "routed_model": "m-routed",
+                                "degraded": ["audio:S1"]}) + "\n", encoding="utf-8")
+    sb = FakeSB({"crime_features": [
+        {"crime_id": "CHN-NEW-1", "extractor_version": "mo-v3", "model": "m", "receipt_id": "r1", "mo": {"a": 1},
+         "visual_tags": [], "entities": {}, "confidence": 0.8, "synthetic": True}]})
+    assert export_jsonl(sb, path) == 1
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    assert rec["crime_id"] == "CHN-NEW-1" and rec["routed_model"] == "m-routed" and rec["degraded"] == ["audio:S1"]
+    assert done_ids(path) == {"CHN-NEW-1"} and stored_ids(sb) == {"CHN-NEW-1"}
+
+
+def test_backfill_skips_ids_already_stored(make_deps, tmp_path):
+    deps = make_deps(lambda lane, m, p: json.dumps(MODEL_MO))
+    out = _backfill(deps, tmp_path / "f.jsonl").run([ADYAR["crime_id"], VELACHERY["crime_id"]],
+                                                     skip_also={ADYAR["crime_id"]})
+    assert out["skipped"] == 1 and out["ok"] == 1 and set(deps.store.features) == {VELACHERY["crime_id"]}

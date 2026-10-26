@@ -7,7 +7,10 @@
 - Writes `crime_features` to Supabase and appends the same record (model + receipt id) to
   `data/sample/crime_features.jsonl`, so sample mode has real extracted MO without re-running
   the model (R3/R6; the JSONL path was granted to this lane by nexus-1).
-- Resumable: ids already in the JSONL are skipped. One failing case never stops the batch.
+- Resumable: ids already in the JSONL, or already extracted in Supabase by this extractor version, are
+  skipped. One failing case never stops the batch.
+- `--export-jsonl` rebuilds the JSONL from Supabase `crime_features` (after a re-seed remaps crime ids):
+  the local-only fields (routed_model, degraded) are joined back by receipt_id, which survives a remap.
 - `--all` lists crime ids from Supabase `crimes` (ids only, for orchestration; agents still
   read case content only through Zetaris).
 """
@@ -28,7 +31,7 @@ from ..adapters.zetaris import ZetarisClient
 from ..config import REPO_ROOT, Settings, get_settings
 from ..tracing import Tracer, new_run_id
 from ..agents.base import AgentDeps, AgentError, MemoryStore, crime_from_row
-from ..agents.extractor import Extractor
+from ..agents.extractor import EXTRACTOR_VERSION, Extractor
 
 DEFAULT_JSONL = REPO_ROOT / "data" / "sample" / "crime_features.jsonl"
 JSONL_FIELDS = ("crime_id", "extractor_version", "model", "routed_model", "receipt_id", "mo", "visual_tags",
@@ -60,6 +63,47 @@ def all_crime_ids(sb: SupabaseClient, page: int = 1000) -> list[str]:
         offset += page
 
 
+def _paged(sb: SupabaseClient, table: str, params: dict[str, str], page: int = 1000) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    while True:
+        got = sb.select(table, {**params, "limit": str(page), "offset": str(len(rows))})
+        rows += got
+        if len(got) < page:
+            return rows
+
+
+def stored_ids(sb: SupabaseClient) -> set[str]:
+    """Crimes this extractor version already extracted with a model receipt (a model call happened)."""
+    return {r["crime_id"] for r in _paged(sb, "crime_features", {
+        "select": "crime_id", "extractor_version": f"eq.{EXTRACTOR_VERSION}", "receipt_id": "not.is.null",
+        "order": "crime_id.asc"})}
+
+
+def export_jsonl(sb: SupabaseClient, path: Path) -> int:
+    """Rewrite the JSONL from Supabase rows; routed_model/degraded come from the old file by receipt_id."""
+    local: dict[str, dict[str, Any]] = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if rec.get("receipt_id"):
+                local[rec["receipt_id"]] = rec
+    rows = _paged(sb, "crime_features", {
+        "select": "crime_id,extractor_version,model,receipt_id,mo,visual_tags,entities,confidence,synthetic",
+        "extractor_version": f"eq.{EXTRACTOR_VERSION}", "receipt_id": "not.is.null", "order": "crime_id.asc"})
+    tmp = path.with_suffix(".jsonl.tmp")
+    tmp.parent.mkdir(parents=True, exist_ok=True)
+    with tmp.open("w", encoding="utf-8", newline="\n") as fh:
+        for r in rows:
+            old = local.get(r["receipt_id"], {})
+            rec = {**r, "routed_model": old.get("routed_model"), "degraded": old.get("degraded")}
+            fh.write(json.dumps({k: rec.get(k) for k in JSONL_FIELDS}, ensure_ascii=False) + "\n")
+    tmp.replace(path)
+    return len(rows)
+
+
 class Backfill:
     def __init__(self, settings: Settings, jsonl: Path, store: Any = None, zetaris: Any = None,
                  nightshift: Any = None, tracer: Tracer | None = None) -> None:
@@ -83,8 +127,8 @@ class Backfill:
                 fh.write(json.dumps({k: feats.get(k) for k in JSONL_FIELDS}, ensure_ascii=False) + "\n")
         return feats
 
-    def run(self, ids: list[str], concurrency: int = 4) -> dict[str, Any]:
-        skip = done_ids(self.jsonl)
+    def run(self, ids: list[str], concurrency: int = 4, skip_also: set[str] | None = None) -> dict[str, Any]:
+        skip = done_ids(self.jsonl) | (skip_also or set())
         todo = [i for i in dict.fromkeys(ids) if i not in skip]
         ok, failed, started = 0, [], time.perf_counter()
         with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
@@ -115,10 +159,14 @@ def main() -> int:
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--jsonl", type=Path, default=DEFAULT_JSONL)
     ap.add_argument("--no-supabase", action="store_true", help="write only the JSONL")
+    ap.add_argument("--export-jsonl", action="store_true", help="rebuild the JSONL from Supabase, then exit")
     args = ap.parse_args()
 
     s = get_settings()
     sb = SupabaseClient(s)
+    if args.export_jsonl:
+        print(json.dumps({"exported": export_jsonl(sb, args.jsonl), "jsonl": str(args.jsonl)}), flush=True)
+        return 0
     ids = [i.strip() for i in args.ids.split(",") if i.strip()]
     if args.priority_file:
         ids += [line.strip() for line in args.priority_file.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -129,7 +177,8 @@ def main() -> int:
     from .store import SupabaseStore
     tracer = Tracer(new_run_id("backfill"), s.logs_dir, echo=False)
     store = SupabaseStore(sb, tracer) if (sb.configured and not args.no_supabase) else MemoryStore()
-    out = Backfill(s, args.jsonl, store=store, tracer=tracer).run(ids, args.concurrency)
+    skip = stored_ids(sb) if isinstance(store, SupabaseStore) else set()
+    out = Backfill(s, args.jsonl, store=store, tracer=tracer).run(ids, args.concurrency, skip_also=skip)
     print(json.dumps({k: v for k, v in out.items() if k != "failed"}), flush=True)
     for cid, err in out["failed"][:20]:
         print(f"FAILED {cid}: {err}", flush=True)
