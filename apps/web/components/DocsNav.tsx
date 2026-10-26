@@ -10,7 +10,7 @@ function Groups({ groups, path }: { groups: NavGroup[]; path: string }) {
     <div className="grid gap-6">
       {groups.map((g) => (
         <section key={g.title} aria-labelledby={`nav-${g.title}`}>
-          <h2 id={`nav-${g.title}`} className="mb-1.5 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+          <h2 id={`nav-${g.title}`} className="mb-1.5 px-3 text-xs font-semibold text-muted">
             {g.title}
           </h2>
           <ul className="grid gap-0.5">
@@ -21,10 +21,10 @@ function Groups({ groups, path }: { groups: NavGroup[]; path: string }) {
                   <Link
                     href={it.href}
                     aria-current={on ? "page" : undefined}
-                    className={`block rounded-md border-l-2 px-3 py-1.5 text-[14px] leading-snug transition-colors ${
+                    className={`block rounded-lg px-3 py-1.5 text-[14px] leading-snug transition-colors duration-150 ${
                       on
-                        ? "border-accent bg-accent-soft font-semibold text-ink"
-                        : "border-transparent text-muted hover:bg-bg hover:text-ink"
+                        ? "bg-signal-soft font-semibold text-signal"
+                        : "text-muted hover:bg-surface-2 hover:text-ink"
                     }`}
                   >
                     {it.label}

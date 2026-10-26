@@ -2,14 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Nexus design tokens. Every colour on screen comes from here, so light and dark stay in step.
+ * Existing names (bg, surface, ink, muted, line, accent, signal) keep their meaning; values are tuned for AA.
+ *   brand   deep navy chrome: the header bar and the console sidebar
+ *   signal  teal: primary actions, current selection, links that act
+ *   accent  amber: highlights and the brand mark, never an action colour
+ *   ok / warn / danger / info  status colours, each with a -soft tint for pills and banners
+ *   sev-high / warn / sev-low  link-alert bands (high / medium / low); accent (gold) = from Zetaris / evidence
+ */
 :root {
-  --bg: #f2f4f6; --surface: #ffffff; --ink: #132130; --muted: #58677a; --line: #d5dbe3;
-  --accent: #8a6a2f; --accent-soft: #f1e9da; --signal: #0e7c86; --signal-soft: #ddf0f1; --todo: #c3c2b7;
+  --bg: #eef2f6; --surface: #ffffff; --surface-2: #f6f8fb; --ink: #0f1d2b; --muted: #4f6072; --line: #d3dbe5;
+  --accent: #8a5a12; --accent-soft: #f6ead6; --accent-bright: #f2b544;
+  --signal: #0b7480; --signal-strong: #075a63; --signal-soft: #dcf1f2; --on-signal: #ffffff;
+  --brand: #0b2540; --brand-2: #10395c; --brand-ink: #eef4fa; --brand-muted: #a9bdd2; --brand-line: #1f4062; --brand-hover: #15385a;
+  --ok: #146c43; --ok-soft: #dff3e8; --warn: #8a5a00; --warn-soft: #fbefd5;
+  --danger: #b42318; --danger-soft: #fde7e4; --info: #1d5fa8; --info-soft: #e2ecf8;
+  --sev-high: #b4441f; --sev-high-soft: #fbe9e2; --sev-low: #475569; --sev-low-soft: #e9eef4;
+  --todo: #c3c2b7;
+  --shadow-card: 0 1px 2px rgb(15 29 43 / 0.05), 0 1px 3px rgb(15 29 43 / 0.07);
+  --shadow-raised: 0 8px 20px -6px rgb(15 29 43 / 0.16), 0 2px 6px rgb(15 29 43 / 0.06);
+  --ring: #0b7480;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c1218; --surface: #141d26; --ink: #e4eaf1; --muted: #97a6b7; --line: #26333f;
-    --accent: #d2ae6a; --accent-soft: #2d2416; --signal: #45c2cc; --signal-soft: #11292c; --todo: #4a5562;
+    --bg: #0a1119; --surface: #111b26; --surface-2: #0d1620; --ink: #e6edf5; --muted: #9aabbd; --line: #233242;
+    --accent: #e0b467; --accent-soft: #2d2416; --accent-bright: #f2b544;
+    --signal: #4cc6cf; --signal-strong: #7ad8de; --signal-soft: #10292d; --on-signal: #04232a;
+    --brand: #07131f; --brand-2: #0c2236; --brand-ink: #e6eef7; --brand-muted: #9fb3c8; --brand-line: #1a2e42; --brand-hover: #12283e;
+    --ok: #4ccf8b; --ok-soft: #0f2a1d; --warn: #f0b847; --warn-soft: #2e2410;
+    --danger: #ff8a7a; --danger-soft: #33140f; --info: #79b0f2; --info-soft: #10223a;
+    --sev-high: #ff9a76; --sev-high-soft: #33180f; --sev-low: #a3b3c6; --sev-low-soft: #1a2430;
+    --todo: #4a5562;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.02);
+    --shadow-raised: 0 10px 24px -8px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+    --ring: #4cc6cf;
+    color-scheme: dark;
   }
 }
-body { background: var(--bg); color: var(--ink); }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "cv11", "ss01";
+}
+h1, h2, h3 { text-wrap: balance; }
+/* Numbers line up in tables and figures (G1). */
+table, .tabular-nums, [data-numeric] { font-variant-numeric: tabular-nums; }
+
+/* One focus style everywhere (keyboard only), visible on light, dark and the navy chrome. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.on-brand :where(a, button, summary):focus-visible { outline-color: var(--accent-bright); }
+
+/* Older screens put white text on bg-signal; in dark mode the teal is light, so use the paired ink instead (AA). */
+.bg-signal.text-white { color: var(--on-signal); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

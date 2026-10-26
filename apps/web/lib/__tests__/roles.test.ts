@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessForPath, allows, canDecideAlerts, desktopNav, isRole, NAV, navFor } from "../roles";
+import { accessForPath, allows, canDecideAlerts, isRole, NAV, NAV_GROUPS, navFor } from "../roles";
 
 const ALL = ["station_officer", "analyst", "supervisor", "admin"] as const;
 
@@ -86,25 +86,24 @@ describe("nav never links to a 404", () => {
   });
 });
 
-describe("desktopNav", () => {
-  const split = (r: Parameters<typeof navFor>[0]) => {
-    const d = desktopNav(navFor(r));
-    return { inline: d.inline.map((n) => n.label), manage: d.manage.map((n) => n.label) };
-  };
-  it("groups Stations, System and Admin under Manage and leaves Notifications to the bell", () => {
-    expect(split("admin").manage).toEqual(["Stations", "System", "Data sources", "Admin"]);
-    expect(split("admin").inline).not.toContain("Notifications");
-    expect(split("supervisor").manage).toEqual(["Stations"]);
+describe("grouped navigation", () => {
+  const groups = NAV_GROUPS.map((g) => g.key);
+  it("puts every item in a known group with an icon", () => {
+    for (const n of NAV) {
+      expect(groups).toContain(n.group);
+      expect(n.icon).toMatch(/^[a-z]+$/);
+    }
   });
-  it("keeps the analyst and officer bars flat, with no Manage menu", () => {
-    expect(split("analyst").manage).toEqual([]);
-    expect(split("station_officer").manage).toEqual([]);
-    expect(split("analyst").inline).toContain("Memory");
-    expect(split("analyst").inline).toContain("Ask");
-    expect(split("station_officer").inline).not.toContain("Ask");
+  it("orders items group by group, so each sidebar section is one run", () => {
+    const order = NAV.map((n) => groups.indexOf(n.group));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
-  // 13 measured on 27 Oct with Ask added: supervisor/admin links take 664 of 826 px at 1536, one 61 px row.
-  it("keeps at most 13 inline links for every role so the bar fits one line at 1080p", () => {
-    for (const r of ["station_officer", "analyst", "supervisor", "admin"] as const) expect(split(r).inline.length).toBeLessThanOrEqual(13);
+  it("keeps every hub one click away for the roles that can open it", () => {
+    expect(navFor("admin").map((n) => n.href)).toEqual(expect.arrayContaining(
+      ["/console", "/console/map", "/console/alerts", "/console/series", "/console/cases", "/console/ask", "/console/system", "/console/system/sources", "/console/admin"]));
+    expect(navFor("station_officer").map((n) => n.href)).toEqual(expect.arrayContaining(["/console", "/console/alerts", "/console/appeals", "/console/tips"]));
+  });
+  it("leaves Notifications out of the wide sidebar (the header bell links there)", () => {
+    expect(NAV.find((n) => n.href === "/console/notifications")?.desktop).toBe("bell");
   });
 });

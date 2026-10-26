@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
 import { DocsNav } from "@/components/DocsNav";
+import { BrandLockup } from "@/components/ui";
 import { getNav } from "@/lib/docs";
 
 export const metadata: Metadata = {
@@ -12,20 +14,17 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   const groups = getNav();
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 h-14 border-b border-line bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-4">
-          <Link href="/docs/progress" className="flex items-baseline gap-2">
-            <span className="text-lg font-bold uppercase tracking-wide">Nexus</span>
-            <span className="font-mono text-xs uppercase tracking-widest text-accent">Engg Docs</span>
-          </Link>
-          <span className="hidden truncate font-mono text-xs text-muted md:inline">
+      <header className="on-brand sticky top-0 z-sticky h-14 border-b border-brand-line bg-brand-bar text-brand-ink">
+        <div className="mx-auto flex h-full max-w-[1400px] items-center gap-4 px-4">
+          <Link href="/docs/progress" className="rounded-md"><BrandLockup sub="Engg Docs" /></Link>
+          <span className="hidden truncate text-xs text-brand-muted md:inline">
             Crime-linking spec · Open Agent Hackathon 2026 · Track 1
           </span>
           <Link
             href="/"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-signal px-4 py-1.5 text-sm font-semibold text-surface shadow-sm transition hover:brightness-110 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            className="ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-accent-bright px-3 text-sm sm:px-4 font-semibold text-brand transition-colors hover:bg-[#f6c96e]"
           >
-            Open app <span aria-hidden="true">→</span>
+            Open app <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
       </header>

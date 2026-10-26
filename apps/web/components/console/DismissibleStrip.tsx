@@ -32,14 +32,14 @@ export function DismissibleStrip({ storageKey, children }: { storageKey: string;
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-signal bg-surface px-4 py-2.5">
+    <div className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--signal)_45%,transparent)] bg-surface px-4 py-3 shadow-card">
       <div className="min-w-0 flex-1">{children}</div>
       <button
         type="button"
         onClick={dismiss}
         aria-label="Hide Start here"
         title="Hide Start here"
-        className="shrink-0 rounded px-1.5 text-lg leading-none text-muted hover:text-current"
+        className="shrink-0 rounded-md px-1.5 text-lg leading-none text-muted hover:bg-surface-2 hover:text-ink"
       >
         ×
       </button>

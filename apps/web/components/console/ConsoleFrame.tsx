@@ -1,70 +1,54 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { desktopNav, navFor, ROLE_LABEL, type NavItem } from "@/lib/roles";
+import { LogOut } from "lucide-react";
+import { navFor, ROLE_LABEL } from "@/lib/roles";
 import type { Officer } from "@/lib/auth";
+import { BrandLockup } from "@/components/ui";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { ConsoleMenuButton, ConsoleSidebar } from "./ConsoleNav";
 
-/** Police console frame: role-gated nav, who is signed in, sign out. */
+/** Police console frame: navy brand bar, grouped role-gated sidebar (drawer on narrow screens), who is signed in. */
 export function ConsoleFrame({ officer, unread = 0, children }: { officer: Officer; unread?: number; children: ReactNode }) {
   const items = navFor(officer.role);
-  const link = (n: NavItem) => (
-    <Link key={n.href} href={n.href} className="hover:text-ink">
-      {n.label}
-    </Link>
+  const role = (
+    <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-accent-bright">
+      {ROLE_LABEL[officer.role]}
+      {officer.stationId ? ` · ${officer.stationId}` : ""}
+    </span>
   );
-  const links = items.map(link);
-  const wide = desktopNav(items);
-  const who = (
-    <div className="flex flex-wrap items-center gap-3 text-sm">
-      {/* the role pill already says who is signed in; the name only shows on wide screens so the nav stays on one line at 1080p + zoom */}
-      <span className="text-muted md:hidden min-[1700px]:inline">{officer.name}</span>
-      <span className="rounded-full bg-signal-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-signal">
-        {ROLE_LABEL[officer.role]}
-        {officer.stationId ? ` · ${officer.stationId}` : ""}
-      </span>
-      <form action="/console/signout" method="post">
-        <button className="text-muted underline-offset-2 hover:text-ink hover:underline">Sign out</button>
-      </form>
-    </div>
+  const signOut = (
+    <form action="/console/signout" method="post">
+      <button className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-brand-muted hover:bg-brand-hover hover:text-brand-ink">
+        <LogOut className="size-4" aria-hidden />Sign out
+      </button>
+    </form>
   );
   return (
     <div className="min-h-screen">
-      <header className="relative border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl items-center gap-x-6 gap-y-2 px-4 py-3 md:flex-wrap">
-          <Link href="/console" className="text-lg font-bold uppercase tracking-wide">
-            Nexus <span className="text-muted">· Console</span>
+      <header className="on-brand sticky top-0 z-sticky h-14 border-b border-brand-line bg-brand-bar text-brand-ink">
+        <div className="flex h-full items-center gap-3 px-4">
+          <Link href="/console" className="rounded-md">
+            <BrandLockup sub="Console" />
           </Link>
-          {/* md and up: inline nav + who is signed in */}
-          <nav className="hidden flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted md:flex">
-            {wide.inline.map(link)}
-            {wide.manage.length > 0 && (
-              <details className="relative">
-                <summary className="cursor-pointer list-none hover:text-ink [&::-webkit-details-marker]:hidden">Manage ▾</summary>
-                <div className="absolute right-0 z-30 mt-2 flex min-w-[9rem] flex-col gap-2 rounded-md border border-line bg-surface p-3 shadow-lg">
-                  {wide.manage.map(link)}
-                </div>
-              </details>
-            )}
-          </nav>
-          <div className="hidden md:flex">{who}</div>
-          {/* the bell is mounted once (one Realtime channel), outside both copies of the nav */}
-          <div className="ml-auto md:ml-0"><NotificationBell userId={officer.userId} initial={unread} /></div>
-          {/* phones: one-line bar, everything else behind a native disclosure (no client JS) */}
-          <details className="group md:hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-line px-3 py-1.5 text-sm [&::-webkit-details-marker]:hidden">
-              <span aria-hidden>☰</span> Menu
-            </summary>
-            <div className="absolute inset-x-0 z-30 mt-3 border-b border-line bg-surface px-4 pb-4 shadow-lg">
-              <nav className="grid grid-cols-2 gap-x-4 gap-y-2 py-3 text-sm text-muted">{links}</nav>
-              <div className="border-t border-line pt-3">{who}</div>
-            </div>
-          </details>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <span className="hidden text-sm text-brand-muted min-[1100px]:inline">{officer.name}</span>
+            <span className="hidden sm:inline-flex">{role}</span>
+            {/* the bell is mounted once (one Realtime channel) */}
+            <NotificationBell userId={officer.userId} initial={unread} />
+            <span className="hidden lg:block">{signOut}</span>
+            <ConsoleMenuButton items={items} footer={<div className="flex flex-wrap items-center gap-3">{role}<span className="text-sm text-brand-muted">{officer.name}</span>{signOut}</div>} />
+          </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
-      <footer className="mx-auto max-w-7xl px-4 pb-6 text-xs text-muted">
-        Hackathon prototype. All data is synthetic.
-      </footer>
+      <div className="flex">
+        <ConsoleSidebar items={items} />
+        <div className="min-w-0 flex-1">
+          <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">{children}</main>
+          <footer className="mx-auto max-w-7xl px-4 pb-6 text-xs text-muted sm:px-6">
+            Hackathon prototype. All data is synthetic.
+          </footer>
+        </div>
+      </div>
     </div>
   );
 }
@@ -72,7 +56,7 @@ export function ConsoleFrame({ officer, unread = 0, children }: { officer: Offic
 /** Honest placeholder for a console screen that is not built yet. */
 export function ConsoleNotYet({ title, task, what }: { title: string; task: string; what: string }) {
   return (
-    <section className="rounded-xl border border-line bg-surface p-6">
+    <section className="rounded-xl border border-line bg-surface p-6 shadow-card">
       <p className="font-mono text-xs uppercase tracking-widest text-accent">Not built yet · {task}</p>
       <h1 className="mt-1 text-2xl font-bold">{title}</h1>
       <p className="mt-2 max-w-prose text-muted">{what}</p>

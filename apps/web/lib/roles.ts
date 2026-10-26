@@ -39,41 +39,47 @@ export function canDecideAlerts(role: Role | null | undefined): boolean {
 
 /**
  * `hidden`: the screen is not built yet, so the link is not shown (main must never link to a 404).
- * `desktop`: where the item sits in the wide (md+) bar so it stays on one line at 1080p:
- * "bell" = left out, the header bell already links there; "manage" = under the Manage menu.
- * The phone menu always lists every item.
+ * `desktop: "bell"`: left out of the wide sidebar because the header bell already links there
+ * (the phone menu still lists it). `group` and `icon` are presentation only (ConsoleNav); access never depends on them.
  */
-export type NavItem = { href: string; label: string; access: Access; hidden?: boolean; desktop?: "bell" | "manage" };
+export type NavGroupKey = "home" | "investigate" | "links" | "public" | "system";
+export type NavItem = {
+  href: string; label: string; access: Access; group: NavGroupKey; icon: string; hidden?: boolean; desktop?: "bell";
+};
 
-/** Console navigation in G2 order. Items the role cannot open are hidden. */
+/** Sidebar sections, in workflow order. "home" has no heading. */
+export const NAV_GROUPS: { key: NavGroupKey; label: string | null }[] = [
+  { key: "home", label: null },
+  { key: "investigate", label: "Investigate" },
+  { key: "links", label: "Alerts & series" },
+  { key: "public", label: "Public" },
+  { key: "system", label: "Data & system" },
+];
+
+/** Console navigation, grouped and in workflow order. Items the role cannot open are hidden. */
 export const NAV: NavItem[] = [
-  { href: "/console", label: "Overview", access: "all" },
-  { href: "/console/map", label: "Pulse Map", access: "all" },
-  { href: "/console/alerts", label: "Link alerts", access: "all" },
-  { href: "/console/cases", label: "Cases", access: "all" },
-  { href: "/console/search", label: "Search", access: "all" },
-  { href: "/console/ask", label: "Ask", access: "analyst+" }, // WS3-30 Ask Nexus
-  { href: "/console/vehicles", label: "Vehicles", access: "all" }, // CAP-06
-  { href: "/console/series", label: "Series", access: "all" },
-  { href: "/console/appeals", label: "Appeals", access: ["station_officer", "supervisor", "admin"] },
-  { href: "/console/tips", label: "Tips", access: ["station_officer", "analyst", "supervisor", "admin"] },
-  { href: "/console/graph", label: "Graph", access: "analyst+" },
-  { href: "/console/stations", label: "Stations", access: "supervisor+", desktop: "manage" },
-  { href: "/console/taskforces", label: "Task forces", access: "all" },
-  { href: "/console/memory", label: "Memory", access: "analyst+" },
-  { href: "/console/notifications", label: "Notifications", access: "all", desktop: "bell" },
-  { href: "/console/system", label: "System", access: "admin", desktop: "manage" },
-  { href: "/console/system/sources", label: "Data sources", access: "admin", desktop: "manage" }, // WS3-27
-  { href: "/console/admin", label: "Admin", access: "admin", desktop: "manage" },
+  { href: "/console", label: "Overview", access: "all", group: "home", icon: "overview" },
+  { href: "/console/map", label: "Pulse Map", access: "all", group: "home", icon: "map" },
+  { href: "/console/ask", label: "Ask", access: "analyst+", group: "home", icon: "ask" }, // WS3-30 Ask Nexus
+  { href: "/console/notifications", label: "Notifications", access: "all", group: "home", icon: "bell", desktop: "bell" },
+  { href: "/console/cases", label: "Cases", access: "all", group: "investigate", icon: "cases" },
+  { href: "/console/search", label: "Search", access: "all", group: "investigate", icon: "search" },
+  { href: "/console/vehicles", label: "Vehicles", access: "all", group: "investigate", icon: "vehicles" }, // CAP-06
+  { href: "/console/graph", label: "Graph", access: "analyst+", group: "investigate", icon: "graph" },
+  { href: "/console/alerts", label: "Link alerts", access: "all", group: "links", icon: "alerts" },
+  { href: "/console/series", label: "Series", access: "all", group: "links", icon: "series" },
+  { href: "/console/taskforces", label: "Task forces", access: "all", group: "links", icon: "taskforces" },
+  { href: "/console/memory", label: "Memory", access: "analyst+", group: "links", icon: "memory" },
+  { href: "/console/appeals", label: "Appeals", access: ["station_officer", "supervisor", "admin"], group: "public", icon: "appeals" },
+  { href: "/console/tips", label: "Tips", access: ["station_officer", "analyst", "supervisor", "admin"], group: "public", icon: "tips" },
+  { href: "/console/stations", label: "Stations", access: "supervisor+", group: "system", icon: "stations" },
+  { href: "/console/system/sources", label: "Data sources", access: "admin", group: "system", icon: "sources" }, // WS3-27
+  { href: "/console/system", label: "System", access: "admin", group: "system", icon: "system" },
+  { href: "/console/admin", label: "Admin", access: "admin", group: "system", icon: "admin" },
 ];
 
 export function navFor(role: Role | null | undefined): NavItem[] {
   return NAV.filter((n) => !n.hidden && allows(role, n.access));
-}
-
-/** The wide-screen bar: inline links, and the ones grouped under "Manage" (empty = no menu). */
-export function desktopNav(items: NavItem[]): { inline: NavItem[]; manage: NavItem[] } {
-  return { inline: items.filter((n) => !n.desktop), manage: items.filter((n) => n.desktop === "manage") };
 }
 
 /** Access rule for a console path (longest matching prefix in NAV); unknown paths need any police role. */
