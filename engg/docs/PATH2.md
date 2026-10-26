@@ -80,7 +80,7 @@ All are marked `cut` for the hackathon and parked here.
 
 | Idea | What it is | Status |
 |---|---|---|
-| Tamil tips via NVIDIA Riva Translate | Translate tips written in Tamil before Tip Guard and the agents read them | Only if Nightshift serves a Riva lane; **untested** |
+| Tamil tips via NVIDIA Riva Translate | Translate tips written in Tamil before Tip Guard and the agents read them | Parked; not before the freeze. Probed 27 Oct (nexus-6): Nightshift knows `nvidia/riva-translate-4b-instruct-v2` but rejects it on `/v1/chat/completions` with 502 `nvidia_translation_contract` ("pass req.translate = { source, target } … not a chat model"); a top-level `translate` field got the same 502. Next: the exact translate request shape from the Meterless docs. Fallback: Nemotron translates in plain chat |
 | Morning station briefing | A daily cited brief for each station, built on the zone briefing that ships today (`agents/briefer.py`, `POST /api/briefing`: numbers from code, the model only writes prose) | Not started: per-station scope, a daily schedule and citations per line |
 
 ## 4. Hardware
