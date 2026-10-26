@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  buildTimeline, canWriteCase, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText,
+  buildTimeline, canWriteCase, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText, reviewFormValues,
   normaliseFir, normalisePlate, parseCaseFilters, plateIlike, plateMatches,
 } from "../cases";
 
@@ -118,6 +118,15 @@ describe("moCorrections", () => {
   });
   it("rejects a bad offender count", () => {
     expect(moCorrections(mo, { offender_count: "two" })).toHaveProperty("error");
+  });
+  it("keeps earlier corrections when a later review changes another field (regression)", () => {
+    // Review 1 corrected violence; review 2 only touches approach. Review 2 must still carry violence.
+    const extractor = { approach: "two_wheeler_from_behind", violence: "snatching", time_band: null };
+    const afterReview1 = { ...extractor, violence: "snatch_and_push", time_band: "afternoon" };
+    const values = reviewFormValues(afterReview1, { approach: "two wheeler from behind checked" });
+    expect(moCorrections(extractor, values)).toEqual({
+      corrections: { approach: "two_wheeler_from_behind_checked", violence: "snatch_and_push", time_band: "afternoon" },
+    });
   });
   it("shows values as text", () => {
     expect(moToText(["bus_stop", "main_road"])).toBe("bus stop, main road");
