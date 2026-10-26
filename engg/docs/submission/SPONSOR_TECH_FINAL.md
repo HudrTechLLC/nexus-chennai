@@ -20,14 +20,14 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 
 - **Sources federated today:**
   - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 4 datasource views where JDBC can't map a type.
-  - **Live REST feeds** for news and social posts, registered as Lightning REST tables, with the views `news_items`, `social_posts` and `v_news_mentions` over them.
+  - **REST feeds served by the Nexus API**, registered as Lightning REST tables: weather is live (`weather_hourly`); the news and social feeds (`news_items`, `social_posts`, `v_news_mentions`) are written but not registered yet `[PENDING: WS1-16]`.
   - **CSV and Parquet file sources** in Zetaris's internal file store: 8 CSV tables (legacy CCTNS exports, CCTV and ANPR camera lists, vehicles, prison releases, history sheets, place aliases, calendar) and 4 Parquet tables (ANPR reads, 112 calls, the legacy archive, map POIs).
 - **Governed access.** Agents can run only registered *named queries*, through one adapter (`services/api/app/adapters/zetaris.py`). Every query id goes into the trace and into the alert's evidence. Live today, each with Lightning SQL and a DuckDB twin for sample mode:
   - `q_case`: one case with its vehicles, statements, evidence and forensics;
   - `q_candidates`: blocking, i.e. same-category cases within a distance and time window;
   - `q_features`: extracted MO features;
   - `q_dq_flags`: data-quality flags;
-  - `q_news`: news that mentions a case's place;
+  - `q_news`: news that mentions a case's place (returns rows only in sample mode until the news feed is registered);
   - `q_hex_counts`: counts per H3 cell, for the hotspot test;
   - `q_search`: text and filter search over crimes and statements, for the console search box;
   - `q_station_matrix`: approved alerts station × station;
@@ -80,7 +80,7 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 ## What was unique about our use of the sponsor technology
 
-1. **The data layer is also the fact-checker.** The Skeptic doesn't trust the Linker. It re-runs Zetaris named queries itself, strikes any factor its own rows don't support, and only then lets a link reach a human. Every surviving reason carries the Zetaris query id and the row behind it.
+1. **The data layer is also the fact-checker.** The Skeptic doesn't trust the Linker. It re-runs Zetaris named queries itself, critiques each pair against its own rows, and sends a pair back for a narrower search or drops it, before any human sees it. Every surviving reason carries the Zetaris query id and the row behind it.
 2. **Human decisions change the next score.** Rejected links stay visible to every police role. Through H-MEM, a rejection ("same street, different entry method") lowers the score of the next similar pair, within a hard ±0.08 bound, and the alert says "memory applied". Each step is in a trust ledger.
 3. **The public can help without steering the system.** Scout Intent screens every anonymous tip before any agent reads it, and fails closed. Zetaris sees tips only through a safe-column view.
 4. **The official engines run unchanged.** The Meterless references are vendored unmodified and pass their own conformance suites, which CI re-runs on every pull request alongside our feature tests.

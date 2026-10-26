@@ -82,7 +82,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 6 · How Zetaris is used (point 5)
 
 - **On slide:**
-  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role), 12 file tables in Zetaris's file store (8 CSV + 4 Parquet: legacy CCTNS exports, ANPR, 112 calls, releases…) and live REST news/social feeds. One semantic view, `v_crime_unified`, over every crime record shape.
+  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role), 12 file tables in Zetaris's file store (8 CSV + 4 Parquet: legacy CCTNS exports, ANPR, 112 calls, releases…) and REST feeds served by the Nexus API (weather live; news/social `[PENDING: WS1-16]`). One semantic view, `v_crime_unified`, over every crime record shape.
   - **Governed:** agents may run only named queries. Live (10): `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`, `q_tip_corroboration`, `q_context`. `q_vehicle_trail`, `q_offender_return`, `q_calls_near` `[PENDING: WS1-15]`.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
@@ -118,10 +118,10 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 9 · What was unique (point 6)
 
 - **On slide (three lines, big):**
-  1. "The data layer is the fact-checker: the Skeptic re-queries Zetaris and strikes links the data doesn't support."
+  1. "The data layer is the fact-checker: the Skeptic re-queries Zetaris and drops links the data doesn't support."
   2. "Rejected links stay visible and teach the system through H-MEM."
   3. "The public can help without steering it: Scout Intent screens every tip first."
-- **Visual:** trace crop showing a `strike_factor` event, next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`, on main). It needs an alert that a recorded decision actually affected: run a decision through the worker first. If none exists by capture time, use the trace crop alone; never mock the section.
+- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`) showing the Skeptic **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
 
 ## Slide 10 · Product visuals (point 7)
 

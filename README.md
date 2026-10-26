@@ -14,7 +14,7 @@ Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.a
 ## What it does
 
 - **Links cases across stations.** For a new case, agents find candidate cases city-wide, score each pair on nine factors in code, and write an alert with per-factor evidence.
-- **Checks its own work.** The Skeptic re-queries Zetaris itself, strikes any factor its own rows don't support, and can send a pair back for a narrower search or drop it.
+- **Checks its own work.** The Skeptic re-queries Zetaris itself, critiques each pair against its own rows, and can send a pair back for a narrower search or drop it.
 - **Keeps a human in charge.** Every alert waits for an analyst. Approvals and rejections go to H-MEM, so a similar pair scores differently next time.
 - **Lets the public help safely.** Anyone can send an anonymous tip. Tip Guard (Meterless Scout Intent) screens it for injection, threats and spam before any agent reads it.
 - **Groups links into series** and builds a dossier with the Meterless Markovian engine.
@@ -32,7 +32,7 @@ Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.a
                                                                              └──────────────────┘
 ```
 
-- **Zetaris** is the data layer. It federates Supabase Postgres and REST news/social feeds today, and agents may only run registered named queries. More detail under [Sponsor technology](#sponsor-technology).
+- **Zetaris** is the data layer. It federates Supabase Postgres and CSV/Parquet file sources, plus REST feeds served by the Nexus API (weather today; news and social in progress), and agents may only run registered named queries. More detail under [Sponsor technology](#sponsor-technology).
 - **Nightshift** is the only path for model calls. The NVIDIA key lives only in Nightshift.
 - **Supabase** holds what police and the public create (cases, tips, alerts, decisions), with row-level security per role. It also holds trace copies and engine state so the Vercel console can show them.
 - The **website can't reach the laptop**, so it reads alerts and traces from Supabase and writes decisions and tips there. A worker on the laptop picks them up.
@@ -55,7 +55,7 @@ Caps: the Planner runs at most 3 rounds, the Skeptic sends back at most 2 times,
 | Extractor | Nemotron Lightning (`fast`) | schema, confidence, protected-attribute drop, World Model ingest | modus operandi labels | no |
 | Planner | Nemotron Ultra (`reason`) | allow-listed queries, clamps, default plan | query order and windows | no |
 | Linker | code + Ultra | all nine factor scores, evidence, H-MEM adjustment | one plain reason per factor | no |
-| Skeptic | code + Ultra | its own re-query, strikes, rescoring, drop | critique; may only downgrade | **yes** |
+| Skeptic | code + Ultra | its own re-query, rescoring, send-back, drop | critique; may only downgrade | **yes** |
 | Alert writer | code | the alert record, coverage, notifications | — | no |
 | Series analyst | code + Markovian + Ultra | series of 3+ connected links | dossier chunk notes | no |
 | Hotspot detector | code (Poisson test) | everything | — | no |
@@ -80,7 +80,7 @@ World Model, H-MEM and Markovian run as the vendored TypeScript references in a 
 
 | Sponsor | How Nexus uses it |
 |---|---|
-| **Zetaris** (data layer) | Federates three kinds of source in place: <ul><li>**Supabase Postgres** (`sb`), read as a read-only role: 17 tables plus 4 datasource views. Tips are exposed only as `tips_v`, a view of safe columns.</li><li>**File sources** in Zetaris's internal file store: 8 CSV and 4 Parquet tables (legacy CCTNS exports and archive, ANPR cameras and reads, 112 calls, releases, history sheets).</li><li>**REST news and social feeds**, as Lightning REST tables.</li></ul>The semantic view `v_crime_unified` gives one shape over every crime record, and 8 data-quality views flag issues such as duplicate FIRs across stations. Agents run only registered named queries; 10 are live (`q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`, `q_tip_corroboration`, `q_context`), each with a DuckDB twin for sample mode. Three more that the Planner can ask for (`q_vehicle_trail`, `q_offender_return`, `q_calls_near`) are not registered yet; when one is requested, the step fails and is traced, and the run continues. |
+| **Zetaris** (data layer) | Federates three kinds of source in place: <ul><li>**Supabase Postgres** (`sb`), read as a read-only role: 17 tables plus 4 datasource views. Tips are exposed only as `tips_v`, a view of safe columns.</li><li>**File sources** in Zetaris's internal file store: 8 CSV and 4 Parquet tables (legacy CCTNS exports and archive, ANPR cameras and reads, 112 calls, releases, history sheets).</li><li>**REST feeds served by the Nexus API**, as Lightning REST tables: weather is live; the news and social feeds are written (`zetaris/40_feeds.sql`) but not registered yet, so `q_news` returns no rows on a live run.</li></ul>The semantic view `v_crime_unified` gives one shape over every crime record, and 8 data-quality views flag issues such as duplicate FIRs across stations. Agents run only registered named queries; 10 are live (`q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`, `q_tip_corroboration`, `q_context`), each with a DuckDB twin for sample mode. Three more that the Planner can ask for (`q_vehicle_trail`, `q_offender_return`, `q_calls_near`) are not registered yet; when one is requested, the step fails and is traced, and the run continues. |
 | **Meterless Nightshift** (primary AI provider) | `services/api/app/adapters/nightshift.py` is the only model path. It uses Nightshift's OpenAI-compatible API on pinned lanes, never `meterless/auto`. Every call logs the lane, the pinned model, the model Nightshift reports back and a receipt id. |
 | **Meterless engines** | All four, as above. |
 | **NVIDIA Nemotron** | `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b` and `reason` = `nvidia/nemotron-3-ultra-550b-a55b`, both through Nightshift. The model is named on every trace line. |
@@ -134,7 +134,7 @@ Copy `.env.example` to `.env` and set these:
 - **Zetaris:** `ZETARIS_REST_URL` (default `http://localhost:8888/api/v1.0`) and `ZETARIS_ORG_ID`. For the API key, set either `ZETARIS_API_KEY` or `ZETARIS_API_KEY_FILE` (a path to a file holding it; preferred).
 - **Nightshift:** `METERLESS_BASE_URL` (default `http://127.0.0.1:8088/v1`). For the runtime token, **either** export `METERLESS_RUNTIME_TOKEN` in your shell (a `.env` file doesn't export it for other tools) **or** set `METERLESS_RUNTIME_TOKEN_FILE` to the token file Nightshift writes itself (on Windows, `%LOCALAPPDATA%/ai.meterless.runtime/proxy-token`). Lanes: `LANE_FAST`, `LANE_REASON` (and `LANE_VISION`, see [Limitations](#limitations)). Pin exact `nvidia/*` ids; `meterless/auto` is refused.
 - **Supabase:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY_FILE` for the worker.
-- **News and social feeds:** live runs need the Nexus API running on :8000 (`python run.py`) before Zetaris reads the news and social feeds, because Zetaris fetches `/mock-feeds/*` from the API. If the API is down, runs still complete, just without news evidence.
+- **REST feeds:** Zetaris fetches its REST feeds (`/mock-feeds/*`) from the Nexus API, so start the API (`python run.py`) before a live run. Weather is registered today; the news and social feeds are not yet. If the API is down, runs still complete, just without feed evidence.
 - **Engines:** `ENGINES_BACKEND=sample` (default, in-process) or `sidecar` (the TypeScript references: `cd engines-ts && npm ci && npm run install:references && npm run sidecar`).
 
 ## Run
@@ -241,7 +241,7 @@ Demo police accounts (station officer, analyst, supervisor) are provided to judg
 
 **What the police console does** (beyond alerts and the map):
 - **Case file:** narrative and statements, with phone and Aadhaar numbers masked; vehicles; an evidence gallery; the MO that Nemotron extracted, with officer corrections stored separately; linked alerts, series, similar cases and the World Model graph; case diary and status.
-- **Evidence:** stored with its original bytes. A sha256 is taken at upload, and each upload adds a custody entry; a check confirms each stored file equals its recorded hash (`apps/web/scripts/evidence-check.mjs`).
+- **Evidence (with a limit):** stored with its original bytes. The upload route computes sha256 server-side; the database enforces that the evidence row matches a storage object the caller uploaded (owner, size, mime) and sets uploaded_by + custody itself; the hash itself is not re-verified in the database. A check confirms each stored file equals its recorded hash (`apps/web/scripts/evidence-check.mjs`). Do not read this as tamper-proof.
 - **FIR form** (`/console/cases/new`): one atomic `file_fir` call saves the crime, vehicles and statements together, and the worker then picks the case up and extracts its MO.
 - **Search:** one box for a case id, FIR number, plate fragment (`?` for an unread character) or free words, with facets (zone, weapon, MO or visual tag, time of day, linked). It lists every table it read, with row counts. Web search reads Supabase under row-level security, not Zetaris (D-029); agents still read only through Zetaris.
 - **Privacy:** victims, witnesses and complainants are never named; lists show the ward, not the address; `audit_log` is append-only for every role (D-030).
