@@ -184,3 +184,52 @@ def test_series_dossier_without_tip_query_and_with_summary_tips(make_deps):
     deps = make_deps(responder=lambda *a: "no checkpoint", handlers=handlers, engines=engines)
     recs = SeriesAnalyst(deps).records([ADYAR["crime_id"]])
     assert {"id": "TIP-9", "kind": "tip", "date": "2026-W43", "text": "Tip mentions: red, motorcycle."} in recs
+
+
+# ----- crime type must match the record (live: a mobile snatching drafted as "Chain Snatching") ----
+
+MOBILE = crime_from_row(as_row({**ADYAR, "sub_type": "mobile_snatching",
+                                "property": [{"type": "mobile_phone", "value_inr": 54725}]}))
+
+
+def _draft(make_deps, case, title, summary="A snatching was reported in the area."):
+    seen = []
+
+    def reply(lane, m, p):
+        seen.append(m)
+        return json.dumps({"title": title, "summary": summary, "looking_for": ["CCTV near the main road"]})
+
+    deps = make_deps(responder=reply)
+    return Sanitiser(deps).draft(case, FEATS), deps, seen
+
+
+def test_sanitiser_rejects_a_draft_that_names_a_different_crime_type(make_deps):
+    d, deps, _ = _draft(make_deps, MOBILE, "Chain Snatching near the hospital")
+    assert d["source"] == "template" and "chain" not in d["title"].lower()
+    fb = [e for e in deps.tracer.read() if e["action"] == "draft_fallback"]
+    assert fb and "chain_snatching" in fb[0]["output_summary"]
+
+
+def test_sanitiser_keeps_a_draft_that_names_the_recorded_crime_type(make_deps):
+    d, _, seen = _draft(make_deps, MOBILE, "Mobile phone snatching in Adyar",
+                        "Two riders snatched a phone from a man walking near the main road.")
+    assert d["source"] == "model" and d["title"] == "Mobile phone snatching in Adyar"
+    assert "Name the crime exactly" in seen[0][0]["content"]
+
+
+def test_sanitiser_accepts_a_synonym_of_its_own_crime_type(make_deps):
+    hb = crime_from_row(as_row({**ADYAR, "category": "house_break", "sub_type": "night_house_break",
+                                "vehicles": [], "property": [{"type": "gold_jewellery", "value_inr": 90000}]}))
+    d, _, _ = _draft(make_deps, hb, "Night burglary at a locked house",
+                     "A locked house was broken into at night and jewellery was taken.")
+    assert d["source"] == "model"
+
+
+def test_crime_type_mismatch_rule():
+    from app.agents.sanitiser import crime_type_mismatch
+    assert crime_type_mismatch("Chain snatching near a bus stop", "mobile_snatching") == "chain_snatching"
+    assert crime_type_mismatch("Phone snatched by two riders", "mobile_snatching") is None
+    assert crime_type_mismatch("Two-wheeler theft outside a mall", "car_theft") == "two_wheeler_theft"
+    assert crime_type_mismatch("A robbery was reported", "chain_snatching") is None  # generic words are fine
+    assert crime_type_mismatch("A murder was reported", "chain_snatching") == "attempt_murder"
+    assert crime_type_mismatch("Attempted murder near a bus stop", "attempt_murder") is None

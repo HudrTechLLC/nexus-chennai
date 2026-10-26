@@ -29,6 +29,7 @@ PUBLIC_H3_RES = 8
 SANITISER_PROMPT = """You write short public appeals for information about a crime, for a city police website.
 Use ONLY the facts given. Never add names, exact addresses, exact times, vehicle numbers, phone numbers,
 case numbers, police station names, victim details, or religion/caste/community.
+Name the crime exactly as "category" says (mobile_snatching is a phone snatching, not a chain snatching).
 Return ONE JSON object: {"title": str (<= 70 chars), "summary": str (1-2 sentences),
 "looking_for": [str] (2-4 short items the public could help with)}. Output it once, then stop."""
 
@@ -140,6 +141,36 @@ def case_leak(text: str, terms: list[tuple[str, str]]) -> str | None:
     return NAME_KIND if NAME_KIND in hit else (PLACE_KIND if hit else None)
 
 
+# Phrases that name one specific crime type (sub_type families from the crimes table). A draft that names a
+# type outside the case's own family is rejected: live, Lightning titled a mobile snatching "Chain Snatching".
+_CRIME_TYPE_MARKERS: tuple[tuple[str, frozenset[str]], ...] = tuple(
+    (pattern, frozenset(types)) for pattern, types in (
+        (r"chain[- ]?snatch", {"chain_snatching"}),
+        (r"(mobile|phone)[- ]?snatch", {"mobile_snatching"}),
+        (r"cab robber|taxi robber", {"cab_robbery"}),
+        (r"house[- ]?break|burglar|break[- ]?in", {"day_house_break", "night_house_break"}),
+        (r"car theft|car stolen|stolen car", {"car_theft"}),
+        (r"(two[- ]?wheeler|bike|motorcycle|scooter) (theft|stolen)", {"two_wheeler_theft"}),
+        (r"pick[- ]?pocket", {"pickpocket"}),
+        (r"shop[- ]?lift|shop theft", {"shop_theft"}),
+        (r"attempt(ed)? (to )?murder", {"attempt_murder"}),
+        (r"\bmurder", {"murder", "attempt_murder"}),
+        (r"stalk", {"stalking"}),
+        (r"kidnap|abduct", {"kidnapping"}),
+    ))
+
+
+def crime_type_mismatch(text: str, sub_type: str | None) -> str | None:
+    """The crime type `text` names that is not the case's own (first found), else None."""
+    if not sub_type:
+        return None
+    low = (text or "").lower()
+    for pattern, types in _CRIME_TYPE_MARKERS:
+        if sub_type not in types and re.search(pattern, low):
+            return sorted(types)[0]
+    return None
+
+
 def leaks(text: str, case: Mapping[str, Any]) -> list[str]:
     """Pattern leaks, case ids, and (when the caller passes case["persons"]) per-case names and address."""
     found = [p.pattern for p in _LEAKS if p.search(text)]
@@ -191,6 +222,9 @@ class Sanitiser:
             text = {"title": str(out.get("title") or "")[:70], "summary": str(out.get("summary") or "")[:400],
                     "looking_for": [str(x)[:120] for x in (out.get("looking_for") or [])][:4]}
             bad = leaks(" ".join([text["title"], text["summary"], *text["looking_for"]]), case)
+            wrong = crime_type_mismatch(" ".join([text["title"], text["summary"]]), case.get("sub_type"))
+            if wrong:
+                bad.append(f"names a different crime type: {wrong} (recorded {case.get('sub_type')})")
             if bad or not text["title"] or not text["summary"]:
                 raise AgentError(f"draft rejected: {bad or 'empty'}")
         except AgentError as exc:
