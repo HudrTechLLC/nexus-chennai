@@ -80,6 +80,8 @@ class NightshiftClient:
         self.tracer = tracer
         self.fixtures_dir = fixtures_dir or settings.sample_dir / "model_fixtures"
         self.record_fixtures = record_fixtures
+        # n-th identical request in this client (one client per run): recorded and replayed in order.
+        self._occurrence: dict[str, int] = {}
         self._client = httpx.Client(
             base_url=settings.meterless_base_url.rstrip("/"),
             timeout=settings.nightshift_timeout_seconds,
@@ -183,7 +185,13 @@ class NightshiftClient:
         return data.get("id")
 
     def _fixture_path(self, lane: str, messages: list[dict[str, Any]]) -> Path:
-        return self.fixtures_dir / f"{fixture_key(lane, messages)}.json"
+        """Fixture for this request: <key>.json the first time, <key>-n.json for the n-th identical request
+        (an agent may ask the same question twice in a run, e.g. a retry or a second Skeptic round, and get
+        a different answer; replay must give the answers back in the same order)."""
+        key = fixture_key(lane, messages)
+        n = self._occurrence.get(key, 0) + 1
+        self._occurrence[key] = n
+        return self.fixtures_dir / (f"{key}.json" if n == 1 else f"{key}-{n}.json")
 
     def _save_fixture(self, lane: str, messages: list[dict[str, Any]], data: dict[str, Any]) -> None:
         path = self._fixture_path(lane, messages)
