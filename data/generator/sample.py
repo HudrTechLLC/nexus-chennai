@@ -34,7 +34,7 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parents[2]
 JUDGE_IDS = ["CHN-AD-2026-001182", "CHN-KU-2025-000078", "CHN-GU-2025-000945"]
-DAYS, RING_KM = 45, 6.0  # the Linker's q_candidates window
+DAYS, RING_KM = 45, 10.0  # widest Planner window (ring 2 = 10 km), so every ring matches live
 EXTRA_DUPLICATES, EXTRA_DQ_PER_RULE = 3, 2
 
 # Supabase column types (public schema), minus geometry and audit columns. DuckDB types.
@@ -180,6 +180,22 @@ def live_features(ids: list[str]) -> list[dict]:
         return [dict(zip(names, r)) for r in cur.fetchall()]
 
 
+def live_tip_guard(tips: list[dict]) -> list[dict]:
+    """The generated tips with the live Tip Guard's recorded verdict (guard, status) where it has
+    screened them, so sample mode corroborates like live. Never the passphrase hash."""
+    if not os.environ.get("NEXUS_DB_PASSWORD"):
+        return tips
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from db_migrate import connect
+
+    with connect() as conn:
+        cur = conn.cursor()
+        cur.execute("select tip_id, guard, status from public.tips where tip_id = any(%s)", ([t["tip_id"] for t in tips],))
+        live = {tid: (g, st) for tid, g, st in cur.fetchall()}
+    return [t | ({"guard": live[t["tip_id"]][0], "status": live[t["tip_id"]][1]} if t["tip_id"] in live else {})
+            for t in tips]
+
+
 def _csv_subset(src: Path, dst: Path, keep=None) -> int:
     rows = list(csv.DictReader(src.open(encoding="utf-8", newline="")))
     rows = [r for r in rows if keep is None or keep(r)]
@@ -207,8 +223,8 @@ def build(src: Path, out: Path) -> dict:
                                       ["crime_id", "role", "plate_pattern", "make_model"]),
         "statements": write_table(con, out, "statements",
                                   [s for s in _jl(sb / "statements.jsonl") if s["crime_id"] in keep], ["statement_id"]),
-        "tips": write_table(con, out, "tips", _jl(sb / "tips.jsonl") if (sb / "tips.jsonl").is_file() else [],
-                            ["tip_id"]),
+        "tips": write_table(con, out, "tips", live_tip_guard(_jl(sb / "tips.jsonl"))
+                            if (sb / "tips.jsonl").is_file() else [], ["tip_id"]),
         "evidence_media": write_table(con, out, "evidence_media", [], ["evidence_id"]),
         "forensics": write_table(con, out, "forensics", [], ["forensic_id"]),
         "crime_features": write_table(con, out, "crime_features", live_features(ids), ["crime_id"]),

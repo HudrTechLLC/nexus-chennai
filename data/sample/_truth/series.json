@@ -168,6 +168,61 @@
  {
   "category": "robbery",
   "crime_ids": [
+   "CHN-SN-2025-000954",
+   "CHN-TM-2025-000881",
+   "CHN-TM-2025-000979",
+   "CHN-TM-2025-001050"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Generated series 1",
+  "series_id": "SER-G01",
+  "stations": [
+   "PS-SELAIYUR-T16",
+   "PS-SHANKARNAGAR-S6",
+   "PS-TAMBARAM-S11"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "asked_for_directions",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "market"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "medium",
+    "count": 2,
+    "helmet": "grey with sticker"
+   },
+   "signature": "wears spectacles",
+   "vehicle": {
+    "colour": "silver",
+    "make_model": "Yamaha FZ",
+    "plate": "TN 02 UP 9867",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 02 ?? 9867",
+     "TN 02 ?? 9867",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
    "CHN-MM-2025-001211",
    "CHN-MM-2025-001313",
    "CHN-PO-2025-001230"
@@ -212,6 +267,120 @@
     "witnessed": [
      "?? 4057",
      "TN 88 ZK 40??",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-IC-2025-001225",
+   "CHN-MA-2025-001323",
+   "CHN-RO-2025-001142"
+  ],
+  "crime_type": "street_robbery",
+  "kind": "series",
+  "name": "Generated series 6",
+  "series_id": "SER-G06",
+  "stations": [
+   "PS-ABHIRAMAPURAM-E4",
+   "PS-ICEHOUSE-D3",
+   "PS-MARINA-D5",
+   "PS-MYLAPORE-E1",
+   "PS-ROYAPETTAH-E2"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "knife_threat_two_men",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "atm",
+     "bar"
+    ],
+    "target": "lone_pedestrian",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "thin",
+    "count": 2,
+    "helmet": "no helmet"
+   },
+   "signature": "sports shoes with neon laces",
+   "vehicle": {
+    "colour": "maroon",
+    "make_model": "Honda Shine",
+    "plate": "TN 86 VC 4647",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 86 V? 4647",
+     "TN 86 V? 4647",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-CH-2025-000823",
+   "CHN-CH-2025-000832",
+   "CHN-KI-2025-000789",
+   "CHN-NU-2025-000748"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Generated series 19",
+  "series_id": "SER-G19",
+  "stations": [
+   "PS-ANNASALAI-D2",
+   "PS-CHETPET-G7",
+   "PS-EGMORE-F2",
+   "PS-KILPAUK-G3",
+   "PS-NUNGAMBAKKAM-F3",
+   "PS-VEPERY-G1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "market"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "thin",
+    "count": 2,
+    "helmet": "grey with sticker"
+   },
+   "signature": "speaks Telugu",
+   "vehicle": {
+    "colour": "silver",
+    "make_model": "TVS Apache",
+    "plate": "TN 88 FC 4640",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 88 F? 4640",
+     "TN 88 ?? 4640",
      null
     ]
    },

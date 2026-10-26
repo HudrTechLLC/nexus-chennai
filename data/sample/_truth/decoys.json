@@ -23,5 +23,13 @@
   ],
   "decoy_id": "DEC-03",
   "shadows_series_id": "SER-NIGHT-CAB"
+ },
+ {
+  "crime_ids": [
+   "CHN-MY-2025-001289",
+   "CHN-RO-2025-001330"
+  ],
+  "decoy_id": "DEC-10",
+  "shadows_series_id": "SER-G06"
  }
 ]
