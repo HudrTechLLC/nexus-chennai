@@ -1,0 +1,45 @@
+# Meterless hmem conformance run (official suite, unchanged)
+source:            github.com/Meterless/Meterless @ 1742dec56a66e58eef9dda2d2b865823758ca8cd (Apache-2.0)
+runner sha256 LF:  d6724860761c4846a0bce3080d25115bcb0ba1d9d0d2e933438f5683a7a9b7c5
+conformance tree:  9a89756e701ef590e709f47b1421143b072de1ed6861db6e9f6b8db87873bbda
+reference tree:    43b2ba3f805837f7a62bb61324026f2a2a2c2291561cd573da732e401bbf06dd
+node:              v24.6.0 (win32/x64)
+cwd:               engines-ts/hmem/reference
+command:           node node_modules/tsx/dist/cli.mjs ../conformance/runner.ts  (= npx tsx ../conformance/runner.ts)
+tsx:               4.23.0
+started (UTC):     2026-10-26T06:22:23.237Z
+
+----- runner output (stdout, then stderr) -----
+
+H-MEM conformance: implementation = C:\Apps\Nexus-n2-engines\engines-ts\hmem\reference\src\index.ts
+
+  record-validation
+    PASS rv-001 a record with no source is rejected by construction
+    PASS rv-002 a record with a source is accepted
+
+  feedback-deltas
+    PASS fd-001 helpful adds exactly +0.05 confidence and +1 accessCount
+    PASS fd-002 not_helpful subtracts exactly 0.03
+    PASS fd-003 wrong subtracts exactly 0.20 and adds the review tag
+    PASS fd-004 confidence clamps at 0 (wrong at 0.1)
+    PASS fd-005 confidence clamps at 1 (helpful at 0.98)
+
+  ranking-order
+    PASS ro-001 superseded penalty dominates: a superseded record ranks below a fresh one with identical content relevance
+    PASS ro-002 confidence multiplies the whole score: identical records rank by confidence
+
+  sleep-guardrails
+    PASS sg-001 old low-access plain record archives; dream-derived record with identical age does not
+
+  conflict-gate
+    PASS cg-001 auto-resolve marks the loser supersededBy and deletes nothing
+
+  ledger-audit
+    PASS la-001 create then feedback reconstructs: actions in order, previous and new confidence present
+
+  dream-boundary
+    PASS db-001 dream proposals never materialize before approval; approval creates a long_term record with lineage
+
+  13/13 checks passed
+----- end of runner output -----
+exit code: 0

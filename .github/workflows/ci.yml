@@ -32,3 +32,30 @@ jobs:
       - name: No secret values in tracked files
         run: |
           ! git grep -nE '(nvapi-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9]{10,}|eyJhbGciOi[A-Za-z0-9_-]{30,}|BEGIN [A-Z ]*PRIVATE KEY)' -- . ':!engg/docs/SPEC.md'
+  engines:
+    # Meterless engines (nexus-2): official conformance suites, unchanged, against the vendored
+    # TypeScript references, then the E4 feature tests against those references via the sidecar.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            engines-ts/package-lock.json
+            engines-ts/*/reference/package-lock.json
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: services/api/requirements-dev.txt }
+      - run: npm ci && npm run install:references
+        working-directory: engines-ts
+      - name: Official conformance suites (unchanged)
+        run: node engines-ts/scripts/run-conformance.mjs && cat logs/conformance_*.txt
+      - name: Start the engines sidecar
+        run: |
+          (cd engines-ts && nohup npx tsx sidecar/server.ts > ../logs/sidecar.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8790/health && exit 0; sleep 1; done
+          cat logs/sidecar.log; exit 1
+      - run: pip install -r services/api/requirements-dev.txt
+      - name: E4 feature tests against the TypeScript references
+        run: ENGINES_BACKEND=sidecar pytest tests/engines -q

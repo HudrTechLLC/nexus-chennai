@@ -183,11 +183,20 @@ def dossier(series_id: str, records: list[dict], *, config: ChunkConfig | None =
     if _runtime.backend() == "sidecar" and generator is None:
         from app.engines import _sidecar
 
-        result = _sidecar.call("markovian/dossier", {
+        # The TypeScript Markovian orchestrator runs the chain (config validation, markers,
+        # carryover cascade); the sidecar's step function is the same extractive generator.
+        result = _sidecar.call("markovian/run", {
             "series_id": series_id, "config": cfg.as_dict(),
             "chunks": [[{"record": r, "line": line} for r, line in batch] for batch in run_plan],
-            "total": len(records)})
-        chunks_info, notes, carryover = result["chunks"], result["notes"], result["carryover"]
+            "total": len(records)}, timeout=120.0)
+        carryover, notes, chunks_info = result["final_carryover"], [], []
+        lines_by_id = {str(r["id"]): line for batch in run_plan for r, line in batch}
+        for step, c in enumerate(result["chunks"], start=1):
+            notes += [ln for ln in c["content"].splitlines() if ln.strip()]
+            chunks_info.append({"step": step, "record_ids": c["record_ids"],
+                                "input_tokens": sum(estimate_tokens(lines_by_id[i] + "\n") for i in c["record_ids"]),
+                                "output_tokens": estimate_tokens(c["content"]),
+                                "carryover_tokens": estimate_tokens(c["carryover_out"]), "carryover_level": None})
     else:
         carryover, notes, chunks_info = "", [], []
         for step, batch in enumerate(run_plan, start=1):

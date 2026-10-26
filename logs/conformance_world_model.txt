@@ -1,0 +1,27 @@
+# Meterless world-model conformance run (official suite, unchanged)
+source:            github.com/Meterless/Meterless @ 1742dec56a66e58eef9dda2d2b865823758ca8cd (Apache-2.0)
+runner sha256 LF:  7cd3b80d62d45d16f3342c62a91c89abf819c9b46970187d2f36fb9e3050da82
+conformance tree:  3762c06c79b99758902f213383d5696b4f2db9cb9c2a149dd1fe24e37064e940
+reference tree:    f3b7719a76ed468d2161dd5f13788261d59c5dd1d3df41eb23e3d16cb517e15b
+node:              v24.6.0 (win32/x64)
+cwd:               engines-ts/world-model/reference
+command:           node node_modules/tsx/dist/cli.mjs ../conformance/runner.ts  (= npx tsx ../conformance/runner.ts)
+tsx:               4.23.0
+started (UTC):     2026-10-26T06:22:22.864Z
+
+----- runner output (stdout, then stderr) -----
+
+World Model conformance: implementation = C:\Apps\Nexus-n2-engines\engines-ts\world-model\reference\src\index.ts
+
+  PASS sid-001 stable ids: diacritics and NBSP normalize identically (NFKD + strip marks)
+  PASS sid-002 stable ids: distinct names stay distinct (no over-normalization)
+  PASS band-001 merge bands at the boundaries: 0.85 auto, 0.84 review, 0.82 review, 0.81 new
+  PASS prov-001 writes without provenance are rejected
+  PASS idem-001 ingest idempotency: same batch twice produces an empty diff
+  PASS idem-002 the idempotency check can fail: a mutated batch changes the shape
+  PASS bitemp-001 bitemporal edges: a superseding edge closes the old one; point-in-time queries respect validity
+  PASS audit-001 every mutation writes an audit entry in order
+
+  8/8 checks passed
+----- end of runner output -----
+exit code: 0
