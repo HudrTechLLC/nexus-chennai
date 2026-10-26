@@ -35,7 +35,11 @@ export type AlertDecision = {
 };
 
 export type MemoryApplied = { memory_id: string; effect: string; text: string };
-export type Skeptic = { rounds: number; struck: string[]; verdict: "approved" | "needs_revision" | "rejected" };
+export type Skeptic = {
+  rounds: number; struck: string[]; verdict: "approved" | "needs_revision" | "rejected";
+  /** applied | unavailable | skipped; absent on older rows. */
+  model_critique?: string;
+};
 
 export type LinkAlert = {
   alert_id: string;

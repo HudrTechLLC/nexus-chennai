@@ -13,6 +13,8 @@ import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
 import { describeGap, sceneGap, trailOf, type Scene, type TrailRead } from "@/lib/alertMap";
 import { memberLonLat } from "@/lib/series";
 import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
+import { SkepticPanel } from "@/components/console/alerts/SkepticPanel";
+import { alertTimeline, SKEPTIC_ACTIONS, skepticTraceFilter, type SkepticEventRow } from "@/lib/skeptic";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +79,17 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
       .map((r): TrailRead => ({ read_id: r.read_id, camera_id: r.camera_id, read_at: r.read_at, plate_text: r.plate_text, crime_id: r.crime_id, p: [r.lon, r.lat] })),
     alert.crimes,
   );
+  // WS3-26: the Skeptic's steps for this pair, from the run trace (RLS: analyst, supervisor, admin).
+  // Filtered to this pair in the query: a batch run has hundreds of Skeptic events.
+  const traceVisible = officer.role !== "station_officer";
+  const critique = (alert.skeptic as { model_critique?: string } | null)?.model_critique;
+  const { data: skepticRows } = alert.run_id && traceVisible
+    ? await sb.from("trace_events").select("run_id, seq, ts, action, input_summary, output_summary, status")
+        .eq("run_id", alert.run_id).eq("agent_name", "Skeptic").in("action", [...SKEPTIC_ACTIONS])
+        .or(skepticTraceFilter(alert.crimes, critique)).order("seq").limit(500)
+    : { data: [] };
+  const skepticSteps = alertTimeline((skepticRows ?? []) as SkepticEventRow[], alert.crimes, critique);
+  const anyStruck = rows.some((f) => f.struck_by_skeptic);
   const stationsLabel = alert.crimes.map((id) => crimes[id]?.station_name.replace(/^PS-/, "") ?? id).filter((v, i, a) => a.indexOf(v) === i).join(" and ");
 
   return (
@@ -132,7 +145,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-lg font-bold">Factors</h2>
-        <p className="text-xs text-muted">Bar = factor value; w = weight; → = contribution to the score. Struck factors were removed by the Skeptic.</p>
+        <p className="text-xs text-muted">Bar = factor value; w = weight; → = contribution to the score.{anyStruck ? " Struck-through factors were struck by the Skeptic and count for nothing." : ""}</p>
         <div className="mt-3"><FactorBars rows={rows} /></div>
       </section>
 
@@ -163,15 +176,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
       </section>
 
       <section className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-xl border border-line bg-surface p-5">
-          <h2 className="text-lg font-bold">Skeptic</h2>
-          {alert.skeptic ? (
-            <p className="mt-1 text-sm">
-              {alert.skeptic.rounds} round{alert.skeptic.rounds === 1 ? "" : "s"} · verdict <strong>{alert.skeptic.verdict.replace("_", " ")}</strong>
-              {alert.skeptic.struck.length ? <> · struck {alert.skeptic.struck.join(", ")}</> : " · nothing struck"}
-            </p>
-          ) : <p className="mt-1 text-sm text-muted">No Skeptic record.</p>}
-        </div>
+        <SkepticPanel skeptic={alert.skeptic} steps={skepticSteps} traceVisible={traceVisible} />
         <div className="rounded-xl border border-line bg-surface p-5">
           <h2 className="text-lg font-bold">Memory applied</h2>
           {(alert.memory_applied ?? []).length === 0 ? <p className="mt-1 text-sm text-muted">No earlier decisions changed this score.</p> : (
