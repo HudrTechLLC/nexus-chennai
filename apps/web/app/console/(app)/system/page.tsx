@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { runTone, stateTone, type RunRow, type StatusRow } from "@/lib/trace";
+import { runTone, stateTone, type RunRow, type StatusRow, type TraceRow } from "@/lib/trace";
 import { droppedLinks, type SkepticEventRow } from "@/lib/skeptic";
 import { evalReport } from "@/lib/evalReport.data";
 import { EvalSummary } from "@/components/console/system/EvalSummary";
+import { visionLane } from "@/lib/alertTrace";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +23,20 @@ const when = (iso: string | null) =>
 export default async function SystemPage() {
   await requireOfficer("admin");
   const sb = consoleServerClient();
-  const [status, runs, drops] = await Promise.all([
+  const [status, runs, drops, vision] = await Promise.all([
     sb.from("system_status").select("component, state, detail, checked_at").order("component"),
     sb.from("runs").select("run_id, kind, started, finished, status, log_path").order("started", { ascending: false }).limit(25),
     // WS3-26: links the Skeptic dropped. They never become alerts, so the trace is their only record.
     sb.from("trace_events").select("run_id, seq, ts, action, input_summary, output_summary, status")
       .eq("agent_name", "Skeptic").eq("action", "drop").order("ts", { ascending: false }).limit(100),
+    // Vision lane from data: the latest vision-lane trace event (a lane=vision model_call, or the Extractor's
+    // vision_unavailable / vision_failed) says whether it works, not the heartbeat's configured model.
+    sb.from("trace_events")
+      .select("run_id, seq, ts, agent_name, action, input_summary, output_summary, target_agent, model, routed_model, receipt_id, zetaris_query_ids, engine, confidence, retry_count, status")
+      .or("and(action.eq.model_call,input_summary.like.lane=vision*),action.in.(vision_unavailable,vision_failed)")
+      .order("ts", { ascending: false }).order("seq", { ascending: false }).limit(1),
   ]);
+  const visionNote = vision.error ? null : visionLane(((vision.data ?? []) as TraceRow[])[0] ?? null);
   const dropped = droppedLinks((drops.data ?? []) as SkepticEventRow[]).slice(0, 30);
   const components = (status.data ?? []) as StatusRow[];
   const recent = (runs.data ?? []) as RunRow[];
@@ -55,18 +63,27 @@ export default async function SystemPage() {
           <p className="text-sm text-muted">No heartbeat yet. Start the worker (<span className="font-mono text-xs">python -m app.worker</span>).</p>
         )}
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {components.map((c) => (
-            <li key={c.component} className="flex items-start justify-between gap-3 rounded-lg border border-line p-3">
-              <div className="min-w-0">
-                <div className="font-mono text-xs">{c.component}</div>
-                <div className="truncate text-xs text-muted" title={JSON.stringify(c.detail ?? {})}>
-                  {detailText(c.detail)}
+          {components.map((c) => {
+            const vis = c.component === "nightshift:vision" ? visionNote : null;
+            return (
+              <li key={c.component} className="flex items-start justify-between gap-3 rounded-lg border border-line p-3">
+                <div className="min-w-0">
+                  <div className="font-mono text-xs">{c.component}</div>
+                  {vis ? (
+                    <div className={`text-xs ${vis.state === "working" ? "text-signal" : "text-accent"}`}>{vis.text}</div>
+                  ) : (
+                    <div className="truncate text-xs text-muted" title={JSON.stringify(c.detail ?? {})}>
+                      {detailText(c.detail)}
+                    </div>
+                  )}
+                  <div className="text-xs text-muted">checked {when(c.checked_at)}{vis ? ` · last vision call ${when(vis.at)}` : ""}</div>
                 </div>
-                <div className="text-xs text-muted">checked {when(c.checked_at)}</div>
-              </div>
-              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${TONE[stateTone(c.state)]}`}>{c.state}</span>
-            </li>
-          ))}
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${vis ? (vis.state === "working" ? TONE.good : TONE.warn) : TONE[stateTone(c.state)]}`}>
+                  {vis ? vis.state : c.state}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
