@@ -7,6 +7,7 @@ contain real credentials. City-specific settings are read from the city pack cho
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -103,6 +104,11 @@ class Settings(BaseSettings):
 
     @property
     def sample_dir(self) -> Path:
+        """data/sample, unless NEXUS_SAMPLE_DIR names another bundle (eval only, e.g. data/eval/planted2/sample)."""
+        alt = os.environ.get("NEXUS_SAMPLE_DIR", "").strip()
+        if alt:
+            p = Path(alt)
+            return p if p.is_absolute() else REPO_ROOT / p
         return REPO_ROOT / "data" / "sample"
 
 

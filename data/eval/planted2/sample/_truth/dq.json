@@ -1,0 +1,37 @@
+[
+ {
+  "row_id": "CHN-EN-2025-000159",
+  "rule": "dq_bad_geo",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-KI-2025-001477",
+  "rule": "dq_bad_geo",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-AA-2025-001132",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-AT-2025-000567",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-EG-2025-000671",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-IC-2026-000058",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-MI-2025-001159",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ }
+]

@@ -1,0 +1,2428 @@
+{
+ "version": 3,
+ "sample_dir": "data/eval/planted2/sample",
+ "sample_seed": 1027,
+ "population": "data/eval/planted2/sample/_truth/pairs.csv label=series; protected, judge-input and excluded-case crime ids excluded; one twin per crime (no crime reused); features stored, else the series' generator-truth MO",
+ "excluded_cases_from": "engg/docs/eval/planted_skeptic_cases.json",
+ "max_twins": 8,
+ "excluded": [
+  "CHN-AD-2026-001071",
+  "CHN-AD-2026-001078",
+  "CHN-AD-2026-001182",
+  "CHN-AD-2026-001231",
+  "CHN-AM-2025-000865",
+  "CHN-AS-2025-000080",
+  "CHN-CH-2025-000823",
+  "CHN-CH-2025-000832",
+  "CHN-CM-2025-000450",
+  "CHN-GU-2025-000945",
+  "CHN-GU-2025-001149",
+  "CHN-IC-2025-001225",
+  "CHN-KA-2025-000077",
+  "CHN-KI-2025-000789",
+  "CHN-KU-2025-000078",
+  "CHN-KU-2025-000082",
+  "CHN-MA-2025-001323",
+  "CHN-MG-2025-000077",
+  "CHN-MG-2025-000079",
+  "CHN-MM-2025-001211",
+  "CHN-MM-2025-001313",
+  "CHN-NA-2025-000990",
+  "CHN-NU-2025-000748",
+  "CHN-PO-2025-000068",
+  "CHN-SN-2025-000954",
+  "CHN-ST-2025-001108",
+  "CHN-TI-2026-001056",
+  "CHN-TI-2026-001087",
+  "CHN-TI-2026-001134",
+  "CHN-TI-2026-001148",
+  "CHN-TM-2025-000881",
+  "CHN-TM-2025-000979",
+  "CHN-TM-2025-001050",
+  "CHN-TU-2025-000437",
+  "CHN-VI-2025-000079",
+  "CHN-VL-2026-000877"
+ ],
+ "plant_kinds": [
+  "vehicle_identity",
+  "offender_count",
+  "offender_age",
+  "helmet",
+  "simultaneous"
+ ],
+ "vehicle_variants": [
+  "colour",
+  "make"
+ ],
+ "plants_per_base": 3,
+ "cases": [
+  {
+   "case_id": "PS-01",
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-AD-2026-001142",
+   "group": "SER-RED-PULSAR",
+   "category": "chain_snatching",
+   "features_source": {
+    "CHN-AD-2026-001002": "generator_truth",
+    "CHN-AD-2026-001142": "generator_truth"
+   },
+   "twin_score": 0.7458,
+   "twin_band": "medium",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-01a",
+     "plant": {
+      "kind": "vehicle_identity",
+      "crime_id": "CHN-AD-2026-001142",
+      "old": {
+       "colour": "red",
+       "plate_digits": "4471"
+      },
+      "new": {
+       "colour": "blue",
+       "plate_digits": "9788"
+      },
+      "detail": "B's vehicle is blue, plate ending 9788; A's is red, plate ending 4471"
+     },
+     "planted_score": 0.5958,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-01b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-AD-2026-001142",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6725,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-01c",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-AD-2026-001142",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.7042,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-AS-2026-000625",
+   "group": "SER-G24",
+   "category": "street_robbery",
+   "features_source": {
+    "CHN-AS-2026-000468": "generator_truth",
+    "CHN-AS-2026-000625": "generator_truth"
+   },
+   "twin_score": 0.7785,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-02a",
+     "plant": {
+      "kind": "vehicle_identity",
+      "crime_id": "CHN-AS-2026-000625",
+      "old": {
+       "colour": "maroon",
+       "plate_digits": "9951"
+      },
+      "new": {
+       "colour": "white",
+       "plate_digits": "5268"
+      },
+      "detail": "B's vehicle is white, plate ending 5268; A's is maroon, plate ending 9951"
+     },
+     "planted_score": 0.5972,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-02b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-AS-2026-000625",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.7018,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-02c",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-AS-2026-000625",
+      "old": "40-50",
+      "new": "18-20",
+      "detail": "B's offenders aged 18-20, A's 40-50"
+     },
+     "planted_score": 0.7368,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-KI-2025-001393",
+   "group": "SER-G01",
+   "category": "chain_snatching",
+   "features_source": {
+    "CHN-AY-2026-000269": "generator_truth",
+    "CHN-KI-2025-001393": "generator_truth"
+   },
+   "twin_score": 0.7502,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-03a",
+     "plant": {
+      "kind": "vehicle_identity",
+      "crime_id": "CHN-KI-2025-001393",
+      "old": {
+       "colour": "maroon",
+       "plate_digits": "8553"
+      },
+      "new": {
+       "colour": "white",
+       "plate_digits": "3870"
+      },
+      "detail": "B's vehicle is white, plate ending 3870; A's is maroon, plate ending 8553"
+     },
+     "planted_score": 0.5836,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-03b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-KI-2025-001393",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.674,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-03c",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-KI-2025-001393",
+      "old": "30-40",
+      "new": "60-70",
+      "detail": "B's offenders aged 60-70, A's 30-40"
+     },
+     "planted_score": 0.7086,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "a": "CHN-CH-2026-000293",
+   "b": "CHN-NU-2026-000076",
+   "group": "SER-G19",
+   "category": "chain_snatching",
+   "features_source": {
+    "CHN-CH-2026-000293": "generator_truth",
+    "CHN-NU-2026-000076": "generator_truth"
+   },
+   "twin_score": 0.7609,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-04a",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-NU-2026-000076",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6862,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-04b",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-NU-2026-000076",
+      "old": "20-30",
+      "new": "50-60",
+      "detail": "B's offenders aged 50-60, A's 20-30"
+     },
+     "planted_score": 0.7192,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-04c",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-NU-2026-000076",
+      "old": "white full-face",
+      "new": "black with green stripe",
+      "detail": "B's rider wore black with green stripe, A's white full-face"
+     },
+     "planted_score": 0.7192,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-EG-2026-000389",
+   "group": "SER-G01",
+   "category": "chain_snatching",
+   "features_source": {
+    "CHN-EG-2026-000329": "generator_truth",
+    "CHN-EG-2026-000389": "generator_truth"
+   },
+   "twin_score": 0.7663,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-05a",
+     "plant": {
+      "kind": "vehicle_identity",
+      "crime_id": "CHN-EG-2026-000389",
+      "old": {
+       "colour": "maroon",
+       "plate_digits": null
+      },
+      "new": {
+       "colour": "white",
+       "plate_digits": null
+      },
+      "detail": "B's vehicle is white; A's is maroon"
+     },
+     "planted_score": 0.7316,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-05b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-EG-2026-000389",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.6901,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-05c",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-EG-2026-000389",
+      "old": "30-40",
+      "new": "60-70",
+      "detail": "B's offenders aged 60-70, A's 30-40"
+     },
+     "planted_score": 0.7246,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-ES-2025-000863",
+   "group": "SER-G06",
+   "category": "street_robbery",
+   "features_source": {
+    "CHN-ES-2025-000711": "generator_truth",
+    "CHN-ES-2025-000863": "generator_truth"
+   },
+   "twin_score": 0.7039,
+   "twin_band": "medium",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-06a",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-ES-2025-000863",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.5599,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-06b",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-ES-2025-000863",
+      "old": "40-50",
+      "new": "18-20",
+      "detail": "B's offenders aged 18-20, A's 40-50"
+     },
+     "planted_score": 0.6623,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-06c",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-ES-2025-000863",
+      "old": "white full-face",
+      "new": "black with green stripe",
+      "detail": "B's rider wore black with green stripe, A's white full-face"
+     },
+     "planted_score": 0.6623,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "a": "CHN-FL-2025-000889",
+   "b": "CHN-KO-2025-000761",
+   "group": "SER-G06",
+   "category": "street_robbery",
+   "features_source": {
+    "CHN-FL-2025-000889": "generator_truth",
+    "CHN-KO-2025-000761": "generator_truth"
+   },
+   "twin_score": 0.7104,
+   "twin_band": "medium",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-07a",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-KO-2025-000761",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.5664,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-07b",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-KO-2025-000761",
+      "old": "40-50",
+      "new": "18-20",
+      "detail": "B's offenders aged 18-20, A's 40-50"
+     },
+     "planted_score": 0.6688,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-07c",
+     "plant": {
+      "kind": "helmet",
+      "crime_id": "CHN-KO-2025-000761",
+      "old": "white full-face",
+      "new": "black with green stripe",
+      "detail": "B's rider wore black with green stripe, A's white full-face"
+     },
+     "planted_score": 0.6688,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "a": "CHN-KA-2026-000247",
+   "b": "CHN-MM-2026-000182",
+   "group": "SER-G24",
+   "category": "street_robbery",
+   "features_source": {
+    "CHN-KA-2026-000247": "generator_truth",
+    "CHN-MM-2026-000182": "generator_truth"
+   },
+   "twin_score": 0.8131,
+   "twin_band": "high",
+   "twin_expected": "approve",
+   "near_misses": [
+    {
+     "near_miss_id": "PS-08a",
+     "plant": {
+      "kind": "vehicle_identity",
+      "crime_id": "CHN-MM-2026-000182",
+      "old": {
+       "colour": "maroon",
+       "plate_digits": "9951"
+      },
+      "new": {
+       "colour": "white",
+       "plate_digits": "5268"
+      },
+      "detail": "B's vehicle is white, plate ending 5268; A's is maroon, plate ending 9951"
+     },
+     "planted_score": 0.6319,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-08b",
+     "plant": {
+      "kind": "offender_count",
+      "crime_id": "CHN-MM-2026-000182",
+      "old": 2,
+      "new": 1,
+      "detail": "B had 1 offenders, A had 2"
+     },
+     "planted_score": 0.7365,
+     "planted_band": "medium",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    },
+    {
+     "near_miss_id": "PS-08c",
+     "plant": {
+      "kind": "offender_age",
+      "crime_id": "CHN-MM-2026-000182",
+      "old": "40-50",
+      "new": "18-20",
+      "detail": "B's offenders aged 18-20, A's 40-50"
+     },
+     "planted_score": 0.7715,
+     "planted_band": "high",
+     "reaches_skeptic": true,
+     "expected": "reject (drop)"
+    }
+   ]
+  }
+ ],
+ "skipped": [
+  {
+   "a": "CHN-AD-2025-001171",
+   "b": "CHN-AD-2025-001339",
+   "group": "SER-G09",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AD-2025-001171",
+   "b": "CHN-SH-2025-001079",
+   "group": "SER-G09",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AD-2025-001171",
+   "b": "CHN-TI-2025-001270",
+   "group": "SER-G09",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AD-2025-001339",
+   "b": "CHN-SH-2025-001079",
+   "group": "SER-G09",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AD-2025-001339",
+   "b": "CHN-TI-2025-001270",
+   "group": "SER-G09",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-TI-2026-000943",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-TI-2026-001037",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-TI-2026-001105",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-VL-2026-000975",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001002",
+   "b": "CHN-VL-2026-001067",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001142",
+   "b": "CHN-TI-2026-000943",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001142",
+   "b": "CHN-TI-2026-001037",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001142",
+   "b": "CHN-TI-2026-001105",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001142",
+   "b": "CHN-VL-2026-000975",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AD-2026-001142",
+   "b": "CHN-VL-2026-001067",
+   "group": "SER-RED-PULSAR",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AM-2025-000413",
+   "b": "CHN-AM-2025-000486",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['vehicle_identity', 'offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000413",
+   "b": "CHN-AM-2025-000527",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000413",
+   "b": "CHN-NA-2025-000623",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000413",
+   "b": "CHN-ST-2025-000454",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000413",
+   "b": "CHN-ST-2025-000571",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000486",
+   "b": "CHN-AM-2025-000527",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000486",
+   "b": "CHN-NA-2025-000623",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000486",
+   "b": "CHN-ST-2025-000454",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000486",
+   "b": "CHN-ST-2025-000571",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000527",
+   "b": "CHN-NA-2025-000623",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000527",
+   "b": "CHN-ST-2025-000454",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AM-2025-000527",
+   "b": "CHN-ST-2025-000571",
+   "group": "SER-NIGHT-CAB",
+   "why": "only ['offender_count'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-AN-2025-000334",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-AN-2025-000478",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-AN-2025-000526",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-AN-2025-000602",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-AN-2025-000658",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000259",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-AN-2025-000478",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-AN-2025-000526",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-AN-2025-000602",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-AN-2025-000658",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000334",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-AN-2025-000526",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-AN-2025-000602",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-AN-2025-000658",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000478",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-AN-2025-000602",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-AN-2025-000658",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000526",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000602",
+   "b": "CHN-AN-2025-000658",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000602",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000602",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000602",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000602",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000658",
+   "b": "CHN-RO-2025-000253",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000658",
+   "b": "CHN-TH-2025-000272",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000658",
+   "b": "CHN-TH-2025-000390",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AN-2025-000658",
+   "b": "CHN-TH-2025-000650",
+   "group": "SER-G22",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-KU-2025-000077",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-KU-2025-000080",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-KU-2025-000084",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-KU-2025-000085",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-MM-2025-000070",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2025-000079",
+   "b": "CHN-VA-2025-000083",
+   "group": "SER-GRILLE-CUTTERS",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-KA-2026-000247",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-KA-2026-000494",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-KU-2026-000553",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-MM-2026-000182",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-MM-2026-000425",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-PO-2026-000326",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-VA-2026-000235",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000468",
+   "b": "CHN-VA-2026-000691",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-KA-2026-000247",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-KA-2026-000494",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-KU-2026-000553",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-MM-2026-000182",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-MM-2026-000425",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-PO-2026-000326",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-VA-2026-000235",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AS-2026-000625",
+   "b": "CHN-VA-2026-000691",
+   "group": "SER-G24",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-EG-2026-000329",
+   "group": "SER-G01",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-EG-2026-000389",
+   "group": "SER-G01",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-KI-2025-001489",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-KI-2026-000199",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-OT-2025-001415",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-VE-2026-000059",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-VE-2026-000135",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000269",
+   "b": "CHN-VE-2026-000429",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-AY-2026-000291",
+   "b": "CHN-CH-2026-000213",
+   "group": "SER-G16",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AY-2026-000291",
+   "b": "CHN-KI-2026-000356",
+   "group": "SER-G16",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-AY-2026-000291",
+   "b": "CHN-OT-2026-000381",
+   "group": "SER-G16",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-CH-2025-001470",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-CH-2026-000246",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-CH-2026-000389",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-EG-2025-001349",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-EG-2025-001393",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001279",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-CH-2026-000246",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-CH-2026-000389",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-EG-2025-001349",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-EG-2025-001393",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2025-001470",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000213",
+   "b": "CHN-KI-2026-000356",
+   "group": "SER-G16",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000213",
+   "b": "CHN-OT-2026-000381",
+   "group": "SER-G16",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-CH-2026-000389",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-EG-2025-001349",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-EG-2025-001393",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000246",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000293",
+   "b": "CHN-NU-2026-000240",
+   "group": "SER-G19",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-CH-2026-000293",
+   "b": "CHN-TH-2026-000173",
+   "group": "SER-G19",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-EG-2025-001349",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-EG-2025-001393",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CH-2026-000389",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-000806",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-000863",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-000909",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-000955",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-001029",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000670",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-CM-2025-000863",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-CM-2025-000909",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-CM-2025-000955",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-CM-2025-001029",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000806",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-CM-2025-000909",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-CM-2025-000955",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-CM-2025-001029",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000863",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-CM-2025-000955",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-CM-2025-001029",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000909",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000955",
+   "b": "CHN-CM-2025-001029",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000955",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000955",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000955",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-000955",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001029",
+   "b": "CHN-CM-2025-001075",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001029",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001029",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001029",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001075",
+   "b": "CHN-TU-2025-000611",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001075",
+   "b": "CHN-VA-2025-000944",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-CM-2025-001075",
+   "b": "CHN-VI-2025-000710",
+   "group": "SER-G26",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-EG-2025-001393",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001349",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-EG-2025-001418",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-KI-2025-001339",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-OT-2025-001281",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-OT-2025-001400",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-OT-2026-000042",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-PE-2025-001217",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-PU-2025-001168",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-TR-2025-001445",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-VE-2025-001270",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-VE-2025-001359",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001382",
+   "b": "CHN-VE-2026-000038",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001393",
+   "b": "CHN-EG-2026-000023",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001393",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001393",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001393",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001393",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-KI-2025-001339",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-OT-2025-001281",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-OT-2025-001400",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-OT-2026-000042",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-PE-2025-001217",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-PU-2025-001168",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-TR-2025-001445",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-VE-2025-001270",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-VE-2025-001359",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2025-001418",
+   "b": "CHN-VE-2026-000038",
+   "group": "SER-G04",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000023",
+   "b": "CHN-EG-2026-000194",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000023",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000023",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000023",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000194",
+   "b": "CHN-EG-2026-000369",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000194",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000194",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-KI-2025-001393",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-KI-2025-001489",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-KI-2026-000199",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-OT-2025-001415",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-VE-2026-000059",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-VE-2026-000135",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000329",
+   "b": "CHN-VE-2026-000429",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000369",
+   "b": "CHN-NU-2026-000289",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000369",
+   "b": "CHN-VE-2026-000099",
+   "group": "SER-G23",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-KI-2025-001393",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-KI-2025-001489",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-KI-2026-000199",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-OT-2025-001415",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-VE-2026-000059",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-VE-2026-000135",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EG-2026-000389",
+   "b": "CHN-VE-2026-000429",
+   "group": "SER-G01",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-EL-2026-000607",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-ES-2026-000414",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-FL-2026-000709",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-KO-2026-000620",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-KO-2026-000732",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-PE-2026-000342",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000510",
+   "b": "CHN-WA-2026-000523",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-ES-2026-000414",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-FL-2026-000709",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-KO-2026-000620",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-KO-2026-000732",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-PE-2026-000342",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-EL-2026-000607",
+   "b": "CHN-WA-2026-000523",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-000465",
+   "b": "CHN-FL-2025-000624",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-000465",
+   "b": "CHN-PE-2025-000486",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-000465",
+   "b": "CHN-PE-2025-000566",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-000465",
+   "b": "CHN-SE-2025-000448",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-FL-2025-000889",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-KO-2025-000761",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-KO-2025-000781",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-KO-2025-000919",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000711",
+   "b": "CHN-KO-2025-001020",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000863",
+   "b": "CHN-FL-2025-000889",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000863",
+   "b": "CHN-KO-2025-000761",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000863",
+   "b": "CHN-KO-2025-000781",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000863",
+   "b": "CHN-KO-2025-000919",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-000863",
+   "b": "CHN-KO-2025-001020",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-ES-2025-001366",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-KO-2025-001352",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-MU-2025-001269",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001053",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001081",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001136",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001160",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001227",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001278",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2025-001450",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001218",
+   "b": "CHN-SE-2026-000016",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-KO-2025-001352",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-MU-2025-001269",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001053",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001081",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001136",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001160",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001227",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001278",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2025-001450",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2025-001366",
+   "b": "CHN-SE-2026-000016",
+   "group": "SER-G08",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2026-000414",
+   "b": "CHN-FL-2026-000709",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2026-000414",
+   "b": "CHN-KO-2026-000620",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2026-000414",
+   "b": "CHN-KO-2026-000732",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2026-000414",
+   "b": "CHN-PE-2026-000342",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-ES-2026-000414",
+   "b": "CHN-WA-2026-000523",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2024-001489",
+   "b": "CHN-FL-2025-000080",
+   "group": "SER-G21",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2024-001489",
+   "b": "CHN-KO-2025-000179",
+   "group": "SER-G21",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2024-001489",
+   "b": "CHN-SE-2025-000087",
+   "group": "SER-G21",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000080",
+   "b": "CHN-KO-2025-000179",
+   "group": "SER-G21",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000080",
+   "b": "CHN-SE-2025-000087",
+   "group": "SER-G21",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000347",
+   "b": "CHN-MU-2025-000333",
+   "group": "SER-G17",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000347",
+   "b": "CHN-NO-2025-000317",
+   "group": "SER-G17",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000347",
+   "b": "CHN-NO-2025-000456",
+   "group": "SER-G17",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000347",
+   "b": "CHN-SE-2025-000431",
+   "group": "SER-G17",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000347",
+   "b": "CHN-SE-2025-000468",
+   "group": "SER-G17",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000624",
+   "b": "CHN-PE-2025-000486",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000624",
+   "b": "CHN-PE-2025-000566",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000624",
+   "b": "CHN-SE-2025-000448",
+   "group": "SER-G07",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2025-000889",
+   "b": "CHN-KO-2025-000781",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-FL-2025-000889",
+   "b": "CHN-KO-2025-000919",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-FL-2025-000889",
+   "b": "CHN-KO-2025-001020",
+   "group": "SER-G06",
+   "why": "a crime is already used by another twin"
+  },
+  {
+   "a": "CHN-FL-2026-000709",
+   "b": "CHN-KO-2026-000620",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000709",
+   "b": "CHN-KO-2026-000732",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000709",
+   "b": "CHN-PE-2026-000342",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000709",
+   "b": "CHN-WA-2026-000523",
+   "group": "SER-G12",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000782",
+   "b": "CHN-NE-2026-000605",
+   "group": "SER-G14",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000782",
+   "b": "CHN-NO-2026-000615",
+   "group": "SER-G14",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-FL-2026-000782",
+   "b": "CHN-NO-2026-000718",
+   "group": "SER-G14",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-KA-2026-000247",
+   "b": "CHN-KA-2026-000494",
+   "group": "SER-G24",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  },
+  {
+   "a": "CHN-KA-2026-000247",
+   "b": "CHN-KU-2026-000553",
+   "group": "SER-G24",
+   "why": "only ['offender_count', 'offender_age'] apply"
+  }
+ ]
+}

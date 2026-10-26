@@ -1,0 +1,107 @@
+[
+ {
+  "crime_ids": [
+   "CHN-MI-2026-001052",
+   "CHN-PA-2026-001047"
+  ],
+  "dup_id": "DUP-01"
+ },
+ {
+  "crime_ids": [
+   "CHN-MI-2024-001227",
+   "CHN-PA-2024-001226"
+  ],
+  "dup_id": "DUP-02"
+ },
+ {
+  "crime_ids": [
+   "CHN-CM-2025-001329",
+   "CHN-VA-2025-001327"
+  ],
+  "dup_id": "DUP-03"
+ },
+ {
+  "crime_ids": [
+   "CHN-RA-2025-001407",
+   "CHN-SR-2025-001408"
+  ],
+  "dup_id": "DUP-04"
+ },
+ {
+  "crime_ids": [
+   "CHN-OT-2025-000045",
+   "CHN-PU-2025-000050"
+  ],
+  "dup_id": "DUP-05"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-001120",
+   "CHN-VL-2025-001121"
+  ],
+  "dup_id": "DUP-06"
+ },
+ {
+  "crime_ids": [
+   "CHN-TI-2025-000393",
+   "CHN-VL-2025-000392"
+  ],
+  "dup_id": "DUP-07"
+ },
+ {
+  "crime_ids": [
+   "CHN-NL-2025-000776",
+   "CHN-TA-2025-000776"
+  ],
+  "dup_id": "DUP-08"
+ },
+ {
+  "crime_ids": [
+   "CHN-AT-2025-000236",
+   "CHN-AV-2025-000236"
+  ],
+  "dup_id": "DUP-09"
+ },
+ {
+  "crime_ids": [
+   "CHN-NU-2026-000079",
+   "CHN-TH-2026-000077"
+  ],
+  "dup_id": "DUP-10"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-001308",
+   "CHN-MI-2025-001310"
+  ],
+  "dup_id": "DUP-11"
+ },
+ {
+  "crime_ids": [
+   "CHN-IC-2026-000006",
+   "CHN-MA-2026-000007"
+  ],
+  "dup_id": "DUP-12"
+ },
+ {
+  "crime_ids": [
+   "CHN-SL-2026-000100",
+   "CHN-TM-2026-000099"
+  ],
+  "dup_id": "DUP-13"
+ },
+ {
+  "crime_ids": [
+   "CHN-KI-2025-000750",
+   "CHN-VE-2025-000750"
+  ],
+  "dup_id": "DUP-14"
+ },
+ {
+  "crime_ids": [
+   "CHN-ES-2026-000525",
+   "CHN-FL-2026-000526"
+  ],
+  "dup_id": "DUP-15"
+ }
+]

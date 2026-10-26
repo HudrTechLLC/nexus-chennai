@@ -1,0 +1,290 @@
+[
+ {
+  "crime_ids": [
+   "CHN-VL-2026-000877"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-EA5ZQXS9"
+ },
+ {
+  "crime_ids": [
+   "CHN-AD-2026-001182"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-8F89EYEY"
+ },
+ {
+  "crime_ids": [
+   "CHN-AD-2026-001142"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-YQW2X2J2"
+ },
+ {
+  "crime_ids": [
+   "CHN-TI-2026-001105"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-729SHEGZ"
+ },
+ {
+  "crime_ids": [
+   "CHN-VL-2026-001067"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-JT4PSDZY"
+ },
+ {
+  "crime_ids": [
+   "CHN-TI-2026-001037"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-RED-PULSAR",
+  "tip_id": "TIP-YN8JBM5R"
+ },
+ {
+  "crime_ids": [
+   "CHN-NA-2025-000623"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-NIGHT-CAB",
+  "tip_id": "TIP-X48DW4BW"
+ },
+ {
+  "crime_ids": [
+   "CHN-ST-2025-000571"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-NIGHT-CAB",
+  "tip_id": "TIP-7K7JY2TN"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-000527"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-NIGHT-CAB",
+  "tip_id": "TIP-JE45UFJQ"
+ },
+ {
+  "crime_ids": [
+   "CHN-KU-2025-000077"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-GRILLE-CUTTERS",
+  "tip_id": "TIP-9K247PK6"
+ },
+ {
+  "crime_ids": [
+   "CHN-KU-2025-000084"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-GRILLE-CUTTERS",
+  "tip_id": "TIP-MPSNBJ86"
+ },
+ {
+  "crime_ids": [
+   "CHN-MG-2025-000077"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-GRILLE-CUTTERS",
+  "tip_id": "TIP-L3XJM85L"
+ },
+ {
+  "crime_ids": [
+   "CHN-SN-2025-000321"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-LIGATURE",
+  "tip_id": "TIP-NKVS9FND"
+ },
+ {
+  "crime_ids": [
+   "CHN-KN-2025-000222"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-LIGATURE",
+  "tip_id": "TIP-KWZ2RWTK"
+ },
+ {
+  "crime_ids": [
+   "CHN-VE-2026-000429"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G01",
+  "tip_id": "TIP-VVK4X33H"
+ },
+ {
+  "crime_ids": [
+   "CHN-EG-2026-000389"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G01",
+  "tip_id": "TIP-AWQRXPP2"
+ },
+ {
+  "crime_ids": [
+   "CHN-KO-2025-001177"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G02",
+  "tip_id": "TIP-JZMKVVLV"
+ },
+ {
+  "crime_ids": [
+   "CHN-WA-2025-001130"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G02",
+  "tip_id": "TIP-Q4BY8GBY"
+ },
+ {
+  "crime_ids": [
+   "CHN-RA-2026-000247"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G03",
+  "tip_id": "TIP-UH6U7VC7"
+ },
+ {
+  "crime_ids": [
+   "CHN-NA-2026-000169"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G03",
+  "tip_id": "TIP-6GM9TJ2V"
+ },
+ {
+  "crime_ids": [
+   "CHN-OT-2026-000042"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G04",
+  "tip_id": "TIP-ZJVGDG8X"
+ },
+ {
+  "crime_ids": [
+   "CHN-VE-2026-000038"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G04",
+  "tip_id": "TIP-L3V2LXRK"
+ },
+ {
+  "crime_ids": [
+   "CHN-RA-2026-000342"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G05",
+  "tip_id": "TIP-N6WXR75Y"
+ },
+ {
+  "crime_ids": [
+   "CHN-RA-2026-000268"
+  ],
+  "kind": "corroborating",
+  "series_id": "SER-G05",
+  "tip_id": "TIP-LZPC5ZTD"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-BKFH82G2"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-JM6DYCCL"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-9ZQCMCN2"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-DUR5WZ9X"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-BGK9GBSY"
+ },
+ {
+  "crime_ids": [],
+  "kind": "unrelated",
+  "series_id": null,
+  "tip_id": "TIP-R2DNGSFQ"
+ },
+ {
+  "crime_ids": [],
+  "kind": "injection",
+  "series_id": null,
+  "tip_id": "TIP-NW4WDFY4"
+ },
+ {
+  "crime_ids": [],
+  "kind": "injection",
+  "series_id": null,
+  "tip_id": "TIP-TWV8X47L"
+ },
+ {
+  "crime_ids": [],
+  "kind": "injection",
+  "series_id": null,
+  "tip_id": "TIP-WDHAPGRQ"
+ },
+ {
+  "crime_ids": [],
+  "kind": "injection",
+  "series_id": null,
+  "tip_id": "TIP-YCPJRA9L"
+ },
+ {
+  "crime_ids": [],
+  "kind": "emergency",
+  "series_id": null,
+  "tip_id": "TIP-NP28DAYE"
+ },
+ {
+  "crime_ids": [],
+  "kind": "emergency",
+  "series_id": null,
+  "tip_id": "TIP-RJPJQ2FX"
+ },
+ {
+  "crime_ids": [],
+  "kind": "spam",
+  "series_id": null,
+  "tip_id": "TIP-R6UNBFFP"
+ },
+ {
+  "crime_ids": [],
+  "kind": "spam",
+  "series_id": null,
+  "tip_id": "TIP-23F2PBWD"
+ },
+ {
+  "crime_ids": [],
+  "kind": "spam",
+  "series_id": null,
+  "tip_id": "TIP-7NUJFBS6"
+ },
+ {
+  "crime_ids": [],
+  "kind": "spam",
+  "series_id": null,
+  "tip_id": "TIP-SJGKWLMT"
+ }
+]
