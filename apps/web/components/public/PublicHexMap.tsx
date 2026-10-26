@@ -106,6 +106,18 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
     if (map.current?.getLayer("hex-selected")) map.current.setFilter("hex-selected", ["==", ["get", "cell"], selected ?? ""]);
   }, [selected]);
 
+  // A hexagon picked from the "Areas with crimes" list may be off-screen (the map stays mounted on a soft
+  // navigation, so the opening frame does not re-run): bring it into view, clear of the card panel.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !selected || !el.current) return;
+    const [w, s, e, n] = cellBounds(selected);
+    const vb = m.getBounds();
+    if (!(vb.contains([w, s]) && vb.contains([e, n]))) {
+      m.fitBounds([[w, s], [e, n]], { padding: framePadding(el.current.clientWidth, el.current.clientHeight), maxZoom: 14, duration: 600 });
+    }
+  }, [selected]);
+
   return <div ref={el} className="h-[65vh] min-h-[420px] w-full overflow-hidden rounded-xl border border-line" />;
 }
 

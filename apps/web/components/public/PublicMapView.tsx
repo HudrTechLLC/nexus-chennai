@@ -2,9 +2,11 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useTransition, type ReactNode } from "react";
 import type { PublicMap } from "@/lib/publicData";
 import { MAP_DAYS, labelOf, mapHref, type MapAt, type MapState } from "@/lib/publicCards";
+import { areaRows, escapeClosesPanel, focusAfterNavigation } from "@/lib/publicArea";
+import { AreaList } from "./AreaList";
 
 const PublicHexMap = dynamic(() => import("./PublicHexMap"), {
   ssr: false, loading: () => <div className="h-[65vh] min-h-[420px] rounded-xl border border-line bg-surface" />,
@@ -25,6 +27,42 @@ export function PublicMapView({ map, state, panel }: { map: PublicMap; state: Ma
   }, [map.cells]);
 
   const go = (next: MapState) => startTransition(() => router.replace(mapHref(next), { scroll: false }));
+
+  // Keyboard path to the cards: the "Areas with crimes" list opens the same panel (?hex=), focus moves into
+  // the panel, and Esc closes it and returns focus to the row it came from.
+  const rows = useMemo(() => areaRows(map.cells, state.type), [map.cells, state.type]);
+  const openedFrom = useRef<string | null>(null);
+  const returnTo = useRef<string | null>(null);
+  const openFromList = (cell: string) => {
+    openedFrom.current = cell;
+    returnTo.current = null;
+    go({ ...state, hex: cell });
+  };
+  useEffect(() => {
+    const t = focusAfterNavigation({ pending, hex: state.hex, openedFrom: openedFrom.current, returnTo: returnTo.current });
+    if (!t) return;
+    if (t.kind === "panel") {
+      document.getElementById("hex-panel")?.focus();
+      openedFrom.current = null;
+      returnTo.current = state.hex; // Esc goes back to this row
+    } else {
+      document.querySelector<HTMLButtonElement>(`button[data-cell="${t.cell}"]`)?.focus();
+      returnTo.current = null;
+    }
+  }, [pending, state.hex]);
+  useEffect(() => {
+    if (!state.hex) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!escapeClosesPanel({ key: e.key, defaultPrevented: e.defaultPrevented, target: e.target as HTMLElement | null }, true)) return;
+      e.preventDefault();
+      returnTo.current = returnTo.current ?? state.hex;
+      go({ ...state, hex: null });
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // go/state are rebuilt each render; the listener only needs the current hex
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.hex, state.days, state.type]);
   const chip = (on: boolean) => `rounded-full border px-3 py-1 ${on ? "border-signal bg-signal-soft" : "border-line"}`;
 
   return (
@@ -54,8 +92,9 @@ export function PublicMapView({ map, state, panel }: { map: PublicMap; state: Ma
         )}
         {panel}
       </div>
+      <AreaList rows={rows} selected={state.hex} onOpen={openFromList} />
       <p className="text-xs text-muted">
-        Each hexagon is about 0.7 km². Tap one to see the crimes reported there. Areas with fewer than {map.min_count} reported
+        Each hexagon is about 0.7 km². Tap one, or pick it from the list, to see the crimes reported there. Areas with fewer than {map.min_count} reported
         crimes are hidden, and there are no exact locations or victim details. Outlined hexagons have an open police appeal.
       </p>
     </div>
