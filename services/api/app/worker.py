@@ -28,7 +28,7 @@ from . import engines
 from .adapters.nightshift import NightshiftClient
 from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient
-from .agents import AgentDeps, TipGuard, hmem_pair
+from .agents import AgentDeps, Sanitiser, TipGuard, hmem_pair
 from .agents.base import crime_from_row, features_from_row, rows_as_dicts
 from .config import Settings, get_settings
 from .graph.runner import run_request
@@ -121,6 +121,35 @@ class Worker:
                            {"guard": stored_guard, "status": TIP_STATUS[g["verdict"]]})
         return len(tips)
 
+    # ----- 2b. public appeal draft requests -> Sanitiser (WS4-07) ---------------------------
+
+    PUBLIC_INCIDENT_COLUMNS = ("public_incident_id", "title", "category", "area_label", "cell", "week",
+                               "time_window", "summary", "looking_for", "images", "sanitiser_model")
+
+    def process_appeal_requests(self) -> int:
+        reqs = self.sb.select("appeal_requests", {"select": "request_id,crime_id", "status": "eq.requested",
+                                                  "order": "requested_at.asc", "limit": str(BATCH)})
+        san = Sanitiser(self.deps)
+        for r in reqs:
+            match = {"request_id": f"eq.{r['request_id']}"}
+            try:
+                cases = rows_as_dicts(self.zetaris.named("q_case", agent="Sanitiser", crime_id=r["crime_id"]))
+                if not cases:
+                    raise ValueError(f"case {r['crime_id']} not found")
+                feats = rows_as_dicts(self.zetaris.named("q_features", agent="Sanitiser", ids=r["crime_id"]))
+                draft = san.draft(crime_from_row(cases[0]), features_from_row(feats[0]) if feats else None)
+                row = {k: draft.get(k) for k in self.PUBLIC_INCIDENT_COLUMNS}
+                row.update(crime_id=r["crime_id"], status="draft", synthetic=True)
+                self.sb.upsert("public_incidents", row, on_conflict="public_incident_id")
+                self.sb.update("appeal_requests", match, {"status": "drafted", "processed_at": _now(),
+                                                          "public_incident_id": draft["public_incident_id"]})
+            except Exception as exc:  # a bad request is marked failed; the queue keeps moving
+                self.sb.update("appeal_requests", match, {"status": "failed", "processed_at": _now(),
+                                                          "error": str(exc)[:300]})
+                self.tracer.emit("Sanitiser", "appeal_request_failed", input_summary=str(r["request_id"]),
+                                 output_summary=str(exc)[:300], status="error")
+        return len(reqs)
+
     # ----- 3. new cases -> agent graph ---------------------------------------------------------
 
     def process_new_cases(self) -> int:
@@ -178,7 +207,8 @@ class Worker:
     def run_once(self) -> dict[str, int]:
         self.heartbeat()
         with engines.use_tracer(self.tracer):
-            out = {"decisions": self.process_decisions(), "tips": self.process_tips()}
+            out = {"decisions": self.process_decisions(), "tips": self.process_tips(),
+                   "appeals": self.process_appeal_requests()}
         out["cases"] = self.process_new_cases()
         return out
 
