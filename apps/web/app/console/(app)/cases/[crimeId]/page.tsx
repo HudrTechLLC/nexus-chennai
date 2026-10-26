@@ -71,10 +71,14 @@ export default async function CaseFilePage({ params }: { params: { crimeId: stri
   }
 
   await audit(sb, "view_case", "crime", crimeId);
-  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} />;
+  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} isAdmin={officer.role === "admin"} />;
 }
 
-async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean }) {
+async function FullCase({ file, canWrite, isAdmin }: { file: CaseFile; canWrite: boolean; isAdmin: boolean }) {
+  // The trace viewer is admin-only (G2 /console/system/**); everyone else sees the run's status.
+  const traceLink = (runId: string) => isAdmin
+    ? <Link href={`/console/system/trace/${encodeURIComponent(runId)}`} className="text-signal hover:underline">trace</Link>
+    : <span className="font-mono">{runId}</span>;
   const sb = consoleServerClient();
   const { crime, features } = file;
   const otherIds = file.alerts.flatMap((a) => a.crimes).filter((id) => id !== crime.crime_id);
@@ -223,7 +227,7 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
               <div className="space-y-1">
                 <p>Not extracted yet. The Extractor runs on the local pipeline after a case is filed.</p>
                 {file.run ? (
-                  <p className="text-muted">Latest run: {file.run.status} · {fmt(file.run.started)} · <Link href={`/console/system/trace/${encodeURIComponent(file.run.run_id)}`} className="text-signal hover:underline">trace</Link></p>
+                  <p className="text-muted">Latest run: {file.run.status} · {fmt(file.run.started)} · {traceLink(file.run.run_id)}</p>
                 ) : <p className="text-muted">Processing: no run has picked it up yet.</p>}
               </div>
             ) : (
@@ -255,7 +259,7 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
                 <p className="text-xs text-muted">
                   {features.model} · {features.extractor_version}{features.confidence !== null ? ` · confidence ${pct(features.confidence)}` : ""}
                   {features.receipt_id ? <> · receipt <span className="font-mono">{features.receipt_id.slice(0, 18)}…</span></> : null}
-                  {file.run ? <> · <Link href={`/console/system/trace/${encodeURIComponent(file.run.run_id)}`} className="text-signal hover:underline">trace</Link></> : null}
+                  {file.run ? <> · run {traceLink(file.run.run_id)}</> : null}
                 </p>
                 {!latestReview && <p className="text-xs text-muted">Not reviewed by an officer yet.</p>}
                 {canWrite && <MoReview crimeId={crime.crime_id} mo={{ ...features.mo, ...corrected }} />}

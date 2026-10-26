@@ -98,15 +98,23 @@ const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_fr
 // Case list
 // =====================
 
+/** Most matching vehicles a plate filter reads; past this the list says it is capped. */
+export const PLATE_CAP = 500;
+
 /** Crime ids whose vehicles can match a plate fragment (RLS limits to readable crimes). */
-export async function crimeIdsForPlate(sb: SupabaseClient, fragment: string, limit = 500): Promise<string[]> {
+export async function crimeIdsForPlate(sb: SupabaseClient, fragment: string, limit = PLATE_CAP): Promise<{ ids: string[]; capped: boolean }> {
   const { data } = await sb.from("crime_vehicles").select("crime_id, plate_pattern").ilike("plate_pattern", plateIlike(fragment)).limit(limit);
-  return Array.from(new Set((data ?? []).filter((v) => plateMatches(v.plate_pattern, fragment)).map((v) => v.crime_id as string)));
+  const rows = data ?? [];
+  return {
+    ids: Array.from(new Set(rows.filter((v) => plateMatches(v.plate_pattern, fragment)).map((v) => v.crime_id as string))),
+    capped: rows.length >= limit,
+  };
 }
 
 /** One page of cases, newest report first, with the total for paging. */
-export async function fetchCases(sb: SupabaseClient, f: CaseFilters): Promise<{ rows: CaseRow[]; total: number; error: string | null }> {
+export async function fetchCases(sb: SupabaseClient, f: CaseFilters): Promise<{ rows: CaseRow[]; total: number; error: string | null; capped?: boolean }> {
   let q = sb.from("crimes").select(CASE_COLS, { count: "exact" });
+  let plateCapped = false;
   if (f.station) q = q.eq("station_id", f.station);
   if (f.category) q = q.eq("category", f.category);
   if (f.status) q = q.eq("status", f.status);
@@ -115,13 +123,14 @@ export async function fetchCases(sb: SupabaseClient, f: CaseFilters): Promise<{ 
   if (lt) q = q.lt("occurred_from", lt);
   if (f.fir) q = f.fir.includes("/") ? q.eq("fir_no", f.fir) : q.like("fir_no", `${f.fir}/%`);
   if (f.plate) {
-    const ids = await crimeIdsForPlate(sb, f.plate);
-    if (ids.length === 0) return { rows: [], total: 0, error: null };
-    q = q.in("crime_id", ids);
+    const hit = await crimeIdsForPlate(sb, f.plate);
+    if (hit.ids.length === 0) return { rows: [], total: 0, error: null };
+    plateCapped = hit.capped;
+    q = q.in("crime_id", hit.ids);
   }
   const start = (f.page - 1) * PAGE_SIZE;
   const { data, count, error } = await q.order("reported_at", { ascending: false }).order("crime_id").range(start, start + PAGE_SIZE - 1);
-  return { rows: (data ?? []) as CaseRow[], total: count ?? 0, error: error?.message ?? null };
+  return { rows: (data ?? []) as CaseRow[], total: count ?? 0, error: error?.message ?? null, capped: plateCapped };
 }
 
 /** Stations for the filters and the FIR form. */

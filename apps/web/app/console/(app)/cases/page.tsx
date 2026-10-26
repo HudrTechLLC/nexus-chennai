@@ -3,7 +3,7 @@ import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { allows } from "@/lib/roles";
 import { CASE_STATUSES, CATEGORIES, casesHref, humanise, PAGE_SIZE, parseCaseFilters } from "@/lib/cases";
-import { fetchCases, stationOptions } from "@/lib/casesData";
+import { fetchCases, PLATE_CAP, stationOptions } from "@/lib/casesData";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Record
   const officer = await requireOfficer("all");
   const f = parseCaseFilters(searchParams);
   const sb = consoleServerClient();
-  const [{ rows, total, error }, stations] = await Promise.all([fetchCases(sb, f), stationOptions(sb)]);
+  const [{ rows, total, error, capped }, stations] = await Promise.all([fetchCases(sb, f), stationOptions(sb)]);
   const names = Object.fromEntries(stations.map((s) => [s.station_id, s.name]));
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const ownOnly = officer.role === "station_officer";
@@ -82,7 +82,8 @@ export default async function CasesPage({ searchParams }: { searchParams: Record
 
       {error && <p role="alert" className="rounded-md border border-red-400 px-3 py-2 text-sm text-red-600">Could not load cases: {error}</p>}
 
-      <p className="text-sm text-muted">{total.toLocaleString("en-IN")} case{total === 1 ? "" : "s"}{pages > 1 ? ` · page ${f.page} of ${pages}` : ""}</p>
+      <p className="text-sm text-muted">{total.toLocaleString("en-IN")} case{total === 1 ? "" : "s"}{pages > 1 ? ` · page ${f.page} of ${pages}` : ""}
+        {capped ? ` · the plate matched more than ${PLATE_CAP} vehicles, so only the first ${PLATE_CAP} are used; type more characters to narrow it` : ""}</p>
 
       {!error && rows.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">No cases match these filters.</p>

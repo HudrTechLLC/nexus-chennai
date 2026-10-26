@@ -98,7 +98,7 @@ export function normaliseFir(v: string | null): string | null {
 export function normalisePlate(v: string | null): string | null {
   if (!v) return null;
   const s = v.toUpperCase().replace(/[\s.-]+/g, "").replace(/[*…]/g, "?");
-  return /^[A-Z0-9?]{2,12}$/.test(s) ? s : null;
+  return /^[A-Z0-9?]{3,12}$/.test(s) ? s : null; // 3+ so a fragment narrows the list
 }
 
 /**
