@@ -32,8 +32,13 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_search`: text and filter search over crimes and statements, for the console search box;
   - `q_station_matrix`: approved alerts station × station;
   - `q_tip_corroboration`: screened public tips in a crime's area and time window;
-  - `q_context`: calendar, nearby place types and hourly weather for one crime.
-  - Still to come: `q_vehicle_trail`, `q_offender_return` and `q_calls_near` `[PENDING: WS1-15]`. Semantic view live: `v_crime_unified`, one view over every crime record shape. The other semantic views are `[PENDING: WS1-13]`.
+  - `q_context`: calendar, nearby place types and hourly weather for one crime;
+  - `q_cases`: full case details for up to 25 crimes in one trip (Planner candidates, Skeptic pairs);
+  - `q_vehicle_trail`: ANPR reads of a plate pattern in a time window, each tied to the nearest crime scene within 1.5 km and 2 h;
+  - `q_offender_return`: offenders released in the last 60 days whose earlier MO shares the case's MO tags, home ward first;
+  - `q_calls_near`: 112 emergency calls within a set distance and time of a crime.
+  - Live check: 13 of these 14 return rows live on Zetaris (live parity run, 26 Oct); all 14 run on DuckDB twins in sample mode.
+  - Still to come: `q_news` returns rows live once the news feed is registered `[PENDING: WS1-16]`. Semantic view live: `v_crime_unified`, one view over every crime record shape; the other semantic views are `[PENDING: WS1-13]`.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
