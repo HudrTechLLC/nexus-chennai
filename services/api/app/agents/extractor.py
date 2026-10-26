@@ -19,6 +19,7 @@ import json
 import re
 from collections.abc import Callable, Mapping
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from .base import AgentDeps, AgentError, chat_json, short
@@ -115,6 +116,31 @@ _EDGE_CONNECTORS = frozenset({"near", "at", "opp", "opposite", "behind", "off", 
 # Single-word place names that are also generic place words: never stripped on their own (nexus-3 review).
 _GENERIC_PLACE_WORDS = frozenset({"harbour", "beach", "fort", "central", "market", "port", "airport", "marina",
                                   "esplanade", "mount", "station", "bazaar", "park", "temple", "church"})
+# A phrase from one of these words to the end names a landmark when any word in it is a name:
+# "woman_near_lic_office" -> "woman"; a generic category stays ("woman_near_atm", "near_temple": chief, WS2-25).
+_LANDMARK_CUT = frozenset({"near", "opposite", "opp"})
+# Landmark words: a NAME before one is a landmark ("womens_polytechnic", "kapaleeshwarar_temple"); the word alone
+# is a place TYPE and stays ("temple", "college_campus", "bus_stand").
+_LANDMARK_WORDS = frozenset({"hospital", "polytechnic", "college", "temple", "church", "mosque", "school", "academy",
+                             "university", "institute", "dargah", "koil", "kovil", "stand", "theatre", "theater",
+                             "inn", "hotel", "mall", "complex", "tower", "towers", "plaza", "office", "bank",
+                             "station", "depot", "signal", "junction", "bridge", "flyover", "gate", "nagar"})
+_ALWAYS_LANDMARK = frozenset({"lic"})  # named institutions that never describe a place type (TASMAC is the
+# state liquor-shop chain: a category, like "wine_shop", so it stays)
+# Words that describe a kind of place or person, never a name: a POI made only of these is not a landmark.
+_GENERIC_TOKENS = _GENERIC_PLACE_WORDS | _LANDMARK_WORDS | frozenset({
+    "a", "the", "of", "and", "or", "new", "old", "big", "small", "main", "public", "private", "government", "govt",
+    "local", "bus", "stop", "metro", "railway", "rail", "train", "terminus", "terminal", "shed", "shelter", "depo",
+    "road", "street", "lane", "area", "premises", "campus", "grounds", "entrance", "precinct", "nearby", "vicinity",
+    "outside", "inside", "atm", "shop", "stall", "store", "restaurant", "cafe", "bar", "canteen", "lodge", "house",
+    "home", "residence", "residential", "commercial", "shopping", "parking", "place", "site", "religious", "worship",
+    "wine", "liquor", "petrol", "bunk", "pump", "medical", "medicals", "pharmacy", "clinic", "school", "colony",
+    "estate", "garden", "gardens", "playground", "ground", "beach", "promenade", "subway", "jetty", "tollgate",
+    "circle", "camp", "studio", "fish", "flower", "milk", "booth", "parlour", "supermarket", "hall", "centre",
+    "center", "trade", "toilet", "post", "police", "fire", "court", "library", "museum", "zoo", "stadium", "gym",
+    "boys", "girls", "children", "kids", "quiet", "dark", "isolated", "busy", "crowded", "establishment",
+    "building", "worship", "tasmac", "office", "temple", "mosque", "hospital", "airport",
+})
 
 
 def _tokens(s: str) -> list[str]:
@@ -142,7 +168,19 @@ def place_terms(city: str | None = None) -> tuple[tuple[str, ...], ...]:
             names.update([r.get("alias") or "", r.get("canonical") or ""])
     seqs = {tuple(_tokens(n)) for n in names}
     seqs = {q for q in seqs if q and not (len(q) == 1 and q[0] in _GENERIC_PLACE_WORDS)}
+    seqs |= _poi_terms(root)
     return tuple(sorted(seqs, key=lambda q: (-len(q), q)))
+
+
+def _poi_terms(root: Path) -> set[tuple[str, ...]]:
+    """Named POIs (`poi_names.txt`, exported from the OSM reference set) of two or more words, unless every word is
+    generic ("bus_stop", "a_school"). One-word POI names are skipped: many are ordinary words ("atm", "canteen")."""
+    path = root / "poi_names.txt"
+    if not path.is_file():
+        return set()
+    lines = path.read_text(encoding="utf-8").splitlines()
+    seqs = {tuple(_tokens(n)) for n in lines if n.strip() and not n.startswith("#")}
+    return {q for q in seqs if len(q) >= 2 and not all(t in _GENERIC_TOKENS or t.isdigit() for t in q)}
 
 
 def strip_place_terms(label: Any, terms: tuple[tuple[str, ...], ...] | None = None) -> tuple[str | None, bool]:
@@ -153,10 +191,16 @@ def strip_place_terms(label: Any, terms: tuple[tuple[str, ...], ...] | None = No
         return label, False
     terms = place_terms() if terms is None else terms
     toks = _tokens(str(label))
-    keep: list[str] = []
     stripped = False
+    cut = next((k for k, t in enumerate(toks) if t in _LANDMARK_CUT), None)
+    if cut is not None and not all(t in _GENERIC_TOKENS or t.isdigit() for t in toks[cut + 1:]):
+        toks, stripped = toks[:cut], True  # "near_<named place>": drop the whole reference
+    keep: list[str] = []
     i = 0
     while i < len(toks):
+        if toks[i] in _ALWAYS_LANDMARK:
+            i, stripped = i + 1, True
+            continue
         if _ORDINAL.match(toks[i]) and i + 1 < len(toks) and toks[i + 1] in _STREET_WORDS:
             j = i + 1
             while j < len(toks) and toks[j] in _STREET_WORDS:
@@ -166,6 +210,12 @@ def strip_place_terms(label: Any, terms: tuple[tuple[str, ...], ...] | None = No
         hit = next((q for q in terms if tuple(toks[i:i + len(q)]) == q), None)
         if hit:
             i, stripped = i + len(hit), True
+            continue
+        if toks[i] in _LANDMARK_WORDS and keep and keep[-1] not in _GENERIC_TOKENS \
+                and keep[-1] not in _EDGE_CONNECTORS:  # "<name>_temple": drop the name and the landmark word
+            while keep and keep[-1] not in _GENERIC_TOKENS and keep[-1] not in _EDGE_CONNECTORS:
+                keep.pop()
+            i, stripped = i + 1, True
             continue
         keep.append(toks[i])
         i += 1
@@ -251,7 +301,7 @@ class Extractor:
         """Field names and counts only: the trace must not re-record the address it removed."""
         if fields:
             counts = {k: fields.count(k) for k in PLACE_GUARDED_FIELDS if k in fields}
-            self.deps.tracer.emit(AGENT, "mo_tag_place_stripped", input_summary=subject,
+            self.deps.tracer.emit(AGENT, "mo_tag_place_stripped", input_summary=subject, status="ok",
                                   output_summary=", ".join(f"{k} x{n}" for k, n in counts.items()))
 
     def _unsupported(self, mo: Mapping[str, Any], evidence_text: str) -> list[str]:

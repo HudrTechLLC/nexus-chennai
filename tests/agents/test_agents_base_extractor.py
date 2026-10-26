@@ -505,8 +505,7 @@ def test_rows_as_dicts_gives_sample_dates_the_live_iso_string_shape():
 
 LIVE_ADDRESS_TAGS = [  # the five live rows that leaked, as stored, and what they must become
     ("CHN-KN-2025-001307", "complainant", ["6th_street_kundrathur", "quiet_place"], "complainant", ["quiet_place"]),
-    ("CHN-AD-2026-001075", "woman_aged_35", ["adyar", "near_womens_polytechnic"], "woman_aged_35",
-     ["near_womens_polytechnic"]),
+    ("CHN-AD-2026-001075", "woman_aged_35", ["adyar", "near_womens_polytechnic"], "woman_aged_35", []),
     ("CHN-SR-2026-001120", "man_near_11th_street", ["street"], "man", ["street"]),
     ("CHN-AN-2026-001073", "man_near_12th_street_anna_salai", ["street"], "man", ["street"]),
     ("CHN-EL-2026-001190", "woman_55_near_3rd_street_elephant_gate", ["street"], "woman_55", ["street"]),
@@ -525,11 +524,18 @@ def test_place_terms_come_from_the_city_pack():
     terms = {"_".join(t) for t in place_terms("chennai")}
     assert {"kundrathur", "adyar", "anna_salai", "elephant_gate", "lattice_bridge_road"} <= terms
     assert not any(t.startswith("ward_") for t in terms)  # ward names are "Ward 12", not places
+    assert "music_academy" in terms  # named POIs (poi_names.txt)
+    assert "bus_stop" not in terms and "atm" not in terms  # generic words never come from the POI list
 
 
 @pytest.mark.parametrize("label", ["road", "street", "bus_stop", "metro_station", "bus_terminus", "woman_aged_45",
                                    "towards_main_road", "woman_near_bus_stop", "lone_pedestrian_woman", "woman_55",
-                                   "gold_chain_weighing_40_g", "woman_aged_65", "marina", "beach_road"])
+                                   "gold_chain_weighing_40_g", "woman_aged_65", "marina", "beach_road",
+                                   # generic categories are not identifying and feed MO matching (chief, WS2-25)
+                                   "woman_near_atm", "near_temple", "man_near_bank", "near_airport", "near_wine_shop",
+                                   "near_tasmac", "near_bus_depot", "near_place_of_worship", "near_public_building",
+                                   "near_establishment", "road_near_hotel", "bus_stand", "temple_complex",
+                                   "college_campus", "hospital", "school_premises", "canteen_area", "atm"])
 def test_strip_place_terms_leaves_generic_labels_alone(label):
     assert strip_place_terms(label) == (label, False)
 
@@ -546,6 +552,19 @@ def test_strip_place_terms_rules():
     for label in ("man_near_12th_street_anna_salai", "6th_street_adyar"):  # idempotent
         once, _ = strip_place_terms(label, terms)
         assert strip_place_terms(once, terms) == (once, False)
+
+
+LANDMARK_TAGS = [  # named places (chief, WS2-25): POIs, named institutions, landmark names
+    ("near_lic_anna_salai", None), ("near_lic_office", None), ("near_lic", None), ("near_holiday_inn", None),
+    ("near_music_academy", None), ("music_academy", None), ("near_womens_polytechnic", None),
+    ("bus_stop_near_cmbt", "bus_stop"), ("woman_near_kapaleeshwarar_temple", "woman"),
+    ("theft_at_kapaleeshwarar_temple_area", "theft_at_area"),
+]
+
+
+@pytest.mark.parametrize("label,want", LANDMARK_TAGS)
+def test_strip_place_terms_removes_named_landmarks(label, want):
+    assert strip_place_terms(label) == (want, True)
 
 
 def test_clean_mo_leaves_other_fields_alone():
