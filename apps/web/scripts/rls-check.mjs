@@ -41,7 +41,7 @@ function client() {
 // ---------- anon: no table access at all (spec Part I, DECISIONS D-003) ----------
 {
   const sb = client();
-  for (const t of ["profiles", "stations", "wards", "runs", "crimes", "link_alerts", "alert_decisions", "tips"]) {
+  for (const t of ["profiles", "stations", "wards", "runs", "crimes", "link_alerts", "alert_decisions", "tips", "tip_reviews", "tip_attempts", "trace_events", "system_status"]) {
     const { data, error } = await sb.from(t).select("*").limit(1);
     if (missing(error)) report(null, `anon ${t}`, "(table not created yet)");
     else report(!!error || (data ?? []).length === 0, `anon reads nothing from ${t}`, error ? `(${error.code})` : `(${data.length} rows)`);
@@ -88,6 +88,14 @@ for (const u of users) {
   const { error: aErr } = await sb.from("link_alerts").select("alert_id").limit(1);
   if (missing(aErr)) report(null, `${tag} link_alerts`, "(table not created yet)");
   else report(!aErr, `${tag} reads link_alerts`);
+
+  // Traces and system status (0006_01): analyst, supervisor, admin only; station officers see none.
+  for (const t of ["trace_events", "system_status"]) {
+    const { data: rows, error: tErr } = await sb.from(t).select("*").limit(5);
+    if (missing(tErr)) { report(null, `${tag} ${t}`, "(table not created yet)"); continue; }
+    if (u.role === "station_officer") report(!!tErr || (rows ?? []).length === 0, `${tag} cannot read ${t}`);
+    else report(!tErr, `${tag} reads ${t}`, `(${(rows ?? []).length})`);
+  }
 
   byRole[u.role] ??= [];
   byRole[u.role].push(uid);
