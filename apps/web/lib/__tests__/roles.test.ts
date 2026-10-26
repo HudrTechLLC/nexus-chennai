@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessForPath, allows, canDecideAlerts, isRole, navFor } from "../roles";
+import { accessForPath, allows, canDecideAlerts, isRole, NAV, navFor } from "../roles";
 
 const ALL = ["station_officer", "analyst", "supervisor", "admin"] as const;
 
@@ -66,5 +66,17 @@ describe("isRole", () => {
     expect(isRole("analyst")).toBe(true);
     expect(isRole("public")).toBe(false);
     expect(isRole(null)).toBe(false);
+  });
+});
+
+describe("nav never links to a 404", () => {
+  it("every visible nav item has a page under app/console/(app)", async () => {
+    const { existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const root = join(__dirname, "..", "..", "app", "console", "(app)");
+    const missing = NAV.filter((n) => !n.hidden)
+      .map((n) => n.href.replace(/^\/console\/?/, ""))
+      .filter((rel) => !existsSync(join(root, rel, "page.tsx")));
+    expect(missing).toEqual([]);
   });
 });
