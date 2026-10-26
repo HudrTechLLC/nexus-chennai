@@ -47,6 +47,11 @@ describe("navFor", () => {
     expect(navFor("supervisor").map((n) => n.href)).not.toContain("/console/system");
     expect(navFor("admin").map((n) => n.href)).toContain("/console/system");
   });
+  it("shows admin only to admin (WS3-14)", () => {
+    for (const r of ALL.filter((x) => x !== "admin")) expect(navFor(r).map((n) => n.href)).not.toContain("/console/admin");
+    expect(navFor("admin").map((n) => n.href)).toContain("/console/admin");
+    expect(accessForPath("/console/admin")).toBe("admin");
+  });
 });
 
 describe("accessForPath", () => {
