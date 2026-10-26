@@ -112,7 +112,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - the alert inbox (`/console/alerts`), then the Adyar–Velachery alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
   - the analyst clicks **Approve**;
   - cut to the alert for the second, similar Red Pulsar case (run after the decision; see Before recording, step 3), whose "Memory applied" section shows the memory from that decision.
-  - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). Or the memory page (`/console/memory`, on main since #85), once nexus-6's live check shows real rows.
+  - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). Or the memory page (`/console/memory`): live on real rows, and it already shows a real reject turned into a memory with its ledger row. Its "Changed later scores" list fills only after step 3 of Before recording.
 - **Narration:**
   > The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
 - **Check no secrets visible:**
