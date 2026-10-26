@@ -139,7 +139,44 @@ class Worker:
                                  status="error")
         return len(todo)
 
+    # ----- 4. system status heartbeat (console /console/system) -----------------------------
+
+    def _probe(self) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+
+        def add(component: str, state: str, **detail: Any) -> None:
+            rows.append({"component": component, "state": state, "detail": detail, "checked_at": _now()})
+
+        try:
+            r = self.zetaris.named("q_ping", agent="Worker")
+            add("zetaris", "sample" if r.source == "sample" else "live", ms=r.ms)
+        except Exception as exc:
+            add("zetaris", "down", error=str(exc)[:200])
+        try:
+            served = set(self.nightshift.list_models())
+            for lane, model in self.settings.lanes.items():
+                add(f"nightshift:{lane}", "live" if model in served else "degraded", model=model)
+        except Exception as exc:
+            state = "sample" if self.settings.sample_mode else "down"
+            for lane, model in self.settings.lanes.items():
+                add(f"nightshift:{lane}", state, model=model, error=str(exc)[:200])
+        add("engines", "live", backend=engines.backend())
+        add("supabase", "live")
+        add("worker", "live", interval_note="heartbeat each pass")
+        return rows
+
+    def heartbeat(self) -> int:
+        """Write system_status. Never fails a worker pass (D-025): errors are traced and skipped."""
+        try:
+            rows = self._probe()
+            self.sb.upsert("system_status", rows, on_conflict="component")
+            return len(rows)
+        except Exception as exc:
+            self.tracer.emit("Worker", "heartbeat_failed", output_summary=str(exc)[:300], status="error")
+            return 0
+
     def run_once(self) -> dict[str, int]:
+        self.heartbeat()
         with engines.use_tracer(self.tracer):
             out = {"decisions": self.process_decisions(), "tips": self.process_tips()}
         out["cases"] = self.process_new_cases()
