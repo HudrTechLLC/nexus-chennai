@@ -108,5 +108,13 @@ class SupabaseClient:
             raise SupabaseError(f"delete from {table} failed: HTTP {resp.status_code} {resp.text[:300]}")
         return resp.json()
 
+    def download(self, bucket: str, path: str) -> bytes:
+        """Bytes of one Storage object (service role; private buckets). For evidence stills the Extractor reads."""
+        self._require()
+        resp = self._client.get(f"/storage/v1/object/{bucket}/{path.lstrip('/')}", headers=self._headers())
+        if resp.status_code >= 400:
+            raise SupabaseError(f"download {bucket}/{path} failed: HTTP {resp.status_code} {resp.text[:200]}")
+        return resp.content
+
     def close(self) -> None:
         self._client.close()

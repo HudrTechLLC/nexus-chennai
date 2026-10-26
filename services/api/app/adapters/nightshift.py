@@ -43,6 +43,14 @@ class LaneNotConfigured(NightshiftError):
     """The requested lane has no pinned model in the environment."""
 
 
+class NightshiftRefused(NightshiftError):
+    """A deterministic refusal (e.g. no_vision_model: no configured model admits images). An answer, not an outage:
+    never retried, and the body's reason is kept in the message so callers can trace it."""
+
+
+REFUSALS = ("no_vision_model",)
+
+
 @dataclass
 class ModelResult:
     lane: str
@@ -115,6 +123,8 @@ class NightshiftClient:
         resp = self._client.post(path, json=body, headers=self._headers())
         if resp.status_code in (401, 403):
             raise NightshiftUnauthorized(f"Nightshift rejected the runtime token (HTTP {resp.status_code})")
+        if resp.status_code >= 400 and any(r in resp.text for r in REFUSALS):
+            raise NightshiftRefused(f"HTTP {resp.status_code}: {resp.text[:300]}")
         resp.raise_for_status()
         return resp
 
