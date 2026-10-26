@@ -88,6 +88,8 @@ export type BriefingLine = { key: string; text: string; href: string; count: num
 export type BriefingInput = {
   alerts: AlertRow[];
   firsToday: number;
+  /** Set for station officers: their FIR count is own-station only, so the line says so. */
+  firsStation?: string | null;
   tipsThisWeek: number;
   series: SeriesRow[];
   decisions: { at: string; decision: string }[];
@@ -97,7 +99,8 @@ export type BriefingInput = {
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** "Today's briefing": one line per item, counted since 00:00 IST, generated from data (no LLM). */
-export function briefing({ alerts, firsToday, tipsThisWeek, series, decisions, now }: BriefingInput): BriefingLine[] {
+export function briefing({ alerts, firsToday, firsStation, tipsThisWeek, series, decisions, now }: BriefingInput): BriefingLine[] {
+  const at = firsStation ? ` at your station (${firsStation})` : " city-wide";
   const from = istMidnight(now);
   const newAlerts = alerts.filter((a) => since(a.created_at, from));
   const cross = newAlerts.filter(isCrossStation).length;
@@ -109,7 +112,7 @@ export function briefing({ alerts, firsToday, tipsThisWeek, series, decisions, n
       key: "alerts", count: newAlerts.length, href: "/console/alerts",
       text: newAlerts.length === 0 ? "No new link alerts today." : `${plural(newAlerts.length, "new link alert")} today, ${cross} cross-station.`,
     },
-    { key: "firs", count: firsToday, href: "/console/cases", text: firsToday === 0 ? "No FIRs registered today." : `${plural(firsToday, "FIR")} registered today.` },
+    { key: "firs", count: firsToday, href: "/console/cases", text: firsToday === 0 ? `No FIRs registered today${at}.` : `${plural(firsToday, "FIR")} registered today${at}.` },
     {
       key: "tips", count: tipsThisWeek, href: "/console/tips",
       text: `${tipsThisWeek === 0 ? "No tips" : plural(tipsThisWeek, "tip")} received this week (tips record only the week, to protect tipsters).`,
@@ -120,4 +123,9 @@ export function briefing({ alerts, firsToday, tipsThisWeek, series, decisions, n
       text: today.length === 0 ? "No alert decisions today." : `${plural(today.length, "alert decision")} today: ${approved} approved, ${today.length - approved} rejected.`,
     },
   ];
+}
+
+/** The member count for a series line, unless its generated name already starts with it ("10 linked cases (…)"). */
+export function seriesCount(name: string, members: number): string | null {
+  return /^\s*\d+\s+linked\s+cases?\b/i.test(name) ? null : `${members} case${members === 1 ? "" : "s"}`;
 }

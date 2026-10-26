@@ -2,7 +2,7 @@
  * Unit tests for the command overview helpers (lib/overview.ts, DASH-07).
  */
 import { describe, expect, it } from "vitest";
-import { alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, topSeries, weekKpis, type AlertRow } from "../overview";
+import { alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, seriesCount, topSeries, weekKpis, type AlertRow } from "../overview";
 
 const NOW = new Date("2026-10-26T12:00:00Z"); // 17:30 IST, Monday 26 Oct
 const alert = (id: string, at: string, over: Partial<AlertRow> = {}): AlertRow => ({
@@ -59,7 +59,7 @@ describe("briefing", () => {
     const lines = briefing({ alerts: [], firsToday: 0, tipsThisWeek: 0, series: [], decisions: [], now: NOW });
     expect(lines.map((l) => l.text)).toEqual([
       "No new link alerts today.",
-      "No FIRs registered today.",
+      "No FIRs registered today city-wide.",
       "No tips received this week (tips record only the week, to protect tipsters).",
       "No new series today.",
       "No alert decisions today.",
@@ -80,10 +80,22 @@ describe("briefing", () => {
     });
     expect(lines.map((l) => l.text)).toEqual([
       "1 new link alert today, 1 cross-station.",
-      "1 FIR registered today.",
+      "1 FIR registered today city-wide.",
       "2 tips received this week (tips record only the week, to protect tipsters).",
       "1 new series today.",
       "2 alert decisions today: 1 approved, 1 rejected.",
     ]);
+  });
+});
+
+describe("labels", () => {
+  it("says the FIR count is own-station for officers", () => {
+    const l = briefing({ alerts: [], firsToday: 2, firsStation: "PS-ADYAR-J2", tipsThisWeek: 0, series: [], decisions: [], now: NOW });
+    expect(l.find((x) => x.key === "firs")!.text).toBe("2 FIRs registered today at your station (PS-ADYAR-J2).");
+  });
+  it("does not repeat a count the series name already gives", () => {
+    expect(seriesCount("10 linked cases (PS-ADYAR-J2, PS-VELACHERY-J7)", 10)).toBeNull();
+    expect(seriesCount("Red Pulsar Duo", 9)).toBe("9 cases");
+    expect(seriesCount("Night grille cutters", 1)).toBe("1 case");
   });
 });
