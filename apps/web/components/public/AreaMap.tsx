@@ -22,6 +22,10 @@ export function AreaMap({ cell }: { cell: string }) {
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.on("load", () => {
+      // small map: start the compact attribution collapsed (the ⓘ still opens it) so it never covers the area
+      const attrib = el.current?.querySelector(".maplibregl-ctrl-attrib");
+      attrib?.classList.remove("maplibregl-compact-show");
+      attrib?.removeAttribute("open");
       m.addSource("area", {
         type: "geojson",
         data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [cellToBoundary(cell, true)] } },
