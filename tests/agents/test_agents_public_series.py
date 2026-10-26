@@ -233,3 +233,69 @@ def test_crime_type_mismatch_rule():
     assert crime_type_mismatch("A robbery was reported", "chain_snatching") is None  # generic words are fine
     assert crime_type_mismatch("A murder was reported", "chain_snatching") == "attempt_murder"
     assert crime_type_mismatch("Attempted murder near a bus stop", "attempt_murder") is None
+
+
+# ----- dossier chunks (live: Ultra's thinking restated [STATE_CHECKPOINT], was cut at 2,048, no notes) ------
+
+def _dossier_deps(make_deps, replies):
+    """Fake reason lane: `replies` is a list of (content, finish_reason); records each call's params."""
+    from app.adapters.nightshift import ModelResult
+    deps = make_deps(responder=lambda *a: "", engines=engines)
+    calls = []
+
+    def chat(lane, messages, *, agent, purpose="", **params):
+        content, finish = replies[min(len(calls), len(replies) - 1)]
+        calls.append({"lane": lane, "purpose": purpose, "params": params, "prompt": messages[-1]["content"]})
+        return ModelResult(lane, "nvidia/test-reason", "nvidia/test-reason", content, f"r{len(calls)}", False, 1,
+                           raw={"choices": [{"finish_reason": finish}]})
+
+    deps.nightshift.chat = chat
+    return deps, calls
+
+
+GOOD_NOTES = ("- Same red bike, rider from behind [CHN-AD-2026-001182]\n[STATE_CHECKPOINT]\nCOMPLETED: read 2 of 2 records\n"
+              "REMAINING: 0\nDECISIONS: red bike\nCONTEXT: none")
+THINKING_ONLY = ("The user wants me to write notes and then write [STATE_CHECKPOINT] with COMPLETED and REMAINING. "
+                 "Let me look at the records. First record is a chain")
+
+
+def test_dossier_chunk_runs_without_thinking_and_with_a_sized_budget(make_deps):
+    from app.agents.series import DOSSIER_CHUNK_TOKENS
+    deps, calls = _dossier_deps(make_deps, [(GOOD_NOTES, "stop")])
+    out = SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
+    assert calls[0]["params"]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert calls[0]["params"]["max_tokens"] == DOSSIER_CHUNK_TOKENS
+    assert "ends with the [id]s" in calls[0]["prompt"]
+    assert out["cited_ids"] == ["CHN-AD-2026-001182"] and out["model"] == "nvidia/test-reason"
+
+
+@pytest.mark.parametrize("bad", [(THINKING_ONLY, "stop"), (GOOD_NOTES, "length")])
+def test_dossier_chunk_rejects_thinking_only_or_cut_off_replies_then_retries(make_deps, bad):
+    from app.agents.series import DOSSIER_CHUNK_TOKENS
+    deps, calls = _dossier_deps(make_deps, [bad, (GOOD_NOTES, "stop")])
+    out = SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
+    assert len(calls) == 2 and calls[1]["params"]["max_tokens"] == 2 * DOSSIER_CHUNK_TOKENS
+    assert any(e["action"] == "chunk_rejected" for e in deps.tracer.read())
+    assert out["cited_ids"] == ["CHN-AD-2026-001182"] and "user wants" not in out["text"]
+
+
+def test_dossier_chunk_falls_back_after_two_bad_replies(make_deps):
+    deps, calls = _dossier_deps(make_deps, [(THINKING_ONLY, "stop")])
+    out = SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
+    assert len(calls) == 2 and out["model"] is None and "user wants" not in out["text"]
+    assert any(e["action"] == "chunk_fallback" for e in deps.tracer.read())
+
+
+def test_series_dossier_uses_a_small_chunk_budget(make_deps, monkeypatch):
+    from app.agents.series import DOSSIER_CONFIG
+    seen = {}
+    real = engines.markovian.dossier
+
+    def spy(series_id, records, **kw):
+        seen.update(kw)
+        return real(series_id, records, **kw)
+
+    monkeypatch.setattr(engines.markovian, "dossier", spy)
+    deps, _ = _dossier_deps(make_deps, [(GOOD_NOTES, "stop")])
+    SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
+    assert seen["config"] is DOSSIER_CONFIG and DOSSIER_CONFIG.input_budget <= 1000

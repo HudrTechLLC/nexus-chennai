@@ -12,13 +12,22 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ..engines.markovian import resolve_config
 from .base import AgentDeps, AgentError, DeadlineExceeded, crime_from_row, features_from_row, short
 
 AGENT = "Series analyst"
 MIN_SERIES = 3
+
+# Live (SER-B687C36CFC): 32 records fit the engine's default 4,000-token chunk, and Ultra's thinking ran out the
+# 2,048-token reply before any notes. Small chunks keep each call short and make the Markovian chaining real;
+# chunk notes are written with thinking off (measured: 508 tokens / 18 s for 11 records, cited, finished).
+DOSSIER_CONFIG = resolve_config(chunk_size=2800, max_chunks=24, carryover_tokens=400)  # 800 tokens of records
+DOSSIER_CHUNK_TOKENS = 2048
+_CITED = re.compile(r"\[([A-Za-z0-9][A-Za-z0-9_./:-]*)\]")
 
 CHUNK_PROMPT = """You are building a crime-series dossier for police analysts, one chunk of records at a time.
 Records (each starts with its [id]):
@@ -27,13 +36,27 @@ Records (each starts with its [id]):
 What you have learned so far (carryover state):
 {carryover}
 
-Write concise notes on this chunk: timeline points, consistent MO, open leads. Cite records as [id] using ONLY
-the ids shown above. Never mention religion, caste or community. {final}
+Write concise notes on this chunk: timeline points, consistent MO, open leads. Every line of notes ends with the [id]s
+it rests on, using ONLY the ids shown above. Never mention religion, caste or community. {final}
 Then write the line [STATE_CHECKPOINT] followed by an updated state of at most 6 lines:
 COMPLETED: read N of {total} records
 REMAINING: ...
 DECISIONS: recurring MO ...
 CONTEXT: open leads ..."""
+
+
+def chunk_problem(text: str, result: Any, chunk_ids: set[str]) -> str | None:
+    """Why a chunk reply cannot be used as notes, or None. Live, a reply that was only the model's thinking
+    restated the [STATE_CHECKPOINT] instruction and was cut off before any notes."""
+    finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")
+    if finish == "length":
+        return "reply cut off at max_tokens"
+    if "[STATE_CHECKPOINT]" not in text:
+        return "no state checkpoint"
+    notes = text.rsplit("[STATE_CHECKPOINT]", 1)[0]
+    if not chunk_ids & set(_CITED.findall(notes)):
+        return "notes cite none of this chunk's records"
+    return None
 
 
 def series_id_for(crime_ids: Sequence[str]) -> str:
@@ -150,15 +173,24 @@ class SeriesAnalyst:
             final = "This is the last chunk: write [TASK_COMPLETE] after your notes." if last else ""
             content = CHUNK_PROMPT.format(records=prompt, carryover=carryover or "(none yet)", total=total,
                                           final=final)
+            ids = {str(r["id"]) for r in batch}
             try:
-                self.deps.check_deadline(AGENT)
-                res = self.deps.nightshift.chat("reason", [{"role": "user", "content": content}], agent=AGENT,
-                                                purpose=f"dossier chunk {step}", max_tokens=2048, temperature=0.2)
-                text = res.content or ""
-                if "[STATE_CHECKPOINT]" not in text:
-                    raise AgentError("no state checkpoint in chunk notes")
-                self.receipts.append((res.model, res.receipt_id))
-                return text
+                budget = DOSSIER_CHUNK_TOKENS
+                for attempt in (1, 2):
+                    self.deps.check_deadline(AGENT)
+                    res = self.deps.nightshift.chat(
+                        "reason", [{"role": "user", "content": content}], agent=AGENT,
+                        purpose=f"dossier chunk {step}" + (" retry" if attempt == 2 else ""), max_tokens=budget,
+                        temperature=0.2, chat_template_kwargs={"enable_thinking": False})
+                    text = res.content or ""
+                    problem = chunk_problem(text, res, ids)
+                    if problem is None:
+                        self.receipts.append((res.model, res.receipt_id))
+                        return text
+                    self.deps.tracer.emit(AGENT, "chunk_rejected", input_summary=f"chunk {step} attempt {attempt}",
+                                          output_summary=problem, engine="markovian", status="retry")
+                    budget *= 2
+                raise AgentError(f"chunk notes rejected twice: {problem}")
             except Exception as exc:
                 self.deps.tracer.emit(AGENT, "chunk_fallback", input_summary=f"chunk {step}",
                                       output_summary=short(str(exc)), engine="markovian", status="degraded")
@@ -173,7 +205,8 @@ class SeriesAnalyst:
             raise AgentError(f"series {series_id}: no records found")
         markovian = self.deps.engines.markovian
         gen = self._generator(len(recs)) if use_model else None
-        out = markovian.dossier(series_id, recs, generator=gen) if gen else markovian.dossier(series_id, recs)
+        out = (markovian.dossier(series_id, recs, config=DOSSIER_CONFIG, generator=gen) if gen
+               else markovian.dossier(series_id, recs, config=DOSSIER_CONFIG))
         self.deps.tracer.emit(AGENT, "dossier", input_summary=f"{series_id} {len(recs)} records",
                               output_summary=f"{out['chunks']} chunks, cited {len(out['cited_ids'])}, "
                                              f"tokens {out['tokens_projected']}→{out['tokens_actual']}",
