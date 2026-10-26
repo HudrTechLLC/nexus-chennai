@@ -1,0 +1,18 @@
+{
+  "city": "chennai",
+  "counts": {
+    "calendar_days": 45,
+    "law_sections": 82,
+    "pois": 8616,
+    "stations": 70,
+    "stations_osm_located": 54,
+    "wards": 201
+  },
+  "sha256": {
+    "cities/chennai/calendar.csv": "8242590c28e8863f48ad18fc6c33fcdb3eb0db1458d9f46a966446859c6455b4",
+    "cities/chennai/law_sections.csv": "495804a27b8d2bfe936d0bda9255857a62f9641a6e48800bd6caddea914857a5",
+    "cities/chennai/stations.geojson": "57d7a5c6f8ba9008302b30fc2561b1fbaed6e48de79b8333cf3959d99e867d93",
+    "cities/chennai/wards.geojson": "1a655fd3ee12a8f70d7f01dd86f61074dd985829eb0372dbb12f38e89178b56a",
+    "data/reference/osm_pois.parquet": "2f053cd135acaadf6866a5b2ffe9cef501819ac80e3916b355b2d8e74a8f9ef9"
+  }
+}

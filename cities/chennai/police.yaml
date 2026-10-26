@@ -1,0 +1,37 @@
+# Police structure for the Chennai city pack (approximate; spec D1 #21 says verify against the
+# public list). Station codes follow the public Greater Chennai Police style (J2 = Adyar).
+# District and region come from the code's letter prefix. Jurisdiction polygons are
+# SYNTHETIC: a Voronoi split of station points, clipped to the city area.
+station_type: law_and_order
+id_format: "PS-{name}-{code}"     # name upper-cased, letters and digits only
+districts:                          # code letter -> district
+  B: Flower Bazaar
+  C: Flower Bazaar
+  N: Flower Bazaar
+  H: Washermenpet
+  P: Washermenpet
+  M: Madhavaram
+  D: Triplicane
+  F: Egmore
+  G: Kilpauk
+  K: Anna Nagar
+  V: Anna Nagar
+  E: Mylapore
+  J: Adyar
+  R: T. Nagar
+  S: St. Thomas Mount
+  T: Tambaram-Avadi
+regions:                            # district -> region
+  Flower Bazaar: North
+  Washermenpet: North
+  Madhavaram: North
+  Triplicane: Central
+  Egmore: Central
+  Kilpauk: Central
+  Anna Nagar: Central
+  Mylapore: South
+  Adyar: South
+  T. Nagar: South
+  St. Thomas Mount: West
+  Tambaram-Avadi: West
+osm_match_radius_km: 3.0           # snap a seed station to an OSM police node within this radius

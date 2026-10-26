@@ -1,0 +1,83 @@
+ipc_code,bns_code,title,category_group,verified
+IPC 34,BNS 3(5),Acts done by several persons in furtherance of common intention,general,false
+IPC 120B,BNS 61(2),Criminal conspiracy,general,false
+IPC 147,BNS 191(2),Rioting,public_order,false
+IPC 148,BNS 191(3),Rioting armed with deadly weapon,public_order,false
+IPC 149,BNS 190,Unlawful assembly; common object,public_order,false
+IPC 186,BNS 221,Obstructing public servant,public_order,false
+IPC 201,BNS 238,Causing disappearance of evidence,general,false
+IPC 268,BNS 270,Public nuisance,public_order,false
+IPC 279,BNS 281,Rash driving on a public way,traffic,false
+IPC 294,BNS 296,Obscene acts and songs,public_order,false
+IPC 302,BNS 103(1),Murder,homicide,false
+IPC 304,BNS 105,Culpable homicide not amounting to murder,homicide,false
+IPC 304A,BNS 106(1),Causing death by negligence,homicide,false
+IPC 304B,BNS 80(2),Dowry death,homicide,false
+IPC 307,BNS 109,Attempt to murder,hurt,false
+IPC 308,BNS 110,Attempt to commit culpable homicide,hurt,false
+IPC 323,BNS 115(2),Voluntarily causing hurt,hurt,false
+IPC 324,BNS 118(1),Voluntarily causing hurt by dangerous weapons,hurt,false
+IPC 325,BNS 117(2),Voluntarily causing grievous hurt,hurt,false
+IPC 326,BNS 118(2),Grievous hurt by dangerous weapons,hurt,false
+IPC 332,BNS 121(1),Hurt to deter public servant,hurt,false
+IPC 337,BNS 125(a),Causing hurt by endangering life,hurt,false
+IPC 338,BNS 125(b),Causing grievous hurt by endangering life,hurt,false
+IPC 341,BNS 126(2),Wrongful restraint,hurt,false
+IPC 342,BNS 127(2),Wrongful confinement,hurt,false
+IPC 353,BNS 132,Assault to deter public servant,hurt,false
+IPC 354,BNS 74,Assault on woman with intent to outrage modesty,crimes_against_women,false
+IPC 354A,BNS 75,Sexual harassment,crimes_against_women,false
+IPC 354B,BNS 76,Assault with intent to disrobe,crimes_against_women,false
+IPC 354C,BNS 77,Voyeurism,crimes_against_women,false
+IPC 354D,BNS 78,Stalking,crimes_against_women,false
+IPC 363,BNS 137(2),Kidnapping,kidnapping,false
+IPC 364,BNS 140(1),Kidnapping in order to murder,kidnapping,false
+IPC 364A,BNS 140(2),Kidnapping for ransom,kidnapping,false
+IPC 365,BNS 140(3),Kidnapping with intent to confine,kidnapping,false
+IPC 366,BNS 87,Kidnapping woman to compel marriage,kidnapping,false
+IPC 376,BNS 64,Rape,crimes_against_women,false
+IPC 379,BNS 303(2),Theft,theft,false
+IPC 380,BNS 305(a),Theft in a dwelling house,theft,false
+IPC 381,BNS 306,Theft by clerk or servant,theft,false
+IPC 382,BNS 307,Theft after preparation for causing death or hurt,theft,false
+,BNS 304(2),Snatching,robbery,false
+IPC 384,BNS 308(2),Extortion,robbery,false
+IPC 386,BNS 308(5),Extortion by putting in fear of death or grievous hurt,robbery,false
+IPC 392,BNS 309(4),Robbery,robbery,false
+IPC 393,BNS 309(5),Attempt to commit robbery,robbery,false
+IPC 394,BNS 309(6),Voluntarily causing hurt in committing robbery,robbery,false
+IPC 395,BNS 310(2),Dacoity,robbery,false
+IPC 397,BNS 311,Robbery or dacoity with attempt to cause death or grievous hurt,robbery,false
+IPC 398,BNS 312,Attempt to commit robbery or dacoity armed with deadly weapon,robbery,false
+IPC 399,BNS 310(4),Making preparation to commit dacoity,robbery,false
+IPC 403,BNS 314,Dishonest misappropriation of property,property,false
+IPC 406,BNS 316(2),Criminal breach of trust,property,false
+IPC 411,BNS 317(2),Dishonestly receiving stolen property,property,false
+IPC 412,BNS 317(3),Dishonestly receiving property stolen in dacoity,property,false
+IPC 413,BNS 317(4),Habitually dealing in stolen property,property,false
+IPC 414,BNS 317(5),Assisting in concealment of stolen property,property,false
+IPC 415,BNS 318(1),Cheating,cheating,false
+IPC 417,BNS 318(2),Punishment for cheating,cheating,false
+IPC 419,BNS 319(2),Cheating by personation,cheating,false
+IPC 420,BNS 318(4),Cheating and dishonestly inducing delivery of property,cheating,false
+IPC 425,BNS 324(1),Mischief,property,false
+IPC 427,BNS 324(4),Mischief causing damage,property,false
+IPC 435,BNS 326(f),Mischief by fire or explosive substance,property,false
+IPC 436,BNS 326(g),Mischief by fire with intent to destroy house,property,false
+IPC 447,BNS 329(3),Criminal trespass,house_break,false
+IPC 448,BNS 329(4),House-trespass,house_break,false
+IPC 452,BNS 333,House-trespass after preparation for hurt or assault,house_break,false
+IPC 454,BNS 331(3),Lurking house-trespass or house-breaking to commit offence,house_break,false
+IPC 456,BNS 331(2),Lurking house-trespass or house-breaking by night,house_break,false
+IPC 457,BNS 331(4),Lurking house-trespass or house-breaking by night to commit offence,house_break,false
+IPC 465,BNS 336(2),Forgery,cheating,false
+IPC 467,BNS 338,Forgery of valuable security or will,cheating,false
+IPC 468,BNS 336(3),Forgery for purpose of cheating,cheating,false
+IPC 471,BNS 340(2),Using as genuine a forged document,cheating,false
+IPC 489A,BNS 178,Counterfeiting currency notes,cheating,false
+IPC 498A,BNS 85,Cruelty by husband or relatives,crimes_against_women,false
+IPC 503,BNS 351(1),Criminal intimidation,hurt,false
+IPC 506,BNS 351(2),Punishment for criminal intimidation,hurt,false
+IPC 509,BNS 79,Word or gesture to insult modesty of a woman,crimes_against_women,false
+IPC 309,,Attempt to commit suicide (no BNS equivalent),general,false
+IPC 497,,Adultery (struck down; no BNS equivalent),general,false
