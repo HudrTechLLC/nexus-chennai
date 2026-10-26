@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # Sponsor technology explanation: final draft (WS5-04)
 
-This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Each claim below names the PR or test behind it. Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
+This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Claims added tonight carry their PR numbers; the rest trace to [EVIDENCE](EVIDENCE.md). Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
@@ -19,7 +19,7 @@ Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [READM
 Nexus never builds a central warehouse. Every crime fact an agent reads comes through **Zetaris**, from the source that holds it.
 
 - **Sources federated today:**
-  - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 4 datasource views where JDBC can't map a type.
+  - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 5 datasource views (`stations`, `wards`, `crime_features_v`, `tips_v`, `case_bundle_v`) where JDBC can't map a type or one read needs a join.
   - **REST feeds served by the Nexus API**, registered as Lightning REST tables: weather (`weather_hourly`), news (`news_items`) and social (`social_posts`), with `v_news_mentions` over news and social.
   - **CSV and Parquet file sources** in Zetaris's internal file store: 8 CSV tables (legacy CCTNS exports, CCTV and ANPR camera lists, vehicles, prison releases, history sheets, place aliases, calendar) and 4 Parquet tables (ANPR reads, 112 calls, the legacy archive, map POIs).
 - **Governed access.** Agents can run only registered *named queries*, through one adapter (`services/api/app/adapters/zetaris.py`). Every query id goes into the trace and into the alert's evidence. Live today, each with Lightning SQL and a DuckDB twin for sample mode:
@@ -67,7 +67,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 - **Pinned lanes, never `meterless/auto`.** The adapter refuses an unpinned or auto model. Each agent role uses a fixed lane.
 - **Every call is traced:** the lane, the pinned model, the model Nightshift reports back, a receipt id (a Meterless receipt header if present, otherwise the response id), the latency and the status. The trace goes to `logs/trace-<run_id>.jsonl`, to stdout and to the console's trace viewer.
 - **Failures are honest.** Transport errors and 5xx responses are retried, up to 3 attempts with backoff. After that, the agent degrades to a traced code-only path. Sample mode replays output recorded from live Nightshift calls, labelled `replayed`. It never invents an answer.
-- **Judges can check every model step without Nightshift.** `output_examples/` holds three runs recorded live through Nightshift, and `data/sample/model_fixtures/` holds their 45 model responses (#283). The sample-mode Docker container answers all three examples with **no network at all** (`--network none`) and matches the recorded outputs exactly. CI job `judge-offline` checks this on every push to main (#285). Replay is time-zone safe: sample data runs in the city's time zone, not the host's (#290).
+- **Judges can check every model step without Nightshift.** `output_examples/` holds three runs recorded live through Nightshift, and `data/sample/model_fixtures/` holds their 45 model responses (#283). The sample-mode Docker container answers all three examples with **no network at all** (`--network none`) and matches the recorded outputs, apart from run timings and the per-query Zetaris ids. CI job `judge-offline` checks this on every push to main (#285). Replay is time-zone safe: sample data runs in the city's time zone, not the host's (#290).
 
 ## NVIDIA Nemotron: where it contributes
 
@@ -88,7 +88,7 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 ## Measured result
 
-On 60 synthetic cases with planted ground truth, the agents link with **precision 0.59, recall 0.86 (F1 0.70)**, against 0.09 / 0.30 (F1 0.13) for a rules-only baseline (same category, ≤ 2 km, ≤ 14 days). **HIGH-band alerts were correct 10 of 10 times**; MEDIUM 56%, which is why an analyst decides every alert. The eval makes no model calls (`output_examples/eval_report.json`, #275; reproducible from a fresh clone with `python -m app.eval`).
+On 60 synthetic cases with planted ground truth, the agents link with **precision 0.59, recall 0.86 (F1 0.70)**, against 0.09 / 0.30 (F1 0.13) for a rules-only baseline (same category, ≤ 2 km, ≤ 14 days). **HIGH-band alerts were correct 10 of 10 times**; MEDIUM 56%, which is why an analyst decides every alert. The eval makes no model calls; 13 of the 60 cases had model-extracted features, and the rest were scored without them (`output_examples/eval_report.json`, #275; reproducible from a fresh clone with the command in the README's Evaluation section).
 
 ## What was unique about our use of the sponsor technology
 
