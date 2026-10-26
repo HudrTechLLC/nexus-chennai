@@ -169,7 +169,7 @@ On Windows PowerShell, `curl` is an alias for `Invoke-WebRequest`, so call `curl
 Invoke-RestMethod -Method Post -Uri http://localhost:8000/run -ContentType "application/json" -InFile input_examples\example_1.json | ConvertTo-Json -Depth 8
 ```
 
-`run.py --once` first prints the trace lines as the agents work, then the result. The result is the last JSON block in the output. `[chief: update this sentence if the trace echo moves to stderr]`
+`run.py --once` prints only the JSON result on stdout, so you can pipe it to `jq`. The trace lines go to stderr and to `logs/trace-<run_id>.jsonl`.
 
 `POST /run` takes `{"run_id"?, "input": {"kind": "case" | "batch" | "tip" | "search", ...}, "options": {...}}` and returns `run_id`, `status`, `output` (`alerts`, `series`, `hotspots`, `summary`), `agents`, `engines`, `trace_id`, `log_file` and `execution_time_seconds`. Bad input returns a 422; it never returns a made-up answer.
 
@@ -222,7 +222,11 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 ## Limitations
 
 - **Synthetic data.** All data is generated for this hackathon. Any quality number is measured on planted structure, not on real police data.
-- **Vision via Nightshift.** Nightshift refuses every request that carries an image (`no_vision_model`) on every route, though text calls to the Super VL model work. This was reported to Meterless. The Extractor traces `vision_unavailable` and falls back to the officer's caption. No visual extraction is faked.
+- **Audio statements and evidence photos are not read by a model yet.** The Extractor has both paths wired: an audio lane would transcribe recordings, and the vision lane (Nemotron Super VL, pinned by default) would tag what a photo shows.
+  - No audio model is pinned on our Nightshift, so audio statements use the transcript recorded with them.
+  - The Nightshift build we run (1.2.7) refuses every image request (`no_vision_model`, reported to Meterless), so photos get no new vision tags. They keep the officer's caption and any tags already on record.
+  - Neither case is hidden or made up. Each shows in the trace as a `degraded` step (`audio_fallback`, `vision_unavailable`) with no model receipt, and the extracted record lists it under `degraded`.
+  - The rest of the case (narrative, typed statements, vehicles, forensics) is extracted and linked as normal. Once Nightshift serves these models, the same code uses them with no change.
 - **Reasoning model.** The spec planned Nemotron Super 120B, but our key isn't served it, so the `reason` lane runs Nemotron Ultra 550B. It is slower, so the run deadline keeps a 45-second reserve.
 - **Zetaris and Supabase Storage (S3) TLS.** Zetaris's S3 client can't complete a TLS handshake with Supabase Storage's S3 endpoint. CSV and Parquet files therefore go into Zetaris's own internal file store instead, still registered as file sources. The fix is documented in `zetaris/README.md`. We didn't apply it because it means restarting Zetaris mid-build.
 - **Tip passphrases use bcrypt, not Argon2id.** The spec said Argon2id. We hash with pgcrypto bcrypt inside Postgres so the hash never leaves the database. Tip codes are random and attempts are limited.
