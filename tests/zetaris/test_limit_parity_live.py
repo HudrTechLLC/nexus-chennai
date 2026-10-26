@@ -46,7 +46,13 @@ def client(tmp_path_factory):
 
 
 def test_every_query_with_parameters_has_an_input():
-    assert set(NAMED_QUERIES) - {"q_ping", "q_news"} <= set(INPUTS)  # q_news needs the API up (40_feeds.sql)
+    assert set(NAMED_QUERIES) - {"q_ping", "q_news"} <= set(INPUTS)
+
+
+@pytest.mark.xfail(strict=True, reason="WS1-16 feeds not registered (nexus.v_news_mentions); remove in the feeds PR")
+def test_q_news_is_live(client):
+    res = client.named("q_news", agent="parity", crime_id=HERO)
+    assert res.source == "zetaris"
 
 
 @pytest.mark.parametrize("name", sorted(INPUTS))
