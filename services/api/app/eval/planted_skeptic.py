@@ -48,7 +48,11 @@ TRUTH = REPO_ROOT / "data" / "sample" / "_truth" / "pairs.csv"
 PROTECTED = frozenset({"CHN-AD-2026-001182", "CHN-VL-2026-000877", "CHN-AD-2026-001231",
                        "CHN-CM-2025-000450", "CHN-TU-2025-000437"})
 _CRIME_ID = re.compile(r"CHN-[A-Z]{2}-\d{4}-\d{6}")
-PLANT_KINDS = ("vehicle_colour", "vehicle_make", "offender_count", "offender_age", "helmet", "simultaneous")
+# vehicle_identity = a DIFFERENT vehicle: its colour or its make (alternating) AND its partial plate digits differ, in
+# every place B states them and in B's ANPR trail reads (nexus-5 review: a colour-only plant leaves the same plate).
+PLANT_KINDS = ("vehicle_identity", "offender_count", "offender_age", "helmet", "simultaneous")
+VEHICLE_VARIANTS = ("colour", "make")
+SERIES = REPO_ROOT / "data" / "sample" / "_truth" / "series.json"
 MIN_KM_SIMULTANEOUS = 5.0
 
 
@@ -158,6 +162,45 @@ def _count_text(obj: Any, old: int, new: int, key: str | None = None) -> Any:
     return re.sub(pat, rep, obj, flags=re.IGNORECASE)
 
 
+_ID_KEYS = frozenset({"crime_id", "source_row_id", "statement_id", "fir_no", "read_id", "camera_id", "evidence_id",
+                      "storage_path", "receipt_id", "witness_ref", "h3_r9", "h3_r8", "geohash7"})
+
+
+def _sub_digits(obj: Any, old: str, new: str, key: str | None = None) -> Any:
+    """The plate's last digits, everywhere B states them (plate fields included); never inside ids."""
+    if key in _ID_KEYS:
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sub_digits(v, old, new, k) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sub_digits(v, old, new, key) for v in obj]
+    if isinstance(obj, str):
+        return re.sub(r"(?<![0-9])" + re.escape(old) + r"(?![0-9])", new, obj)
+    return obj
+
+
+def plate_digits(v: Mapping[str, Any] | None) -> str | None:
+    m = re.search(r"(\d{4})$", str((v or {}).get("plate") or ""))
+    return m.group(1) if m else None
+
+
+def new_digits(d: str) -> str:
+    return f"{(int(d) + 5317) % 10000:04d}"
+
+
+def truth_features() -> dict[str, dict[str, Any]]:
+    """Features for crimes with none stored: the generator's ground-truth MO for their series (no extraction, no
+    model call). Marked source=generator_truth in the case file; visual tags are empty."""
+    out: dict[str, dict[str, Any]] = {}
+    for ser in json.loads(SERIES.read_text(encoding="utf-8")):
+        mo = dict((ser.get("true_mo") or {}).get("mo") or {})
+        for cid in ser.get("crime_ids") or []:
+            out[cid] = {"crime_id": cid, "mo": mo, "visual_tags": [], "entities": {"persons": [], "phones": [],
+                                                                                  "plates": []},
+                        "extractor_version": "generator_truth"}
+    return out
+
+
 def _vehicle(c: Mapping[str, Any]) -> Mapping[str, Any] | None:
     vs = [v for v in c.get("vehicles") or [] if isinstance(v, Mapping)]
     return vs[0] if vs else None
@@ -188,17 +231,31 @@ class Plant:
         return cls(d["kind"], d["crime_id"], d["old"], d["new"], d["detail"])
 
 
-def choose_plant(kind: str, a: Mapping[str, Any], b: Mapping[str, Any], fa: Mapping[str, Any] | None
-                 ) -> Plant | None:
+def choose_plant(kind: str, a: Mapping[str, Any], b: Mapping[str, Any], fa: Mapping[str, Any] | None,
+                 variant: str = "colour") -> Plant | None:
     """The plant of `kind` for pair (a, b), or None when it doesn't apply (the fact must be shared by A and B)."""
     va, vb, oa, ob = _vehicle(a), _vehicle(b), _offender(a), _offender(b)
     bid = b["crime_id"]
-    if kind == "vehicle_colour" and va and vb and va.get("colour") and va.get("colour") == vb.get("colour"):
-        new = COLOUR_SWAP.get(str(vb["colour"]).lower())
-        return new and Plant(kind, bid, vb["colour"], new, f"B's vehicle is {new}, A's is {vb['colour']}")
-    if kind == "vehicle_make" and va and vb and va.get("make_model") and va.get("make_model") == vb.get("make_model"):
-        new = MAKE_SWAP.get(vb["make_model"])
-        return new and Plant(kind, bid, vb["make_model"], new, f"B's vehicle is a {new}, A's a {vb['make_model']}")
+    if kind == "vehicle_identity" and va and vb:
+        # Plates must agree: both read the same digits (they are planted too) or neither has a plate. One plate missing,
+        # or two different plates, is not a clean single-fact near-miss.
+        da, db = plate_digits(va), plate_digits(vb)
+        if da != db or bool(va.get("plate")) != bool(vb.get("plate")) or (va.get("plate") and not da):
+            return None
+        nd = new_digits(db) if db else None
+        tail = (lambda d: f", plate ending {d}") if db else (lambda d: "")
+        if variant == "colour" and va.get("colour") and va.get("colour") == vb.get("colour") \
+                and COLOUR_SWAP.get(str(vb["colour"]).lower()):
+            new = COLOUR_SWAP[str(vb["colour"]).lower()]
+            return Plant(kind, bid, {"colour": vb["colour"], "plate_digits": db}, {"colour": new, "plate_digits": nd},
+                         f"B's vehicle is {new}{tail(nd)}; A's is {vb['colour']}{tail(db)}")
+        if variant == "make" and va.get("make_model") and va.get("make_model") == vb.get("make_model") \
+                and MAKE_SWAP.get(vb["make_model"]):
+            new = MAKE_SWAP[vb["make_model"]]
+            return Plant(kind, bid, {"make_model": vb["make_model"], "plate_digits": db},
+                         {"make_model": new, "plate_digits": nd},
+                         f"B's vehicle is a {new}{tail(nd)}; A's a {vb['make_model']}{tail(db)}")
+        return None
     if kind == "offender_count" and oa and ob and oa.get("count") and oa.get("count") == ob.get("count"):
         new = COUNT_SWAP.get(int(ob["count"]))
         return new and Plant(kind, bid, int(ob["count"]), new, f"B had {new} offenders, A had {ob['count']}")
@@ -224,27 +281,33 @@ def apply_plant(plant: Plant, crime: dict[str, Any], features: dict[str, Any] | 
     """B's crime row and features with the planted fact rewritten everywhere it appears. Pure."""
     c, f = copy.deepcopy(crime), copy.deepcopy(features)
     k = plant.kind
-    if k == "vehicle_colour":
-        # Only the colour word right before a vehicle word: "red Bajaj Pulsar", "red_motorcycle". Never the helmet's
-        # "black with red stripe" (that would be a second planted fact).
-        make = (_vehicle(c) or {}).get("make_model") or ""
-        nouns = ["motorcycle", "bike", "scooter", "two-wheeler", "two wheeler", "vehicle", *([make] if make else [])]
-        after = "|".join(r"[ _]".join(re.escape(w) for w in n.split()) for n in nouns)
-        rules = [(r"(?<![A-Za-z0-9])" + re.escape(plant.old) + r"(?=[ _](?:" + after + r")(?![A-Za-z0-9]))",
-                  plant.new)]
-        c, f = _sub_strings(c, rules), _sub_strings(f, rules)
-        for v in c.get("vehicles") or []:
-            if isinstance(v, dict) and v.get("colour") == plant.old:
-                v["colour"] = plant.new
-    elif k == "vehicle_make":
-        old_words, new_words = plant.old.split(), plant.new.split()
-        rules = [(_token(plant.old), plant.new),
-                 # the model name alone ("it looked like a pulsar") -> the new model name
-                 (_token(" ".join(old_words[1:])), " ".join(new_words[1:]))]
-        c, f = _sub_strings(c, rules), _sub_strings(f, rules)
-        for v in c.get("vehicles") or []:
-            if isinstance(v, dict) and v.get("make_model") in (plant.old, plant.new):
-                v["make_model"] = plant.new
+    if k == "vehicle_identity":
+        if "colour" in plant.old:
+            # Only the colour word right before a vehicle word: "red Bajaj Pulsar", "red_motorcycle". Never the
+            # helmet's "black with red stripe" (that would be a second planted fact).
+            make = (_vehicle(c) or {}).get("make_model") or ""
+            nouns = ["motorcycle", "bike", "scooter", "two-wheeler", "two wheeler", "vehicle", "car",
+                     *([make] if make else [])]
+            after = "|".join(r"[ _]".join(re.escape(w) for w in n.split()) for n in nouns)
+            old_c, new_c = plant.old["colour"], plant.new["colour"]
+            rules = [(r"(?<![A-Za-z0-9])" + re.escape(old_c) + r"(?=[ _](?:" + after + r")(?![A-Za-z0-9]))", new_c)]
+            c, f = _sub_strings(c, rules), _sub_strings(f, rules)
+            for v in c.get("vehicles") or []:
+                if isinstance(v, dict) and v.get("colour") == old_c:
+                    v["colour"] = new_c
+        else:
+            old_m, new_m = plant.old["make_model"], plant.new["make_model"]
+            old_words, new_words = old_m.split(), new_m.split()
+            rules = [(_token(old_m), new_m),
+                     # the model name alone ("it looked like a pulsar") -> the new model name
+                     (_token(" ".join(old_words[1:])), " ".join(new_words[1:]))]
+            c, f = _sub_strings(c, rules), _sub_strings(f, rules)
+            for v in c.get("vehicles") or []:
+                if isinstance(v, dict) and v.get("make_model") in (old_m, new_m):
+                    v["make_model"] = new_m
+        if plant.old.get("plate_digits"):
+            c = _sub_digits(c, plant.old["plate_digits"], plant.new["plate_digits"])
+            f = _sub_digits(f, plant.old["plate_digits"], plant.new["plate_digits"])
     elif k == "offender_count":
         c, f = _count_text(c, plant.old, plant.new), _count_text(f, plant.old, plant.new)
         for d in c.get("offenders_described") or []:
@@ -264,11 +327,15 @@ def apply_plant(plant: Plant, crime: dict[str, Any], features: dict[str, Any] | 
                 d["age_band"] = plant.new
     elif k == "helmet":
         new_value, forms = HELMET_SWAP[plant.old]
-        rules = [(_token(o), n) for o, n in forms]
-        c, f = _sub_strings(c, rules), _sub_strings(f, rules)
+        # The structured field first: the text rule for "no helmet" would otherwise rewrite the field's own value.
         for d in c.get("offenders_described") or []:
             if isinstance(d, dict) and d.get("helmet") == plant.old:
                 d["helmet"] = new_value
+        rules = [(_token(o), n) for o, n in forms]
+        protected = [d.get("helmet") for d in c.get("offenders_described") or [] if isinstance(d, dict)]
+        c, f = _sub_strings(c, rules), _sub_strings(f, rules)
+        for d, h in zip([d for d in c.get("offenders_described") or [] if isinstance(d, dict)], protected):
+            d["helmet"] = h
     elif k == "simultaneous":
         old_t, new_t = _parse(plant.old), _parse(plant.new["occurred_from"])
         delta = new_t - old_t
@@ -313,18 +380,30 @@ class PlantedZetaris:
 
     CASE_QUERIES = ("q_case", "q_cases")
 
-    def __init__(self, inner: Any, plant: Plant | None) -> None:
+    def __init__(self, inner: Any, plant: Plant | None, truth: Mapping[str, dict[str, Any]] | None = None) -> None:
         self.inner, self.plant = inner, plant
+        self.truth = truth_features() if truth is None else truth
 
     def named(self, name: str, *, agent: str, **params: Any) -> Any:
         res = self.inner.named(name, agent=agent, **params)
-        if self.plant is None or name not in (*self.CASE_QUERIES, "q_features"):
+        if name not in (*self.CASE_QUERIES, "q_features", "q_vehicle_trail"):
             return res
         from ..agents.base import crime_from_row, features_from_row, rows_as_dicts
 
+        rows = rows_as_dicts(res)
+        if name == "q_features":  # crimes with no stored features get their series' generator-truth MO
+            have = {r.get("crime_id") for r in rows}
+            rows += [dict(self.truth[i]) for i in str(params.get("ids") or "").split(",")
+                     if i and i not in have and i in self.truth]
+        if self.plant is None:
+            return _Rows(res, rows)
         out = []
-        for row in rows_as_dicts(res):
+        for row in rows:
             if row.get("crime_id") != self.plant.crime_id:
+                out.append(row)
+            elif name == "q_vehicle_trail":  # B's ANPR reads show B's (planted) plate
+                if self.plant.kind == "vehicle_identity" and self.plant.old.get("plate_digits"):
+                    row = _sub_digits(row, self.plant.old["plate_digits"], self.plant.new["plate_digits"])
                 out.append(row)
             elif name == "q_features":
                 _, f = apply_plant(self.plant, {"crime_id": self.plant.crime_id}, features_from_row(row))
@@ -371,46 +450,67 @@ def score_pair(deps: Any, a_id: str, b_id: str) -> Any:
     return pairs[0], (a, fa, b, fb)
 
 
-PLANTS_PER_BASE = 2
+PLANTS_PER_BASE = 3
 
 
 def prepare(settings: Settings) -> dict[str, Any]:
-    """The pre-registered case list. Deterministic, code only: which base pairs alert, which plants each gets, and
-    which planted pairs the Linker already stops (they never reach the Skeptic: reported, not run).
+    """The pre-registered case list. Deterministic, code only.
 
-    Each alerting base pair (the TWIN, unaltered) gets PLANTS_PER_BASE near-misses, each with one different planted
-    fact. Kinds are assigned by a fixed rotation over the kinds that apply to the pair, and are never retried."""
+    Base pairs (TWINS, unaltered): ground-truth series pairs that the Linker alerts on, chosen per series in file order
+    so that no crime is used twice (the widest set of distinct crimes). Each twin gets PLANTS_PER_BASE near-misses,
+    each with one different planted fact; kinds follow a fixed rotation over the kinds that apply to the pair and are
+    never retried, and the vehicle plant alternates colour / make. Planted pairs the Linker already stops never reach
+    the Skeptic: they are listed (`reaches_skeptic: false`) and not run."""
     pool = eligible_pairs()
-    bases, skipped = [], []
-    slot = 0
+    truth = truth_features()
+    bases, skipped, used = [], [], set()
+    slot = vehicle_n = 0
     for a_id, b_id, group in pool:
+        if a_id in used or b_id in used:
+            skipped.append({"a": a_id, "b": b_id, "group": group, "why": "a crime is already used by another twin"})
+            continue
         base, (a, fa, b, fb) = score_pair(_deps(settings, "planted-prep", None), a_id, b_id)
         if fa is None or fb is None:
-            skipped.append({"a": a_id, "b": b_id, "group": group, "why": "no stored features"})
+            skipped.append({"a": a_id, "b": b_id, "group": group, "why": "no features (stored or generator truth)"})
             continue
         if not base.score.alert:
             skipped.append({"a": a_id, "b": b_id, "group": group,
                             "why": f"base pair does not alert (score {base.score.score})"})
             continue
-        applicable = [k for k in PLANT_KINDS if choose_plant(k, a, b, fa)]
+        applicable = [k for k in PLANT_KINDS
+                      if any(choose_plant(k, a, b, fa, v) for v in VEHICLE_VARIANTS)]
         if len(applicable) < PLANTS_PER_BASE:
             skipped.append({"a": a_id, "b": b_id, "group": group, "why": f"only {applicable} apply"})
             continue
+        used |= {a_id, b_id}
         case_id = f"PS-{len(bases) + 1:02d}"
         near = []
         for n in range(PLANTS_PER_BASE):
             kind = applicable[(slot + n) % len(applicable)]
-            plant = choose_plant(kind, a, b, fa)
+            plant = None
+            if kind == "vehicle_identity":
+                for k in range(len(VEHICLE_VARIANTS)):  # alternate; fall back to the other variant only if n/a
+                    plant = choose_plant(kind, a, b, fa, VEHICLE_VARIANTS[(vehicle_n + k) % len(VEHICLE_VARIANTS)])
+                    if plant:
+                        break
+                vehicle_n += 1
+            else:
+                plant = choose_plant(kind, a, b, fa)
             planted, _ = score_pair(_deps(settings, "planted-prep", plant), a_id, b_id)
-            near.append({"near_miss_id": f"{case_id}{'ab'[n]}", "plant": plant.to_dict(),
+            near.append({"near_miss_id": f"{case_id}{'abc'[n]}", "plant": plant.to_dict(),
                          "planted_score": planted.score.score, "planted_band": planted.score.band,
                          "reaches_skeptic": bool(planted.score.alert), "expected": "reject (drop)"})
         slot += PLANTS_PER_BASE
-        bases.append({"case_id": case_id, "a": a_id, "b": b_id, "group": group, "twin_score": base.score.score,
-                      "twin_band": base.score.band, "twin_expected": "approve", "near_misses": near})
-    return {"version": 2, "population": "data/sample/_truth/pairs.csv label=series; protected and judge crimes "
-                                         "excluded; stored features required (no extraction)",
-            "excluded": sorted(excluded_ids()), "plant_kinds": list(PLANT_KINDS), "plants_per_base": PLANTS_PER_BASE,
+        src = {cid: ("stored" if cid not in truth or (f or {}).get("extractor_version") != "generator_truth"
+                     else "generator_truth") for cid, f in ((a_id, fa), (b_id, fb))}
+        bases.append({"case_id": case_id, "a": a_id, "b": b_id, "group": group, "category": b.get("sub_type"),
+                      "features_source": src, "twin_score": base.score.score, "twin_band": base.score.band,
+                      "twin_expected": "approve", "near_misses": near})
+    return {"version": 3, "population": "data/sample/_truth/pairs.csv label=series; protected and judge crimes "
+                                         "excluded; one twin per crime (no crime reused); features stored, else the "
+                                         "series' generator-truth MO",
+            "excluded": sorted(excluded_ids()), "plant_kinds": list(PLANT_KINDS),
+            "vehicle_variants": list(VEHICLE_VARIANTS), "plants_per_base": PLANTS_PER_BASE,
             "cases": bases, "skipped": skipped}
 
 
@@ -424,9 +524,14 @@ def _guard(settings: Settings) -> None:
                        "SUPABASE_SERVICE_ROLE_KEY_FILE", "ZETARIS_API_KEY", "ZETARIS_API_KEY_FILE") if os.environ.get(k)]
     if bad:
         sys.exit(f"refusing to run: unset {bad} (sample data, memory store, no fixture recording)")
+    # The RESOLVED settings too: .env and *_FILE paths load keys the environment check above cannot see, and with a
+    # Zetaris key set, sample mode queries live Zetaris (nexus-5 review).
+    loaded = [k for k in ("zetaris_api_key", "supabase_url", "supabase_service_role_key") if getattr(settings, k, "")]
+    if loaded:
+        sys.exit(f"refusing to run: settings resolve {loaded} (from .env or a *_FILE); clear them")
     if not settings.sample_mode:
         sys.exit("refusing to run: SAMPLE_MODE must be true (DuckDB twins, no Zetaris load)")
-    if os.environ.get("NEXUS_STORE", "memory") != "memory":
+    if os.environ.get("NEXUS_STORE", "memory") != "memory" or (settings.nexus_store or "memory") != "memory":
         sys.exit("refusing to run: NEXUS_STORE must be memory")
     if not (settings.meterless_runtime_token or "").strip():
         sys.exit("refusing to run: no Nightshift token (the critique must be a live call, not a replay)")
