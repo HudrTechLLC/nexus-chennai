@@ -20,7 +20,7 @@ export function AlertCard({ alert, crimes, deciderNames }: {
   const capLine = coverageCapLine(alert);
 
   return (
-    <article className="rounded-xl border border-line bg-surface p-4">
+    <article className="min-w-0 rounded-xl border border-line bg-surface p-4">
       <div className="flex flex-wrap items-start gap-4">
         <ScoreRing score={alert.score} band={alert.band} />
         <div className="min-w-0 flex-1">

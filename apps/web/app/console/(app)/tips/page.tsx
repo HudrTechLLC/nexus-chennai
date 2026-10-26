@@ -29,7 +29,7 @@ export default async function TipsQueue({ searchParams }: { searchParams: { tab?
         <h1 className="text-2xl font-bold">Tips</h1>
         <p className="text-sm text-muted">Public tips arrive anonymous and untrusted. The worker screens each one (Tip Guard) before it reaches agents; you decide whether it helps.</p>
       </div>
-      <nav className="flex gap-1 border-b border-line" aria-label="Tip status">
+      <nav className="flex gap-1 overflow-x-auto whitespace-nowrap border-b border-line" aria-label="Tip status">
         {TIP_TABS.map((t) => (
           <Link key={t} href={`/console/tips?tab=${t}`} aria-current={t === tab ? "page" : undefined}
             className={`-mb-px border-b-2 px-3 py-2 text-sm ${t === tab ? "border-signal font-semibold" : "border-transparent text-muted hover:text-ink"}`}>
