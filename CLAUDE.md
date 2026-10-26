@@ -13,6 +13,7 @@ In this repo every spec reference to `docs/` means `engg/docs/` (DECISIONS D-002
   no secrets, every claimed engine has a feature and a passing test, sample mode
   runs real logic, scores in code, tips are untrusted, no Cursor.
 - Record every decision or verification in engg/docs/DECISIONS.md; update PROGRESS.md at session end.
+- Change task status only with `python scripts/tracker.py set <ID> <status>`; it stamps the real time. Never hand-type a timestamp.
 - Any behaviour change updates the matching note in engg/docs/ in the same commit/PR.
 - Nothing city-specific in code: it belongs in cities/<city>/ (D-004).
 - You may create skills, subagents, slash commands and hooks under .claude/;
