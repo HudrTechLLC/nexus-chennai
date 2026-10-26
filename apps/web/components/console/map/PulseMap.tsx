@@ -352,7 +352,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* layers + filters */}
-      <div className="absolute right-12 top-3 z-10 w-56 space-y-3 rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur">
+      <div className="absolute right-12 top-3 z-10 max-h-[calc(100%-9.5rem)] w-56 space-y-3 overflow-y-auto rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur">
         <div>
           <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Layers</p>
           {([
@@ -400,7 +400,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       </div>
 
       {/* clock dial */}
-      <div className="absolute bottom-28 right-3 z-10">
+      <div className="absolute bottom-28 left-3 z-10">
         <ClockDial arc={clock} onChange={setClock} hours={hourBins} />
       </div>
 
@@ -415,7 +415,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       )}
 
       {trailMsg && (
-        <div className="absolute bottom-28 left-3 z-10 max-w-sm rounded-md bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-3 py-2 text-xs shadow">
+        <div className="absolute left-3 top-24 z-10 max-w-sm rounded-md bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-3 py-2 text-xs shadow">
           {trailMsg} <button className="ml-2 underline" onClick={() => { setTrail(null); setTrailMsg(null); }}>clear</button>
         </div>
       )}
