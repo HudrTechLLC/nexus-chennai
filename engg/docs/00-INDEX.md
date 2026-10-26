@@ -38,6 +38,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [WS3-06 / WS3-10 gate](validation/WS3-06-WS3-10-2026-10-26.md): case file, search and FIR capture vs CAP-01…10 and SRCH-01…07, with live evidence and open gaps
 - [WS5-08 checklist](validation/WS5-08-checklist.md): Tuesday fresh-clone validation (L3), every Disqualification Checklist item with its command and PASS rule
 - [PLANTED_SKEPTIC_PREREG](eval/PLANTED_SKEPTIC_PREREG.md): planted false-link test for the Skeptic, pre-registered before any model call (paired: 8 twins over 16 distinct crimes in 5 series + 24 single-fact near-misses; primary = near-miss dropped while its twin is approved). **Run 27 Oct: FAIL, 0/24.** The Skeptic never chose drop; results in the note and `output_examples/planted_skeptic.json`
+- [SKEPTIC_CONTRADICTION_PREREG](eval/SKEPTIC_CONTRADICTION_PREREG.md): pre-registered fix for #392. A deterministic hard-contradiction rule (offender count, age band, helmet, vehicle) drops approved pairs in code. It is tested on a FRESH blind planted set: primary drop ≥ 0.60, twin false-drop ≤ 1/8. The rule code is pinned and not merged until it passes
 - [WS5-08 results](validation/WS5-08-2026-10-27.md): the checklist run; part 1 pre-run (secrets incl. full history, hygiene, README, licences, vendored engines), part 2 on Tuesday
 - [NEMOTRON_ALONE_PREREG](eval/NEMOTRON_ALONE_PREREG.md): pre-registered baseline, Nemotron Ultra alone vs the full system on the same 182 headline pairs (case list, prompt, scoring and stop rules fixed before any call)
 
