@@ -120,9 +120,12 @@ class Worker:
         if d["decision"] == "approve":
             title = f"Link {alert['alert_id']} approved: joint case proposed for {' + '.join(stations)}"
             kind = "joint_case_proposal"
+            # LNK-09: analysts+ propose the task force and a supervisor approves it (city-wide roles).
+            users = users + self.sb.select("profiles", {"select": "user_id", "role": "in.(analyst,supervisor)"})
         else:
             title = f"Link {alert['alert_id']} rejected ({d.get('reason_code')})"
             kind = "alert_decision"
+        users = list({u["user_id"]: u for u in users}.values())
         rows = [{"user_id": u["user_id"], "kind": kind, "title": title, "body": d.get("note"),
                  "link": f"/console/alerts/{alert['alert_id']}"} for u in users]
         if rows:

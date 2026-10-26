@@ -248,3 +248,31 @@ def test_sweep_failure_never_fails_the_pass(tmp_path):
     w = _sweep_worker(tmp_path, sb)
     assert w.sweep_stale_runs(now=NOW) == 0
     assert any(e["action"] == "sweep_failed" for e in w.tracer.read())
+
+
+def test_approval_also_notifies_analysts_and_supervisors(tmp_path, monkeypatch):
+    """LNK-09: only analysts+ propose a task force and a supervisor approves it, so they get the joint-case
+    proposal too, not just the station officers. Rejections stay with the stations."""
+    monkeypatch.setattr(engines.hmem, "record_decision", lambda *a: None)
+    profiles = [{"user_id": "u1", "station_id": "PS-ADYAR-J2", "role": "station_officer"},
+                {"user_id": "u3", "station_id": "PS-VELACHERY-J7", "role": "station_officer"},
+                {"user_id": "a1", "station_id": None, "role": "analyst"},
+                {"user_id": "s1", "station_id": "PS-ADYAR-J2", "role": "supervisor"},  # also at a station: once
+                {"user_id": "x9", "station_id": "PS-OTHER", "role": "station_officer"}]
+    sb = FakeSB({
+        "alert_decisions": [{"decision_id": 2, "alert_id": "LA-2", "decision": "approve", "processed_at": None},
+                            {"decision_id": 3, "alert_id": "LA-3", "decision": "reject", "reason_code": "decoy",
+                             "processed_at": None}],
+        "link_alerts": [{"alert_id": "LA-2", "crimes": [ADYAR["crime_id"], VELACHERY["crime_id"]],
+                         "stations": ["PS-ADYAR-J2", "PS-VELACHERY-J7"], "status": "pending"},
+                        {"alert_id": "LA-3", "crimes": [ADYAR["crime_id"], VELACHERY["crime_id"]],
+                         "stations": ["PS-ADYAR-J2"], "status": "pending"}],
+        "profiles": profiles,
+    })
+    worker(tmp_path, sb).run_once()
+    notes = sb.tables["notifications"]
+    approved = [n for n in notes if n["kind"] == "joint_case_proposal"]
+    assert sorted(n["user_id"] for n in approved) == ["a1", "s1", "u1", "u3"]
+    assert all(n["link"] == "/console/alerts/LA-2" for n in approved)
+    rejected = [n for n in notes if n["kind"] == "alert_decision"]
+    assert sorted(n["user_id"] for n in rejected) == ["s1", "u1"]
