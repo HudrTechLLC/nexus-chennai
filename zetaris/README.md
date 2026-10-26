@@ -45,10 +45,18 @@ The team chose not to change the running container mid-build (D-022a). File sour
 **To switch back later:** fix the S3A channel (for example `fs.s3a.ssl.channel.mode=default_jsse_with_gcm`, or a newer JDK/wildfly-openssl). Then set `s3Endpoint "ukrujnsjucwvytnokbtw.storage.supabase.co/storage/v1/s3"` and `useS3PathStyleAccess "true"` on the file tables, with keys `{{secret:s3_key_id}}` / `{{secret:s3_secret}}`. That is a one-line change per table in `00_sources.sql`.
 
 ## News and social feeds: the API must be up first (40_feeds.sql)
-**Status (2026-10-26): weather is live; news and social are PENDING.**
-- Registered: `nexus_feeds` (#2), `rest_weather` (#8), `nexus.weather_hourly` (#9, 744 rows).
-- Not registered yet: `rest_news`, `rest_social`, `news_items`, `social_posts` and `v_news_mentions` (#3–#7). They are waiting on the feed generator (WS1-16), so a live `q_news` returns no rows until they land.
+**Status (2026-10-26): all of 40_feeds.sql is live (WS1-16).**
+- `nexus_feeds` (#2), `rest_weather` (#8), `nexus.weather_hourly` (#9, 744 rows).
+- `rest_news`, `rest_social`, `news_items`, `social_posts` and `v_news_mentions` (#3–#7), registered 2026-10-26 with `--since 2023-01-01 --until 2026-11-01`. That window is baked into the REST URLs; changing it means re-registering #3 and #4.
+- The feeds serve the committed synthetic slice: `data/sample/news/articles.jsonl` (47 articles) and `data/sample/social/posts.jsonl` (61 posts), written by `python -m app.feeds_gen --sample`. Live `q_news` for the judge cases returns the same rows as sample mode.
+- Known limit: against the full live crime set, 5 articles also match two or more same-category crimes, none on the judge path. The post-freeze full generator fixes this.
 - `20_dq.sql` is fully live (all 8 views).
+
+**Restart recipe for the feed API.** It is a plain local process, so a reboot or editor restart stops it, and then every live `q_news` silently degrades to "no news".
+- Run from a checkout at or after main `3c38da2`, which contains `data/sample/news`. An older checkout serves zero items without any error.
+- Command: `python run.py --host 127.0.0.1 --port 8000`. No `.env` is needed for `/mock-feeds`.
+- Check: `curl "http://127.0.0.1:8000/mock-feeds/news?since=2023-01-01&until=2026-11-01"` shows `"count": 47`.
+- Before recording a demo, make one warm-up `q_news` call. A cold first call can exceed the 8 s fail-fast and trip the 60 s breaker for that client.
 
 **Live runs need the Nexus API on :8000 before Zetaris reads feeds.** The `nexus_feeds.rest_news` / `rest_social` REST tables call `http://host.docker.internal:8000/mock-feeds/*` (`services/api/app/feeds.py`), both when they are registered and every time `nexus.news_items`, `nexus.social_posts` or `nexus.v_news_mentions` is queried. So a live `q_news` is a call from the API into Zetaris and back into the API.
 
