@@ -128,6 +128,8 @@ class AgentDeps:
     engines: Any = None  # the app.engines facade (world_model, hmem, markovian, scout_intent)
     store: Store = field(default_factory=MemoryStore)
     deadline: float | None = None  # time.monotonic() value; None = no deadline
+    # Optional query steps that timed out in this run: skipped for the rest of it (Planner STEP_TIMEOUT_S).
+    timed_out_steps: set[str] = field(default_factory=set)
 
     def check_deadline(self, where: str) -> None:
         if self.deadline is not None and time.monotonic() > self.deadline:

@@ -77,3 +77,30 @@ def test_q_candidates_is_not_capped(run):
     planner.execute(plan())
     cand = [t for sql, t in fake.calls if "nexus.dq_flags" not in sql][0]
     assert cand.get("read") != STEP_TIMEOUT_S  # the client's normal timeout, with retries
+
+
+def test_a_timed_out_step_stays_skipped_for_the_whole_run_after_the_breaker_expires(run, monkeypatch):
+    # run_3d845f76: round 2 came 3.7 min after round 1, the adapter's 60 s breaker had expired and q_dq_flags cost
+    # another 30 s. The run remembers it: later rounds skip it without asking Zetaris.
+    import app.adapters.zetaris as z
+
+    monkeypatch.setattr(z, "BREAKER_SECONDS", 0.0)
+    fake, planner, tracer = run
+    planner.execute(plan(1))
+    out = planner.execute(plan(2))
+    assert "q_dq_flags" not in out and "q_context" in out
+    assert len(fake.timeouts("nexus.dq_flags")) == 1
+    ev = [e for e in tracer.read() if e["action"] == "step_degraded"]
+    assert [e["status"] for e in ev] == ["degraded", "degraded"]
+    assert "earlier in this run" in ev[1]["output_summary"]
+
+
+def test_a_fresh_run_tries_the_step_again(tmp_path):
+    # Remembered per run (on its deps), never across runs.
+    fake = SlowDq()
+    for i in range(2):
+        tracer = Tracer(f"t{i}", tmp_path, echo=False)
+        client = ZetarisClient(Settings(_env_file=None, sample_mode=False, zetaris_api_key="k"), tracer=tracer,
+                               transport=httpx.MockTransport(fake))
+        Planner(AgentDeps(tracer=tracer, zetaris=client, store=MemoryStore(), nightshift=None)).execute(plan())
+    assert len(fake.timeouts("nexus.dq_flags")) == 2
