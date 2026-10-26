@@ -4,7 +4,7 @@
   "team": "Heisenbugs",
   "status": "submission candidate; every claim is backed by a test, trace or CI job (ledger: engg/docs/submission/EVIDENCE.md)",
   "sponsor_technology": {
-    "zetaris": "Data layer: Supabase Postgres federated as source `sb` (read-only role), 12 CSV/Parquet file tables in Zetaris's internal store, REST news/social feeds, the semantic view v_crime_unified and data-quality views; agents read only through 13 registered named queries",
+    "zetaris": "Data layer: Supabase Postgres federated as source `sb` (read-only role), 12 CSV/Parquet file tables in Zetaris's internal store, the semantic view v_crime_unified and data-quality views; REST feeds served by the Nexus API: weather live, news/social in progress. Agents read only through the app's named-query registry (13 queries, each with Lightning SQL and a DuckDB twin)",
     "meterless_engines": [
       "world_model",
       "hmem",
