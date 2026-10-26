@@ -48,7 +48,8 @@ export type AppealRequest = {
   requested_at: string;
 };
 
-export type AppealEdit = { title: string; summary: string; looking_for: string[] };
+/** area_label is optional so older callers keep working; the console editor always sends it (0007_09). */
+export type AppealEdit = { title: string; summary: string; looking_for: string[]; area_label?: string };
 
 /** Parse the form's "one item per line" box: trimmed, empty lines dropped, at most 4 items. */
 export function parseLookingFor(raw: string): string[] {
@@ -65,7 +66,9 @@ export function validateAppeal(e: AppealEdit, terms: CaseTerm[] = []): string | 
   if (e.title.length > 90) return "Keep the title under 90 characters.";
   if (!e.summary.trim()) return "Add a summary.";
   if (e.summary.length > 500) return "Keep the summary under 500 characters.";
-  for (const [field, text] of [["title", e.title], ["summary", e.summary], ...e.looking_for.map((t) => ["looking for", t])]) {
+  if (e.area_label !== undefined && !e.area_label.trim()) return "Add an area, such as the locality.";
+  if ((e.area_label ?? "").length > 60) return "Keep the area under 60 characters.";
+  for (const [field, text] of [["title", e.title], ["area", e.area_label ?? ""], ["summary", e.summary], ...e.looking_for.map((t) => ["looking for", t])]) {
     const k = leakKind(text) ?? caseLeakKind(text, terms);
     if (k) return `The ${field} contains a ${k}. Public appeals must not.`;
   }

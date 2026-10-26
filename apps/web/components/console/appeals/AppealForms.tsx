@@ -38,18 +38,19 @@ export function RequestDraftForm() {
 /** Edit a draft and publish it, or withdraw a published appeal. The database re-checks every published word. */
 export function AppealEditor({ appeal, canWrite }: { appeal: Appeal; canWrite: boolean }) {
   const [title, setTitle] = useState(appeal.title);
+  const [area, setArea] = useState(appeal.area_label);
   const [summary, setSummary] = useState(appeal.summary);
   const [lookingFor, setLookingFor] = useState(appeal.looking_for.join("\n"));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
-  const edit = { title, summary, looking_for: parseLookingFor(lookingFor) };
+  const edit = { title, area_label: area, summary, looking_for: parseLookingFor(lookingFor) };
   const live = validateAppeal(edit);
   const readOnly = !canWrite || appeal.status === "withdrawn";
 
   function run(action: "save" | "publish" | "withdraw") {
     start(async () => {
-      const r = await saveAppeal(appeal.public_incident_id, { title, summary, looking_for: lookingFor, action });
+      const r = await saveAppeal(appeal.public_incident_id, { title, area_label: area, summary, looking_for: lookingFor, action });
       const done = { save: "Saved.", publish: "Published. It appears on the public appeals page within a minute.", withdraw: "Withdrawn from the public site." };
       setMsg(r.ok ? { ok: true, text: done[action] } : { ok: false, text: r.error });
       if (r.ok) router.refresh();
@@ -64,6 +65,10 @@ export function AppealEditor({ appeal, canWrite }: { appeal: Appeal; canWrite: b
         <input className={field} value={title} onChange={(e) => setTitle(e.target.value)} disabled={readOnly} />
       </label>
       <label className="block text-sm">
+        <span className="mb-1 block text-muted">Area shown to the public (a locality or road, never a landmark or door number)</span>
+        <input className={field} value={area} onChange={(e) => setArea(e.target.value)} disabled={readOnly} />
+      </label>
+      <label className="block text-sm">
         <span className="mb-1 block text-muted">Summary</span>
         <textarea className={field} rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} disabled={readOnly} />
       </label>
@@ -72,7 +77,7 @@ export function AppealEditor({ appeal, canWrite }: { appeal: Appeal; canWrite: b
         <textarea className={field} rows={4} value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} disabled={readOnly} />
       </label>
       {!readOnly && live && <p role="alert" className="text-sm text-red-600">{live}</p>}
-      {!readOnly && !live && leakKind(`${title} ${summary} ${lookingFor}`) === null && (
+      {!readOnly && !live && leakKind(`${title} ${area} ${summary} ${lookingFor}`) === null && (
         <p className="text-xs text-muted">No plates, phone numbers, case or FIR numbers found. The database checks again when you publish.</p>
       )}
       {canWrite && (

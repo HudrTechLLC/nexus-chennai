@@ -77,3 +77,14 @@ describe("per-case leaks (shared fixture case_leaks, 0007_08)", () => {
     expect(validateAppeal(ok)).toBeNull(); // without the case's terms only the pattern list applies
   });
 });
+
+describe("area label (0007_09)", () => {
+  const ok = { title: "Mobile snatching", summary: "A phone was snatched.", looking_for: [], area_label: "Adyar" };
+  it("is required when sent, short, and leak-checked like the other fields", () => {
+    expect(validateAppeal(ok)).toBeNull();
+    expect(validateAppeal({ ...ok, area_label: " " })).toMatch(/area/);
+    expect(validateAppeal({ ...ok, area_label: "x".repeat(61) })).toMatch(/60/);
+    const terms = caseTerms([], "near VHS Hospital, Adyar");
+    expect(validateAppeal({ ...ok, area_label: "Adyar (near VHS Hospital, Adyar area)" }, terms)).toMatch(/area contains a place from the case address/);
+  });
+});
