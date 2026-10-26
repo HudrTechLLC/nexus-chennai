@@ -273,3 +273,8 @@ The sponsor text names Ultra 550B as the reasoning model, because it is what act
   - the route handler only rate-limits and strips EXIF;
   - passphrases are never logged.
 - **Trade-off:** bcrypt is weaker than Argon2id against GPU cracking, but each tip code is random and attempts are limited online. The README states the deviation.
+
+## D-024 · A 13th named query, `q_hex_counts` (nexus-2, #35) (2026-10-26)
+The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_hex_counts`: crime counts per H3 cell per time window, read through Zetaris, with a DuckDB twin.
+- **Statistics:** a Poisson upper-tail test against each cell's own baseline of 8 windows, shrunk toward the citywide rate. No model is involved.
+- **Code:** it lives in `adapters/zetaris_queries_n2.py` and is merged into `NAMED_QUERIES`, a file split agreed between nexus-1 and nexus-2.

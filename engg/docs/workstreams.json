@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:27:53+05:30",
+  "updated": "2026-10-26T12:33:13+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -131,7 +131,7 @@
           "id": "WS1-14",
           "phase": "P2",
           "title": "Data-quality views: duplicate FIRs, bad geo, unmapped sections",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-2"
         },
         {
@@ -321,8 +321,9 @@
           "id": "WS2-18",
           "phase": "P4",
           "title": "Hotspot detector (statistical, no model)",
-          "status": "todo",
-          "owner": "nexus-2"
+          "status": "done",
+          "owner": "nexus-2",
+          "ref": "#35"
         },
         {
           "id": "WS2-19",
