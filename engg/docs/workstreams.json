@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T16:26:53+05:30",
+  "updated": "2026-10-26T16:31:23+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -492,9 +492,10 @@
           "id": "WS3-15",
           "phase": "P7",
           "title": "Command overview: KPIs, alert funnel, top series, today's briefing (DASH-07)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-5",
-          "note": "Chief decisions 26 Oct: open = registered + under_investigation; briefing is code-generated, no LLM"
+          "note": "Chief decisions 26 Oct: open = registered + under_investigation; briefing is code-generated, no LLM",
+          "ref": "#184"
         }
       ]
     },
