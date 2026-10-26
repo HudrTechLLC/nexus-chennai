@@ -24,7 +24,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 - **No "Super VL reads the CCTV still".** Nightshift refuses image input (D-021). Segment 3 shows the honest caption fallback, traced as `vision_unavailable`.
 - **Reasoning model is Nemotron Ultra 550B**, not Super 120B (D-017).
-- **No eval numbers** unless `output_examples/eval_report.json` lands (`[PENDING: WS2-14]`). The close doesn't depend on them.
+- **Eval numbers are on main** (`output_examples/eval_report.json`: P 0.59 / R 0.86 vs rules-only 0.09 / 0.30; HIGH 9/9). The close doesn't depend on them. If you say one, say it with the baseline, never as a bare accuracy figure.
 - **One story**, not a tour: the public-tip and appeal segments are cut to keep under 3:40. They are covered in the deck.
 
 ## Before recording
