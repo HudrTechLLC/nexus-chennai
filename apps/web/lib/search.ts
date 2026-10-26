@@ -68,6 +68,16 @@ export function aliasVariants(words: string[]): string[] {
   return Array.from(out).slice(0, 24);
 }
 
+/** Evidence kinds, and the words that find them ("cctv" finds stills and clips). */
+export const EVIDENCE_KINDS = ["cctv_still", "cctv_clip", "photo", "scan", "audio", "document"] as const;
+
+/** PostgREST or-filter for evidence: a camera-id fragment, or an evidence kind the word names. */
+export function evidenceFilter(words: string[]): string {
+  const safe = words.map((w) => w.toLowerCase().replace(/[^a-z0-9_-]/g, "")).filter((w) => w.length >= 2);
+  const kinds = EVIDENCE_KINDS.filter((k) => safe.some((w) => k.split("_").includes(w) || k === w));
+  return [...safe.map((w) => `camera_id.ilike.%${w}%`), ...(kinds.length ? [`kind.in.(${kinds.join(",")})`] : [])].join(",");
+}
+
 /** PostgREST or-filter for person search: a name fragment, or an exact alias in any common spelling. */
 export function personFilter(words: string[]): string {
   const byName = words.map((w) => `name.ilike.%${w}%`);

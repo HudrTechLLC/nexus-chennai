@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dayRange, plateIlike, plateMatches } from "@/lib/cases";
-import { SEARCHABLE_TIP_STATUSES, personFilter, type ParsedSearch } from "@/lib/search";
+import { SEARCHABLE_TIP_STATUSES, evidenceFilter, personFilter, type ParsedSearch } from "@/lib/search";
 import type { CaseRow } from "@/lib/casesData";
 
 /**
@@ -14,6 +14,10 @@ export type SourceUsed = { group: string; source: string; rows: number; error: s
 export type VehicleHit = { crime_id: string; plate_pattern: string | null; vehicle_type: string; make_model: string | null; colour: string | null; role: string };
 export type PersonHit = { person_id: string; name: string | null; aliases: string[] };
 export type TipHit = { tip_id: string; category: string; text: string; received_week: string; status: string };
+/** One ANPR camera read of a plate (map_anpr_reads; all police roles may read it). */
+export type AnprHit = { read_id: string; camera_id: string; read_at: string; plate_text: string; plate_confidence: number | null; crime_id: string | null };
+/** One evidence item (evidence_media, under can_read_crime). */
+export type EvidenceHit = { evidence_id: string; crime_id: string; kind: string; camera_id: string | null; captured_at: string | null };
 
 export type SearchResult = {
   /** True when a tag or linked facet matched more ids than one query carries, so results are a subset. */
@@ -22,6 +26,8 @@ export type SearchResult = {
   vehicles: VehicleHit[];
   persons: PersonHit[];
   tips: TipHit[];
+  anpr: AnprHit[];
+  evidence: EvidenceHit[];
   sources: SourceUsed[];
 };
 
@@ -120,5 +126,24 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
     note("Tips", "tips (screened by Tip Guard only)", tips.length, tr.error?.message ?? null);
   }
 
-  return { capped, cases, vehicles, persons, tips, sources };
+  // ANPR camera reads: a plate fragment, matched the same way as vehicle plates (SRCH-01, SRCH-05).
+  let anpr: AnprHit[] = [];
+  if (p.kind === "plate") {
+    const { data, error } = await sb.from("map_anpr_reads").select("read_id, camera_id, read_at, plate_text, plate_confidence, crime_id")
+      .ilike("plate_text", plateIlike(p.value)).order("read_at", { ascending: false }).limit(200);
+    anpr = ((data ?? []) as AnprHit[]).filter((r) => plateMatches(r.plate_text, p.value)).slice(0, LIMIT);
+    note("ANPR reads", "map_anpr_reads", anpr.length, error?.message ?? null);
+  }
+
+  // Evidence: a camera id or an evidence kind word ("cctv", "photo"), or every item on one case.
+  let evidence: EvidenceHit[] = [];
+  if (p.kind === "crime_id" || (p.kind === "text" && p.words.length)) {
+    let eq = sb.from("evidence_media").select("evidence_id, crime_id, kind, camera_id, captured_at");
+    eq = p.kind === "crime_id" ? eq.eq("crime_id", p.value) : eq.or(evidenceFilter(p.words));
+    const { data, error } = await eq.order("created_at", { ascending: false }).limit(LIMIT);
+    evidence = (data ?? []) as EvidenceHit[];
+    note("Evidence", "evidence_media", evidence.length, error?.message ?? null);
+  }
+
+  return { capped, cases, vehicles, persons, tips, anpr, evidence, sources };
 }

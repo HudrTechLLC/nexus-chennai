@@ -2,7 +2,7 @@
  * Unit tests for console search parsing (lib/search.ts).
  */
 import { describe, expect, it } from "vitest";
-import { aliasVariants, classifyQuery, hasCriteria, parseSearch, personFilter, searchWords } from "../search";
+import { aliasVariants, classifyQuery, evidenceFilter, hasCriteria, parseSearch, personFilter, searchWords } from "../search";
 
 describe("classifyQuery", () => {
   it("recognises case ids", () => {
@@ -73,5 +73,16 @@ describe("alias search (SRCH-05)", () => {
   it("matches a name fragment or an exact alias", () => {
     expect(personFilter(["sathish"])).toBe('name.ilike.%sathish%,aliases.ov.{"sathish","Sathish","SATHISH"}');
     expect(personFilter([])).toBe("");
+  });
+});
+
+describe("evidence search (SRCH-01)", () => {
+  it("matches a camera id fragment, and an evidence kind a word names", () => {
+    expect(evidenceFilter(["cctv"])).toBe("camera_id.ilike.%cctv%,kind.in.(cctv_still,cctv_clip)");
+    expect(evidenceFilter(["cam-17"])).toBe("camera_id.ilike.%cam-17%");
+    expect(evidenceFilter(["photo"])).toBe("camera_id.ilike.%photo%,kind.in.(photo)");
+  });
+  it("drops characters that could change the filter", () => {
+    expect(evidenceFilter(["a,b)", "x"])).toBe("camera_id.ilike.%ab%");
   });
 });
