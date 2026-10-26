@@ -53,6 +53,28 @@ export function searchWords(q: string): string[] {
   return Array.from(new Set(q.toLowerCase().replace(/[%_\\,()."'*]/g, " ").split(/\s+/).filter((w) => w.length >= 2))).slice(0, 6);
 }
 
+/**
+ * Spellings to match against persons.aliases (SRCH-05). Aliases are a text[], which PostgREST can only match
+ * by whole element, so this offers the typed phrase and each word in lower, Title and UPPER case
+ * ("pulsar raju" → "Pulsar Raju", "PULSAR RAJU", "pulsar", "Pulsar", …). Only letters, digits, space and
+ * hyphen survive, so nothing can break out of the array literal.
+ */
+export function aliasVariants(words: string[]): string[] {
+  const clean = words.map((w) => w.toLowerCase().replace(/[^a-z0-9 -]/g, "")).filter((w) => w.length >= 2);
+  if (clean.length === 0) return [];
+  const title = (t: string) => t.replace(/(^|[ -])([a-z])/g, (_m, p: string, c: string) => p + c.toUpperCase());
+  const out = new Set<string>();
+  for (const t of [clean.join(" "), ...clean]) for (const v of [t, title(t), t.toUpperCase()]) out.add(v);
+  return Array.from(out).slice(0, 24);
+}
+
+/** PostgREST or-filter for person search: a name fragment, or an exact alias in any common spelling. */
+export function personFilter(words: string[]): string {
+  const byName = words.map((w) => `name.ilike.%${w}%`);
+  const aliases = aliasVariants(words);
+  return [...byName, ...(aliases.length ? [`aliases.ov.{${aliases.map((v) => `"${v}"`).join(",")}}`] : [])].join(",");
+}
+
 export function parseSearch(sp: Record<string, string | string[] | undefined>): ParsedSearch {
   const raw = (Array.isArray(sp.q) ? sp.q[0] : sp.q ?? "").slice(0, 120);
   const { kind, value } = classifyQuery(raw);
