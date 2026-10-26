@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T14:19:21+05:30",
+  "updated": "2026-10-26T14:29:58+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -89,10 +89,10 @@
           "id": "WS1-08",
           "phase": "P1",
           "title": "Seeded generator: 14k FIRs, 70 stations, 30 planted series, decoys, duplicates, vehicle chains, offender returns",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
           "note": "Slice 1 merged + seeded (14k crimes, 30 series, 25 decoys, 15 dup FIRs); slice 2 next",
-          "ref": "#30"
+          "ref": "#30, #76"
         },
         {
           "id": "WS1-09",
@@ -105,10 +105,10 @@
           "id": "WS1-10",
           "phase": "P1",
           "title": "Upload to S3 (or Zetaris-readable store) and seed Supabase",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "Supabase seeded; Zetaris file side via internal store (D-022a)",
-          "ref": "#30"
+          "note": "Additive re-seed: 14,039 crimes, 0 lost; map_* filled; 120 MB",
+          "ref": "#76, #87"
         },
         {
           "id": "WS1-11",
@@ -146,7 +146,7 @@
           "title": "12 named queries + DuckDB sample equivalents",
           "status": "in_progress",
           "owner": "nexus-1",
-          "note": "q_case + q_features live; DuckDB twins by nexus-2 (#48)"
+          "note": "8/13 live (q_case, q_candidates, q_features, q_dq_flags, q_news, q_hex_counts, q_search, q_station_matrix); q_case perf -> nexus-2"
         },
         {
           "id": "WS1-16",
@@ -313,7 +313,7 @@
           "title": "Judge path: real /run, 3 input examples, real outputs, sample mode end to end",
           "status": "in_progress",
           "owner": "nexus-3",
-          "note": "/run real; judge inputs CHN-AD-2026-001182, CHN-KU-2025-000078, CHN-GU-2025-000945; waits on sample bundle (WS1-11)",
+          "note": "First live /run OK (run_fb8044bf -> LA-2026-C802D4F2E02B); waits on sample bundle for judge path",
           "ref": "#27"
         },
         {
@@ -440,7 +440,7 @@
           "title": "Pulse Map (lean): hex layer, crime-type filter, time scrubber",
           "status": "in_progress",
           "owner": "nexus-4",
-          "note": "Slices A+B live (dots, arcs, hulls, hex heat, scrubber); slice C (CCTV/ANPR/112/tips/release layers) + live check after seed",
+          "note": "Slices A+B live; slice C data now seeded",
           "ref": "#33"
         },
         {
