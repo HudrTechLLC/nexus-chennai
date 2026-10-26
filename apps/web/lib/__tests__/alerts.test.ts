@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  coverageCap, coverageCapLine,
+  coverageCap, coverageCapLine, parseScope,
   coverageOf, decisionState, factorRows, latestDecision, parseSort, parseTab, queryIds, sortAlerts,
   validateDecision, type AlertDecision, type LinkFactor,
 } from "../alerts";
@@ -100,5 +100,18 @@ describe("coverageCap (D-016)", () => {
   });
   it("forensic matches are exempt from the cap", () => {
     expect(coverageCapLine({ ...capped, link_factors: [...capped.link_factors, f("forensic", 0.1, 1)] })).toBeNull();
+  });
+});
+
+describe("parseScope (officer inbox defaults to own station)", () => {
+  it("station officers open on their station and can switch to city-wide", () => {
+    expect(parseScope(undefined, "station_officer", "PS-ADYAR-J2")).toBe("station");
+    expect(parseScope("city", "station_officer", "PS-ADYAR-J2")).toBe("city");
+    expect(parseScope("junk", "station_officer", "PS-ADYAR-J2")).toBe("station");
+  });
+  it("other roles, or an officer without a station, always see city-wide", () => {
+    expect(parseScope("station", "analyst", null)).toBe("city");
+    expect(parseScope("station", "supervisor", "PS-ADYAR-J2")).toBe("city");
+    expect(parseScope(undefined, "station_officer", null)).toBe("city");
   });
 });

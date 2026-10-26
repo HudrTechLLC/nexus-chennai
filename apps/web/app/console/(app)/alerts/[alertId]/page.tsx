@@ -5,6 +5,7 @@ import { consoleServerClient } from "@/lib/supabase/server";
 import { coverageCapLine, coverageOf, decisionState, factorRows, latestDecision, pct, queryIds, REASON_LABEL } from "@/lib/alerts";
 import { audit, crimeBriefs, crimeTitle, fetchAlert, officerNames, type CrimeBrief } from "@/lib/alertsData";
 import { canDecideAlerts } from "@/lib/roles";
+import { canPropose } from "@/lib/taskforces";
 import { BandPill, FactorBars, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { DecisionForm } from "@/components/console/alerts/DecisionForm";
 import { AlertsLive } from "@/components/console/alerts/AlertsLive";
@@ -94,7 +95,8 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-lg font-bold">Evidence</h2>
-        <table className="mt-2 w-full text-left text-sm">
+        <div className="-mx-5 overflow-x-auto px-5">
+        <table className="mt-2 w-full min-w-[34rem] text-left text-sm">
           <thead className="text-xs uppercase text-muted">
             <tr><th className="py-1">Factor</th><th>Why</th><th>Source row</th><th>Zetaris query</th></tr>
           </thead>
@@ -113,6 +115,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
             ))}
           </tbody>
         </table>
+        </div>
         <p className="mt-2 font-mono text-xs text-muted">Zetaris query ids: {qids.length ? qids.join(", ") : "none recorded"}</p>
       </section>
 
@@ -153,6 +156,14 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
           <p className="mt-1 text-sm">
             <strong>{last.decision === "approve" ? "Approved" : `Rejected · ${last.reason_code ? REASON_LABEL[last.reason_code] : ""}`}</strong>{" "}
             by {names[last.by] ?? "an analyst"}, {fmt(last.at)}{last.note ? `: ${last.note}` : ""}
+          </p>
+        )}
+        {alert.status === "approved" && canPropose(officer.role) && (
+          <p className="mt-3">
+            <Link href={`/console/taskforces/new?alert_id=${encodeURIComponent(alertId)}`}
+              className="inline-block rounded-md bg-ink px-3 py-1.5 text-sm font-semibold text-bg hover:opacity-90">
+              Propose joint task force
+            </Link>
           </p>
         )}
         {decisions.length > 0 && (

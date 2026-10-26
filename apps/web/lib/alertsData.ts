@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Officer } from "@/lib/auth";
-import type { LinkAlert, Tab } from "@/lib/alerts";
+import type { LinkAlert, Scope, Tab } from "@/lib/alerts";
 
 /** One crime as an alert card shows it. Full rows for crimes the officer may read, the city-wide summary otherwise. */
 export type CrimeBrief = {
@@ -24,9 +24,10 @@ export type CrimeBrief = {
 const ALERT_SELECT = "*, link_factors(*), alert_decisions(*)";
 
 /** Inbox rows for a tab. Every police role sees every status, including rejected (spec F4, Part I). */
-export async function fetchInbox(sb: SupabaseClient, officer: Officer, tab: Tab, limit = 200): Promise<{ rows: LinkAlert[]; error: string | null }> {
+export async function fetchInbox(sb: SupabaseClient, officer: Officer, tab: Tab, scope: Scope = "city", limit = 200): Promise<{ rows: LinkAlert[]; error: string | null }> {
   let q = sb.from("link_alerts").select(ALERT_SELECT).order("created_at", { ascending: false }).limit(limit);
   if (tab === "pending" || tab === "approved" || tab === "rejected") q = q.eq("status", tab);
+  if (scope === "station" && officer.stationId) q = q.contains("stations", [officer.stationId]);
   if (tab === "mine") {
     if (officer.role === "station_officer" && officer.stationId) {
       q = q.contains("stations", [officer.stationId]);

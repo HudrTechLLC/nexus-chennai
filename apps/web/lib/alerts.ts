@@ -189,6 +189,17 @@ export function decisionState(alert: Pick<LinkAlert, "status" | "alert_decisions
 // Inbox tabs and sorting (G2)
 // =====================
 
+// Station officers read every alert city-wide (spec L75, L1452); the inbox opens on their own
+// station's alerts (L69's intent, chief ruling 2026-10-26) with a toggle to the whole city.
+export const SCOPES = ["station", "city"] as const;
+export type Scope = (typeof SCOPES)[number];
+
+/** Scope for the inbox: only a station officer with a station gets "station", and that is their default. */
+export function parseScope(v: string | undefined, role: string | null | undefined, stationId: string | null | undefined): Scope {
+  if (role !== "station_officer" || !stationId) return "city";
+  return v === "city" ? "city" : "station";
+}
+
 export const TABS = ["pending", "approved", "rejected", "mine"] as const;
 export type Tab = (typeof TABS)[number];
 export const TAB_LABEL: Record<Tab, string> = { pending: "Pending", approved: "Approved", rejected: "Rejected", mine: "Mine" };
