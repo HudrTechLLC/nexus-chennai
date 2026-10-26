@@ -42,9 +42,13 @@ function ProvList({ rows }: { rows: Provenance[] }) {
  * Click a node or edge for its attributes and provenance (which agent or feed asserted it, how
  * often, when). Drag to pan, scroll to zoom. "Centre here" reloads the neighbourhood around a node.
  */
-export function GraphExplorer({ nodes, edges, provenance, seedIds, qs }: {
+export function GraphExplorer({ nodes, edges, provenance, seedIds, qs = "", explorerLinks = true, heightClass = "h-[min(70vh,640px)]" }: {
   nodes: GraphNode[]; edges: GraphEdge[]; provenance: Provenance[]; seedIds: string[];
-  qs: string; // current filters (hops, types) to keep when re-centring
+  qs?: string; // current filters (hops, types) to keep when re-centring
+  /** Show "Centre here" (links to /console/graph, analyst+). Pass false when embedding for roles that cannot open the explorer. */
+  explorerLinks?: boolean;
+  /** Tailwind height of the canvas, e.g. "h-96" when embedded in a case file. */
+  heightClass?: string;
 }) {
   const pos = useMemo(() => {
     const p = forceLayout(nodes.map((n) => n.id), edges, { width: W, height: H, pin: seedIds.length === 1 ? seedIds[0] : null });
@@ -79,7 +83,7 @@ export function GraphExplorer({ nodes, edges, provenance, seedIds, qs }: {
     <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
       <div className="relative overflow-hidden rounded-xl border border-line bg-surface">
         <svg
-          ref={svg} viewBox={`0 0 ${W} ${H}`} className="h-[min(70vh,640px)] w-full touch-none select-none"
+          ref={svg} viewBox={`0 0 ${W} ${H}`} className={`${heightClass} w-full touch-none select-none`}
           role="img" aria-label={`World Model graph: ${nodes.length} entities, ${edges.length} relations`}
           onWheel={onWheel}
           onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; }}
@@ -152,7 +156,9 @@ export function GraphExplorer({ nodes, edges, provenance, seedIds, qs }: {
               {selNode.synthetic && <p className="text-[11px] text-accent">synthetic</p>}
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
-              <Link href={`/console/graph?seed=${encodeURIComponent(selNode.id)}${qs ? `&${qs}` : ""}`} className="rounded-md bg-signal px-2 py-1 text-white">Centre here</Link>
+              {explorerLinks && (
+                <Link href={`/console/graph?seed=${encodeURIComponent(selNode.id)}${qs ? `&${qs}` : ""}`} className="rounded-md bg-signal px-2 py-1 text-white">Centre here</Link>
+              )}
               {href(selNode) && <Link href={href(selNode)!} className="rounded-md border border-line px-2 py-1 hover:border-signal">Open {selNode.type === "crime" ? "case" : "series"}</Link>}
             </div>
             {selNode.aliases.length > 0 && (
