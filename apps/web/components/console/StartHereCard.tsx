@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, Compass } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Officer } from "@/lib/auth";
 import type { AlertRow } from "@/lib/overview";
@@ -61,18 +62,25 @@ export async function StartHereCard({ sb, officer, alerts }: { sb: SupabaseClien
   });
   return (
     <DismissibleStrip storageKey={key}>
-      <section aria-labelledby="start-here" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm md:flex-nowrap md:overflow-hidden md:whitespace-nowrap">
-        <h2 id="start-here" className="shrink-0 font-semibold">Start here</h2>
-        <p className="hidden min-w-0 truncate text-muted md:block" title={WHAT_NEXUS_DOES}>{WHAT_NEXUS_DOES}</p>
-        <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 md:shrink-0 md:flex-nowrap">
-          {steps.map((s) => (
-            <li key={s.n}>
-              <Link href={s.href} title={s.body} className="text-signal underline-offset-2 hover:underline">
-                <span className="text-muted">{s.n}.</span> {s.title} →
-              </Link>
-            </li>
-          ))}
-        </ol>
+      <section aria-labelledby="start-here" className="flex gap-3 text-sm">
+        <span className="mt-0.5 hidden size-8 shrink-0 place-items-center rounded-lg bg-signal-soft text-signal sm:grid">
+          <Compass className="size-[18px]" aria-hidden />
+        </span>
+        <div className="min-w-0 space-y-1.5">
+          <p>
+            <span id="start-here" role="heading" aria-level={2} className="mr-2 font-semibold text-ink">Start here</span>
+            <span className="text-muted">{WHAT_NEXUS_DOES}</span>
+          </p>
+          <ol className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            {steps.map((s) => (
+              <li key={s.n}>
+                <Link href={s.href} title={s.body} className="inline-flex items-center gap-1 font-medium text-signal underline-offset-2 hover:underline">
+                  <span className="text-muted">{s.n}.</span> {s.title} <ArrowRight className="size-3.5" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
     </DismissibleStrip>
   );

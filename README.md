@@ -361,6 +361,8 @@ Versions are pinned in `services/api/requirements*.txt` and `apps/web/package.js
 | pngjs | 7.0.0 | MIT |
 | @tailwindcss/typography | 0.5.15 | MIT |
 | server-only | 0.0.1 | MIT |
+| lucide-react (icons) | 0.468.0 | ISC |
+| Inter, JetBrains Mono (fonts, self-hosted at build by `next/font`) | Google Fonts | SIL OFL 1.1 |
 
 **Web, development:** typescript 5 (Apache-2.0), eslint 8 and eslint-config-next 14.2.35, tailwindcss 3.4, postcss 8, vitest 2.1.9, @types/node, @types/react, @types/react-dom, @types/pngjs 6.0.5 (all MIT).
 

@@ -8,6 +8,7 @@ import type { PublicCell } from "@/lib/publicData";
 import { framePadding, type MapAt } from "@/lib/publicCards";
 import { cellBounds } from "@/lib/publicArea";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { collapseAttribution } from "@/lib/mapChrome";
 
 /**
  * Public crime map (spec G1 /map): H3 r8 cells coloured by count, gentle pulse on cells with an
@@ -55,6 +56,7 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    collapseAttribution(m, el.current);
     m.on("load", () => {
       m.addSource("hex", { type: "geojson", data });
       m.addLayer({

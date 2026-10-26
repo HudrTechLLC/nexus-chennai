@@ -5,6 +5,7 @@ import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { overlayPadding } from "@/lib/pulse";
+import { collapseAttribution } from "@/lib/mapChrome";
 
 export type MapView = { center: [number, number]; zoom: number; bounds?: [number, number, number, number] };
 
@@ -44,6 +45,7 @@ export function MapCanvas({ view, layers, theme, onClick, onHover, focus, initia
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    collapseAttribution(m, el.current);
     // a move with an input event behind it (drag, wheel, pinch, zoom buttons) is the user's
     m.on("movestart", (e) => { if ((e as { originalEvent?: unknown }).originalEvent) userMoved.current = true; });
     m.on("moveend", () => {

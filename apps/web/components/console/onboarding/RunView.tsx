@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Badge, type Tone } from "@/components/ui";
 import { approveRun, rejectRun, saveMapping } from "@/app/console/(app)/system/sources/onboard/actions";
 import {
   clip, confidenceLabel, dqHits, mappingEdits, mappingIssues, POLL_MS, shouldPoll, STATUS_LABEL, STEPS, stepIndex,
   TRANSFORM_LABEL, TRANSFORMS, type MappingEdit, type OnboardingField, type OnboardingMapping, type OnboardingRun,
   type Transform,
 } from "@/lib/onboarding";
+
+/** DQ severity → chip tone (G3): errors red, warnings amber, info slate. */
+const severityTone = (sev: string): Tone => {
+  const v = sev.toLowerCase();
+  return v === "error" || v === "high" ? "danger" : v.startsWith("warn") || v === "medium" ? "warn" : "low";
+};
 
 type Draft = Record<string, { unified_field: string | null; transform: Transform }>;
 const toDraft = (rows: OnboardingMapping[]): Draft =>
@@ -99,13 +106,25 @@ export function RunView({ initialRun, initialMappings, fields }: {
             </Link>
           )}
         </div>
-        <ol className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs" aria-label="Progress">
-          {STEPS.map((s, i) => (
-            <li key={s} className={`flex items-center gap-2 ${i < at || (i === at && !stopped) ? "" : "text-muted"}`} aria-current={i === at ? "step" : undefined}>
-              <span className={i === at && !stopped ? "font-semibold" : ""}>{s}</span>
-              {i < STEPS.length - 1 && <span aria-hidden className="text-muted">→</span>}
-            </li>
-          ))}
+        <ol className="mt-4 grid grid-cols-6 text-xs" aria-label="Progress">
+          {STEPS.map((s, i) => {
+            const done = i < at || (i === at && run.status === "registered");
+            const current = i === at && !stopped && !done;
+            const failedHere = i === at && stopped;
+            return (
+              <li key={s} className="relative flex flex-col items-center gap-1.5 text-center" aria-current={i === at ? "step" : undefined}>
+                {i > 0 && (
+                  <span aria-hidden className={`absolute right-1/2 top-[7px] h-0.5 w-full ${i <= at ? "bg-signal" : "bg-line"}`} />
+                )}
+                <span aria-hidden className={`relative z-[1] size-4 rounded-full ${
+                  failedHere ? "bg-danger ring-4 ring-danger-soft"
+                    : done ? "bg-signal"
+                    : current ? "bg-surface ring-[3px] ring-inset ring-signal"
+                    : "bg-surface ring-2 ring-inset ring-line"}`} />
+                <span className={done || current ? "font-medium text-ink" : failedHere ? "font-medium text-danger" : "text-muted"}>{s}</span>
+              </li>
+            );
+          })}
         </ol>
         {(run.status === "uploaded" || run.status === "profiling") && (
           <p className="mt-2 text-sm text-muted">The local worker picks the file up within about 15 s, profiles it through Zetaris and proposes a mapping (about 20–40 s).</p>
@@ -201,7 +220,14 @@ export function RunView({ initialRun, initialMappings, fields }: {
                           <span className="text-xs text-muted">{TRANSFORM_LABEL[d.transform]}</span>
                         )}
                       </td>
-                      <td className={`${cell} tabular-nums`}>{confidenceLabel(m.confidence)}</td>
+                      <td className={`${cell} tabular-nums`}>
+                        <span className="inline-flex items-center gap-2">
+                          <span aria-hidden className="h-1.5 w-10 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-line">
+                            <span className="block h-full rounded-full bg-signal" style={{ width: `${Math.round((m.confidence ?? 0) * 100)}%` }} />
+                          </span>
+                          {confidenceLabel(m.confidence)}
+                        </span>
+                      </td>
                       <td className={`${cell} max-w-xs text-xs text-muted`}>{m.reason ?? ""}</td>
                     </tr>
                   );
@@ -233,7 +259,7 @@ export function RunView({ initialRun, initialMappings, fields }: {
                   {run.dq.map((f, i) => (
                     <tr key={`${f.rule}-${i}`} className={Number(f.count) > 0 ? "" : "text-muted"}>
                       <td className={cell}><div className="font-mono text-xs">{f.rule}</div>{f.detail && <div className="text-xs text-muted">{clip(f.detail, 160)}</div>}</td>
-                      <td className={cell}>{f.severity}</td>
+                      <td className={cell}><Badge tone={severityTone(f.severity)}>{f.severity}</Badge></td>
                       <td className={`${cell} tabular-nums`}>{Number(f.count).toLocaleString("en-IN")}</td>
                       <td className={`${cell} hidden text-xs text-muted sm:table-cell`}>{(f.sample_rows ?? []).slice(0, 2).map((r) => clip(r, 50)).join(" · ")}</td>
                     </tr>

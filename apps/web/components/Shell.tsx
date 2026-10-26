@@ -1,20 +1,16 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandLockup } from "@/components/ui";
+import { PublicNav } from "./PublicNav";
 
-/** Page frame shared by the public portal pages. */
+/** Page frame shared by the public portal pages: navy brand bar with the hex mark, icon nav, police login. */
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-baseline gap-x-6 gap-y-2 px-4 py-3">
-          <Link href="/" className="text-xl font-bold uppercase tracking-wide">Nexus · Chennai</Link>
-          <nav className="flex gap-4 text-sm text-muted">
-            <Link href="/appeals" className="hover:text-ink">Appeals</Link>
-            <Link href="/map" className="hover:text-ink">Crime map</Link>
-            <Link href="/tip" className="hover:text-ink">Send a tip</Link>
-            <Link href="/console" className="hover:text-ink">Police login</Link>
-            <Link href="/docs/progress" className="hover:text-ink">Engg Docs</Link>
-          </nav>
+      <header className="on-brand sticky top-0 z-sticky h-14 border-b border-brand-line bg-brand-bar text-brand-ink">
+        <div className="relative mx-auto flex h-full max-w-5xl items-center gap-6 px-4">
+          <Link href="/" className="rounded-md"><BrandLockup /></Link>
+          <PublicNav />
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
@@ -28,7 +24,7 @@ export function Shell({ children }: { children: ReactNode }) {
 /** Honest placeholder for a screen that is not built yet. */
 export function NotYet({ title, phase, what }: { title: string; phase: string; what: string }) {
   return (
-    <section className="rounded-xl border border-line bg-surface p-6">
+    <section className="rounded-xl border border-line bg-surface p-6 shadow-card">
       <p className="font-mono text-xs uppercase tracking-widest text-accent">Coming in {phase}</p>
       <h1 className="mt-1 text-3xl font-bold">{title}</h1>
       <p className="mt-2 max-w-prose text-muted">{what}</p>
