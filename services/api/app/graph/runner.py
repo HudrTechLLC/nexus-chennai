@@ -19,6 +19,7 @@ from ..adapters.nightshift import NightshiftClient
 from ..adapters.supabase import SupabaseClient
 from ..adapters.zetaris import ZetarisClient
 from ..agents import AgentDeps, DeadlineExceeded, MemoryStore, Store, detect_series
+from ..agents.series import find_test_firs
 from ..config import Settings
 from ..tracing import Tracer, new_run_id
 from .pipeline import AgentGraph
@@ -196,12 +197,41 @@ def _hotspots(graph: AgentGraph, case_dates: list[str], case_ids: set[str], opti
             for a in graph.writer.write_hotspots(relevant)], []
 
 
-def _save_series(graph: AgentGraph, series: list[dict[str, Any]]) -> list[str]:
-    """Persist detected series (series + series_members); the stored id replaces the hash id when a series grew."""
+def _detect_series(graph: AgentGraph, alerts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    """Series among this run's links, without D-033 test FIRs: {crime_id: reason} of the ones left out."""
+    series = detect_series(alerts)
+    if not series:
+        return series, {}
+    excluded = find_test_firs(graph.deps, [cid for s in series for cid in s["crime_ids"]])
+    for cid, why in sorted(excluded.items()):
+        graph.deps.tracer.emit("Series analyst", "series_member_excluded", input_summary=cid, output_summary=why,
+                               status="ok", extra={"crime_id": cid, "reason": why})
+    return (detect_series(alerts, excluded=set(excluded)) if excluded else series), excluded
+
+
+def _save_series(graph: AgentGraph, series: list[dict[str, Any]], excluded: Mapping[str, str] | None = None
+                 ) -> list[str]:
+    """Persist detected series (series + series_members); the stored id replaces the hash id when a series grew.
+
+    A stored member this run did not place in the series is removed only when it is a D-033 test FIR
+    (`series_member_removed`); members a run simply did not see are kept.
+    """
     errors: list[str] = []
+    known = dict(excluded or {})
+
+    def exclude(ids: list[str]) -> dict[str, str]:
+        unread = [cid for cid in ids if cid not in known]
+        known.update(find_test_firs(graph.deps, unread) if unread else {})
+        return {cid: known[cid] for cid in ids if cid in known}
+
+    store = graph.deps.store
     for ser in series:
         try:
-            ser["series_id"] = graph.deps.store.write_series(ser, graph.deps.tracer.run_id)
+            before = len(getattr(store, "removed", []))
+            ser["series_id"] = store.write_series(ser, graph.deps.tracer.run_id, exclude=exclude)
+            for r in getattr(store, "removed", [])[before:]:
+                graph.deps.tracer.emit("Series analyst", "series_member_removed", input_summary=r["series_id"],
+                                       output_summary=f"{r['crime_id']}: {r['reason']}", status="ok", extra=dict(r))
         except Exception as exc:  # the run's answer stands without the write
             graph.deps.tracer.emit("Series analyst", "series_save_failed", input_summary=ser.get("series_id"),
                                    output_summary=str(exc)[:300], status="error")
@@ -259,8 +289,8 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
             "deadline" if "deadline" in statuses else "partial")
         hotspots, herr = _hotspots(graph, case_dates, set(ids), options)
         errors += herr
-        series = detect_series(alerts)  # 3+ connected cases among this run's links (LNK-05)
-        errors += _save_series(graph, series)
+        series, excluded = _detect_series(graph, alerts)  # 3+ connected cases among this run's links (LNK-05)
+        errors += _save_series(graph, series, excluded)
         return ({"alerts": alerts, "series": series, "hotspots": hotspots, "errors": errors,
                  "summary": summarise(alerts, struck, dropped, f"{processed}/{len(ids)} cases processed")},
                 status)

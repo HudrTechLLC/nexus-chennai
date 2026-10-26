@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Any
 
 from ..adapters.supabase import SupabaseClient
-from ..agents.base import choose_series_id, series_name
+from ..agents.base import ExcludeFn, choose_series_id, series_name
 from ..tracing import IST, Tracer
 from .redact import redact_event
 
@@ -42,6 +42,7 @@ class SupabaseStore:
     def __init__(self, client: SupabaseClient, tracer: Tracer) -> None:
         self.client = client
         self.tracer = tracer
+        self.removed: list[dict[str, Any]] = []  # series_member_removed rows (D-033); the runner traces them
 
     # ----- runs ----------------------------------------------------------------
 
@@ -106,13 +107,22 @@ class SupabaseStore:
 
     # ----- series (WS2-21) ----------------------------------------------------------------
 
-    def write_series(self, series: dict[str, Any], run_id: str) -> str:
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str:
         ids = list(series.get("crime_ids") or [])
         stored = self.client.select("series_members", {"select": "series_id,crime_id",
                                                        "crime_id": f"in.({','.join(ids)})"}) if ids else []
         sid = choose_series_id(series, {r["crime_id"]: r["series_id"] for r in stored})
         self.client.upsert("series", {"series_id": sid, "name": series_name(series), "run_id": run_id,
                                       "synthetic": True}, on_conflict="series_id")
+        if exclude:  # D-033: only this series' members, only those `exclude` names; the crimes are never touched
+            members = self.client.select("series_members", {"select": "crime_id", "series_id": f"eq.{sid}"})
+            others = sorted({r["crime_id"] for r in members} - set(ids))
+            gone = dict(exclude(others)) if others else {}
+            for cid in others:
+                if cid not in gone:
+                    continue
+                self.client.delete("series_members", {"series_id": f"eq.{sid}", "crime_id": f"eq.{cid}"})
+                self.removed.append({"series_id": sid, "crime_id": cid, "reason": gone[cid]})
         self.client.upsert("series_members", [{"series_id": sid, "crime_id": cid} for cid in ids],
                            on_conflict="series_id,crime_id")
         self.tracer.emit("Series analyst", "series_saved", input_summary=sid,

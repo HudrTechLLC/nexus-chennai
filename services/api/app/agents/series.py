@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 from typing import Any
 
 from ..engines.markovian import resolve_config
@@ -63,8 +63,48 @@ def series_id_for(crime_ids: Sequence[str]) -> str:
     return "SER-" + hashlib.sha1("|".join(sorted(crime_ids)).encode("utf-8")).hexdigest()[:10].upper()
 
 
-def detect_series(alerts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    """Connected components of 3+ cases over pair alerts that are not rejected."""
+# D-033: a crime whose narrative starts with a bracketed label containing the word "test" (e.g.
+# "[nexus-5 timing test FIR] ...") is a test filing. It keeps its pair alerts, but is never a series member.
+TEST_FIR = re.compile(r"^\s*\[[^\]]*\btest\b[^\]]*\]", re.IGNORECASE)
+TEST_FIR_REASON = "test FIR"
+
+
+def is_test_fir(narrative: Any) -> bool:
+    return isinstance(narrative, str) and bool(TEST_FIR.match(narrative))
+
+
+def find_test_firs(deps: AgentDeps, crime_ids: Sequence[str]) -> dict[str, str]:
+    """{crime_id: reason} for the D-033 test FIRs among `crime_ids`, read through Zetaris (q_cases, R1).
+
+    If the read fails, nothing is excluded or removed this run (traced `test_fir_check_failed`); the next run
+    that can read the narratives applies the rule.
+    """
+    from ..adapters.zetaris_queries_n2 import cases_params
+    ids = sorted({str(c) for c in crime_ids if c})
+    found: dict[str, str] = {}
+    if not ids:
+        return found
+    try:
+        for params in cases_params(ids):
+            rows, _ = deps.query("q_cases", agent=AGENT, **params)
+            for r in rows:
+                if r.get("crime_id") in ids and is_test_fir(r.get("narrative")):
+                    found[str(r["crime_id"])] = TEST_FIR_REASON
+    except DeadlineExceeded:
+        raise
+    except Exception as exc:
+        deps.tracer.emit(AGENT, "test_fir_check_failed", input_summary=f"{len(ids)} crimes",
+                         output_summary=short(str(exc)), status="degraded")
+        return {}
+    return found
+
+
+def detect_series(alerts: Sequence[Mapping[str, Any]], excluded: Set[str] = frozenset()) -> list[dict[str, Any]]:
+    """Connected components of 3+ cases over pair alerts that are not rejected.
+
+    `excluded` crimes (D-033 test FIRs) are left out before grouping, so they neither join a series nor bridge
+    two series together.
+    """
     parent: dict[str, str] = {}
 
     def find(x: str) -> str:
@@ -75,7 +115,7 @@ def detect_series(alerts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
         return x
 
     edges = [a for a in alerts if a.get("kind", "pair") == "pair" and a.get("status") != "rejected"
-             and len(a.get("crimes") or []) == 2]
+             and len(a.get("crimes") or []) == 2 and not set(a["crimes"]) & excluded]
     for a in edges:
         x, y = a["crimes"]
         parent[find(x)] = find(y)

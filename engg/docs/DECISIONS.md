@@ -358,6 +358,17 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Known live limit:** with the full live crime set, 5 sample articles match more than one same-category crime; fixed by the post-freeze full generator.
 - **Related:** D-017 · [LANES](LANES.md)
 
+## D-033 · Test FIRs are never series members (nexus-3, approved by nexus-chief) (2026-10-26)
+- **Rule:** a crime whose narrative starts with a bracketed label containing the word "test" is a test FIR. Regex, case-insensitive: `^\s*\[[^\]]*\btest\b[^\]]*\]`. It matches `[nexus-5 timing test FIR] …` and `[QA test] …`, but not `[testimony …]`, `[attested …]` or a "test" outside a leading label.
+- **Series detection** reads the narratives of the series' crimes through Zetaris (`q_cases`) and leaves test FIRs out *before* grouping. A test FIR therefore neither joins a series nor bridges two series into one. Each one is traced as `series_member_excluded {crime_id, reason: "test FIR"}`. The dossier never reads them, because it reads only the stored members.
+- **Stored series:** when a run rewrites a series, a stored member that this run did not place in it is removed **only if it is a test FIR**. Each removal is traced as `series_member_removed {series_id, crime_id, reason}`. Only that series' `series_members` row is deleted; other series and the crimes themselves are never touched.
+  - **Deviation from the approved "replace the member set" (accepted by nexus-chief):** a full replace would also drop members that a run simply did not see. A worker run on one new case detects only the series formed by that case's links, so a full replace would shrink a stored 10-case series to that slice. Removal is limited to rule-flagged members for that reason.
+  - **Idempotent:** a re-run with the same inputs removes nothing (tested).
+- **Pair alerts are unchanged.** C802 (LA-2026-C802D4F2E02B), whose pair includes the labelled test FIR, stays as it is: labelled and undecided.
+- **Effect on SER-B687C36CFC (Red Pulsar):** the next run that rewrites it keeps the same id (overlap reuse in `choose_series_id`), removes the test FIR CHN-AD-2026-001231 and leaves 9 members. Checked live: of 14,040 crime narratives the rule matches exactly 2, both nexus-5 labelled filings (CHN-AD-2026-001231, CHN-VL-2026-001220); no other narrative contains the word "test".
+- **If the narratives cannot be read,** nothing is excluded or removed that run (`test_fir_check_failed`, degraded); the next readable run applies the rule.
+- **Related:** D-032 · [LANES](LANES.md)
+
 ## D-034 · Model timeout is 180 s, not the spec's 90 s (chief, 2026-10-26)
 - **Spec NFR-06** says model 90 s. `config.py` uses **180 s**, from the Meterless runtime contract.
 - **Why:** the reasoning lane (Nemotron Ultra) plans in ~28 s, but critique and dossier calls with larger budgets (#196, #234) can run past 90 s on a laptop-hosted Nightshift that serialises calls. A 90 s cut would turn slow-but-correct calls into degraded steps.
