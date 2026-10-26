@@ -18,6 +18,7 @@ const q: AskQuestion = {
     understood: "House breaks at Adyar station this month",
     filters: [{ field: "station_id", op: "eq", value: "PS-ADYAR-J2", label: "Station: Adyar" }],
     steps: [{ query: "crimes_by_filter", purpose: "Find matching house breaks", query_id: "zq-77", rows: 4 }],
+    notes: ["searched all robberies: the question does not name street robberies"],
     model_plan: { steps: 1 },
   },
   answer: { summary: "4 house breaks.", total: 4, truncated: false, rows: [] },
@@ -34,6 +35,7 @@ describe("HowAnswered", () => {
     expect(html).toContain("routed to claude-haiku");
     expect(html).toContain("rcpt-9");
     expect(html).toContain("raw plan");
+    expect(html).toContain("searched all robberies");
   });
   it("links the full trace for admins only", () => {
     expect(renderToStaticMarkup(<HowAnswered q={q} canOpenTrace={false} />)).not.toContain("/console/system/trace/");

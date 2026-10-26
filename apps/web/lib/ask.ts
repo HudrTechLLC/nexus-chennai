@@ -13,7 +13,7 @@ export type AskStatus = "queued" | "planning" | "running" | "answered" | "unmapp
 
 export type AskStep = { query: string; params?: Record<string, unknown>; purpose: string; query_id?: string | null; rows?: number | null };
 export type AskFilter = { field: string; op: string; value: unknown; label: string };
-export type AskPlan = { steps: AskStep[]; filters: AskFilter[]; understood: string; model_plan?: unknown };
+export type AskPlan = { steps: AskStep[]; filters: AskFilter[]; understood: string; notes?: string[]; model_plan?: unknown };
 export type AskAnswerRow = { crime_id: string; why: string };
 export type AskAnswer = { summary: string; total: number; truncated: boolean; rows: AskAnswerRow[]; excluded_test_filings?: number };
 
@@ -53,7 +53,7 @@ export const POLL_GIVE_UP_MS = 120_000;
 export const RECENT_LIMIT = 5;
 
 export const SAMPLE_QUESTIONS = [
-  "Chain snatchings by two men on a red Pulsar in the last 90 days",
+  "Chain snatchings on a red Pulsar in the last 90 days",
   "Chain snatchings in Adyar after 7 pm in the last 90 days",
   "Robberies in Velachery that are still undetected since 1 September",
 ] as const;

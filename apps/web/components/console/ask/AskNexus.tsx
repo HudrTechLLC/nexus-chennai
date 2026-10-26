@@ -176,7 +176,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
           <section className="rounded-xl border border-line bg-surface p-5">
             <p className="text-xs uppercase tracking-wider text-muted">{phase.q.question}</p>
             {phase.q.status === "failed" ? (
-              <p className="mt-2 text-sm text-red-600">The search failed{phase.q.error ? `: ${phase.q.error}` : "."} Please try again.</p>
+              <p className="mt-2 text-sm text-red-600">{phase.q.error ?? "Something went wrong. Please ask again."}</p>
             ) : (
               <p className="mt-2 text-lg">{phase.q.answer?.summary ?? "No answer."}</p>
             )}
@@ -239,6 +239,11 @@ export function HowAnswered({ q, canOpenTrace }: { q: AskQuestion; canOpenTrace:
         </span>
       </summary>
       {q.plan?.understood && <p className="mt-3 text-sm">Understood as: <strong>{q.plan.understood}</strong></p>}
+      {(q.plan?.notes ?? []).length > 0 && (
+        <ul className="mt-1 list-disc pl-5 text-xs text-muted">
+          {q.plan!.notes!.map((n, i) => <li key={i}>{n}</li>)}
+        </ul>
+      )}
       {(q.plan?.filters ?? []).length > 0 && (
         <p className="mt-1 text-xs text-muted">Filters: {q.plan!.filters.map((f) => f.label).join(" · ")}</p>
       )}
