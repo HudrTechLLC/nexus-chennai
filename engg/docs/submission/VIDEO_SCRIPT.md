@@ -49,6 +49,9 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
    - `.env`.
    Use a clean browser profile with a synthetic demo account.
 5. **1080p (OBS), browser zoom 110–125%, terminal font enlarged.**
+6. **Open the Pulse Map at least 30 s before recording segment 1** (it took ~25 s to load in nexus-4's dry run).
+7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
+8. **Segment 3 needs a real `vision_unavailable` trace step.** It comes only from a live FIR filed with a CCTV still (nexus-3 / nexus-5 are producing one). Note its `run_id`. If there is no such trace when you record, cut the CCTV-still sentence from the segment 3 narration.
 
 ## Script
 
@@ -56,7 +59,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 1 · The problem · 0:00–0:18 (18 s, ~40 words)
 
-- **Screen:** Pulse Map (`/console/map`), time scrubber playing over Chennai.
+- **Screen:** Pulse Map (`/console/map`), time scrubber playing over Chennai. Start recording at least 30 s after the map opens (Before recording, step 6).
 - **Narration:**
   > Chennai's police stations each see only their own cases. A gang that snatches a chain in Adyar on a Wednesday evening and another in Velachery two days later looks like two unrelated robberies. Nexus connects them. This is our entry for Solving Fragmented Intelligence.
 - **Check no secrets visible:** console header shows the demo user only. No other tabs in frame.
@@ -72,7 +75,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 - **Screen:**
   - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
-  - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines.
+  - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines. The CCTV-still sentence needs the `vision_unavailable` step from a live FIR filed with a still (Before recording, step 8).
 - **Narration:**
   > An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
 - **Check no secrets visible:**
@@ -112,7 +115,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 ### 7 · The analyst decides, and H-MEM learns · 2:15–2:50 (35 s, ~80 words)
 
 - **Screen:**
-  - the alert inbox (`/console/alerts`), then the Adyar–Velachery alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
+  - the alert inbox (`/console/alerts`), then click the hero card **directly**: LA-2026-E38C6B38B865, Adyar–Velachery. In the dry run it was the **3rd card by Score**, not the first, and some other Red Pulsar cards showed "model rationale unavailable", so don't open those. Then the alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
   - the analyst clicks **Approve**;
   - cut to the alert for the second, similar Red Pulsar case (run after the decision; see Before recording, step 3), whose "Memory applied" section shows the memory from that decision.
   - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). Or the memory page (`/console/memory`): live on real rows, and it already shows a real reject turned into a memory with its ledger row. Its "Changed later scores" list fills only after step 3 of Before recording.
@@ -124,9 +127,9 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 8 · The series on the map · 2:50–3:12 (22 s, ~50 words)
 
-- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order; the scrubber plays them. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
+- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order. **Widen the scrubber window so every member shows** before playing. The series is labelled on screen by its generated name ("10 linked cases (…)"), not "Red Pulsar Duo", so the narration doesn't name it. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
 - **Narration:**
-  > Approved links grow into a series. On the map, the Red Pulsar Duo appears as one trail across five stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
+  > Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
 - **Check no secrets visible:** the map tiles carry no key in view; crop the URL bar (a MapTiler key can sit in tile URLs in devtools, so keep devtools closed).
 
 ### 9 · Close · 3:12–3:30 (18 s, ~42 words)
@@ -163,7 +166,7 @@ The Linker scores each pair on nine factors, in code. Here, two thefts near the 
 The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
 
 [seg_08]
-Approved links grow into a series. On the map, the Red Pulsar Duo appears as one trail across five stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
+Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
 
 [seg_09]
 Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what the data can't support, and every human decision teaches the next alert. All data here is synthetic, and every alert is a suggestion for a person to decide.
@@ -176,7 +179,9 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 | "Adyar on a Wednesday evening… Velachery two days later" | hero pair in `series.yaml`: CHN-AD-2026-001182 on Wed 14 Oct 19:40 IST, CHN-VL-2026-000877 on Fri 16 Oct 19:55 IST (checked) | Change the weekday words to match the dates on screen |
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
 | Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `7534e9e`):** the same pair, high 0.787 | Read the score shown on screen; never the number from this table |
-| "five stations" | `SER-RED-PULSAR` `stations: [J2, J7, J6, J3, J5]`; only true if all members are linked | Say "across stations" |
+| "across three stations" | Live series SER-B687C36CFC: 10 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-6, 26 Oct). Final count after nexus-3's D-033 (test FIR removed) and the series-naming fix | Say the station count shown on screen, or just "across stations" |
+| Seg 3: "The CCTV still can't be read today…" | a `vision_unavailable` step in the live FIR-with-still run (none yet at the dry run) | Cut that sentence |
+| Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
 | Seg 6: "ages don't match… shop theft… two-wheeler theft… nothing else overlaps… drops the link" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
 | "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
 | Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
