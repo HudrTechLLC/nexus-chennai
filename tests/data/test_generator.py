@@ -122,7 +122,7 @@ def test_duplicates_two_stations_same_incident(crimes, out):
 
 def test_pairs_labels(out):
     rows = list(csv.DictReader((out / "_truth/pairs.csv").open(encoding="utf-8")))
-    assert {r["label"] for r in rows} == {"series", "decoy", "duplicate"}
+    assert {r["label"] for r in rows} == {"series", "decoy", "duplicate", "vehicle_chain", "offender_return"}
     assert all(r["crime_a"] < r["crime_b"] for r in rows)
 
 
@@ -132,3 +132,100 @@ def _blocks(a: dict, b: dict) -> bool:
     da = datetime.fromisoformat(a["occurred_from"])
     db = datetime.fromisoformat(b["occurred_from"])
     return abs((da - db).days) <= 45 and gh5_block(geohash(a["lat"], a["lon"]), geohash(b["lat"], b["lon"]))
+
+
+# ---------- slice 2 ----------
+import duckdb  # noqa: E402
+
+from app.models import AnprRead, CallLog, CctvCamera, HistorySheet, LegacyCctnsRow, Release  # noqa: E402
+from app.scoring.factors import plate_match  # noqa: E402
+
+
+def _parquet(out: Path, pattern: str) -> list[dict]:
+    con = duckdb.connect()
+    cur = con.execute(f"SELECT * FROM read_parquet('{(out / pattern).as_posix()}')")
+    cols = [d[0] for d in cur.description]
+    return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+
+def _csv(path: Path) -> list[dict]:
+    return list(csv.DictReader(path.open(encoding="utf-8")))
+
+
+def test_hero_anpr_sightings_match_the_spec(out):
+    reads = {r["camera_id"]: r for r in _parquet(out, "anpr/reads_*.parquet") if r["plate_text"] == "TN09BX4471"
+             and r["crime_id"] in ("CHN-AD-2026-001182", "CHN-VL-2026-000877")}
+    from datetime import timezone
+
+    utc = reads["ANPR-OMR-12"]["read_at"].astimezone(timezone.utc)
+    assert utc.isoformat().startswith("2026-10-14T14:28:41")  # 19:58:41 IST
+    assert abs(reads["ANPR-OMR-12"]["plate_confidence"] - 0.81) < 1e-9
+    assert "ANPR-VLY-03" in reads
+
+
+def test_slice2_rows_validate_against_d3_models(out):
+    for r in _parquet(out, "anpr/reads_*.parquet")[:500]:
+        AnprRead.model_validate({k: r[k] for k in AnprRead.model_fields})
+    for r in _parquet(out, "calls/calls_*.parquet")[:500]:
+        CallLog.model_validate({k: r[k] for k in CallLog.model_fields if k != "location"}
+                               | {"location": {"lat": r["lat"], "lon": r["lon"]}})
+    for r in _csv(out / "ref/cctv_cameras.csv")[:500]:
+        CctvCamera.model_validate({k: r[k] for k in CctvCamera.model_fields})
+    for r in _csv(out / "ref/releases.csv"):
+        Release.model_validate({k: (r[k] or None) for k in Release.model_fields})
+    for r in _csv(out / "ref/history_sheets.csv")[:300]:
+        HistorySheet.model_validate({k: (r[k] or None) for k in HistorySheet.model_fields})
+    files = sorted((out / "legacy").glob("cctns_*.csv"))
+    assert len(files) == 8
+    for f in files:
+        rows = _csv(f)
+        assert list(rows[0]) == list(LegacyCctnsRow.model_fields)
+        for r in rows[:50]:
+            LegacyCctnsRow.model_validate(r)
+    assert _parquet(out, "legacy/archive.parquet")
+
+
+def test_vehicle_chains_are_traceable_on_anpr(crimes, out):
+    chains = json.loads((out / "_truth/vehicle_chains.json").read_text(encoding="utf-8"))
+    assert len(chains) == 12
+    reads = _parquet(out, "anpr/reads_*.parquet")
+    by_plate = defaultdict(list)
+    for r in reads:
+        by_plate[r["plate_text"]].append(r)
+    vehicles = defaultdict(list)
+    for v in jl(out / "supabase" / "crime_vehicles.jsonl"):
+        vehicles[v["crime_id"]].append(v)
+    for c in chains:
+        full = c["plate"].replace(" ", "")
+        assert len(by_plate[full]) >= 3
+        theft, use = crimes[c["theft_crime_id"]], crimes[c["use_crime_ids"][0]]
+        assert theft["station_id"] != use["station_id"] and theft["occurred_from"] < use["occurred_from"]
+        seen = [v["plate_display"] for v in vehicles[use["crime_id"]] if v["role"] == "used_by_offender"]
+        assert seen and (plate_match(seen[0], c["plate"]) or 0) > 0
+
+
+def test_offender_returns_follow_release_near_home(crimes, out):
+    rets = json.loads((out / "_truth/offender_returns.json").read_text(encoding="utf-8"))
+    rel = {r["release_id"]: r for r in _csv(out / "ref/releases.csv")}
+    assert len(rets) == 10
+    from datetime import date, datetime
+
+    for x in rets:
+        released = date.fromisoformat(rel[x["release_id"]]["released_on"])
+        for cid in x["return_crime_ids"]:
+            days = (datetime.fromisoformat(crimes[cid]["occurred_from"]).date() - released).days
+            assert 0 < days <= 60
+        assert x["prior_case_refs"], x["return_id"]
+
+
+def test_dq_defects_planted(out):
+    dq = json.loads((out / "_truth/dq.json").read_text(encoding="utf-8"))
+    rules = {d["rule"] for d in dq}
+    assert {"dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections", "dq_stale_cameras"} <= rules
+
+
+def test_map_projections_are_aggregates(out):
+    cells = jl(out / "supabase" / "map_call_cells.jsonl")
+    assert cells and set(cells[0]) == {"h3_r9", "category", "hour_bucket", "n", "synthetic"}
+    reads = jl(out / "supabase" / "map_anpr_reads.jsonl")
+    assert reads and all(r["crime_id"] for r in reads)

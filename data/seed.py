@@ -33,6 +33,8 @@ TABLES = [
       "occurred_from", "occurred_to", "reported_at", "lat", "lon", "address", "ward_no", "h3_r9", "h3_r8",
       "geohash7", "week", "severity", "property", "weapon", "offenders_described", "victims", "status",
       "narrative", "synthetic"], {}),
+    ("persons", "persons", "person_id",
+     ["person_id", "name", "aliases", "descriptors", "residence_ward", "source", "source_row_id", "synthetic"], {}),
     ("statements", "statements", "statement_id",
      ["statement_id", "crime_id", "witness_ref", "mode", "text", "audio_path", "transcript_model", "recorded_at",
       "source", "source_row_id", "synthetic"], {}),
@@ -59,6 +61,26 @@ def _upsert(cur, table: str, key: str, cols: list[str], geo: dict[str, str]) -> 
         f"on conflict ({key}) do update set {updates}")
 
 
+def _retire_stale_crimes(cur) -> None:
+    """Synthetic crimes no longer generated (e.g. renumbered) are removed. Extracted features
+    are first moved to the regenerated crime with identical content (station, time, sub-type,
+    narrative), so a re-seed never throws away Extractor work. Runs with _stage = crimes."""
+    cur.execute("create temp table _new_ids on commit drop as select doc->>'crime_id' as crime_id from _stage")
+    cur.execute("create temp table _stale on commit drop as select crime_id from public.crimes "
+                "where synthetic and crime_id not in (select crime_id from _new_ids)")
+    cur.execute(
+        "update public.crime_features cf set crime_id = n.crime_id "
+        "from public.crimes o join public.crimes n on n.station_id = o.station_id "
+        "and n.occurred_from = o.occurred_from and n.sub_type is not distinct from o.sub_type "
+        "and n.narrative is not distinct from o.narrative and n.crime_id <> o.crime_id "
+        "where cf.crime_id = o.crime_id and o.crime_id in (select crime_id from _stale) "
+        "and n.crime_id in (select crime_id from _new_ids) "
+        "and not exists (select 1 from public.crime_features x where x.crime_id = n.crime_id)")
+    moved = cur.rowcount
+    cur.execute("delete from public.crimes where crime_id in (select crime_id from _stale)")
+    print(f"crimes: retired {cur.rowcount} stale synthetic rows; moved {moved} crime_features to new ids")
+
+
 def seed(src: Path, dry_run: bool) -> None:
     from db_migrate import connect  # same pooler logic and password handling as migrations
 
@@ -72,6 +94,8 @@ def seed(src: Path, dry_run: bool) -> None:
                 n = _load(cur, sb / f"{fname}.jsonl")
                 _upsert(cur, table, key, cols, geo)
                 print(f"{table}: {n} rows upserted")
+                if table == "crimes":
+                    _retire_stale_crimes(cur)
             # section_map has a nullable natural key, so refresh it whole (nothing references it).
             n = _load(cur, sb / "section_map.jsonl")
             cur.execute("delete from public.section_map")
@@ -88,10 +112,37 @@ def seed(src: Path, dry_run: bool) -> None:
                         "(r).make_model, (r).colour, (r).synthetic "
                         "from (select jsonb_populate_record(null::public.crime_vehicles, doc) r from _stage) s")
             print(f"crime_vehicles: {n} rows")
+            # person_links: composite key, insert missing only.
+            if (sb / "person_links.jsonl").is_file():
+                n = _load(cur, sb / "person_links.jsonl")
+                cur.execute("insert into public.person_links (person_id, crime_id, role, synthetic) "
+                            "select (r).person_id, (r).crime_id, (r).role, (r).synthetic "
+                            "from (select jsonb_populate_record(null::public.person_links, doc) r from _stage) s "
+                            "on conflict do nothing")
+                print(f"person_links: {n} rows")
+            # Pulse Map projection cache (D-019): refreshed whole, never an agent source.
+            for table in MAP_TABLES:
+                f = sb / f"{table}.jsonl"
+                if not f.is_file():
+                    continue
+                n = _load(cur, f)
+                cur.execute(f"delete from public.{table}")
+                cur.execute(f"insert into public.{table} select (jsonb_populate_record(null::public.{table}, doc)).* "
+                            "from _stage")
+                print(f"{table}: {n} rows")
+            cur.execute("select pg_size_pretty(pg_database_size(current_database())), "
+                        "pg_database_size(current_database())")
+            pretty, size = cur.fetchone()
+            print(f"database size: {pretty}")
+            if size > 400 * 1024 * 1024:
+                raise RuntimeError(f"database would be {pretty} (> 400 MB cap for the free tier); rolling back")
             cur.execute("select count(*) from public.crimes where synthetic")
             print(f"crimes in db (synthetic): {cur.fetchone()[0]}")
             if dry_run:
                 raise _DryRun()
+
+
+MAP_TABLES = ["map_cctv_cameras", "map_anpr_cameras", "map_anpr_reads", "map_call_cells", "map_release_density"]
 
 
 class _DryRun(Exception):

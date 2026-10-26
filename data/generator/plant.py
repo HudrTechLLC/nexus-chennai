@@ -278,7 +278,7 @@ def duplicates(ctx: Ctx, pool: list[dict], n: int) -> list[tuple[dict, dict]]:
     """Same incident filed at two stations (jurisdiction dispute). Returns (original, duplicate)."""
     r = ctx.rng("duplicates")
     kinds = {"chain_snatching", "mobile_snatching", "two_wheeler_theft", "street_robbery", "night_house_break"}
-    cands = [d for d in pool if d["ctype"] in kinds]
+    cands = [d for d in pool if d["ctype"] in kinds and d["role"] == "background" and not d.get("dq")]
     picks = r.sample(cands, n)
     out = []
     for i, orig in enumerate(picks):
