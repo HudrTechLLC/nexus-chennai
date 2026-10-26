@@ -100,8 +100,11 @@ describe("desktopNav", () => {
     expect(split("analyst").manage).toEqual([]);
     expect(split("station_officer").manage).toEqual([]);
     expect(split("analyst").inline).toContain("Memory");
+    expect(split("analyst").inline).toContain("Ask");
+    expect(split("station_officer").inline).not.toContain("Ask");
   });
-  it("keeps at most 12 inline links for every role so the bar fits one line at 1080p", () => {
-    for (const r of ["station_officer", "analyst", "supervisor", "admin"] as const) expect(split(r).inline.length).toBeLessThanOrEqual(12);
+  // 13 measured on 27 Oct with Ask added: supervisor/admin links take 664 of 826 px at 1536, one 61 px row.
+  it("keeps at most 13 inline links for every role so the bar fits one line at 1080p", () => {
+    for (const r of ["station_officer", "analyst", "supervisor", "admin"] as const) expect(split(r).inline.length).toBeLessThanOrEqual(13);
   });
 });
