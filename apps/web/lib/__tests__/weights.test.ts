@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_WEIGHTS, SCORING_RULES, WEIGHTS_VERSION, factorUsage, nonDefaultAlerts } from "../weights";
+import { DEFAULT_WEIGHTS, SCORING_RULES, WEIGHTS_VERSION, factorUsage, nonDefaultAlerts, versionCounts } from "../weights";
 
 const PY = readFileSync(resolve(__dirname, "../../../../services/api/app/scoring/weights.py"), "utf8");
 const pyNumber = (name: string) => Number(new RegExp(`^${name}\\s*=\\s*([0-9.]+)`, "m").exec(PY)?.[1]);
@@ -44,5 +44,15 @@ describe("factorUsage", () => {
   it("flags alerts scored with non-default weights", () => {
     expect(nonDefaultAlerts(rows)).toEqual(["A3"]);
     expect(nonDefaultAlerts([{ factor: "new_factor", weight: 0.1, alert_id: "A9", created_at: null }])).toEqual(["A9"]);
+  });
+});
+
+describe("versionCounts", () => {
+  it("counts alerts per recorded version and shows unrecorded ones as pre-versioning", () => {
+    expect(versionCounts([{ weights_version: null }, { weights_version: "f2-default-v1" }, { weights_version: null }, { weights_version: "custom" }, { weights_version: " " }])).toEqual([
+      { version: "pre-versioning", alerts: 3, current: false },
+      { version: "custom", alerts: 1, current: false },
+      { version: "f2-default-v1", alerts: 1, current: true },
+    ]);
   });
 });

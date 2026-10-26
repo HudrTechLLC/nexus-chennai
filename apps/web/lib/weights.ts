@@ -91,3 +91,15 @@ export function nonDefaultAlerts(rows: FactorRow[]): string[] {
   }
   return Array.from(out).sort();
 }
+
+/** Alerts per recorded weights version; alerts written before 0007_07 have none ("pre-versioning"). */
+export function versionCounts(alerts: { weights_version: string | null }[]): { version: string; alerts: number; current: boolean }[] {
+  const m = new Map<string, number>();
+  for (const a of alerts) {
+    const v = a.weights_version?.trim() || "pre-versioning";
+    m.set(v, (m.get(v) ?? 0) + 1);
+  }
+  return Array.from(m.entries())
+    .map(([version, n]) => ({ version, alerts: n, current: version === WEIGHTS_VERSION }))
+    .sort((a, b) => b.alerts - a.alerts || a.version.localeCompare(b.version));
+}
