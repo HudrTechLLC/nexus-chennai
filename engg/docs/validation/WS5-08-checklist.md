@@ -51,6 +51,19 @@ Related: [README](README.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [D
 | 3.6 | `docker cp nexus:/repo/logs ./logs-docker && ls logs-docker/trace-*.jsonl \| wc -l` | One trace file per `/run` (≥ 3) |
 | 3.7 | `docker rm -f nexus` | Container removed |
 
+### 3b · Fully offline run (Tuesday morning, not the night before: RAM)
+
+Proves the judge path has **zero** dependency on Supabase, Zetaris or Nightshift: the container has no network at all. With `--network none` Docker ignores `-p`, so the host can't reach the API. Post the examples from **inside** the container with `docker exec`.
+
+| # | Command | PASS when |
+|---|---|---|
+| 3.8 | Image from the fresh clone (1.1 / 3.1): `docker run -d --name nexus-off --network none -e SAMPLE_MODE=true oah-submission` | Container starts. `docker inspect -f '{{.HostConfig.NetworkMode}}' nexus-off` prints `none` |
+| 3.9 | `for n in 1 2 3; do docker cp input_examples/example_$n.json nexus-off:/tmp/ex$n.json; done` | Copied |
+| 3.10 | Wait for the API inside the container: `for i in $(seq 1 30); do docker exec nexus-off python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health')" 2>/dev/null && break; sleep 2; done` then post each example: `for n in 1 2 3; do docker exec nexus-off python -c "import json,urllib.request as u; r=u.urlopen(u.Request('http://127.0.0.1:8000/run', data=open('/tmp/ex$n.json','rb').read(), headers={'Content-Type':'application/json'}), timeout=600); d=json.load(r); print($n, r.status, d['status'], d['output']['summary'][:100])"; done` | Each prints `200`, `success` and the same summary as in 3.5 |
+| 3.11 | `docker logs nexus-off 2>&1 \| grep -ciE 'connection refused\|name resolution\|getaddrinfo\|timed out'` then `docker rm -f nexus-off` | `0`: no attempt to reach the network on the judge path. Container removed |
+
+If 3.8–3.11 pass, add to the README Run / Sample mode section: **"The judge path runs fully offline: the sample-mode container answers all three examples with `--network none`."** with the commit validated. Don't add that line before it passes.
+
 ## 4 · Traces show how the agent got there
 
 Run this check on **each** trace from step 3.6 (`for f in logs-docker/trace-*.jsonl; do …; done`):
