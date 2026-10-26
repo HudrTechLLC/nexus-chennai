@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { ROLE_LABEL, canDecideAlerts } from "@/lib/roles";
+import { StartHereCard } from "@/components/console/StartHereCard";
 import {
   OPEN_STATUSES, alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, seriesCount, topSeries, weekKpis,
   type AlertRow, type SeriesRow,
@@ -89,6 +90,8 @@ export default async function Overview({ searchParams }: { searchParams: { denie
         <Tile label="Cross-station links · last 7 days" value={n(week.crossStation)} sub="alerts spanning two or more stations" />
         <Tile label="Joint task forces" value={n(taskforces.count)} sub="active" />
       </section>
+
+      <StartHereCard sb={sb} officer={officer} alerts={alertRows} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-line bg-surface p-5">
