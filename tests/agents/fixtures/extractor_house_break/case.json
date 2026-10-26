@@ -1,0 +1,25 @@
+{
+ "crime_id": "CHN-VL-2026-001220",
+ "category": "house_break",
+ "sub_type": "day_house_break",
+ "narrative": "[nexus-5 timing test FIR] The complainant locked her ground-floor house at about 10 am and went to a relative's place. On returning at 2 pm she found the rear window grille cut and the bedroom almirah broken open. Gold jewellery and cash were missing. A neighbour saw two thin young men leave on foot through the back lane around noon.",
+ "statements": [
+  {
+   "statement_id": "ST-CHN-VL-2026-001220-1",
+   "witness_ref": "W-1 (masked)",
+   "mode": "text",
+   "text": "Around noon I saw two thin young men walk out through the back lane carrying a bag.",
+   "recorded_at": "2026-10-26T16:41:50.933565+05:30"
+  }
+ ],
+ "evidence": [],
+ "location": {
+  "lat": "12.9789",
+  "lon": "80.2203",
+  "address": "2nd Main Road, Velachery",
+  "ward": "178",
+  "h3_r9": "89618c4e63bffff",
+  "geohash7": "tf31c6w"
+ },
+ "synthetic": "true"
+}

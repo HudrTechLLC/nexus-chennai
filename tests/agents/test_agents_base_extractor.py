@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -389,3 +390,39 @@ def test_chat_json_cut_off_twice_fails_loudly(make_deps):
     actions = [e["output_summary"] for e in deps.tracer.read() if e["action"] == "llm_reply_truncated"]
     assert ['"action": "retried"' in a for a in actions] == [True, False]
     assert '"action": "failed"' in actions[1]
+
+
+# ----- Extractor grounding (mo-v4) -------------------------------------------------
+
+HOUSE_BREAK_DIR = Path(__file__).resolve().parent / "fixtures" / "extractor_house_break"
+
+
+def test_extractor_house_break_is_not_extracted_as_chain_snatching(tmp_path):
+    """Live regression (CHN-VL-2026-001220, 26 Oct): with only chain-snatching example labels in the prompt,
+    Lightning (thinking off) returned two_wheeler_from_behind / lone_pedestrian_woman / gold_chain for a day
+    house break with no vehicle. The fixture is the real Lightning reply to the mo-v4 prompt; a prompt change
+    misses it (NightshiftError) until it is re-recorded and re-checked."""
+    from app.tracing import Tracer
+    s = Settings(_env_file=None, sample_mode=True, meterless_runtime_token="", lane_fast="nvidia/fast")
+    tr = Tracer("r", tmp_path, echo=False)
+    deps = AgentDeps(tracer=tr, zetaris=None, store=MemoryStore(),
+                     nightshift=NightshiftClient(s, tr, fixtures_dir=HOUSE_BREAK_DIR))
+    case = json.loads((HOUSE_BREAK_DIR / "case.json").read_text(encoding="utf-8"))
+    mo = Extractor(deps).extract_case(case, write=False)["mo"]
+    flat = json.dumps(mo)
+    assert "two_wheeler" not in flat and "gold_chain" not in flat and "lone_pedestrian" not in flat
+    assert "grille" in (mo["approach"] or "") and mo["offender_count"] == 2
+
+
+def test_extractor_grounds_the_prompt_with_the_recorded_category(make_deps):
+    seen = []
+    deps = make_deps(responder=lambda lane, m, p: (seen.append(m), json.dumps(MODEL_MO))[1])
+    case = crime_from_row(as_row({**ADYAR, "category": "house_break", "sub_type": "day_house_break"}))
+    Extractor(deps).extract_case(case, write=False)
+    user = seen[0][-1]["content"]
+    assert user.startswith("Recorded as: house_break / day_house_break\n\nFIR narrative:")
+    from app.agents.extractor import EXTRACTOR_VERSION, MO_SYSTEM_PROMPT
+    assert EXTRACTOR_VERSION == "mo-v4"
+    for label in ("two_wheeler_from_behind", "rear_window_grille_cut", "posed_as_ride_hailing_cab"):
+        assert label in MO_SYSTEM_PROMPT  # examples span crime types, not one
+    assert "does not support" in MO_SYSTEM_PROMPT

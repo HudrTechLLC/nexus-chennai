@@ -126,3 +126,19 @@ def test_backfill_ingests_world_model_and_replays_without_model(make_deps, tmp_p
     out = bf.replay([VELACHERY["crime_id"]], concurrency=1)  # stored features come from q_features
     assert out["ok"] == 1 and eng.world_model.crimes[-1] == VELACHERY["crime_id"]
     assert len(deps.nightshift.calls) == calls  # replay never calls a model
+
+
+def test_stored_mo_v3_features_count_as_done_after_the_mo_v4_bump(tmp_path):
+    """mo-v4 changed only prompt grounding: stored mo-v3 rows (the hero's among them) are never
+    re-extracted by the backfill, and the eval export keeps them."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from test_worker_store import FakeSB
+
+    from app.graph.backfill import export_jsonl, stored_ids
+    row = {"model": "m", "mo": {"a": 1}, "visual_tags": [], "entities": {}, "confidence": 0.8, "synthetic": True}
+    sb = FakeSB({"crime_features": [
+        {**row, "crime_id": "CHN-AD-2026-001182", "extractor_version": "mo-v3", "receipt_id": "r1"},
+        {**row, "crime_id": "CHN-VL-2026-001220", "extractor_version": "mo-v4", "receipt_id": "r2"},
+        {**row, "crime_id": "CHN-OLD-1", "extractor_version": "mo-v2", "receipt_id": "r3"}]})
+    assert stored_ids(sb) == {"CHN-AD-2026-001182", "CHN-VL-2026-001220"}
+    assert export_jsonl(sb, tmp_path / "f.jsonl") == 2
