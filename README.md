@@ -237,6 +237,8 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 
 The web app is deployed on Vercel at <https://nexus-chennai.vercel.app>. It reads from Supabase, so it shows the shared synthetic dataset, not your local run.
 
+Demo police accounts (station officer, analyst, supervisor) are provided to judges in the submission form.
+
 | Area | Routes |
 |---|---|
 | **Public portal** (no sign-in) | `/` home · `/appeals` and `/appeals/<id>` public appeals · `/map` fuzzed crime map · `/cctv` · `/tip/new` → `/tip/sent` → `/tip/status` anonymous tips · `/about/privacy` |
