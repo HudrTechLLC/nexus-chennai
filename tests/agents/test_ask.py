@@ -55,6 +55,19 @@ class TestResolvePlan:
         p = resolve_plan(plan(sub_type="chain_snatching"), TODAY, "chain snatchings in Adyar")
         assert p.sub_type == "chain_snatching" and p.notes == []
 
+    @pytest.mark.parametrize("question,sub,kept", [
+        ("house breaks in Adyar in the last 30 days", "day_house_break", False),  # "days" is not "day"
+        ("house breaks in Adyar in the last 30 days", "night_house_break", False),
+        ("burglaries tonight in Adyar", "night_house_break", False),  # "tonight" is not "night"
+        ("daytime break-in at Adyar", "day_house_break", True),
+        ("house breaks during the day this month", "day_house_break", True),
+        ("break-ins at night in Velachery", "night_house_break", True),
+        ("overnight house breaks last week", "night_house_break", True),
+    ])
+    def test_day_and_night_cues_are_whole_words(self, question, sub, kept):
+        p = resolve_plan(plan(sub_type=sub), TODAY, question)
+        assert p.category == "house_break" and (p.sub_type == sub) is kept
+
     def test_place_aliases_resolve_to_their_station(self):
         assert STATIONS["adayar"][0] == "PS-ADYAR-J2"
         assert resolve_plan(plan(category="robbery", stations=["LB Road"]), TODAY).stations[0][0] == "PS-ADYAR-J2"

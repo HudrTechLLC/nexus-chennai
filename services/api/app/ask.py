@@ -58,7 +58,10 @@ SUB_TYPE_CUES = {
     "chain_snatching": r"chain", "mobile_snatching": r"mobile|phone", "street_robbery": r"street|mugg",
     "cab_robbery": r"cab|taxi|auto", "two_wheeler_theft": r"two.?wheeler|bike|motorcycle|scoot|vehicle theft",
     "pickpocket": r"pick.?pocket|pocket", "shop_theft": r"shop|store", "car_theft": r"\bcars?\b",
-    "night_house_break": r"night", "day_house_break": r"\bday|daytime", "assault": r"assault|attack|beat",
+    # Whole words and phrases only (chief): "last 30 days" must not name a day break, "tonight" not a night one.
+    "night_house_break": r"\b(night|nighttime|night-time|at night|overnight|by night)\b",
+    "day_house_break": r"\b(daytime|day-time|during the day|by day|day house|day break|day-time break)\b",
+    "assault": r"assault|attack|beat",
     "attempt_murder": r"attempt", "stalking": r"stalk", "murder": r"murder|homicide|kill", "cheating": r"cheat|fraud",
     "kidnapping": r"kidnap|abduct",
 }
