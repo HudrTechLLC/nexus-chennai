@@ -27,6 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: No secret files tracked
-        run: "! git ls-files | grep -E '(^|/)\.env$|\.pem$|\.key$'"
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.pem$|\.key$'
       - name: No secret values in tracked files
-        run: "! git grep -nE '(nvapi-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9]{10,}|eyJhbGciOi[A-Za-z0-9_-]{30,}|BEGIN [A-Z ]*PRIVATE KEY)' -- . ':!engg/docs/SPEC.md'"
+        run: |
+          ! git grep -nE '(nvapi-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9]{10,}|eyJhbGciOi[A-Za-z0-9_-]{30,}|BEGIN [A-Z ]*PRIVATE KEY)' -- . ':!engg/docs/SPEC.md'
