@@ -65,13 +65,15 @@ QUERY_SIGNALS: dict[str, list[tuple[re.Pattern[str], float]]] = {
                                               (3.0, 2.5, 2.0, 1.2, 1.5, 1.0))],
     "similar_mo": [(p, w) for p, w in zip(_rx(r"\bsimilar\b", r"\b(same|matching|like this)\s+(mo|modus|method|pattern)\b",
                                                r"\b(mo|modus operandi|method of entry|entry method)\b",
-                                               r"\bcrimes? like\b", r"\b(m\.o\.)"),
-                                           (1.5, 3.0, 1.5, 2.0, 1.5))],
+                                               r"\b(crimes?|cases|thefts?|burglar(y|ies)|robber(y|ies)|snatch(ing|ings)|"
+                                               r"break-ins?)\s+(like|where|with|in which|involving)\b",
+                                               r"\b(m\.o\.)", r"\bsimilar (to|pattern|cases|crimes)\b"),
+                                           (1.5, 3.0, 1.5, 2.5, 1.5, 2.0))],
     "map_filter": [(p, w) for p, w in zip(_rx(r"\b(on|in) (the )?map\b", r"\bnear(by)?\b|\bwithin \d+\s*(m|km)\b",
                                                r"\b(hotspots?|heat ?map|around)\b", r"\b(show|plot|filter)\b.*\b(in|near|around)\b",
                                                r"\b(last|past) (night|week|month|\d+ days)\b"),
                                            (3.0, 2.0, 2.0, 1.0, 0.8))],
-    "image_search": [(p, w) for p, w in zip(_rx(r"\b(photo|image|picture|cctv still|still|screenshot|face)\b",
+    "image_search": [(p, w) for p, w in zip(_rx(r"\b(photos?|images?|pictures?|cctv stills?|stills?|screenshots?|face|frames?)\b",
                                                  r"\blooks? like (this|the)\b", r"\b(match|find).*(photo|image|face)\b"),
                                              (2.5, 2.0, 1.5))],
     "series_question": [(p, w) for p, w in zip(_rx(r"\bseries\b", r"\b(linked|connected) (crimes|cases)\b",
@@ -99,7 +101,9 @@ INJECTION = _rx(
     r"(?:[A-Za-z0-9+/]{40,}={0,2})",
 )
 THREAT = _rx(
-    r"\b(i|we)('ll| will| am going to| gonna)\s+(kill|shoot|stab|bomb|burn|hurt|attack|finish)\b",
+    r"\b(i|we)('ll| will|'m going to| am going to|'re going to| are going to| gonna)\s+"
+    r"(kill|shoot|stab|bomb|burn|hurt|attack|finish|beat)\b",
+    r"\b(will|gonna|going to) (die|be killed|be hurt)\b",
     r"\b(bomb|explosive|ied)\b.{0,40}\b(plant|placed|set|will|going)\b",
     r"\byou('ll| will) (die|pay|regret)\b|\bwatch your back\b|\b(dead|death) (man|threat)\b",
     r"\b(kill|murder|shoot)\s+(the |that |this )?(inspector|officer|constable|police|you|him|her|them)\b",
@@ -119,6 +123,7 @@ EMERGENCY = _rx(
     r"\b(happening|going on|in progress)\s+(right )?now\b|\bright now\b",
     r"\b(help|save) (me|us)\b|\bsomeone (is )?(bleeding|dying|unconscious|injured)\b",
     r"\b(bleeding|on fire|fire|being attacked|being beaten|kidnapp(ed|ing)|abduct(ed|ing)|gun|knife)\b",
+    r"\b(collapsed|unconscious|not breathing|heart attack|trapped|drowning|overdose)\b",
     r"\b(he|she|they)('s| is| are) (still )?(here|inside|outside|following me|breaking in)\b",
 )
 PII = {"phone": re.compile(PHONE), "email": re.compile(EMAIL)}
