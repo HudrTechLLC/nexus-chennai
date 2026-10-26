@@ -76,7 +76,9 @@ The chief announces the live base URL and token file when ready.
    - the full suite passes locally on your tree rebased onto current main;
    - the diff stays in your paths.
 
-   If main's CI after the merge goes red because of your change, fixing it is your **first** priority. Vercel deploys `main` automatically.
+   If main's CI after the merge goes red because of your change, fixing it is your **first** priority.
+
+   **Merge safety (added 26 Oct after a wrong-PR merge):** merge only PRs **you own**. Resolve the PR by its **head branch**, never a typed number. Before merging, confirm that the required checks (`api`, `web`, `engines`, `secrets`) are all **present and green**; Vercel alone reporting is not enough. Vercel deploys `main` automatically.
    - Apply a migration to Supabase **only after it is merged**, with `scripts/db_migrate.py`, and only the owning lane does it.
    - Don't change Vercel or Supabase project settings. Ask the chief.
 4. **Don't edit** `workstreams.json`, `PROGRESS.md`, `DECISIONS.md` or `LANES.md`. Send the chief the task ids you finished and any decision you need. The chief updates the tracker with `scripts/tracker.py`.

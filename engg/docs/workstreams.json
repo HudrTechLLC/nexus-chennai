@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T13:22:54+05:30",
+  "updated": "2026-10-26T13:36:00+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -506,16 +506,18 @@
           "id": "WS4-07",
           "phase": "P8",
           "title": "Sanitiser draft + officer publish flow",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-3",
-          "note": "Moved to nexus-3"
+          "note": "Moved to nexus-3",
+          "ref": "#53"
         },
         {
           "id": "WS4-08",
           "phase": "P8",
           "title": "Tip triage in console (quarantined tips visible)",
-          "status": "in_progress",
-          "owner": "nexus-4"
+          "status": "done",
+          "owner": "nexus-4",
+          "ref": "#55"
         }
       ]
     },
