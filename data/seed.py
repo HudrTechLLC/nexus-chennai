@@ -6,6 +6,8 @@
 - Upserts by primary key, so re-running refreshes rows (and fills placeholder stations).
 - Child rows without their own stable key (crime_vehicles) are replaced per crime.
 - Never touches profiles, auth or any table this lane does not own.
+- Crimes the generator did not make (e.g. FIRs filed from the console) are never retired or
+  overwritten; a generated crime that would take one's crime_id or FIR number stops the seed.
 Rows go in via COPY into a jsonb staging table, then jsonb_populate_record into the real
 table, so column types come from the schema itself.
 """
@@ -15,6 +17,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,13 +64,33 @@ def _upsert(cur, table: str, key: str, cols: list[str], geo: dict[str, str]) -> 
         f"on conflict ({key}) do update set {updates}")
 
 
-def _retire_stale_crimes(cur, allow: bool) -> None:
+# Generator rows carry source_row_id = uuid5(GEN_NS, crime_id); see data/generator/cli.py.
+GEN_NS = uuid.UUID("6f1c2a52-6a71-4c51-9e57-2c7b1b0a0e42")
+
+
+def _foreign_crimes(cur) -> dict[str, tuple[str, str]]:
+    """Crimes in the database the generator did not make: crime_id -> (station_id, fir_no)."""
+    cur.execute("select crime_id, station_id, fir_no, source_row_id from public.crimes")
+    return {cid: (st, fir) for cid, st, fir, srid in cur.fetchall() if srid != str(uuid.uuid5(GEN_NS, cid))}
+
+
+def _guard_foreign(cur, foreign: dict[str, tuple[str, str]]) -> None:
+    """Runs with _stage = crimes. Refuses to overwrite a crime the generator did not make."""
+    cur.execute("select doc->>'crime_id', doc->>'station_id', doc->>'fir_no' from _stage")
+    keys = {v: k for k, v in foreign.items()}
+    clash = [(cid, st, fir) for cid, st, fir in cur.fetchall() if cid in foreign or (st, fir) in keys]
+    if clash:
+        raise RuntimeError(f"{len(clash)} generated crimes would overwrite crimes filed outside the generator "
+                           f"(e.g. {clash[:3]}); regenerate or renumber before seeding; rolling back")
+
+
+def _retire_stale_crimes(cur, allow: bool, keep: list[str]) -> None:
     """Synthetic crimes no longer generated (e.g. renumbered) are removed. Extracted features
     are first moved to the regenerated crime with identical content (station, time, sub-type,
     narrative), so a re-seed never throws away Extractor work. Runs with _stage = crimes."""
     cur.execute("create temp table _new_ids on commit drop as select doc->>'crime_id' as crime_id from _stage")
     cur.execute("create temp table _stale on commit drop as select crime_id from public.crimes "
-                "where synthetic and crime_id not in (select crime_id from _new_ids)")
+                "where synthetic and crime_id not in (select crime_id from _new_ids) and crime_id <> all(%s)", (keep,))
     cur.execute("select count(*) from _stale")
     stale = cur.fetchone()[0]
     if stale and not allow:
@@ -95,12 +118,17 @@ def seed(src: Path, dry_run: bool, retire: bool = False) -> None:
             cur = conn.cursor()
             cur.execute("set local search_path = public, extensions")
             cur.execute("create temp table _stage (doc jsonb) on commit drop")
+            foreign = _foreign_crimes(cur)
+            if foreign:
+                print(f"crimes: {len(foreign)} filed outside the generator, kept as they are")
             for fname, table, key, cols, geo in TABLES:
                 n = _load(cur, sb / f"{fname}.jsonl")
+                if table == "crimes":
+                    _guard_foreign(cur, foreign)
                 _upsert(cur, table, key, cols, geo)
                 print(f"{table}: {n} rows upserted")
                 if table == "crimes":
-                    _retire_stale_crimes(cur, retire)
+                    _retire_stale_crimes(cur, retire, list(foreign))
             # section_map has a nullable natural key, so refresh it whole (nothing references it).
             n = _load(cur, sb / "section_map.jsonl")
             cur.execute("delete from public.section_map")
