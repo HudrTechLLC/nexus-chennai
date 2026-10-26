@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
+import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
 import { cellToBoundary, cellToLatLng, latLngToCell } from "h3-js";
 import { CITY } from "@/lib/city";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -27,15 +28,16 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     if (!el.current) return;
     // A prefilled area (WS4-12) opens centred on its hexagon, close enough to see it.
     const [lat, lng] = cell ? cellToLatLng(cell) : [0, 0];
+    const theme = currentMapTheme();
     const m = new maplibregl.Map({
-      container: el.current, style: "/map/light.json",
+      container: el.current, style: mapStyleUrl(theme),
       center: cell ? [lng, lat] : CITY.map.center, zoom: cell ? Math.max(CITY.map.zoom, 13) : CITY.map.zoom,
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.on("load", () => {
       m.addSource("pick", { type: "geojson", data: geo(cell) });
-      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": "#0e7c86", "fill-opacity": 0.3 } });
-      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": "#0e7c86", "line-width": 2 } });
+      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": MAP_INK[theme].signal, "fill-opacity": 0.3 } });
+      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": MAP_INK[theme].signal, "line-width": 2 } });
     });
     m.on("click", (e) => cb.current(latLngToCell(e.lngLat.lat, e.lngLat.lng, CITY.h3.public)));
     map.current = m;

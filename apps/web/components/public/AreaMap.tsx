@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
+import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
 import { cellToBoundary } from "h3-js";
 import { cellBounds } from "@/lib/publicArea";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -15,8 +16,9 @@ export function AreaMap({ cell }: { cell: string }) {
   useEffect(() => {
     if (!el.current) return;
     const b = cellBounds(cell);
+    const theme = currentMapTheme();
     const m = new maplibregl.Map({
-      container: el.current, style: "/map/light.json",
+      container: el.current, style: mapStyleUrl(theme),
       bounds: [[b[0], b[1]], [b[2], b[3]]], fitBoundsOptions: { padding: 48, maxZoom: 14 },
       interactive: false,
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
@@ -30,8 +32,8 @@ export function AreaMap({ cell }: { cell: string }) {
         type: "geojson",
         data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [cellToBoundary(cell, true)] } },
       });
-      m.addLayer({ id: "area-fill", type: "fill", source: "area", paint: { "fill-color": "#0e7c86", "fill-opacity": 0.25 } });
-      m.addLayer({ id: "area-line", type: "line", source: "area", paint: { "line-color": "#0e7c86", "line-width": 2.5 } });
+      m.addLayer({ id: "area-fill", type: "fill", source: "area", paint: { "fill-color": MAP_INK[theme].signal, "fill-opacity": 0.25 } });
+      m.addLayer({ id: "area-line", type: "line", source: "area", paint: { "line-color": MAP_INK[theme].signal, "line-width": 2.5 } });
     });
     return () => m.remove();
   }, [cell]);
