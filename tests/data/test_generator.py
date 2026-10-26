@@ -229,3 +229,27 @@ def test_map_projections_are_aggregates(out):
     assert cells and set(cells[0]) == {"h3_r9", "category", "hour_bucket", "n", "synthetic"}
     reads = jl(out / "supabase" / "map_anpr_reads.jsonl")
     assert reads and all(r["crime_id"] for r in reads)
+
+
+def test_tips_mix_unscreened_and_corroborating(crimes, out):
+    import re
+    from collections import Counter
+
+    from app.models.public import Tip
+
+    tips = jl(out / "supabase" / "tips.jsonl")
+    truth = {t["tip_id"]: t for t in json.loads((out / "_truth" / "tips.json").read_text(encoding="utf-8"))}
+    assert len(tips) == 40 and set(truth) == {t["tip_id"] for t in tips}
+    assert Counter(t["kind"] for t in truth.values()) == {"corroborating": 24, "unrelated": 6, "injection": 4,
+                                                          "emergency": 2, "spam": 4}
+    for t in tips:
+        Tip.model_validate({k: t[k] for k in Tip.model_fields if k in t})
+        assert re.fullmatch(r"TIP-[A-HJ-NP-Z2-9]{8}", t["tip_id"])
+        assert t["guard"] is None and t["status"] == "new" and t["tip_code_hash"] is None and t["synthetic"]
+        assert t["category"] in ("vehicle_seen", "person_seen", "have_cctv", "item_for_sale", "something_else")
+        assert t["approx_cell"] is None or re.fullmatch(r"88[0-9a-f]{13}", t["approx_cell"])
+    red = [t for t in tips if truth[t["tip_id"]]["series_id"] == "SER-RED-PULSAR"]
+    assert len(red) == 6
+    for t in red:  # each sighting sits in the cell of the crime it corroborates
+        assert t["approx_cell"] == crimes[truth[t["tip_id"]]["crime_ids"][0]]["h3_r8"]
+    assert any("Pulsar" in t["text"] for t in red)
