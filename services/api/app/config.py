@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     nexus_local_dir: str = ""  # LocalStore directory; default data/local (gitignored)
     max_agent_rounds: int = 3
     run_deadline_seconds: int = 300
+    # Worker (filing) case runs: one case through Planner, Linker and up to two Ultra critique rounds (~90 s each)
+    # did not fit 300 s live (run_3d845f76). /run (spec C4) and batch runs keep run_deadline_seconds.
+    case_run_deadline_seconds: int = 420
     log_level: str = "INFO"
     port: int = 8000
 
