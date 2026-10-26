@@ -52,6 +52,7 @@ export const NAV: NavItem[] = [
   { href: "/console/alerts", label: "Link alerts", access: "all" },
   { href: "/console/cases", label: "Cases", access: "all" },
   { href: "/console/search", label: "Search", access: "all" },
+  { href: "/console/ask", label: "Ask", access: "analyst+" }, // WS3-30 Ask Nexus
   { href: "/console/vehicles", label: "Vehicles", access: "all" }, // CAP-06
   { href: "/console/series", label: "Series", access: "all" },
   { href: "/console/appeals", label: "Appeals", access: ["station_officer", "supervisor", "admin"] },
