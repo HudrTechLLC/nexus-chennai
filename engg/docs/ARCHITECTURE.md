@@ -12,7 +12,7 @@ Related: [SPEC](SPEC.md) · [DECISIONS](DECISIONS.md) · [SETUP](SETUP.md) · [C
 ```
                  INTERNET                                   TEAM LAPTOP (never exposed)
 ┌──────────────────────────────────────┐        ┌───────────────────────────────────────────┐
-│ Vercel  (team HUDR, region bom1)     │        │ services/api  FastAPI + LangGraph  :8000  │
+│ Vercel  (team HUDR, region sin1)     │        │ services/api  FastAPI + LangGraph  :8000  │
 │  apps/web  Next.js                   │        │ worker        same image, queue jobs      │
 │   /            public portal         │        │ Zetaris       local Docker  REST :8888    │
 │   /appeals     police-approved posts │        │ Nightshift    Meterless runtime   :8088   │
@@ -24,7 +24,7 @@ Related: [SPEC](SPEC.md) · [DECISIONS](DECISIONS.md) · [SETUP](SETUP.md) · [C
                 │ anon key + user JWT (RLS)                      │
                 ▼                                                ▼
         ┌──────────────────────────────────────────────────────────────┐
-        │ Supabase  nexus-chennai  (ap-south-1 Mumbai)                 │
+        │ Supabase  nexus-qa  (ap-southeast-1 Singapore)               │
         │  Postgres+PostGIS · Auth · RLS · Realtime · Storage          │
         └──────────────────────────────────────────────────────────────┘
                 ▲  registered as a source (read-only role zetaris_reader)

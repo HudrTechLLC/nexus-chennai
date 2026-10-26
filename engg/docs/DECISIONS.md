@@ -23,6 +23,7 @@ Status: ✅ decided · 🟡 provisional (revisit) · ⏳ to verify on the live s
 | D-010 | 2026-10-26 | ⏳ | Vercel request logs record IP addresses, which conflicts with the WS4 "no IP in logs" check |
 | D-011 | 2026-10-26 | ✅ | Zetaris REST format confirmed from `zetaris/getting-started` @ `6a2fbaa` |
 | D-012 | 2026-10-26 | ✅ | Web app stays on **Next.js 14** (14.2.35, the latest 14.x patch), as the spec says |
+| D-014 | 2026-10-26 | ✅ | Supabase project is **`nexus-qa`** (`ukrujnsjucwvytnokbtw`) in **Singapore** (`ap-southeast-1`), HUDR LLC org; Vercel functions moved to `sin1` |
 | D-013 | 2026-10-26 | ✅ | Engg Docs (16 spec tabs, notes, progress tracker) published in the web app at `/docs`; production URL public, previews need Vercel login |
 
 ---
@@ -146,3 +147,28 @@ The team wants one shareable link to the spec and to live progress.
   - The repo itself stays private until submission.
   - The docs contain no secrets: CI runs a secret scan and SETUP.md lists only placeholder names.
 - **Updating progress:** edit the task status in `workstreams.json` and merge. The chart and the task list update on the next deploy.
+
+## D-014 · Supabase project and region
+The team created the project in the dashboard:
+
+- **Name and ref:** `nexus-qa`, ref `ukrujnsjucwvytnokbtw`, in the HUDR LLC organisation (Pro plan, micro compute).
+- **Region:** Singapore (`ap-southeast-1`), not Mumbai as the spec assumed.
+  - The extra latency from India is about 30–40 ms per request, which is acceptable for the hackathon.
+  - Recreating the project to move it isn't worth the time.
+  - The Vercel function region is now `sin1` to sit next to the database, and the city pack records both regions.
+
+**How the migration was applied:**
+- `scripts/db_migrate.py` connects through the session pooler and applies each file in its own transaction. Applied migrations are recorded in `public.schema_migrations`, which has RLS on and no anon or authenticated access.
+- `0001` now installs `postgis`, `pgcrypto` and `pg_trgm` into the `extensions` schema, as Supabase recommends.
+- Verified after applying:
+  - all tables have RLS on;
+  - 6 policies are in place;
+  - the anon role is denied on every table;
+  - the `wm` and `hmem` schemas exist;
+  - the `zetaris_reader` role exists (no login yet).
+
+**Where the credentials are:**
+- **Database password:** `C:/Apps/healgrid-app/.secrets/nexus-db.txt` (gitignored there).
+- **Secret key:** `~/.secrets/nexus-service-role.key`.
+
+The backend reads keys through `*_FILE` settings, so no secret sits in a repo `.env`.

@@ -29,7 +29,6 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 
 | Blocker | Owner | Needed for |
 |---|---|---|
-| Supabase CLI token invalid (`Invalid access token`) | Team: run `npx supabase login`, or create project `nexus-chennai` (free, Mumbai) in the dashboard and share the project ref | P0 |
 | meterless.ai resets the connection, so Nightshift can't be downloaded | Team: ask in HackOS Help Meterless | P0 smoke, P3+ |
 | Nightshift may need a dedicated GPU; the laptop has an integrated Intel Arc | Team: confirm cloud lanes (NVIDIA hosted) work from Nightshift | P3+ |
 | Zetaris platform download + registry login | Team: Zetaris Cloud account | P2 |
@@ -39,6 +38,17 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 ## Log
 
 > Live progress chart and full task list: `/docs/progress` in the web app (source `workstreams.json`).
+
+### 2026-10-26 · Supabase live (branch `feat/supabase-setup`)
+- **Project:** `nexus-qa` (`ukrujnsjucwvytnokbtw`, Singapore), created by the team in the dashboard.
+- **Migration:** `0001` applied with the new `scripts/db_migrate.py`. RLS is verified and anon is denied everywhere (D-014).
+- **Secrets from files:** the backend reads secrets via `*_FILE` settings, so no secret goes into a repo `.env`.
+- **Smoke check:**
+  - Supabase: PASS
+  - city pack and sample mode: PASS
+  - Zetaris and Nightshift: SKIP
+- **Vercel:** function region moved to `sin1`.
+- PR #2 merged. Engg Docs are live at https://nexus-chennai.vercel.app/docs/progress
 
 ### 2026-10-26 · Engg Docs + tracker in the web app (branch `feat/engg-docs`)
 - PR #1 merged.
