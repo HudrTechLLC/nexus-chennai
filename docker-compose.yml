@@ -12,5 +12,11 @@ services:
   worker:
     build: { context: ., dockerfile: Dockerfile }
     env_file: [{ path: .env, required: false }]
+    environment:
+      METERLESS_BASE_URL: ${METERLESS_BASE_URL:-http://host.docker.internal:8088/v1}
+      ZETARIS_REST_URL: ${ZETARIS_REST_URL:-http://host.docker.internal:8888/api/v1.0}
     command: ["python", "-m", "app.worker"]
+    # Shares logs/ with the api so H-MEM state (logs/hmem) and traces are one store.
+    volumes: ["./logs:/repo/logs"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
     profiles: ["worker"]
