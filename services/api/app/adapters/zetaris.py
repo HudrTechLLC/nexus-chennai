@@ -26,7 +26,7 @@ from typing import Any
 import duckdb
 import httpx
 
-from ..config import Settings
+from ..config import Settings, load_city
 from ..tracing import Tracer
 from .zetaris_sources import localise
 
@@ -206,6 +206,9 @@ class ZetarisClient:
     def _run_sample(self, sql: str) -> list[list[Any]]:
         if self._duck is None:
             self._duck = duckdb.connect(":memory:")
+            # The city's zone, never the host's: the twins' date logic (days, windows) must give the same rows on
+            # an IST laptop and in a UTC container, or the judge examples do not reproduce (WS5-12).
+            self._duck.execute(f"SET TimeZone = '{load_city(self.settings.city)['timezone']}'")
             self._duck.execute(f"SET file_search_path = '{self.settings.sample_dir.as_posix()}'")
             load_sample_views(self._duck, self.settings.sample_dir)
         return [list(r) for r in self._duck.execute(sql).fetchall()]
