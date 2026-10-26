@@ -100,8 +100,10 @@ def cosine(u: Any, v: Any) -> float | None:
     if isinstance(u, dict) != isinstance(v, dict):
         raise TypeError("cannot compare a sparse TF-IDF vector with a dense model vector")
     if isinstance(u, dict):
-        dot = sum(u[k] * v[k] for k in u.keys() & v.keys())
-        nu, nv = math.sqrt(sum(x * x for x in u.values())), math.sqrt(sum(x * x for x in v.values()))
+        # Sorted keys: the same summation order from either side, so cosine(u, v) == cosine(v, u) exactly.
+        dot = sum(u[k] * v[k] for k in sorted(u.keys() & v.keys()))
+        nu = math.sqrt(sum(u[k] * u[k] for k in sorted(u)))
+        nv = math.sqrt(sum(v[k] * v[k] for k in sorted(v)))
     else:
         if len(u) != len(v):
             raise ValueError("vectors differ in dimension")
@@ -110,8 +112,8 @@ def cosine(u: Any, v: Any) -> float | None:
     return round(dot / (nu * nv), 4) if nu and nv else None
 
 
-def mo_vector(features: Mapping[str, Any] | None) -> dict[str, float]:
-    """Field-tagged MO feature vector: `approach=snatch`, `tag=red_bike`, ... weighted by field. No IDF."""
+def _mo_raw(features: Mapping[str, Any] | None) -> dict[str, float]:
+    """Field-tagged MO keys (`approach=snatch`, `tag=red_bike`, ...) with field weights, unnormalised."""
     if not features:
         return {}
     mo = features.get("mo") or {}
@@ -123,7 +125,39 @@ def mo_vector(features: Mapping[str, Any] | None) -> dict[str, float]:
     for tok in tokens(features.get("visual_tags")):
         key = f"tag={tok}"
         vec[key] = vec.get(key, 0.0) + TAG_WEIGHT
-    return _normalise(vec)
+    return vec
+
+
+def mo_vector(features: Mapping[str, Any] | None) -> dict[str, float]:
+    """Field-tagged MO feature vector: `approach=snatch`, `tag=red_bike`, ... weighted by field. No IDF."""
+    return _normalise(_mo_raw(features))
+
+
+# ---------------------------------------------------------------------------- fixed-IDF MO cosine (WS2-21)
+# The D-027 TF-IDF fallback for similar-MO. IDF comes from ONE fixed table built over all extracted MO records
+# (cities/<city>/mo_idf.json, `python -m app.engines.mo_idf`), never from a run's candidate batch: a pair must
+# score the same whichever case fetched it, from either direction, and in the Skeptic's recompute.
+
+def build_mo_idf(records: Sequence[Mapping[str, Any] | None]) -> dict[str, Any]:
+    """Smoothed IDF over field-tagged MO keys: log((1 + n) / (1 + df)) + 1. Uses no labels."""
+    docs = [set(_mo_raw(r)) for r in records if r]
+    df = Counter(k for d in docs for k in d)
+    n = len(docs)
+    idf = {k: round(math.log((1 + n) / (1 + c)) + 1.0, ROUND) for k, c in sorted(df.items())}
+    return {"docs": n, "default": round(math.log(1 + n) + 1.0, ROUND), "idf": idf}
+
+
+def mo_idf_vector(features: Mapping[str, Any] | None, table: Mapping[str, Any]) -> dict[str, float]:
+    """Field weight x IDF per key, L2-normalised. A key the table has never seen gets the rarest weight."""
+    idf, default = table["idf"], float(table["default"])
+    return _normalise({k: w * float(idf.get(k, default)) for k, w in _mo_raw(features).items()})
+
+
+def mo_idf_cosine(table: Mapping[str, Any]):
+    """`text_cosine(features_a, features_b)` for scoring.factors.mo_similarity, weighted by a fixed table."""
+    def cos(features_a: Mapping[str, Any] | None, features_b: Mapping[str, Any] | None) -> float | None:
+        return cosine(mo_idf_vector(features_a, table), mo_idf_vector(features_b, table))
+    return cos
 
 
 def mo_cosine(features_a: Mapping[str, Any] | None, features_b: Mapping[str, Any] | None) -> float | None:

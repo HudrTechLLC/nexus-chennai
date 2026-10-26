@@ -4,6 +4,7 @@
     python -m app.eval --truth data/sample/_truth --limit 200
     python -m app.eval --out output_examples/eval_report.json
     python -m app.eval --mo-cosine both    # D-027 trial: report precision/recall with the flag off and on
+    python -m app.eval --mo-cosine all     # also the WS2-21 fixed-IDF mode (NEXUS_MO_TFIDF), reported apart
 
 Reproducible by construction: no model calls (R7) and no H-MEM (the evaluator has no engines, so no
 memory adjusts a score; analysts' live decisions cannot leak in). Crimes not made by the generator
@@ -38,6 +39,8 @@ def default_truth() -> Path:
 
 GEN_NS = uuid.UUID("6f1c2a52-6a71-4c51-9e57-2c7b1b0a0e42")  # same value as data/seed.py GEN_NS (generator)
 MO_COSINE_FLAG = "NEXUS_MO_COSINE"
+MO_TFIDF_FLAG = "NEXUS_MO_TFIDF"
+MODES = {"off": "", "on": MO_COSINE_FLAG, "tfidf": MO_TFIDF_FLAG}
 
 
 def non_generated_ids(settings) -> list[str]:
@@ -75,8 +78,9 @@ def main() -> int:
     ap.add_argument("--truth", type=Path, default=None)
     ap.add_argument("--limit", type=int, default=None, help="evaluate only the first N truth crimes")
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "output_examples" / "eval_report.json")
-    ap.add_argument("--mo-cosine", choices=("off", "on", "both"), default="off",
-                    help="engines.similarity.mo_cosine in mo_similarity (NEXUS_MO_COSINE); 'both' runs twice")
+    ap.add_argument("--mo-cosine", choices=("off", "on", "both", "tfidf", "all"), default="off",
+                    help="mo_similarity text cosine: off, on (NEXUS_MO_COSINE), tfidf (NEXUS_MO_TFIDF, WS2-21); "
+                         "'both' = off+on, 'all' = off+on+tfidf; the first mode is the headline")
     ap.add_argument("--exclude-file", type=Path, help="extra crime ids to exclude, one per line")
     args = ap.parse_args()
 
@@ -88,23 +92,36 @@ def main() -> int:
     exclude = set(non_generated_ids(s))
     if args.exclude_file:
         exclude |= {ln.strip() for ln in args.exclude_file.read_text(encoding="utf-8").splitlines() if ln.strip()}
-    modes = ["off", "on"] if args.mo_cosine == "both" else [args.mo_cosine]
-    previous = os.environ.get(MO_COSINE_FLAG)
+    modes = {"both": ["off", "on"], "all": ["off", "on", "tfidf"]}.get(args.mo_cosine, [args.mo_cosine])
+    previous = {f: os.environ.get(f) for f in (MO_COSINE_FLAG, MO_TFIDF_FLAG)}
     reports = {}
     try:
         for mode in modes:
-            os.environ[MO_COSINE_FLAG] = "1" if mode == "on" else ""
+            for f in (MO_COSINE_FLAG, MO_TFIDF_FLAG):
+                os.environ[f] = "1" if MODES[mode] == f else ""
             reports[mode] = evaluate(truth, crimes, exclude, s, run_id if mode == modes[0] else f"{run_id}-{mode}")
     finally:
-        if previous is None:
-            os.environ.pop(MO_COSINE_FLAG, None)
-        else:
-            os.environ[MO_COSINE_FLAG] = previous
+        for f, v in previous.items():
+            if v is None:
+                os.environ.pop(f, None)
+            else:
+                os.environ[f] = v
     report = reports[modes[0]]
     report["mo_cosine"] = modes[0]
-    if len(modes) == 2:
-        report["mo_cosine_trial"] = {m: {k: r["agent"][k] for k in ("precision", "recall", "tp", "fp", "fn", "alerts")
-                                         if k in r["agent"]} for m, r in reports.items()}
+    def _headline(r):
+        return {k: r["agent"][k] for k in ("precision", "recall", "tp", "fp", "fn", "alerts") if k in r["agent"]}
+
+    if {"off", "on"} <= set(reports):
+        report["mo_cosine_trial"] = {m: _headline(reports[m]) for m in ("off", "on")}
+    if "tfidf" in reports:  # WS2-21, reported apart from the D-027 off/on trial
+        from ..engines import mo_idf
+
+        path = mo_idf.table_path()
+        stamp = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        report["mo_tfidf_trial"] = {"tfidf": _headline(reports["tfidf"]), "off": _headline(reports["off"])
+                                    if "off" in reports else None,
+                                    "table": {k: stamp.get(k) for k in ("source", "docs", "extractor_versions",
+                                                                        "built_at")} if stamp else "missing"}
     report["hmem"] = "off: no memory adjusts any score (reproducible; live analyst decisions excluded)"
     report["truth_dir"] = str(truth_dir.relative_to(REPO_ROOT)) if truth_dir.is_relative_to(REPO_ROOT) else str(
         truth_dir)

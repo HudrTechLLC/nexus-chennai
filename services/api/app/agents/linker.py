@@ -128,14 +128,45 @@ def _forensic_codes(crime: Mapping[str, Any]) -> list[str]:
 
 
 MO_COSINE_FLAG = "NEXUS_MO_COSINE"
+MO_TFIDF_FLAG = "NEXUS_MO_TFIDF"
+_ON = ("1", "true", "on", "yes")
+_idf_cache: dict[str, tuple[float, Any]] = {}
+
+
+def _flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in _ON
+
+
+def _mo_idf_cosine() -> Callable[[Any, Any], float | None] | None:
+    """The fixed-IDF cosine over cities/<city>/mo_idf.json, cached per file version; None if there is no table."""
+    from ..engines import mo_idf
+    from ..engines.similarity import mo_idf_cosine
+
+    path = mo_idf.table_path()
+    if not path.is_file():
+        return None
+    mtime = path.stat().st_mtime
+    hit = _idf_cache.get(str(path))
+    if hit is None or hit[0] != mtime:
+        import json
+
+        hit = (mtime, mo_idf_cosine(json.loads(path.read_text(encoding="utf-8"))))
+        _idf_cache[str(path)] = hit
+    return hit[1]
 
 
 def mo_text_cosine() -> Callable[[Any, Any], float | None] | None:
-    """`engines.similarity.mo_cosine` when NEXUS_MO_COSINE=1 (D-027 trial), else None = scoring's own cosine.
+    """The text-cosine part of mo_similarity. Read per call, so the eval can flip modes; all default off.
 
-    Default off until the eval is run both ways (chief, 26 Oct); read per call so the eval can flip it.
+    - NEXUS_MO_TFIDF=1 (WS2-21): field-tagged MO keys weighted by ONE fixed IDF table
+      (cities/<city>/mo_idf.json), so a pair scores the same from any candidate set, either direction, and in
+      the Skeptic's recompute (it calls compute_factors too). Falls back to scoring's own cosine without a table.
+    - NEXUS_MO_COSINE=1 (D-027 trial): engines.similarity.mo_cosine, the same keys without IDF.
+    - neither: None = scoring's own raw-count text cosine.
     """
-    if os.environ.get(MO_COSINE_FLAG, "").strip().lower() not in ("1", "true", "on", "yes"):
+    if _flag(MO_TFIDF_FLAG):
+        return _mo_idf_cosine()
+    if not _flag(MO_COSINE_FLAG):
         return None
     from ..engines.similarity import mo_cosine
     return mo_cosine
