@@ -67,7 +67,7 @@ Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVER
 | Nightshift is the only model path; pinned lanes; `meterless/auto` refused | `adapters/nightshift.py::model_for`, `config.FORBIDDEN_MODELS`; `tests/adapters/test_nightshift.py` | ✅ |
 | Lanes: `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b`, `reason` = `nvidia/nemotron-3-ultra-550b-a55b` (Super 120B is 404 for our key) | D-017; `.env.example` | ✅ |
 | `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: text calls work, image calls refused (`no_vision_model`) | D-021 | ⚠️ limitation, never claim visual extraction |
-| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; **no call site** in `services/api/app` | ❌ do not claim |
+| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; no call site on main. nexus-2 building similar-MO search per spec E2 (Nemotron embed lane if Nightshift `/v1/embeddings` works, which returned 404 for every model at the time; TF-IDF otherwise) | `[PENDING: WS2-embed]` |
 | NVIDIA key lives only in Nightshift; the app holds the Nightshift URL + runtime token | `adapters/nightshift.py` docstring; `.env.example` | ✅ |
 
 ## Web (Vercel)
