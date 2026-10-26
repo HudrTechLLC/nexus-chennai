@@ -9,9 +9,8 @@ const STATUS_TONE: Record<string, string> = {
 const ACTION_LABEL: Record<string, string> = { rationale_reexplained: "rationale re-explained (later run)" };
 
 /** A failed step the run went on from reads amber, not red; red only when nothing ran after it. */
-const FAILURE_TONE = { retried: "text-amber-700", recovered: "text-amber-700", fatal: "text-red-600" } as const;
+const FAILURE_TONE = { recovered: "text-amber-700", fatal: "text-red-600" } as const;
 const FAILURE_TITLE = {
-  retried: "This step failed and the same agent ran again later in this run.",
   recovered: "This step failed; the run carried on without it.",
   fatal: "This step failed and the run stopped here.",
 } as const;
@@ -74,7 +73,6 @@ export function AlertHowMade({ steps, runId, verdict, canOpenTrace }: {
                   className={`text-xs ${failed ? FAILURE_TONE[failed] : STATUS_TONE[x.status] ?? "text-muted"}`}
                   title={failed ? FAILURE_TITLE[failed] : undefined}
                 >
-                  {failed === "retried" && <span aria-hidden className="mr-0.5">↻</span>}
                   {x.status.replaceAll("_", " ")}
                 </span>
               )}
