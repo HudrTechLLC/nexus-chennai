@@ -6,6 +6,9 @@ import { audit, officerNames } from "@/lib/alertsData";
 import { TIP_CATEGORY_LABEL, tipAreaLabel, type TipRow } from "@/lib/tips";
 import { GuardBadges, UntrustedText } from "@/components/console/tips/TipBits";
 import { ReplyForm, ReviewForm, type Nearby } from "@/components/console/tips/TipActions";
+import { cellAreaLabel, consoleCell, consoleCellMapHref, consoleCrimeMapHref, tipLinkedCrimes, type TipCrimeSource } from "@/lib/consoleArea";
+
+const SOURCE_LABEL: Record<TipCrimeSource, string> = { appeal: "appeal case", tip: "chosen by the tipster", review: "linked in a review" };
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +35,17 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
   const reviews = [...(tip.tip_reviews ?? [])].sort((a, b) => b.at.localeCompare(a.at));
   const names = await officerNames(sb, reviews.map((r) => r.by));
 
+  // WS3-24: the console map, framed on the tip's area and on each crime it is tied to. A crime link is offered
+  // only when this officer may read the crime (can_read_crime, as the map's RLS would decide); never in a public URL.
+  const mapCell = consoleCell(tip.approx_cell_fine) ?? consoleCell(tip.approx_cell);
+  const linked = tipLinkedCrimes({ appealCrimeId: appeal.data?.crime_id, aboutCrimeId: tip.about_crime_id, reviews });
+  const readable = await Promise.all(linked.map(async (l) => {
+    const { data: ok } = await sb.rpc("can_read_crime", { p_crime_id: l.crimeId });
+    return ok === true;
+  }));
+  // Crimes this officer may not read are counted, never named (no id on the page).
+  const hidden = readable.filter((r) => !r).length;
+
   return (
     <div className="space-y-5">
       <Link href="/console/tips" className="text-sm text-muted hover:text-ink">← Tips</Link>
@@ -45,6 +59,27 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
         </div>
         <GuardBadges guard={tip.guard} status={tip.status} />
         {appeal.data && <p className="text-sm">Appeal: <strong>{appeal.data.title}</strong></p>}
+        {(mapCell || linked.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" data-testid="tip-map-links">
+            {mapCell && (
+              <span>
+                <Link href={consoleCellMapHref(mapCell)!} className="font-medium text-signal hover:underline">View on map</Link>
+                <span className="text-xs text-muted"> · {cellAreaLabel(mapCell)}</span>
+              </span>
+            )}
+            {linked.map((l, i) => readable[i] && (
+              <span key={l.crimeId} className="text-xs">
+                <span className="font-mono">{l.crimeId}</span> <span className="text-muted">({SOURCE_LABEL[l.source]})</span>{" "}
+                <Link href={consoleCrimeMapHref(l.crimeId)!} className="font-medium text-signal hover:underline">See crime on map</Link>
+              </span>
+            ))}
+            {hidden > 0 && (
+              <span className="text-xs text-muted">
+                {hidden === 1 ? "1 linked crime is" : `${hidden} linked crimes are`} not visible to your role
+              </span>
+            )}
+          </div>
+        )}
         {tip.status === "quarantined" && (
           <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
             Quarantined by Tip Guard: it is shown here for review but is never passed to the agents.

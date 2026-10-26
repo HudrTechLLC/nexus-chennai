@@ -4,7 +4,7 @@ import type { Layer, PickingInfo } from "@deck.gl/core";
 import { GeoJsonLayer, PathLayer, PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { H3HexagonLayer, TripsLayer } from "@deck.gl/geo-layers";
 import { PathStyleExtension } from "@deck.gl/extensions";
-import { cellToLatLng } from "h3-js";
+import { cellToBoundary, cellToLatLng } from "h3-js";
 import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
@@ -17,6 +17,8 @@ import { TimeScrubber } from "./TimeScrubber";
 import { CrimeDrawer } from "./CrimeDrawer";
 import { usePulseData, type LinkPoint } from "./usePulseData";
 import { consoleBrowserClient } from "@/lib/supabase/browser";
+import { cellBounds } from "@/lib/publicArea";
+import { cellAreaLabel } from "@/lib/consoleArea";
 
 type TrailRead = { read_id: string; camera_id: string; read_at: string; plate: string; conf: number | null; lon: number; lat: number };
 type Trail = { crime_id: string; plates: string[]; reads: TrailRead[] };
@@ -42,7 +44,10 @@ function pointOf(p: LinkPoint | undefined, byId: Map<string, MapCrime>, id: stri
   return null;
 }
 
-export default function PulseMap({ stationId, role }: { stationId: string | null; role: Role }) {
+/** focusCell / focusCrime come from /console/map?cell= / ?crime= (WS3-24), already validated by the page. */
+export default function PulseMap({ stationId, role, focusCell = null, focusCrime = null }: {
+  stationId: string | null; role: Role; focusCell?: string | null; focusCrime?: string | null;
+}) {
   const data = usePulseData();
   const [cats, setCats] = useState<Set<CatKey>>(new Set(CAT_KEYS));
   const [win, setWin] = useState<[number, number] | null>(null);
@@ -264,8 +269,10 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   // Opening frame: once the default window has loaded (newest months load first), frame what this
   // role can see: its crimes plus arc ends and series members. Computed once; MapCanvas skips it if
   // the user has already moved the map.
-  const [openFrame, setOpenFrame] = useState<[number, number, number, number] | null>(null);
-  const frameDone = useRef(false);
+  const [openFrame, setOpenFrame] = useState<[number, number, number, number] | null>(
+    focusCell && !focusCrime ? cellBounds(focusCell) : null);
+  // A ?cell= or ?crime= frame replaces the automatic opening frame.
+  const frameDone = useRef(Boolean(focusCell || focusCrime));
   useEffect(() => {
     if (frameDone.current || !win || data.totalMonths === 0) return;
     if (data.loadedMonths < Math.min(2, data.totalMonths)) return;
@@ -274,12 +281,46 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
     setOpenFrame(initialFrame(visible.map((c) => c.pos), linked));
   }, [win, data.loadedMonths, data.totalMonths, visible, arcs, series]);
 
+  // ?crime=: once the crime has loaded (months load newest first), open its drawer, frame it and move the
+  // time window to include it. If every month has loaded and it is not there, this role cannot read it
+  // (map_crimes runs under RLS), so say so and keep the map where it is.
+  const [focusMsg, setFocusMsg] = useState<string | null>(null);
+  const crimeDone = useRef(!focusCrime);
+  useEffect(() => {
+    if (crimeDone.current || !focusCrime) return;
+    const c = byId.get(focusCrime);
+    if (c) {
+      crimeDone.current = true;
+      setSelected(c);
+      setOpenFrame(boundsOf([c.pos], 0.004));
+      const ext = data.extent;
+      setWin((w) => {
+        if (w && c.t >= w[0] && c.t <= w[1]) return w;
+        const len = w ? w[1] - w[0] : 30 * DAY_MS;
+        const lo = ext ? ext.min : c.t - len, hi = ext ? ext.max : c.t + len;
+        const from = Math.max(lo, Math.min(c.t - len / 2, hi - len));
+        return [from, Math.min(hi, from + len)];
+      });
+      return;
+    }
+    if (data.totalMonths > 0 && data.loadedMonths >= data.totalMonths) {
+      crimeDone.current = true;
+      setFocusMsg("That crime isn't visible to your role");
+    }
+  }, [focusCrime, byId, data.extent, data.loadedMonths, data.totalMonths]);
+  const cellLabel = focusCell ? cellAreaLabel(focusCell) : null;
+
   const [panelOpen, setPanelOpen] = useState(false); // phones only: the layers panel starts closed
 
   const dim = constellation ? 0.25 : 1;
   const loopT = (now % 2400) / 2400; // travelling dash: one pass every 2.4 s
 
   const layers: Layer[] = [
+    focusCell && new PolygonLayer<{ ring: LonLat[] }>({
+      id: "focus-cell", data: [{ ring: cellToBoundary(focusCell, true) as LonLat[] }], getPolygon: (d) => d.ring,
+      stroked: true, filled: true, getFillColor: [56, 189, 248, 38], getLineColor: [56, 189, 248, 240], // cyan: amber means a series
+      lineWidthMinPixels: 3, pickable: false,
+    }),
     toggles.wards && data.boundaries && new GeoJsonLayer({
       id: "wards", data: data.boundaries.wards as never, stroked: true, filled: false,
       getLineColor: [150, 160, 175, 90], lineWidthMinPixels: 0.5,
@@ -491,6 +532,13 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
                 {loading && <span className="text-muted"> · loading month {data.loadedMonths + 1}/{data.totalMonths}</span>}
                 {role === "station_officer" && <span className="text-muted"> · other stations shown by area cell</span>}
               </span>}
+        {cellLabel && (
+          <div className="mt-0.5 flex items-center gap-1.5 text-ink" data-testid="focus-cell-label">
+            <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-sm border-2 border-[rgb(56,189,248)] bg-[rgba(56,189,248,0.15)]" />
+            Tip area · {cellLabel}
+          </div>
+        )}
+        {focusMsg && <div role="status" className="mt-0.5 text-muted" data-testid="focus-crime-msg">{focusMsg}</div>}
       </div>
 
       {/* clock dial */}
