@@ -10,6 +10,7 @@ from app.adapters.nightshift import (
     NightshiftClient,
     NightshiftError,
     NightshiftUnauthorized,
+    fixture_key,
 )
 from app.config import Settings
 from app.tracing import Tracer
@@ -144,3 +145,26 @@ def test_sample_mode_without_token_replays_without_calling(tmp_path):
     result = c.chat("fast", msgs, agent="t")
     assert result.replayed is True and result.content == "OK"
     assert calls == []  # nothing was sent
+
+
+def test_repeated_identical_requests_record_and_replay_in_order(tmp_path):
+    """Judge replay (example 2): the Skeptic asked the same question in round 1 and round 2 and got different
+    answers; one fixture per key kept only the last, so replay diverged. The n-th identical request is now
+    recorded as <key>-n.json (the first stays <key>.json) and replayed in the same order."""
+    answers = iter(["first", "second"])
+
+    def handler(req):
+        body = json.loads(req.content)
+        return httpx.Response(200, json={"id": "c", "model": body["model"],
+                                         "choices": [{"message": {"content": next(answers)}, "finish_reason": "stop"}]})
+
+    msgs = [{"role": "user", "content": "same question"}]
+    rec = NightshiftClient(settings(), transport=httpx.MockTransport(handler), fixtures_dir=tmp_path, record_fixtures=True)
+    assert [rec.chat("fast", msgs, agent="t").content for _ in range(2)] == ["first", "second"]
+    key = fixture_key("fast", msgs)
+    assert sorted(p.name for p in tmp_path.iterdir()) == [f"{key}-2.json", f"{key}.json"]
+
+    replay = NightshiftClient(settings(meterless_runtime_token="", sample_mode=True), fixtures_dir=tmp_path)
+    assert [replay.chat("fast", msgs, agent="t").content for _ in range(2)] == ["first", "second"]
+    with pytest.raises(NightshiftError):
+        replay.chat("fast", msgs, agent="t")  # a third ask was never recorded: fail, never reuse an answer
