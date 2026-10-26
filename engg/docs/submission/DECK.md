@@ -82,8 +82,8 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 6 · How Zetaris is used (point 5)
 
 - **On slide:**
-  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role) and live REST news/social feeds. CSV/Parquet file sources `[PENDING: WS1-12]`.
-  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`. More `[PENDING: WS1-15]`.
+  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role), 12 file tables in Zetaris's file store (8 CSV + 4 Parquet: legacy CCTNS exports, ANPR, 112 calls, releases…) and live REST news/social feeds. One semantic view, `v_crime_unified`, over every crime record shape.
+  - **Governed:** agents may run only named queries. Live (10): `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`, `q_tip_corroboration`, `q_context`. `q_vehicle_trail`, `q_offender_return`, `q_calls_near` `[PENDING: WS1-15]`.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
   - **The Skeptic re-runs Zetaris queries itself** before any alert reaches a human.
@@ -136,6 +136,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 11 · Results
 
 - **On slide:** precision and recall, Nexus vs rules-only baseline (same category, ≤ 2 km, ≤ 14 days) on the planted truth `[PENDING: WS2-14]`. Fill from `output_examples/eval_report.json` only; if it doesn't land, drop the table and keep the test evidence.
+- **Judge-path result (confirmed):** the Red Pulsar hero pair, Adyar ↔ Velachery, is linked **high (0.787) across two stations** from a fresh clone with no credentials. Use this line even if the eval table doesn't land.
 - **Also:** typical `/run` execution time from `output_examples/` `[PENDING: WS2-16]`; tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
 - **Visual:** the eval page or a clean table. No chart without real numbers.
 
