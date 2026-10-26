@@ -83,7 +83,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 - **On slide:**
   - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role) and live REST news/social feeds. CSV/Parquet file sources `[PENDING: WS1-12]`.
-  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`. More `[PENDING: WS1-15]`.
+  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`. More `[PENDING: WS1-15]`.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
   - **The Skeptic re-runs Zetaris queries itself** before any alert reaches a human.
@@ -130,7 +130,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - **Alert card** (`/console/alerts/[alertId]`): factors, evidence, Zetaris query ids, approve/reject.
   - **Tip flow** (`/tip/new` → `/tip/sent` → `/tip/status`): anonymous, EXIF stripped, tip code.
   - **Tip triage** (`/console/tips`): quarantined tips visible to police.
-- **Optional fifth tile:** series page with dossier `[PENDING: WS3-11]`; fallback: public appeal page (`/appeals/[publicId]`).
+- **Optional fifth tile:** series page with its Markovian dossier (`/console/series/[seriesId]`, on main). Use it only once nexus-6's live check shows real rows; fallback: public appeal page (`/appeals/[publicId]`).
 - **Check no secrets visible:** tip status page shows a tip code. Use a throwaway synthetic tip, never a real passphrase you reuse.
 
 ## Slide 11 · Results

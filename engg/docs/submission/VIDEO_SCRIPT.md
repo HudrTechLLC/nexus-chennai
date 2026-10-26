@@ -31,19 +31,13 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
 2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** If the hero case gives no drop, use a run that does and narrate that pair. **Never stage or edit a trace.**
-3. **Set up H-MEM so the decision reaches the next run** (segment 7). How it works on main (`services/api/app/engines/hmem/`):
-   - with `ENGINES_BACKEND=sample` (the default), each process keeps its own H-MEM;
-   - H-MEM persists to `logs/hmem/` (`ledger.jsonl`, `state.json`);
-   - a process reads `state.json` **only when it opens H-MEM**, so an API that is already running does not see a decision the worker records afterwards;
-   - in `docker-compose.yml` only `api` mounts `./logs`, so the `worker` container doesn't share that directory at all.
+3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. They must still **share the `logs/hmem/` directory**: in `docker-compose.yml` only `api` mounts `./logs`, so run both as plain Python from one checkout.
 
    **Recipe:**
-   1. Run the API and the worker as plain Python from the **same checkout**: `python run.py` and `python -m app.worker`. They then share `logs/hmem/`.
+   1. `python run.py` and `python -m app.worker` from the same checkout.
    2. Approve the Adyar–Velachery alert in the console, and let the worker pass once (it calls `hmem.record_decision`).
-   3. **Restart the API**, or use `python run.py --once`, which is a fresh process, so it loads the new state.
-   4. Run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
-
-   **Confirm with nexus-2/nexus-3 before the shoot** that the step-4 alert reaches Supabase (so the console shows it) and shows a non-empty `memory_applied`. If not, use the ledger fallback in segment 7.
+   3. Run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
+   4. Check that alert's "Memory applied" section in the console is non-empty. If it is empty, use the ledger fallback in segment 7.
 4. **Hide everything that can hold a secret** before you press record:
    - Nightshift's Providers and Console tabs;
    - the Supabase dashboard;
@@ -74,8 +68,8 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 ### 3 · A new case arrives · 0:38–1:05 (27 s, ~62 words)
 
 - **Screen:**
-  - **Planned:** the officer saves the FIR in the console form `[PENDING: WS3-10]`.
-  - **Fallback (on main):** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines.
+  - **Planned (on main, #73):** the officer saves the FIR in the console form (`/console/cases/new`), attaching the CCTV still (#88). Then trigger the run: the worker picks up new crimes, or `POST /api/cases/<id>/process`.
+  - **Fallback:** a terminal running `curl -s -X POST localhost:8000/run -H "Content-Type: application/json" -d '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}'`, with stdout trace lines scrolling. Then cut to the trace viewer `/console/system/trace/<run_id>`, scrolled to the Extractor lines.
 - **Narration:**
   > An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. The CCTV still can't be read today, because our runtime refuses images, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
 - **Check no secrets visible:**
@@ -118,7 +112,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
   - the alert inbox (`/console/alerts`), then the Adyar–Velachery alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
   - the analyst clicks **Approve**;
   - cut to the alert for the second, similar Red Pulsar case (run after the decision; see Before recording, step 3), whose "Memory applied" section shows the memory from that decision.
-  - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). The memory page itself is `[PENDING: WS3-11]`.
+  - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). Or the memory page (`/console/memory`, on main since #85), once nexus-6's live check shows real rows.
 - **Narration:**
   > The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
 - **Check no secrets visible:**
@@ -127,7 +121,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 8 · The series on the map · 2:50–3:12 (22 s, ~50 words)
 
-- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order; the scrubber plays them. Optional: the series dossier `[PENDING: WS3-11]`; skip it if the page isn't on main.
+- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order; the scrubber plays them. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
 - **Narration:**
   > Approved links grow into a series. On the map, the Red Pulsar Duo appears as one trail across five stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
 - **Check no secrets visible:** the map tiles carry no key in view; crop the URL bar (a MapTiler key can sit in tile URLs in devtools, so keep devtools closed).

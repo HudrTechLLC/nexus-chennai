@@ -6,7 +6,7 @@ tags: [nexus, deliverables]
 
 This note lists every claim the submission drafts make, with the file, test or CI job that proves it. The four drafts ([README_DRAFT](README_DRAFT.md), [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), [DECK](DECK.md), [VIDEO_SCRIPT](VIDEO_SCRIPT.md)) take their claims only from here. When a `[PENDING: id]` task lands, flip its row here first, then the drafts. `grep -rn "PENDING:" engg/docs/submission/` lists everything still open.
 
-**Verified against `origin/main` @ `c686f0c`** (26 Oct 2026). CI on that commit is green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`.
+**Verified against `origin/main` @ `4c2f686`** (26 Oct 2026; first pass @ `c686f0c`, where CI was green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`). Re-check CI on the freeze commit.
 Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [ENGINES](../ENGINES.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
 ## Re-verify at freeze (about 2 minutes)
@@ -19,7 +19,7 @@ ls output_examples/eval_report.json 2>&1                                        
 PYTHONPATH=services/api python -c "from app.adapters.zetaris import NAMED_QUERIES as N; print(sorted(N))"   # WS1-15 (13 + q_ping when done)
 ls zetaris/10_views.sql 2>&1; grep -ci 'file\|parquet\|csv' zetaris/00_sources.sql                       # WS1-13, WS1-12
 find apps/web/app/console -name page.tsx | sed 's#apps/web/app##' | sort                                 # WS3-06/10/11 (cases, search, fir, series, stations, memory, graph)
-grep -rn '"embed"\|embeddings' services/api/app --include=*.py | grep -v config.py                      # WS2-embed call site
+grep -rn embed_fallback services/api/app | head -3                                                      # embed stays fallback-only (D-027)
 grep -rn "PENDING:" engg/docs/submission/                                                               # what's still open
 ```
 
@@ -65,8 +65,8 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Tips reach Zetaris only through `tips_v` (safe columns; no passphrase hash, no raw text) | `zetaris/README.md`; migration `0003_zetaris_reader_tips.sql` | ✅ |
 | REST feeds: `rest_news`, `rest_social` (Lightning REST tables) + views `news_items`, `social_posts`, `v_news_mentions` | `zetaris/40_feeds.sql` | ✅ |
 | Data-quality views (8): `dq_duplicate_firs`, `dq_bad_geo`, `dq_time_inconsistent`, `dq_unmapped_sections`, `dq_flags`, `dq_orphan_evidence`, `dq_tip_without_incident`, `dq_stale_cameras` | `zetaris/20_dq.sql`; `tests/engines/test_dq.py` | ✅ |
-| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/` | ✅ (6 of 13) |
-| `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context`, `q_search`, `q_station_matrix` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
+| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/`, `tests/engines/test_search.py` (`q_search`: #84; `q_station_matrix`: #93) | ✅ (8 of 13) |
+| `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
 | Semantic views `v_crime_unified`, `v_vehicle_trail`, `v_offender_return`, `v_tip_corroboration` (`10_views.sql`) | file not on main | `[PENDING: WS1-13]` |
 | CSV / Parquet file sources (legacy exports, ANPR, 112 calls) in Zetaris's internal file store | not in `00_sources.sql` on main; D-022a explains the store | `[PENDING: WS1-12]` |
 | Live `SELECT count(*) FROM sb.crimes` = 14000 | `zetaris/README.md` (recorded by nexus-1) | ✅ (recorded, not CI) |
@@ -80,10 +80,11 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | E4 feature tests pass on both the sample backend and the TS references through the sidecar | CI `api` (`pytest -q`) and CI `engines` (`ENGINES_BACKEND=sidecar pytest tests/engines -q`); `tests/engines/test_backend_parity.py` | ✅ |
 | Scout Intent (Nexus implementation of the Meterless Scout spec): 120 E4 fixtures, route accuracy 1.000, injections quarantined 18/18, emergencies 8/8, 0 false quarantines; held-out 40: route 0.950, injections 7/7 | `logs/feature_scout_intent.txt` (run 2026-10-26 06:27 UTC); gated in `tests/engines/test_scout_intent.py` | ✅ |
 | Engine state persisted to Supabase `wm_*` / `hmem_*` (append-only ledger) when `ENGINES_PERSIST=supabase` | migration `0005_01_engines.sql`; D-020; `tests/engines/test_migration_0005.py`, `test_persist.py` | ✅ |
+| H-MEM: a decision recorded by the worker reaches the API's next score without a restart (store reopened when `state.json`/`ledger.jsonl` change; lock file for concurrent writers); the next alert row carries `memory_applied` | #82 `tests/engines/test_hmem_shared.py`; #83 `tests/graph/test_hmem_e2e.py` | ✅ |
 | Nightshift is the only model path; pinned lanes; `meterless/auto` refused | `adapters/nightshift.py::model_for`, `config.FORBIDDEN_MODELS`; `tests/adapters/test_nightshift.py` | ✅ |
 | Lanes: `fast` = `nvidia/nemotron-3.5-lightning-30b-a3b`, `reason` = `nvidia/nemotron-3-ultra-550b-a55b` (Super 120B is 404 for our key) | D-017; `.env.example` | ✅ |
 | `vision` = `nvidia/nemotron-3.5-super-vl-120b-a12b`: text calls work, image calls refused (`no_vision_model`) | D-021 | ⚠️ limitation, never claim visual extraction |
-| Embed lane `nvidia/nemotron-3.5-embed-1b` | configured in `.env.example` / `config.py`; no call site on main. nexus-2 building similar-MO search per spec E2 (Nemotron embed lane if Nightshift `/v1/embeddings` works, which returned 404 for every model at the time; TF-IDF otherwise) | `[PENDING: WS2-embed]` |
+| Embed lane `nvidia/nemotron-3.5-embed-1b` | **Not claimed** (D-027): Nightshift 1.2.7 has no `/v1/embeddings` route (404 for every model). Similar-MO and text search use TF-IDF + feature vectors in code (spec E2 fallback), traced `embed_fallback`: `services/api/app/engines/similarity.py`; `tests/engines/test_similarity.py` | ✅ fallback in code; ❌ model not claimed |
 | NVIDIA key lives only in Nightshift; the app holds the Nightshift URL + runtime token | `adapters/nightshift.py` docstring; `.env.example` | ✅ |
 
 ## Web (Vercel)
@@ -92,8 +93,9 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 |---|---|---|
 | Public portal: home, appeals list + detail, fuzzed hex map, CCTV page, anonymous tip (EXIF stripped, tip code, status, replies), privacy | `apps/web/app/(public)/**`; WS4-01…06 done | ✅ |
 | Console: sign-in + roles, alerts inbox + detail, map, appeals, tip triage, system status + trace viewer | `apps/web/app/console/(app)/**` pages exist; CI `web` green | ✅ pages exist; completeness of WS3-04/05/07/08/09 and WS4-07/08: `[PENDING]` per task |
-| Case file + search; FIR capture form | not on main | `[PENDING: WS3-06]`, `[PENDING: WS3-10]` |
-| Series pages, station link matrix, memory page, graph explorer | not on main | `[PENDING: WS3-11]` |
+| Case list + case file (#61); unified search with facets (#78); FIR capture form + `file_fir` RPC (#73); evidence and audio-statement upload, evidence gallery (#88) | `console/(app)/cases/**`, `search/page.tsx`; CI `web` | ✅ built |
+| Series list + series page with Markovian dossier, station link matrix (#70); H-MEM memory page + World Model graph explorer (#85). RPCs `station_link_matrix`, `series_overview`, `hmem_effects`, `wm_graph` (security invoker, read-only, jsonb; anon refused; D-028) | `console/(app)/{series,stations,memory,graph}/**`; migrations `0004_06_01_series_stations.sql`, `0004_06_02_memory_graph.sql`; vitest `series`, `stationMatrix`, `memory`, `worldGraph` (CI `web`) | ✅ built; live check on real rows `[PENDING: WS3-11 live]` (nexus-6) |
+| Pulse Map data-source layers + vehicle trail | #86 | ✅ built |
 | Tip passphrases hashed with pgcrypto bcrypt inside Postgres (deviation from spec Argon2id) | D-023; migration `0004_03_public_rpcs.sql` (`gen_salt('bf', …)`) | ✅ |
 
 ## Libraries (for the README dependency list)
