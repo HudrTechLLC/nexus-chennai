@@ -23,13 +23,20 @@ def test_reads_only_registered_sources_and_safe_views():
         sql = NAMED_QUERIES[name].lightning
         tables = set(re.findall(r"\bFROM\s+([a-z_]+\.[a-z_]+)", sql, flags=re.I))
         assert tables <= {"sb.crimes", "sb.crime_vehicles", "sb.statements", "sb.evidence_media", "sb.forensics",
-                          "sb.crime_features_v"}, tables
+                          "sb.crime_features_v", "sb.case_bundle_v"}, tables
         assert "sb.tips" not in sql
 
 
 def test_city_time_comes_from_the_pack():
+    sql = specs()["q_candidates"]["lightning"]
+    assert "from_utc_timestamp(b.occurred_from, 'Asia/Kolkata')" in sql and "'+05:30'" in sql
+
+
+def test_q_case_is_one_read_of_the_case_bundle_view():
+    # Timestamps come from the view in city time ({{city:timezone}} in 30_case.sql; tests/engines/test_case_bundle.py).
     sql = specs()["q_case"]["lightning"]
-    assert "from_utc_timestamp(c.occurred_from, 'Asia/Kolkata')" in sql and "'+05:30'" in sql
+    assert sql.endswith("FROM sb.case_bundle_v WHERE crime_id = :crime_id")
+    assert set(re.findall(r"\bFROM\s+([a-z_]+\.[a-z_]+)", sql, flags=re.I)) == {"sb.case_bundle_v"}
 
 
 def test_no_param_lookalikes_in_sql():
