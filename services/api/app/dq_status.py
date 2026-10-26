@@ -13,6 +13,13 @@ heartbeat rows:
 - detail: one key per rule with its row count, total, source, ms, and the Zetaris query id (the trace
   file of this run records the same id).
 
+It also runs q_source_counts (WS3-27) and upserts component 'zetaris:sources': detail.counts holds the row
+count of every federated source, keyed by the console Data sources page's source ids, which the page shows
+"as of <checked_at>, via Zetaris". That row is written only when Zetaris itself answered: a failure or a
+sample-mode answer leaves the last good row (and its real checked_at) in place.
+
+    python -m app.dq_status [--only dq|sources]
+
 It is separate from the worker on purpose: the worker's pass is synchronous, and an 80 s query on every
 heartbeat would hold up new FIRs. Run it after a re-seed and before a demo.
 """
@@ -29,6 +36,7 @@ from .config import Settings, get_settings
 from .tracing import IST, Tracer, new_run_id
 
 COMPONENT = "zetaris:dq"
+SOURCES_COMPONENT = "zetaris:sources"
 AGENT = "DQStatus"
 RULES = tuple(rule for rule, _ in DQ_RULE_VIEWS)
 
@@ -73,6 +81,23 @@ def build_row(zetaris: Any, previous: dict[str, Any] | None) -> dict[str, Any]:
             "checked_at": checked}
 
 
+def build_sources_row(zetaris: Any) -> tuple[dict[str, Any] | None, str]:
+    """The 'zetaris:sources' row for one q_source_counts call, or (None, why) when there is nothing true to
+    write: Zetaris failed, or only the sample twin answered. Never raises."""
+    try:
+        r = zetaris.named("q_source_counts", agent=AGENT)
+    except Exception as exc:
+        return None, f"q_source_counts failed: {str(exc)[:200]}"
+    if r.source != "zetaris":
+        return None, f"answered by {r.source}, not Zetaris: not written"
+    counts = {sid: int(n) for sid, n in r.rows if n is not None}
+    missing = sorted(sid for sid, n in r.rows if n is None)
+    detail: dict[str, Any] = {"counts": counts, "source": r.source, "ms": r.ms, "query_id": r.query_id}
+    if missing:
+        detail["not_measured"] = ", ".join(missing)
+    return {"component": SOURCES_COMPONENT, "state": "live", "detail": detail, "checked_at": _now()}, "ok"
+
+
 def run(settings: Settings, sb: Any, zetaris: Any, tracer: Tracer) -> dict[str, Any]:
     row = build_row(zetaris, _previous(sb))
     sb.upsert("system_status", [row], on_conflict="component")
@@ -83,22 +108,51 @@ def run(settings: Settings, sb: Any, zetaris: Any, tracer: Tracer) -> dict[str, 
     return row
 
 
-def main() -> None:
+def run_sources(sb: Any, zetaris: Any, tracer: Tracer) -> tuple[dict[str, Any] | None, str]:
+    row, why = build_sources_row(zetaris)
+    if row is not None:
+        sb.upsert("system_status", [row], on_conflict="component")
+    tracer.emit(AGENT, "source_counts", input_summary=SOURCES_COMPONENT,
+                output_summary=f"written sources={len(row['detail']['counts'])}" if row else why,
+                zetaris_query_ids=[row["detail"]["query_id"]] if row else [],
+                status="ok" if row else "error")
+    return row, why
+
+
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser(prog="python -m app.dq_status", description=__doc__.splitlines()[0])
+    ap.add_argument("--only", choices=("dq", "sources"), help="run just one of the two (default: both)")
+    args = ap.parse_args(argv)
     s = get_settings()
     sb = SupabaseClient(s)
     if not sb.configured:
         raise SystemExit("Supabase is not configured; nowhere to write system_status.")
     tracer = Tracer(new_run_id("dqstatus"), s.logs_dir, echo=False)
     z = ZetarisClient(s, tracer)
+    row = src = None
+    why = ""
     try:
-        row = run(s, sb, z, tracer)
+        if args.only != "sources":
+            row = run(s, sb, z, tracer)
+        if args.only != "dq":
+            src, why = run_sources(sb, z, tracer)
     finally:
         z.close()
         sb.close()
-    d = row["detail"]
-    print(f"{COMPONENT}: {row['state']} total={d.get('total')} source={d.get('source')} ms={d.get('ms')}"
-          + (f" not_measured={d['not_measured']}" if d.get("not_measured") else "")
-          + (f" error={d['error']}" if d.get("error") else ""), flush=True)
+    if row is not None:
+        d = row["detail"]
+        print(f"{COMPONENT}: {row['state']} total={d.get('total')} source={d.get('source')} ms={d.get('ms')}"
+              + (f" not_measured={d['not_measured']}" if d.get("not_measured") else "")
+              + (f" error={d['error']}" if d.get("error") else ""), flush=True)
+    if args.only != "dq":
+        if src is not None:
+            d = src["detail"]
+            print(f"{SOURCES_COMPONENT}: written {len(d['counts'])} sources ms={d['ms']}"
+                  + (f" not_measured={d['not_measured']}" if d.get("not_measured") else ""), flush=True)
+        else:
+            print(f"{SOURCES_COMPONENT}: not written ({why})", flush=True)
 
 
 if __name__ == "__main__":

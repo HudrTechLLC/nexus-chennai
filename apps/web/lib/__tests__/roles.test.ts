@@ -92,7 +92,7 @@ describe("desktopNav", () => {
     return { inline: d.inline.map((n) => n.label), manage: d.manage.map((n) => n.label) };
   };
   it("groups Stations, System and Admin under Manage and leaves Notifications to the bell", () => {
-    expect(split("admin").manage).toEqual(["Stations", "System", "Admin"]);
+    expect(split("admin").manage).toEqual(["Stations", "System", "Data sources", "Admin"]);
     expect(split("admin").inline).not.toContain("Notifications");
     expect(split("supervisor").manage).toEqual(["Stations"]);
   });

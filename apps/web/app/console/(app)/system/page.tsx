@@ -36,6 +36,9 @@ export default async function SystemPage() {
           Health of every service the agents use, as reported by the worker on each pass, and the latest agent runs.
           Open a run to see each step: agent, model and receipt, Zetaris queries, engines and Skeptic decisions.
         </p>
+        <Link href="/console/system/sources" className="mt-1 inline-block text-sm text-accent underline-offset-2 hover:underline">
+          Data sources: what Zetaris federates →
+        </Link>
       </div>
 
       <EvalSummary report={evalReport} />
