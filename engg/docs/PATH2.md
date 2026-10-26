@@ -61,7 +61,7 @@ All are marked `cut` for the hackathon and parked here.
 | WS6-06 | Route-signed evidence hashes | The database doesn't re-verify the upload hash today ([D-029](DECISIONS.md) limit) |
 | WS6-07 | Full lazy news generator over the live crime set | 5 sample articles match more than one live crime today ([D-032](DECISIONS.md), known live limit) |
 | WS6-08 | Column-limited persons view for `zetaris_reader` | Hardening: Zetaris should see only the columns agents need |
-| WS6-09 | Vision and audio lanes once Nightshift routes them | Images are refused today and no audio model is pinned (WS2-05, CAP-03, CAP-09) |
+| WS6-09 | Vision on an in-house lane; an audio lane once Nightshift routes one | Vision works through a rate-limited third-party free route (D-036, verified in run `reextract_vis_1793040194`); no audio model is pinned (WS2-05, CAP-03, CAP-09) |
 
 ## 4. Hardware
 
@@ -75,4 +75,4 @@ All are marked `cut` for the hackathon and parked here.
 3. **Full dataset everywhere (WS6-02).** Rebuild fixtures and re-run the eval on 14k crimes; publish both slices' numbers.
 4. **Safety items (WS6-05, WS6-06, WS6-08).** Close the known limits the README lists.
 5. **Scoring and data quality (WS6-03, WS6-04, WS6-07).** Each one changes scores, so each re-runs the eval and records a decision.
-6. **Model lanes (WS6-09)** when Nightshift serves vision and audio; the Extractor code paths already exist.
+6. **Model lanes (WS6-09):** move vision to an in-house lane, and add audio when Nightshift serves it; the Extractor code paths already exist.
