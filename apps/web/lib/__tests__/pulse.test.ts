@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   arcPath, binDaily, binHours, catKey, cone, convexHull, decodeCrimes, DAY_MS, hhmm, inClockArc, km, localDay,
-  boundsOf, byCount, decodeFacets, facetIds, monthWindows, padRing, passes, UNKNOWN_ZONE, zoneStations, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
+  boundsOf, byCount, initialFrame, overlayPadding, decodeFacets, facetIds, monthWindows, padRing, passes, UNKNOWN_ZONE, zoneStations, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type MapCrime,
 } from "../pulse";
 
 describe("catKey", () => {
@@ -231,5 +231,48 @@ describe("byCount", () => {
     const m = new Map([["6th_street", new Set(["A"])], ["two_wheeler_from_behind", new Set(["A", "B", "C"])], ["night", new Set(["A", "B"])], ["gold_chain", new Set(["C", "D"])]]);
     expect(byCount(m)).toEqual(["two_wheeler_from_behind", "gold_chain", "night", "6th_street"]);
     expect(byCount(new Map())).toEqual([]);
+  });
+});
+
+describe("initialFrame", () => {
+  it("frames the visible crimes plus their arc ends and series members", () => {
+    const b = initialFrame([[80.25, 13.0], [80.26, 13.01]], [[80.22, 12.98]], 0)!;
+    expect(b).toEqual([80.22, 12.98, 80.26, 13.01]);
+  });
+  it("trims far outliers in a big set but never drops a linked point", () => {
+    const pts: [number, number][] = Array.from({ length: 100 }, (_, i) => [80.2 + i * 0.001, 13.0 + i * 0.001]);
+    pts.push([79.0, 12.0]); // a stray geocode
+    const b = initialFrame(pts, [[80.5, 13.2]], 0)!;
+    expect(b[0]).toBeGreaterThan(79.5);
+    expect(b[2]).toBe(80.5);
+    expect(b[3]).toBe(13.2);
+  });
+  it("is null when there is nothing to frame", () => {
+    expect(initialFrame([], [])).toBeNull();
+  });
+});
+
+describe("overlayPadding", () => {
+  const box = { left: 0, top: 0, right: 1500, bottom: 900 };
+  it("pads the side each panel hugs: chips top, panel right, dial left, scrubber bottom", () => {
+    const p = overlayPadding(box, [
+      { left: 12, top: 12, right: 900, bottom: 100 }, // chips + status line
+      { left: 1200, top: 12, right: 1450, bottom: 600 }, // layers panel
+      { left: 12, top: 530, right: 220, bottom: 740 }, // clock dial
+      { left: 12, top: 750, right: 1488, bottom: 888 }, // scrubber
+    ], 16);
+    expect(p).toEqual({ top: 116, right: 316, left: 236, bottom: 166 });
+  });
+  it("ignores panels outside the map and keeps a usable frame on a phone", () => {
+    const phone = { left: 0, top: 0, right: 350, bottom: 660 };
+    const p = overlayPadding(phone, [
+      { left: 12, top: 12, right: 300, bottom: 50 },
+      { left: 12, top: 440, right: 338, bottom: 650 },
+      { left: 400, top: 0, right: 500, bottom: 100 },
+    ], 12);
+    expect(p.top).toBe(62);
+    expect(p.bottom).toBe(232);
+    expect(phone.right - p.left - p.right).toBeGreaterThanOrEqual(350 * 0.4);
+    expect(phone.bottom - p.top - p.bottom).toBeGreaterThanOrEqual(660 * 0.4);
   });
 });

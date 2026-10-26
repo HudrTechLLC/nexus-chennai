@@ -4,6 +4,7 @@ import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { overlayPadding } from "@/lib/pulse";
 
 export type MapView = { center: [number, number]; zoom: number; bounds?: [number, number, number, number] };
 
@@ -11,10 +12,12 @@ export type MapView = { center: [number, number]; zoom: number; bounds?: [number
  * MapLibre basemap (self-hosted style JSON, OSM-derived OpenFreeMap tiles) with a deck.gl overlay.
  * Layers are passed in; the canvas only owns the map and the overlay.
  */
-export function MapCanvas({ view, layers, theme, onClick, onHover, focus }: {
+export function MapCanvas({ view, layers, theme, onClick, onHover, focus, initialFocus }: {
   view: MapView;
   /** [west, south, east, north]: when set (or changed), the camera eases to fit it, clear of the overlay panels */
   focus?: [number, number, number, number] | null;
+  /** the opening frame: applied once, and never after the user has panned or zoomed */
+  initialFocus?: [number, number, number, number] | null;
   layers: Layer[];
   theme: "dark" | "light";
   onClick?: (info: PickingInfo) => void;
@@ -23,6 +26,8 @@ export function MapCanvas({ view, layers, theme, onClick, onHover, focus }: {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const overlay = useRef<MapboxOverlay | null>(null);
+  const userMoved = useRef(false);
+  const framed = useRef(false);
   const handlers = useRef({ onClick, onHover });
   handlers.current = { onClick, onHover };
 
@@ -39,6 +44,11 @@ export function MapCanvas({ view, layers, theme, onClick, onHover, focus }: {
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    // a move with an input event behind it (drag, wheel, pinch, zoom buttons) is the user's
+    m.on("movestart", (e) => { if ((e as { originalEvent?: unknown }).originalEvent) userMoved.current = true; });
+    m.on("moveend", () => {
+      if (el.current) el.current.dataset.cam = [...m.getCenter().toArray().map((v) => v.toFixed(4)), m.getZoom().toFixed(2)].join(",");
+    });
     const o = new MapboxOverlay({
       interleaved: false,
       layers: [],
@@ -66,15 +76,31 @@ export function MapCanvas({ view, layers, theme, onClick, onHover, focus }: {
     overlay.current?.setProps({ layers });
   }, [layers]);
 
+  /** Fit a box clear of the floating panels (chips, status line, layers panel, clock dial, scrubber) as laid out now. */
+  const fit = (b: [number, number, number, number], duration: number) => {
+    const m = map.current, host = el.current;
+    if (!m || !host) return;
+    const box = host.getBoundingClientRect();
+    const panels = Array.from(host.parentElement?.querySelectorAll<HTMLElement>("[data-map-overlay]") ?? [])
+      .filter((p) => p.offsetParent !== null)
+      .map((p) => p.getBoundingClientRect());
+    const padding = overlayPadding(box, panels, 24); // 24 px clears a dot's glow at the frame edge
+    m.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding, maxZoom: 14, duration });
+  };
+
   const focusKey = focus ? focus.map((v) => v.toFixed(5)).join(",") : "";
   useEffect(() => {
-    if (!focus || !map.current) return;
-    const w = el.current?.clientWidth ?? 0;
-    // keep the fitted area clear of the clock dial (left), layer panel (right) and time scrubber (bottom)
-    const padding = w >= 900 ? { top: 70, bottom: 170, left: 240, right: 320 } : { top: 60, bottom: 140, left: 30, right: 30 };
-    map.current.fitBounds([[focus[0], focus[1]], [focus[2], focus[3]]], { padding, maxZoom: 14, duration: 1200 });
+    if (focus) fit(focus, 1200);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusKey]);
+
+  const initialKey = initialFocus ? initialFocus.map((v) => v.toFixed(5)).join(",") : "";
+  useEffect(() => {
+    if (!initialFocus || framed.current || userMoved.current) return;
+    framed.current = true;
+    fit(initialFocus, 900);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialKey]);
 
   return <div ref={el} className="h-full w-full" />;
 }
