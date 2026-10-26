@@ -223,6 +223,7 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 - **Tip passphrases use bcrypt, not Argon2id.** The spec said Argon2id. We hash with pgcrypto bcrypt inside Postgres so the hash never leaves the database. Tip codes are random and attempts are limited.
 - **Explanations are model-written** and can be imperfect. Numbers can't be, because code computes them, and the Skeptic re-checks factors against fresh rows.
 - **Hotspots** use a Poisson test against each cell's own recent history. They flag concentrations, not causes.
+- **Appeal stills are blurred, not detected.** Appeal stills are anonymised by a whole-image heavy blur (shrink to 48 px, re-encode with no metadata), not by face or plate detection. The app path always blurs, and a database check ties every published still to its own case. But an officer with write access to a case could still upload an unblurred image directly via the storage API. Future fix: worker-side blur with face detection (OpenCV) and a service-role-only writer.
 
 ## Responsible AI
 
