@@ -29,6 +29,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ## Before recording
 
+0. **Pause background extraction before filing the live FIR.** Ask nexus-3, or stop them yourself: the backfill (`python -m app.graph.backfill`) and any series batch run. Nightshift serves one model call at a time, so a running batch makes the FIR's calls wait behind it. **Keep the worker running** (`python -m app.worker` with `ENGINES_PERSIST=supabase`). It picks up a new FIR on its next pass, 15 s between passes by default (`--interval`). Measured end-to-end times (filed → features → alert) come from nexus-3 after their worker change; quote only those, never an estimate.
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
 2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** If the hero case gives no drop, use a run that does and narrate that pair. **Never stage or edit a trace.**
 3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. The API and worker must share `logs/hmem/`. Plain Python from one checkout does this, and so does `docker compose --profile worker up`, because the worker mounts `./logs` too since #97.
