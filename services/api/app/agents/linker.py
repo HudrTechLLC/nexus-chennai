@@ -16,7 +16,8 @@ rationales in one batched model call.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import os
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -126,6 +127,20 @@ def _forensic_codes(crime: Mapping[str, Any]) -> list[str]:
     return [str(f.get("match_code")) for f in crime.get("forensics") or [] if f.get("match_code")]
 
 
+MO_COSINE_FLAG = "NEXUS_MO_COSINE"
+
+
+def mo_text_cosine() -> Callable[[Any, Any], float | None] | None:
+    """`engines.similarity.mo_cosine` when NEXUS_MO_COSINE=1 (D-027 trial), else None = scoring's own cosine.
+
+    Default off until the eval is run both ways (chief, 26 Oct); read per call so the eval can flip it.
+    """
+    if os.environ.get(MO_COSINE_FLAG, "").strip().lower() not in ("1", "true", "on", "yes"):
+        return None
+    from ..engines.similarity import mo_cosine
+    return mo_cosine
+
+
 def compute_factors(
     a: Mapping[str, Any],
     b: Mapping[str, Any],
@@ -150,7 +165,7 @@ def compute_factors(
     crimes_ev = [_ev("v_crime_unified", ida), _ev("v_crime_unified", idb)]
     feats_ev = [_ev("v_crime_features", ida), _ev("v_crime_features", idb)]
     out = [
-        FactorResult("mo_similarity", F.mo_similarity(fa, fb), evidence=feats_ev),
+        FactorResult("mo_similarity", F.mo_similarity(fa, fb, text_cosine=mo_text_cosine()), evidence=feats_ev),
         FactorResult("space_time", F.space_time(a, b), evidence=crimes_ev),
     ]
     trail = [r for r in anpr_rows if r.get("crime_id") in (ida, idb)]

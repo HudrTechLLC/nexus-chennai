@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import datetime
 from typing import Any
 
@@ -147,8 +147,13 @@ def cosine(a: Counter[str], b: Counter[str]) -> float | None:
     return dot / (na * nb)
 
 
-def mo_similarity(features_a: Mapping[str, Any] | None, features_b: Mapping[str, Any] | None) -> float | None:
-    """Similarity of two extracted MO records (D3.2)."""
+def mo_similarity(features_a: Mapping[str, Any] | None, features_b: Mapping[str, Any] | None,
+                  text_cosine: Callable[[Any, Any], float | None] | None = None) -> float | None:
+    """Similarity of two extracted MO records (D3.2).
+
+    `text_cosine(features_a, features_b)` replaces the built-in raw-count text cosine when given
+    (the Linker passes `engines.similarity.mo_cosine` behind NEXUS_MO_COSINE; scoring stays pure).
+    """
     if not features_a or not features_b:
         return None
     mo_a, mo_b = features_a.get("mo") or {}, features_b.get("mo") or {}
@@ -166,7 +171,8 @@ def mo_similarity(features_a: Mapping[str, Any] | None, features_b: Mapping[str,
         num += w * sim
         den += w
     jac = num / den if den else None
-    cos = cosine(_mo_text_vector(features_a), _mo_text_vector(features_b))
+    cos = (text_cosine(features_a, features_b) if text_cosine is not None
+           else cosine(_mo_text_vector(features_a), _mo_text_vector(features_b)))
     if jac is None and cos is None:
         return None
     if jac is None:
