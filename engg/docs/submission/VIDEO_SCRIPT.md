@@ -150,7 +150,22 @@ Each replaces part of an existing segment's screen; the narration and timing sta
 | 4 · Zetaris | the console's *Data sources* page: every federated source and table | WS3-27 | `[PENDING: WS3-27]` |
 | 5 · Nightshift | the per-step model line on the trace (lane, pinned model, receipt) | WS3-25 | `[PENDING: WS3-25]` |
 | 6 · Skeptic | the alert page's Skeptic panel showing the drop | WS3-26 | `[PENDING: WS3-26]` |
-| 7 · Analyst | the *From the public* panel: screened tips cited on the alert | WS3-28 | `[PENDING: WS3-28]` |
+| 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320, open) | `[PENDING: WS3-28]` |
+
+### Optional beat 7a · A tip from the public reaches the analyst `[PENDING: WS3-28, #320]`
+
+Use it only if #320 ("From the public" on alert and series pages) is merged and deployed. #320 reads tips tied to a crime through `tips.about_crime_id`, which a crime card's tip link sets.
+
+- **Crime:** **CHN-TI-2026-001134** (Thiruvanmiyur), a Red Pulsar series member that is **not** in the hero pair. Its public card is on the default 30-day map: `/map/crime/PC-998D5DCC9560`, with the tip link `/tip/new?about=PC-998D5DCC9560` (nexus-5, read-only check). **Never use the hero's cases** (CHN-AD-2026-001182, CHN-VL-2026-000877).
+- **Before recording (off camera):**
+  1. In a logged-out browser, open the card and use *Share a tip about this*. Send a short, clean tip that starts with **"[test tip]"**. Tip Guard must pass it: a quarantined tip is counted but never listed.
+  2. Keep the worker running so Tip Guard screens it. Note the tip id, and add it to the cleanup list as KEEP-LABELLED or DELETE (Ravee decides).
+  3. Check that it appears under *From the public* on the series page (`/console/series/SER-B687C36CFC`).
+- **Screen (about 6 s, inside segment 7):** a quick cut of the public card's *Share a tip* form (pre-recorded, logged out), then the series page's *From the public* block listing that tip.
+- **Narration:** replace segment 7's last sentence ("Rejections work the same way, and they stay visible to every station.") with:
+  > A tip a member of the public sent about one of these crimes shows up here too, screened before any agent read it.
+  That's about 7 words more (≈ 3 s), so the video runs about 3:33, still under the 3:40 limit.
+- **Safe for the hero:** the tip is tied to one crime that is not in the hero pair. The corroboration factor only counts items that mention both crimes of a pair, and alerts aren't re-scored without a run, so the hero alert doesn't change.
 
 ## ElevenLabs narration text (one block per segment)
 
