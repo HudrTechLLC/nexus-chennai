@@ -1,5 +1,6 @@
 import { PublicMapView } from "@/components/public/PublicMapView";
 import { HexPanel } from "@/components/public/HexPanel";
+import { HexPattern } from "@/components/public/HexPattern";
 import { getHexCrimes, getPublicMap } from "@/lib/publicData";
 import { parseMapState } from "@/lib/publicCards";
 
@@ -14,7 +15,8 @@ export default async function PublicMapPage({ searchParams }: { searchParams: Re
   ]);
   return (
     <div className="space-y-4">
-      <div>
+      <div className="relative isolate overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-signal-soft via-surface to-accent-soft p-6">
+        <HexPattern />
         <h1 className="text-3xl font-bold">See what&apos;s happening near you</h1>
         <p className="mt-1 max-w-prose text-muted">Reported crime by area. Locations are grouped into hexagons, never exact.</p>
       </div>

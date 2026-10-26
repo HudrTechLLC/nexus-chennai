@@ -115,7 +115,7 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
   }
 
   const StepTab = ({ n, label }: { n: number; label: string }) => (
-    <span className={`rounded-full px-3 py-1 text-xs ${step === n ? "bg-ink text-bg" : step > n ? "bg-signal-soft text-signal" : "bg-bg text-muted"}`}>{n} · {label}</span>
+    <span className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${step === n ? "border-ink bg-ink text-bg shadow-sm" : step > n ? "border-signal bg-signal-soft text-signal" : "border-line bg-surface text-muted"}`}>{n} · {label}</span>
   );
 
   return (
