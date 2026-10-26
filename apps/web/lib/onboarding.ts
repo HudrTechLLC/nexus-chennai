@@ -186,11 +186,16 @@ export function clip(value: unknown, max = 60): string {
   return one.length > max ? `${one.slice(0, max - 1)}…` : one;
 }
 
-/** DQ findings by severity, most serious first. */
+/** DQ rules that found something (a rule with count 0 passed). */
+export function dqHits(dq: DqFinding[] | null): DqFinding[] {
+  return (dq ?? []).filter((f) => Number(f.count) > 0);
+}
+
+/** DQ findings by severity, most serious first. Rules that found nothing are not findings. */
 export function dqCounts(dq: DqFinding[] | null): { severity: string; findings: number; rows: number }[] {
   const order = ["error", "high", "warn", "warning", "medium", "info", "low"];
   const by = new Map<string, { findings: number; rows: number }>();
-  for (const f of dq ?? []) {
+  for (const f of dqHits(dq)) {
     const cur = by.get(f.severity) ?? { findings: 0, rows: 0 };
     by.set(f.severity, { findings: cur.findings + 1, rows: cur.rows + (Number(f.count) || 0) });
   }

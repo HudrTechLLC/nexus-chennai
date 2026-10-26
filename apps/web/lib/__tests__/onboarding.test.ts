@@ -101,6 +101,8 @@ describe("display helpers", () => {
     expect(dqCounts([{ rule: "r1", severity: "warn", count: 3 }, { rule: "r2", severity: "error", count: 2 }, { rule: "r3", severity: "warn", count: 1 }]))
       .toEqual([{ severity: "error", findings: 1, rows: 2 }, { severity: "warn", findings: 2, rows: 4 }]);
     expect(dqCounts(null)).toEqual([]);
+    expect(dqCounts([{ rule: "r0", severity: "warn", count: 0 }, { rule: "r1", severity: "info", count: 5 }]))
+      .toEqual([{ severity: "info", findings: 1, rows: 5 }]);
   });
 });
 

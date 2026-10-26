@@ -53,7 +53,7 @@ export function StartForm() {
 
   return (
     <form onSubmit={submit} className="space-y-4 rounded-xl border border-line bg-surface p-5" noValidate>
-      <h2 className="font-semibold">Onboard a new source</h2>
+      <h2 className="font-semibold">Start a run</h2>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label htmlFor="ob-key" className="text-sm font-medium">Source key</label>

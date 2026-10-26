@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { approveRun, rejectRun, saveMapping } from "@/app/console/(app)/system/sources/onboard/actions";
 import {
-  clip, confidenceLabel, mappingEdits, mappingIssues, POLL_MS, shouldPoll, STATUS_LABEL, STEPS, stepIndex,
+  clip, confidenceLabel, dqHits, mappingEdits, mappingIssues, POLL_MS, shouldPoll, STATUS_LABEL, STEPS, stepIndex,
   TRANSFORM_LABEL, TRANSFORMS, type MappingEdit, type OnboardingField, type OnboardingMapping, type OnboardingRun,
   type Transform,
 } from "@/lib/onboarding";
@@ -122,7 +122,7 @@ export function RunView({ initialRun, initialMappings, fields }: {
           <dl className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-3">
             <div><dt className="text-xs text-muted">Zetaris view</dt><dd className="font-mono text-xs">{run.view_name ?? `onboard_${run.source_key}`}</dd></div>
             <div><dt className="text-xs text-muted">Rows</dt><dd>{run.row_count?.toLocaleString("en-IN") ?? "—"}</dd></div>
-            <div><dt className="text-xs text-muted">DQ findings</dt><dd>{(run.dq ?? []).length}</dd></div>
+            <div><dt className="text-xs text-muted">DQ findings</dt><dd>{dqHits(run.dq).length} of {(run.dq ?? []).length} rules found something</dd></div>
           </dl>
           <label className="mt-3 flex items-center gap-2 text-sm text-muted">
             <input type="checkbox" checked={run.linking_enabled} disabled aria-describedby="ob-link-note" />
@@ -168,23 +168,38 @@ export function RunView({ initialRun, initialMappings, fields }: {
                         {ex.length > 0 && <div className="text-xs text-muted">e.g. {ex.join(" · ")}</div>}
                       </td>
                       <td className={cell}>
-                        <label className="sr-only" htmlFor={`f-${m.source_col}`}>Unified field for {m.source_col}</label>
-                        <select id={`f-${m.source_col}`} className={select} disabled={!editable} value={d.unified_field ?? ""}
-                          onChange={(e) => set(m.source_col, { unified_field: e.target.value || null })}>
-                          <option value="">Ignore this column</option>
-                          {fields.map((f) => <option key={f.field} value={f.field}>{f.label}{f.required ? " *" : ""}</option>)}
-                        </select>
+                        {editable ? (
+                          <>
+                            <label className="sr-only" htmlFor={`f-${m.source_col}`}>Unified field for {m.source_col}</label>
+                            <select id={`f-${m.source_col}`} className={select} value={d.unified_field ?? ""}
+                              onChange={(e) => set(m.source_col, { unified_field: e.target.value || null })}>
+                              <option value="">Ignore this column</option>
+                              {fields.map((f) => <option key={f.field} value={f.field}>{f.label}{f.required ? " *" : ""}</option>)}
+                            </select>
+                          </>
+                        ) : (
+                          <span className={d.unified_field ? "" : "text-muted"}>{d.unified_field ? fieldLabel(d.unified_field) : "Ignored"}</span>
+                        )}
+                        {d.unified_field === "lat" && d.transform === "latlong_lat" && (
+                          <div className="text-xs text-muted">fills Latitude and Longitude (the view splits the pair)</div>
+                        )}
                         {m.proposed_field !== d.unified_field && (
                           <div className="text-xs text-muted">proposed: {fieldLabel(m.proposed_field)}</div>
                         )}
                         {(changed || m.edited) && <div className="text-xs text-signal">{changed ? "changed, not saved" : "edited"}</div>}
                       </td>
                       <td className={cell}>
-                        <label className="sr-only" htmlFor={`t-${m.source_col}`}>Transform for {m.source_col}</label>
-                        <select id={`t-${m.source_col}`} className={select} disabled={!editable} value={d.transform}
-                          onChange={(e) => set(m.source_col, { transform: e.target.value as Transform })}>
-                          {TRANSFORMS.map((t) => <option key={t} value={t}>{TRANSFORM_LABEL[t]}</option>)}
-                        </select>
+                        {editable ? (
+                          <>
+                            <label className="sr-only" htmlFor={`t-${m.source_col}`}>Transform for {m.source_col}</label>
+                            <select id={`t-${m.source_col}`} className={select} value={d.transform}
+                              onChange={(e) => set(m.source_col, { transform: e.target.value as Transform })}>
+                              {TRANSFORMS.map((t) => <option key={t} value={t}>{TRANSFORM_LABEL[t]}</option>)}
+                            </select>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted">{TRANSFORM_LABEL[d.transform]}</span>
+                        )}
                       </td>
                       <td className={`${cell} tabular-nums`}>{confidenceLabel(m.confidence)}</td>
                       <td className={`${cell} max-w-xs text-xs text-muted`}>{m.reason ?? ""}</td>
@@ -197,7 +212,7 @@ export function RunView({ initialRun, initialMappings, fields }: {
           <div aria-live="polite" className="mt-2 text-xs">
             {issues.missing.length > 0 && <p className="text-red-600">Required fields not mapped: {issues.missing.map(fieldLabel).join(", ")}.</p>}
             {issues.duplicated.length > 0 && <p className="text-red-600">Mapped more than once: {issues.duplicated.map(fieldLabel).join(", ")}.</p>}
-            {!blocked && <p className="text-muted">* required. Every required field is mapped exactly once.</p>}
+            {!blocked && <p className="text-muted">{editable ? "* required. " : ""}Every required field is mapped exactly once{current.some((c) => c.unified_field === "lat" && c.transform === "latlong_lat") ? " (Longitude comes from the combined Lat/Long column)" : ""}.</p>}
           </div>
         </section>
       )}
@@ -210,17 +225,17 @@ export function RunView({ initialRun, initialMappings, fields }: {
             <p className="mt-1 text-sm text-muted">No findings.</p>
           ) : (
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[560px] text-sm">
+              <table className="w-full text-sm sm:min-w-[560px]">
                 <thead className="text-left text-xs text-muted">
-                  <tr><th className={cell}>Rule</th><th className={cell}>Severity</th><th className={cell}>Rows</th><th className={cell}>Sample</th></tr>
+                  <tr><th className={cell}>Rule</th><th className={cell}>Severity</th><th className={cell}>Rows</th><th className={`${cell} hidden sm:table-cell`}>Sample</th></tr>
                 </thead>
                 <tbody className="divide-y divide-line">
                   {run.dq.map((f, i) => (
-                    <tr key={`${f.rule}-${i}`}>
+                    <tr key={`${f.rule}-${i}`} className={Number(f.count) > 0 ? "" : "text-muted"}>
                       <td className={cell}><div className="font-mono text-xs">{f.rule}</div>{f.detail && <div className="text-xs text-muted">{clip(f.detail, 160)}</div>}</td>
                       <td className={cell}>{f.severity}</td>
                       <td className={`${cell} tabular-nums`}>{Number(f.count).toLocaleString("en-IN")}</td>
-                      <td className={`${cell} text-xs text-muted`}>{(f.sample_rows ?? []).slice(0, 2).map((r) => clip(r, 50)).join(" · ")}</td>
+                      <td className={`${cell} hidden text-xs text-muted sm:table-cell`}>{(f.sample_rows ?? []).slice(0, 2).map((r) => clip(r, 50)).join(" · ")}</td>
                     </tr>
                   ))}
                 </tbody>
