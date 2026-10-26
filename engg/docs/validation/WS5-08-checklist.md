@@ -47,7 +47,7 @@ Related: [README](README.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [D
 | 3.2 | `docker run -d --name nexus -p 8000:8000 -e SAMPLE_MODE=true oah-submission` | Container starts with **no `.env` and no credentials** |
 | 3.3 | `for i in $(seq 1 30); do curl -fsS localhost:8000/health && break; sleep 2; done` | JSON with `"status":"ok"`, `"sample_mode":true`; `zetaris.state` = `sample`; nightshift has **no** `Illegal header value` error, and lanes list the D-017 ids |
 | 3.4 | `for n in 1 2 3; do curl -s -o out_$n.json -w "ex$n HTTP %{http_code} %{time_total}s\n" -X POST localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_$n.json; done` | Every line says `HTTP 200`, each well under the 300 s deadline |
-| 3.5 | `python -c "import json;[print(n, (d:=json.load(open(f'out_{n}.json')))['status'], d['output']['summary']) for n in (1,2,3)]"` | All `success`. Example 1 includes the Red Pulsar Adyar ↔ Velachery link (judge path @ `7534e9e`: high 0.787, cross-station) |
+| 3.5 | `python -c "import json;[print(n, (d:=json.load(open(f'out_{n}.json')))['status'], d['output']['summary']) for n in (1,2,3)]"` | All `success`. Each matches `output_examples/example_N.json` on status, summary and every alert's pair/band/score (nexus-7 @ `de8e666`: ex 1 has 3 links, 2 high incl. Adyar ↔ Velachery 0.7887; ex 3 has a Skeptic drop) |
 | 3.6 | `docker cp nexus:/repo/logs ./logs-docker && ls logs-docker/trace-*.jsonl \| wc -l` | One trace file per `/run` (≥ 3) |
 | 3.7 | `docker rm -f nexus` | Container removed |
 

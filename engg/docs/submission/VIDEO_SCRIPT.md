@@ -178,7 +178,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 |---|---|---|
 | "Adyar on a Wednesday evening… Velachery two days later" | hero pair in `series.yaml`: CHN-AD-2026-001182 on Wed 14 Oct 19:40 IST, CHN-VL-2026-000877 on Fri 16 Oct 19:55 IST (checked) | Change the weekday words to match the dates on screen |
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
-| Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `7534e9e`):** the same pair, high 0.787 | Read the score shown on screen; never the number from this table |
+| Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `de8e666`):** the same pair, high 0.789 (the top link there is Adyar ↔ Thiruvanmiyur, high 0.819) | Read the score shown on screen; never the number from this table |
 | "across three stations" | Live series SER-B687C36CFC: 10 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-6, 26 Oct). Final count after nexus-3's D-033 (test FIR removed) and the series-naming fix | Say the station count shown on screen, or just "across stations" |
 | Seg 3: "The CCTV still can't be read today…" | a `vision_unavailable` step in the live FIR-with-still run (none yet at the dry run) | Cut that sentence |
 | Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
