@@ -84,8 +84,31 @@ def test_zetaris_file_is_generated_from_the_same_rules():
     for view in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections", "dq_flags",
                  "dq_orphan_evidence", "dq_tip_without_incident", "dq_stale_cameras"):
         assert f"CREATE OR REPLACE SCHEMASTORE VIEW {view} WITH CONTAINER nexus AS" in committed
-    assert "{{city:map.bounds.west}}" in committed and "80.05" not in committed
+    assert "{{city:map.bounds.0}}" in committed and "80.05" not in committed
     # Same rule text in both dialects, modulo the dialect substitutions.
     spark = dq_rules.rule_sql("time_inconsistent", dq_rules.SPARK, dq_rules.BOUND_PLACEHOLDERS)
     duck = dq_rules.rule_sql("time_inconsistent", dq_rules.DUCK, dq_rules.BOUND_PLACEHOLDERS)
     assert spark.replace("STRING", "VARCHAR").replace("nexus.v_crime_unified", "v_crime_unified") == duck
+
+
+@pytest.mark.parametrize("name", ["20_dq.sql", "40_feeds.sql"])
+def test_register_py_fills_every_placeholder_from_the_city_pack(name):
+    """The files must render through register.py itself (its dry-run path), with no placeholder left over."""
+    import importlib.util
+
+    import yaml
+
+    spec = importlib.util.spec_from_file_location("register", ROOT / "zetaris" / "register.py")
+    reg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(reg)
+    city = yaml.safe_load((ROOT / "cities" / "chennai" / "city.yaml").read_text(encoding="utf-8"))
+    stmts = reg.statements((ROOT / "zetaris" / name).read_text(encoding="utf-8"))
+    shown = [reg.fill(stmt, city, "2026-09-26", "2026-10-26")[1] for stmt in stmts]
+    assert shown and not any("{{" in s for s in shown)
+    if name == "20_dq.sql":
+        assert any(f"lon < {dq_rules.city_bounds(city)['west']}" in s for s in shown)
+
+
+def test_dq_reads_only_registered_tip_columns():
+    sql = (ROOT / "zetaris" / "20_dq.sql").read_text(encoding="utf-8")
+    assert "sb.tips_v" in sql and "sb.tips " not in sql
