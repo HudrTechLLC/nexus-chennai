@@ -29,8 +29,9 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_dq_flags`: data-quality flags;
   - `q_news`: news that mentions a case's place;
   - `q_hex_counts`: counts per H3 cell, for the hotspot test;
-  - `q_search`: text and filter search over crimes and statements, for the console search box.
-  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` and `q_station_matrix` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
+  - `q_search`: text and filter search over crimes and statements, for the console search box;
+  - `q_station_matrix`: approved alerts station × station.
+  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.

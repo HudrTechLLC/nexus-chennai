@@ -6,7 +6,7 @@ tags: [nexus, deliverables]
 
 This note lists every claim the submission drafts make, with the file, test or CI job that proves it. The four drafts ([README_DRAFT](README_DRAFT.md), [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), [DECK](DECK.md), [VIDEO_SCRIPT](VIDEO_SCRIPT.md)) take their claims only from here. When a `[PENDING: id]` task lands, flip its row here first, then the drafts. `grep -rn "PENDING:" engg/docs/submission/` lists everything still open.
 
-**Verified against `origin/main` @ `28e4156`** (26 Oct 2026; first pass @ `c686f0c`, where CI was green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`). Re-check CI on the freeze commit.
+**Verified against `origin/main` @ `4c2f686`** (26 Oct 2026; first pass @ `c686f0c`, where CI was green on all five jobs: `api` (ruff + pytest), `engines` (official conformance + E4 tests on the TypeScript references), `judge-path` (docker build + start with `SAMPLE_MODE=true`, no credentials), `web` (typecheck, lint, vitest, `next build`) and `secrets`). Re-check CI on the freeze commit.
 Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [ENGINES](../ENGINES.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
 ## Re-verify at freeze (about 2 minutes)
@@ -65,8 +65,8 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Tips reach Zetaris only through `tips_v` (safe columns; no passphrase hash, no raw text) | `zetaris/README.md`; migration `0003_zetaris_reader_tips.sql` | ✅ |
 | REST feeds: `rest_news`, `rest_social` (Lightning REST tables) + views `news_items`, `social_posts`, `v_news_mentions` | `zetaris/40_feeds.sql` | ✅ |
 | Data-quality views (8): `dq_duplicate_firs`, `dq_bad_geo`, `dq_time_inconsistent`, `dq_unmapped_sections`, `dq_flags`, `dq_orphan_evidence`, `dq_tip_without_incident`, `dq_stale_cameras` | `zetaris/20_dq.sql`; `tests/engines/test_dq.py` | ✅ |
-| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/`, `tests/engines/test_search.py` (`q_search`: #84) | ✅ (7 of 13) |
-| `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context`, `q_station_matrix` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
+| Named queries registered with live SQL + DuckDB twin: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix` (plus `q_ping`) | `NAMED_QUERIES` in `adapters/zetaris.py`, `zetaris_queries_n1.py`, `zetaris_queries_n2.py`; `tests/zetaris/`, `tests/engines/test_search.py` (`q_search`: #84; `q_station_matrix`: #93) | ✅ (8 of 13) |
+| `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
 | Semantic views `v_crime_unified`, `v_vehicle_trail`, `v_offender_return`, `v_tip_corroboration` (`10_views.sql`) | file not on main | `[PENDING: WS1-13]` |
 | CSV / Parquet file sources (legacy exports, ANPR, 112 calls) in Zetaris's internal file store | not in `00_sources.sql` on main; D-022a explains the store | `[PENDING: WS1-12]` |
 | Live `SELECT count(*) FROM sb.crimes` = 14000 | `zetaris/README.md` (recorded by nexus-1) | ✅ (recorded, not CI) |
@@ -94,7 +94,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | Public portal: home, appeals list + detail, fuzzed hex map, CCTV page, anonymous tip (EXIF stripped, tip code, status, replies), privacy | `apps/web/app/(public)/**`; WS4-01…06 done | ✅ |
 | Console: sign-in + roles, alerts inbox + detail, map, appeals, tip triage, system status + trace viewer | `apps/web/app/console/(app)/**` pages exist; CI `web` green | ✅ pages exist; completeness of WS3-04/05/07/08/09 and WS4-07/08: `[PENDING]` per task |
 | Case list + case file (#61); unified search with facets (#78); FIR capture form + `file_fir` RPC (#73); evidence and audio-statement upload, evidence gallery (#88) | `console/(app)/cases/**`, `search/page.tsx`; CI `web` | ✅ built |
-| Series list + series page with Markovian dossier, station link matrix (#70); H-MEM memory page + World Model graph explorer (#85). RPCs `station_link_matrix`, `series_overview`, `hmem_effects`, `wm_graph` (security invoker, read-only; anon refused) | `console/(app)/{series,stations,memory,graph}/**`; migrations `0004_06_01_series_stations.sql`, `0004_06_02_memory_graph.sql`; vitest `series`, `stationMatrix`, `memory`, `worldGraph` (CI `web`) | ✅ built; live check on real rows `[PENDING: WS3-11 live]` (nexus-6) |
+| Series list + series page with Markovian dossier, station link matrix (#70); H-MEM memory page + World Model graph explorer (#85). RPCs `station_link_matrix`, `series_overview`, `hmem_effects`, `wm_graph` (security invoker, read-only, jsonb; anon refused; D-028) | `console/(app)/{series,stations,memory,graph}/**`; migrations `0004_06_01_series_stations.sql`, `0004_06_02_memory_graph.sql`; vitest `series`, `stationMatrix`, `memory`, `worldGraph` (CI `web`) | ✅ built; live check on real rows `[PENDING: WS3-11 live]` (nexus-6) |
 | Pulse Map data-source layers + vehicle trail | #86 | ✅ built |
 | Tip passphrases hashed with pgcrypto bcrypt inside Postgres (deviation from spec Argon2id) | D-023; migration `0004_03_public_rpcs.sql` (`gen_salt('bf', …)`) | ✅ |
 

@@ -83,7 +83,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 - **On slide:**
   - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role) and live REST news/social feeds. CSV/Parquet file sources `[PENDING: WS1-12]`.
-  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`. More `[PENDING: WS1-15]`.
+  - **Governed:** agents may run only named queries. Live: `q_case`, `q_candidates`, `q_features`, `q_dq_flags`, `q_news`, `q_hex_counts`, `q_search`, `q_station_matrix`. More `[PENDING: WS1-15]`.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
   - **The Skeptic re-runs Zetaris queries itself** before any alert reaches a human.
