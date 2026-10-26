@@ -4,6 +4,8 @@ tags: [nexus, release-notes]
 
 # Sponsor technology explanation (draft)
 
+> **Superseded.** This is the early outline. The submission text is in [SPONSOR_TECH_FINAL](submission/SPONSOR_TECH_FINAL.md), and its claims are checked in [EVIDENCE](submission/EVIDENCE.md). Do not paste from this file.
+
 This text is pasted into the HackOS submission form. **Rule R10:** each claim is written here only after a trace or test proves it, and each one links to its evidence. Until then it stays a placeholder.
 Related: [DELIVERABLES](DELIVERABLES.md) · [SPEC Part P](SPEC.md#products) · [SPEC Part E](SPEC.md#sponsors) · [00-INDEX](00-INDEX.md)
 
@@ -11,9 +13,9 @@ Related: [DELIVERABLES](DELIVERABLES.md) · [SPEC Part P](SPEC.md#products) · [
 _Pending P2._ To write up:
 
 - the registered sources and storage types;
-- the semantic views (`v_crime_unified`, `v_vehicle_trail`, …);
+- the semantic views (`v_crime_unified` and the data-quality and feed views; vehicle trail and the other cross-source checks became named queries, not views);
 - the data-quality views;
-- the 12 named queries;
+- the named queries (14, plus `q_ping`);
 - the evidence that every agent read goes through `app/adapters/zetaris.py`.
 
 > Draft line from the spec: "Every fact in a Nexus link alert traces back to a row Zetaris returned from the source that holds it: Supabase, S3 or a live feed."
