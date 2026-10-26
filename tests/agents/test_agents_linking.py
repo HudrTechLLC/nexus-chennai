@@ -288,7 +288,7 @@ def test_alert_writer_writes_valid_d3_11_alert(make_deps):
     written = AlertWriter(deps).write(results)
     assert len(written) == 1
     row = written[0]
-    LinkAlert.model_validate({k: v for k, v in row.items() if k != "synthetic"})
+    LinkAlert.model_validate({k: v for k, v in row.items() if k not in ("synthetic", "weights_version")})
     assert row["status"] == "pending" and row["kind"] == "pair"
     assert set(row["stations"]) == {ADYAR["station_id"], VELACHERY["station_id"]}
     assert row["skeptic"] == {"rounds": 1, "struck": [], "verdict": "approved", "model_critique": "applied"}
@@ -425,3 +425,10 @@ def test_trace_keeps_whole_skeptic_critique_and_linker_rationale(make_deps):
     approved = [e for e in ev if e["agent_name"] == "Skeptic" and e["action"] == "approve"]
     assert explained and explained[0]["output_summary"] == rationale.strip()[:600]
     assert approved and approved[0]["output_summary"].endswith(critique[:400])
+
+def test_alert_writer_records_weights_version(make_deps):
+    """link_alerts.weights_version (0007_07): the weights an alert was scored with (combine.WEIGHTS_VERSION)."""
+    from app.scoring.combine import WEIGHTS_VERSION
+    deps = make_deps(responder=approve_all)
+    row = AlertWriter(deps).write(Skeptic(deps).review(scored(deps)))[0]
+    assert row["weights_version"] == WEIGHTS_VERSION
