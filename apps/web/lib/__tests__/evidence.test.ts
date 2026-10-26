@@ -69,3 +69,12 @@ describe("exifDateTime", () => {
     expect(exifDateTime(bytes("%PDF-1.7"))).toBeNull();
   });
 });
+
+describe("EXIF capture time to captured_at", () => {
+  it("passes the full EXIF time, seconds included, to the city-time conversion", async () => {
+    const { cityLocalToIso } = await import("../fir");
+    const local = exifDateTime(jpegWithExif("2026:10:20 19:44:12"));
+    expect(local).toBe("2026-10-20T19:44:12");
+    expect(cityLocalToIso(local as string, "Asia/Kolkata")).toBe("2026-10-20T14:14:12.000Z");
+  });
+});

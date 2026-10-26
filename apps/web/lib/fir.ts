@@ -57,10 +57,13 @@ export function tzOffsetMinutes(tz: string, at: Date): number {
   return Math.round((asUtc - at.getTime()) / 60000);
 }
 
-/** "2026-10-26T18:20" read as wall-clock time in `tz` → ISO instant; null when malformed. */
+/**
+ * "2026-10-26T18:20" (datetime-local) or "2026-10-26T18:20:05" (EXIF) read as wall-clock time in `tz`
+ * → ISO instant; null when malformed. Seconds are kept when given.
+ */
 export function cityLocalToIso(local: string, tz: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local)) return null;
-  const naive = new Date(`${local}:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(local)) return null;
+  const naive = new Date(`${local.length === 16 ? `${local}:00` : local}Z`);
   if (Number.isNaN(naive.getTime())) return null;
   const offset = tzOffsetMinutes(tz, new Date(naive.getTime() - tzOffsetMinutes(tz, naive) * 60000));
   return new Date(naive.getTime() - offset * 60000).toISOString();
