@@ -47,6 +47,9 @@ class NamedQuery:
     lightning: str
     sample: str
     description: str = ""
+    # Output column names, in order (D3 names where they exist). Both forms must return
+    # exactly these columns; a width mismatch raises instead of mislabelling values.
+    columns: tuple[str, ...] = ()
 
 
 @dataclass
@@ -56,11 +59,18 @@ class QueryResult:
     rows: list[list[Any]]
     ms: int
     source: str  # "zetaris" or "sample"
+    columns: tuple[str, ...] = ()
+
+    def dicts(self) -> list[dict[str, Any]]:
+        """Rows as dicts keyed by column name. Raises if the query declares no columns."""
+        if not self.columns:
+            raise ZetarisError(f"named query '{self.name}' declares no columns")
+        return [dict(zip(self.columns, row, strict=True)) for row in self.rows]
 
 
 # The registry grows with P2 (spec E5 lists the 12 named queries).
 NAMED_QUERIES: dict[str, NamedQuery] = {
-    "q_ping": NamedQuery("q_ping", "SELECT 1", "SELECT 1", "Connectivity check"),
+    "q_ping": NamedQuery("q_ping", "SELECT 1", "SELECT 1", "Connectivity check", ("one",)),
 }
 
 _PARAM = re.compile(r":([a-z_][a-z0-9_]*)")
@@ -165,8 +175,13 @@ class ZetarisClient:
             source = "sample"
             rows = self._run_sample(render(q.sample, params))[:limit]
         ms = int((time.perf_counter() - started) * 1000)
+        bad = next((r for r in rows if q.columns and len(r) != len(q.columns)), None)
+        if bad is not None:
+            msg = f"'{name}' returned {len(bad)} columns via {source}, declared {len(q.columns)}"
+            self._trace(agent, name, query_id, len(rows), ms, "error", msg)
+            raise ZetarisError(msg)
         self._trace(agent, name, query_id, len(rows), ms, "ok", source)
-        return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source)
+        return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source, columns=q.columns)
 
     def _trace(self, agent, name, query_id, rows, ms, status, note) -> None:
         if self.tracer is None:
