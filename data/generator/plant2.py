@@ -97,10 +97,10 @@ def offender_returns(ctx: Ctx, n: int) -> list[dict]:
     return out
 
 
-def dq_defects(ctx: Ctx, pool: list[dict]) -> list[dict]:
+def dq_defects(ctx: Ctx, pool: list[dict], exclude: set[int] = frozenset()) -> list[dict]:
     """Mutate a few background FIRs into known DQ defects; returns [{rule, crime_key}]."""
     r = ctx.rng("dq-defects")
-    bg = [d for d in pool if d["role"] == "background"]
+    bg = [d for d in pool if d["role"] == "background" and d["_key"] not in exclude]
     picks = r.sample(bg, 10)
     out = []
     for d in picks[:5]:  # in the sea, east of the coastline

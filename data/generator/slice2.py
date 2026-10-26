@@ -27,12 +27,7 @@ def plant_more(ctx: Ctx, bg: list[dict], keyed) -> dict:
     for ret in returns:
         for d in ret["returns"]:
             keyed(d)
-    dq = plant2.dq_defects(ctx, bg)
-    return {"chains": chains, "returns": returns, "dq": dq}
-
-
-def extra_count() -> int:
-    return 18 + 20  # ~1.5 uses x 12 chains + 2 returns x 10
+    return {"chains": chains, "returns": returns, "dq": []}  # dq is planted after numbering (cli.generate)
 
 
 # ---------- writers ----------
@@ -112,7 +107,6 @@ def _series_plates(series) -> dict[str, str]:
 
 def write_sources(ctx: Ctx, out: Path, drafts: list[dict], series, more: dict, scale: float) -> dict:
     hashes: dict[str, str] = {}
-    r = ctx.rng("slice2-sightings")
     plates = _series_plates(series)
     cams = S.anpr_cameras(ctx, 140)
 
