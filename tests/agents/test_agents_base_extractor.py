@@ -12,7 +12,7 @@ from agents_fixtures import ADYAR, FakeEngines, as_row
 from app.adapters.nightshift import NightshiftClient
 from app.agents import AgentDeps, AgentError, Extractor, MemoryStore, TipGuard, parse_model_json
 from app.agents.base import chat_json, crime_from_row, features_from_row, rows_as_dicts
-from app.agents.extractor import clean_mo, mo_confidence
+from app.agents.extractor import clean_mo, mo_confidence, place_terms, strip_place_terms
 from app.config import Settings
 
 # ----- parse_model_json ------------------------------------------------------
@@ -498,3 +498,87 @@ def test_rows_as_dicts_gives_sample_dates_the_live_iso_string_shape():
     assert "'2026-01-05T21:10:00+05:30'" in render("SELECT :t0", {"t0": row["occurred_from"]})
     dicts = SimpleNamespace(dicts=lambda: [{"t": datetime(2026, 1, 5, 9, 0, tzinfo=ist)}])
     assert rows_as_dicts(dicts) == [{"t": "2026-01-05T09:00:00+05:30"}]
+
+
+# ----- MO-tag address guard (WS2-25, privacy J5) ----------------------------------
+# mo_tags are visible city-wide (crimes_citywide), so target and place_type must not carry a street or locality.
+
+LIVE_ADDRESS_TAGS = [  # the five live rows that leaked, as stored, and what they must become
+    ("CHN-KN-2025-001307", "complainant", ["6th_street_kundrathur", "quiet_place"], "complainant", ["quiet_place"]),
+    ("CHN-AD-2026-001075", "woman_aged_35", ["adyar", "near_womens_polytechnic"], "woman_aged_35", []),
+    ("CHN-SR-2026-001120", "man_near_11th_street", ["street"], "man", ["street"]),
+    ("CHN-AN-2026-001073", "man_near_12th_street_anna_salai", ["street"], "man", ["street"]),
+    ("CHN-EL-2026-001190", "woman_55_near_3rd_street_elephant_gate", ["street"], "woman_55", ["street"]),
+]
+
+
+@pytest.mark.parametrize("crime_id,target,places,want_target,want_places", LIVE_ADDRESS_TAGS)
+def test_clean_mo_strips_streets_and_localities_from_live_tags(crime_id, target, places, want_target, want_places):
+    stripped: list[str] = []
+    mo = clean_mo({"target": target, "place_type": places}, stripped)
+    assert (mo["target"], mo["place_type"]) == (want_target, want_places), crime_id
+    assert stripped  # every one of the five had something to strip
+
+
+def test_place_terms_come_from_the_city_pack():
+    terms = {"_".join(t) for t in place_terms("chennai")}
+    assert {"kundrathur", "adyar", "anna_salai", "elephant_gate", "lattice_bridge_road"} <= terms
+    assert not any(t.startswith("ward_") for t in terms)  # ward names are "Ward 12", not places
+    assert "music_academy" in terms  # named POIs (poi_names.txt)
+    assert "bus_stop" not in terms and "atm" not in terms  # generic words never come from the POI list
+
+
+@pytest.mark.parametrize("label", ["road", "street", "bus_stop", "metro_station", "bus_terminus", "woman_aged_45",
+                                   "towards_main_road", "woman_near_bus_stop", "lone_pedestrian_woman", "woman_55",
+                                   "gold_chain_weighing_40_g", "woman_aged_65", "marina", "beach_road",
+                                   # generic categories are not identifying and feed MO matching (chief, WS2-25)
+                                   "woman_near_atm", "near_temple", "man_near_bank", "near_airport", "near_wine_shop",
+                                   "near_tasmac", "near_bus_depot", "near_place_of_worship", "near_public_building",
+                                   "near_establishment", "road_near_hotel", "bus_stand", "temple_complex",
+                                   "college_campus", "hospital", "school_premises", "canteen_area", "atm",
+                                   "woman_bank_employee", "elderly_temple_visitor"])
+def test_strip_place_terms_leaves_generic_labels_alone(label):
+    assert strip_place_terms(label) == (label, False)
+
+
+def test_strip_place_terms_rules():
+    terms = (("anna", "salai"), ("adyar",))
+    assert strip_place_terms("adyar", terms) == (None, True)
+    assert strip_place_terms("near_2nd_cross_street", terms) == (None, True)
+    assert strip_place_terms("house_on_4th_main_road", terms) == ("house", True)
+    assert strip_place_terms("shop_in_anna_salai_area", terms) == ("shop_in_area", True)
+    assert strip_place_terms("anna", terms) == ("anna", False)  # whole sequences only, never a prefix
+    assert strip_place_terms("adyarite", terms) == ("adyarite", False)
+    assert strip_place_terms(None, terms) == (None, False)
+    for label in ("man_near_12th_street_anna_salai", "6th_street_adyar"):  # idempotent
+        once, _ = strip_place_terms(label, terms)
+        assert strip_place_terms(once, terms) == (once, False)
+
+
+LANDMARK_TAGS = [  # named places (chief, WS2-25): POIs, named institutions, landmark names
+    ("near_lic_anna_salai", None), ("near_lic_office", None), ("near_lic", None), ("near_holiday_inn", None),
+    ("near_music_academy", None), ("music_academy", None), ("near_womens_polytechnic", None),
+    ("bus_stop_near_cmbt", "bus_stop"), ("woman_near_kapaleeshwarar_temple", "woman"),
+    ("theft_at_kapaleeshwarar_temple_area", "theft_at_area"),
+]
+
+
+@pytest.mark.parametrize("label,want", LANDMARK_TAGS)
+def test_strip_place_terms_removes_named_landmarks(label, want):
+    assert strip_place_terms(label) == (want, True)
+
+
+def test_clean_mo_leaves_other_fields_alone():
+    mo = clean_mo({"escape": "towards_adyar_on_6th_street", "approach": "from_anna_salai"})
+    assert mo["escape"] == "towards_adyar_on_6th_street" and mo["approach"] == "from_anna_salai"
+
+
+def test_extract_case_traces_place_strip_without_the_address(make_deps):
+    out = {**MODEL_MO, "mo": {**MODEL_MO["mo"], "target": "woman_55_near_3rd_street_elephant_gate",
+                              "place_type": ["bus stop", "adyar"]}}
+    deps = make_deps(responder=lambda lane, m, p: json.dumps(out))
+    f = Extractor(deps).extract_case(crime_from_row(as_row(ADYAR)), write=False)
+    assert f["mo"]["target"] == "woman_55" and f["mo"]["place_type"] == ["bus_stop"]
+    ev = [e for e in deps.tracer.read() if e["action"] == "mo_tag_place_stripped"]
+    assert len(ev) == 1 and "target" in ev[0]["output_summary"] and "place_type" in ev[0]["output_summary"]
+    assert not any(w in ev[0]["output_summary"] for w in ("elephant", "adyar", "3rd"))
