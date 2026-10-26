@@ -52,13 +52,16 @@ export function resizeCell(cell: string | null, res: AreaRes, point: Point | nul
   return latLngToCell(p.lat, p.lng, res);
 }
 
-/** Zoom levels at which zooming in steps the size down to the next finer one (never back up). */
-export const AUTO_STEP_ZOOM: Record<9 | 10, number> = { 9: 14, 10: 16 };
+/** Zoom levels from which the picker suggests the next finer size. */
+export const SUGGEST_ZOOM: Record<9 | 10, number> = { 9: 14, 10: 16 };
 
-/** The finer size zooming in suggests, or the current one. Zooming out never makes the area bigger. */
-export function autoRes(zoom: number, res: AreaRes): AreaRes {
-  if (res < 10 && zoom >= AUTO_STEP_ZOOM[10]) return 10;
-  if (res < 9 && zoom >= AUTO_STEP_ZOOM[9]) return 9;
+/**
+ * The finer size to SUGGEST at this zoom, or the current one. Only a hint: the size changes only when the
+ * tipster taps Large/Medium/Small (J1; zooming is not consent to a more precise area). Never suggests bigger.
+ */
+export function suggestedRes(zoom: number, res: AreaRes): AreaRes {
+  if (res < 10 && zoom >= SUGGEST_ZOOM[10]) return 10;
+  if (res < 9 && zoom >= SUGGEST_ZOOM[9]) return 9;
   return res;
 }
 

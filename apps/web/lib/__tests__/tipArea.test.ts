@@ -7,7 +7,7 @@ import { cellToParent, latLngToCell } from "h3-js";
 import { describe, expect, it, vi } from "vitest";
 import { fetchPlaces } from "../geocodeClient";
 import { validateTip } from "../tip";
-import { autoRes, DEFAULT_AREA_RES, isTipCell, resizeCell } from "../tipArea";
+import { DEFAULT_AREA_RES, suggestedRes, isTipCell, resizeCell } from "../tipArea";
 
 const P = { lat: 13.0067, lng: 80.2206 }; // Guindy
 const R8 = latLngToCell(P.lat, P.lng, 8);
@@ -59,13 +59,19 @@ describe("resizeCell", () => {
   });
 });
 
-describe("autoRes", () => {
-  it("steps finer when zooming in close, never coarser", () => {
-    expect(autoRes(12, 8)).toBe(8);
-    expect(autoRes(14, 8)).toBe(9);
-    expect(autoRes(16, 8)).toBe(10);
-    expect(autoRes(16, 9)).toBe(10);
-    expect(autoRes(10, 10)).toBe(10);
+describe("suggestedRes", () => {
+  it("suggests a finer size when zoomed in close, never a coarser one", () => {
+    expect(suggestedRes(12, 8)).toBe(8);
+    expect(suggestedRes(14, 8)).toBe(9);
+    expect(suggestedRes(16, 8)).toBe(10);
+    expect(suggestedRes(16, 9)).toBe(10);
+    expect(suggestedRes(10, 10)).toBe(10);
+  });
+  it("is only a hint: the picker never applies it on zoom (J1)", async () => {
+    const src = (await import("node:fs")).readFileSync(new URL("../../components/public/HexPicker.tsx", import.meta.url), "utf8");
+    const zoomHandler = src.slice(src.indexOf('m.on("zoomend"'), src.indexOf("map.current = m"));
+    expect(zoomHandler).toContain("setHint(");
+    expect(zoomHandler).not.toMatch(/setRes\(|cb\.current\(|onChange\(/);
   });
 });
 

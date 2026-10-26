@@ -4,7 +4,7 @@ import maplibregl from "maplibre-gl";
 import { cellToBoundary, cellToLatLng, latLngToCell } from "h3-js";
 import { CITY } from "@/lib/city";
 import { fetchPlaces, GEOCODE_DEBOUNCE_MS, GEOCODE_MIN_CHARS, type PlaceSuggestion } from "@/lib/geocodeClient";
-import { AREA_SIZES, autoRes, cellRes, DEFAULT_AREA_RES, resizeCell, zoomFor, type AreaRes, type Point } from "@/lib/tipArea";
+import { AREA_SIZES, cellRes, suggestedRes, DEFAULT_AREA_RES, resizeCell, zoomFor, type AreaRes, type Point } from "@/lib/tipArea";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 /**
@@ -23,10 +23,14 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
   const cellRef = useRef(cell);
   cellRef.current = cell;
   const point = useRef<Point | null>(null); // browser only, never sent
+  const [hint, setHint] = useState<AreaRes | null>(null);
 
+  // The size changes ONLY when the tipster taps Large/Medium/Small (J1): zooming is not consent to a
+  // more precise area. Zooming in close shows a non-binding hint instead (nexus-6 review of #308).
   const setRes = (r: AreaRes) => {
     resRef.current = r;
     setResState(r);
+    setHint(null);
     if (cellRef.current) cb.current(resizeCell(cellRef.current, r, point.current));
   };
 
@@ -62,10 +66,10 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
       const z = zoomFor(resRef.current);
       if (m.getZoom() < z - 1) m.easeTo({ center: e.lngLat, zoom: z });
     });
-    // Zooming in close steps the size down to the finer one (never back up).
+    // Zooming in close only suggests a smaller size; it never changes it.
     m.on("zoomend", () => {
-      const next = autoRes(m.getZoom(), resRef.current);
-      if (next !== resRef.current) setRes(next);
+      const next = suggestedRes(m.getZoom(), resRef.current);
+      setHint(next !== resRef.current ? next : null);
     });
     map.current = m;
     return () => m.remove();
@@ -96,6 +100,13 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
           </button>
         ))}
       </div>
+      {hint && (
+        <p className="text-xs">
+          Zoomed in. Choose {AREA_SIZES.find((s) => s.res === hint)?.label} for a tighter area?{" "}
+          <button type="button" className="underline" onClick={() => setRes(hint)}>Use {AREA_SIZES.find((s) => s.res === hint)?.label.toLowerCase()}</button>
+          <button type="button" className="ml-2 text-muted underline" onClick={() => setHint(null)}>No thanks</button>
+        </p>
+      )}
       <p className="text-xs text-muted">
         {cell ? "Area chosen. We keep only this small area, not an exact point." : "Search a place or tap the map near where it happened. Optional."}
         {cell && <button type="button" className="ml-2 underline" onClick={() => { point.current = null; onChange(null); }}>clear</button>}
