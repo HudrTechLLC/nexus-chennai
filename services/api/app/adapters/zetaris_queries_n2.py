@@ -305,3 +305,50 @@ ORDER BY c.t DESC, c.crime_id
 
 Q_SEARCH = _q_search()
 N2_SPECS[Q_SEARCH["name"]] = Q_SEARCH
+
+
+# ---------------------------------------------------------------------------- q_station_matrix (spec E5)
+# v_station_link_matrix: approved link alerts aggregated station x station, for the cross-station view and
+# the "cross-station links this week" KPI (DASH-07). Every approved alert counts once for each unordered pair
+# of distinct stations in it (station_a < station_b); an alert within one station counts on the diagonal.
+#   since, until   city-local dates or datetimes on the alert's created_at ("" = open); until is exclusive
+# link_alerts.stations is text[]: Postgres arrays arrive over JDBC as a '{a,b}' string, and the twin reads
+# either that string or a list, so both forms strip brackets, quotes and spaces and split on commas.
+MATRIX_COLUMNS = ("station_a", "station_b", "approved_links", "cross_station", "alert_ids")
+
+
+def _q_station_matrix() -> dict:
+    tz, _ = _city_tz()
+    lightning = (
+        "WITH a AS (SELECT alert_id, array_distinct(filter(split(regexp_replace(cast(stations AS STRING), "
+        "'[{}\" ]', ''), ','), z -> z <> '')) AS st FROM sb.link_alerts WHERE status = 'approved' "
+        f"AND (:since = '' OR created_at >= to_utc_timestamp(CAST(:since AS TIMESTAMP), '{tz}')) "
+        f"AND (:until = '' OR created_at < to_utc_timestamp(CAST(:until AS TIMESTAMP), '{tz}'))), "
+        "s AS (SELECT alert_id, size(st) AS n, e.s FROM a LATERAL VIEW explode(st) e AS s) "
+        "SELECT x.s AS station_a, y.s AS station_b, count(DISTINCT x.alert_id) AS approved_links, "
+        "x.s <> y.s AS cross_station, concat_ws(',', sort_array(collect_set(x.alert_id))) AS alert_ids "
+        "FROM s x JOIN s y ON y.alert_id = x.alert_id AND (x.s < y.s OR (x.n = 1 AND x.s = y.s)) "
+        "GROUP BY x.s, y.s ORDER BY approved_links DESC, station_a, station_b"
+    )
+    sample = f"""
+WITH a AS (
+  SELECT alert_id, CAST(created_at AS TIMESTAMPTZ) AS t,
+         list_distinct(list_filter(string_split(regexp_replace(CAST(stations AS VARCHAR), '[]{{}}["'' ]', '', 'g'),
+                                                ','), s -> s <> '')) AS st
+  FROM 'sb/link_alerts.parquet' WHERE status = 'approved'),
+w AS (SELECT * FROM a
+      WHERE (:since = '' OR t >= (CAST(:since AS TIMESTAMP) AT TIME ZONE '{tz}'))
+        AND (:until = '' OR t < (CAST(:until AS TIMESTAMP) AT TIME ZONE '{tz}'))),
+s AS (SELECT alert_id, unnest(st) AS s, len(st) AS n FROM w),
+p AS (SELECT x.alert_id, x.s AS station_a, y.s AS station_b FROM s x JOIN s y
+      ON y.alert_id = x.alert_id AND (x.s < y.s OR (x.n = 1 AND x.s = y.s)))
+SELECT station_a, station_b, count(DISTINCT alert_id) AS approved_links, station_a <> station_b AS cross_station,
+       string_agg(DISTINCT alert_id, ',' ORDER BY alert_id) AS alert_ids
+FROM p GROUP BY station_a, station_b ORDER BY approved_links DESC, station_a, station_b
+""".strip()
+    return dict(name="q_station_matrix", lightning=lightning, sample=sample, columns=MATRIX_COLUMNS,
+                description="Approved link alerts aggregated station x station (v_station_link_matrix)")
+
+
+Q_STATION_MATRIX = _q_station_matrix()
+N2_SPECS[Q_STATION_MATRIX["name"]] = Q_STATION_MATRIX
