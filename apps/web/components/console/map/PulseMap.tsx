@@ -372,7 +372,8 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
     }),
     // Each series member gets a gold ring, so the series reads at a glance among the city's other crimes.
     toggles.hulls && !constellation && new ScatterplotLayer<{ p: LonLat }>({
-      id: "series-members", data: series.flatMap((s) => s.pts), getPosition: (x) => x.p, getRadius: 8, radiusUnits: "pixels",
+      // only members whose crime is on the map in the current time window, so no ring ever circles an empty spot
+      id: "series-members", data: series.flatMap((s) => s.pts).filter((x) => visibleIds.has(x.id)), getPosition: (x) => x.p, getRadius: 8, radiusUnits: "pixels",
       filled: false, stroked: true, getLineColor: [255, 214, 120, 255], lineWidthUnits: "pixels", getLineWidth: 2,
     }),
     constellation && new PathLayer<(typeof series)[number]>({

@@ -160,8 +160,8 @@ describe("failureOutcome", () => {
   // the hero run's shape: plan, failed, link, skeptic, re-plan, failed again, alert writer
   const run = [st(1, "Planner", "plan"), st(2, "Planner", "step_failed", "error"), st(3, "Linker", "score_pair"),
     st(4, "Skeptic", "approve", "approved"), st(5, "Planner", "plan"), st(6, "Planner", "step_failed", "error"), st(7, "Alert writer", "write_alert")];
-  it("says retried only when the same agent ran again later", () => {
-    expect(failureOutcome(run, 1)).toBe("retried");
+  it("calls a failure the run went on from recovered, never retried (the trace does not record a re-run)", () => {
+    expect(failureOutcome(run, 1)).toBe("recovered");
     expect(failureOutcome(run, 5)).toBe("recovered");
   });
   it("is fatal when nothing ran after the failure, and null for steps that did not fail", () => {

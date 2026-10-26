@@ -169,14 +169,14 @@ export function visionLane(latest: TraceRow | null): { state: "working" | "unava
 
 /**
  * How serious a failed step looks, from what the run did next (never guessed):
- * "retried" = the same agent ran again later in this run; "recovered" = the run carried on with other steps;
- * "fatal" = nothing ran after it. Steps that did not fail return null.
+ * "recovered" = the run carried on with later steps; "fatal" = nothing ran after it. Steps that did not fail
+ * return null. There is deliberately no "retried": the trace records a later step by the same agent, not that
+ * it re-ran the failed one (on the hero, a failed query was skipped and the Planner went on with others).
  */
-export function failureOutcome(steps: AlertStep[], i: number): "retried" | "recovered" | "fatal" | null {
+export function failureOutcome(steps: AlertStep[], i: number): "recovered" | "fatal" | null {
   const x = steps[i];
   if (!x || !(x.status === "error" || x.action === "step_failed")) return null;
   const later = steps.slice(i + 1).filter((y) => y.runId === x.runId);
-  if (later.some((y) => y.agent === x.agent && y.action !== "step_failed" && y.status !== "error")) return "retried";
   return later.length ? "recovered" : "fatal";
 }
 
