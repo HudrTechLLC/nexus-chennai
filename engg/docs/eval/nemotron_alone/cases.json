@@ -1,0 +1,1215 @@
+{
+ "prereg": "engg/docs/eval/NEMOTRON_ALONE_PREREG.md",
+ "headline": {
+  "report": "output_examples/eval_report.json",
+  "git_commit": "8d8e789",
+  "run_id": "eval_ad27b22c",
+  "tp": 84,
+  "fp": 58,
+  "fn": 14,
+  "alerts": 148,
+  "reproduced": true
+ },
+ "generated_at_commit": "3d00fc8",
+ "truth_dir": "data/sample/_truth",
+ "truth_sha256": {
+  "decoys.json": "2de157c81a19b56e6eeea0f9cb1b5a4a8143dd5be6217e0a5cdf36c536f8aa09",
+  "dq.json": "d33ec8e2e7ecbe1877fc95f7ae25ad26a47a5a2d14a52cdc56d7917b297c602a",
+  "duplicates.json": "5867e365650b67810040038975813a2900e456c465f923c5db2fd589a300ca85",
+  "pairs.csv": "852e1cb21f1f82f8e40e34153ca43b66dd59d85cf60f3ac4642e220ecf087633",
+  "series.json": "127d7e25f3db4b40430c79c95acf4b19e7be01675c92b328044e1809658f4005",
+  "tips.json": "fe6adc41d6ff365506ec2a08f19863805c39651cd6feca1de58f2f74bae55d03"
+ },
+ "rule": {
+  "cases": "every 3rd of the 60 headline cases in sorted order (indices 0, 3, ..., 57)",
+  "pairs_per_case": 10,
+  "pair_order": "q_candidates order (km_apart, crime_id), crimes missing from q_cases skipped as the evaluator skips them; a pair reached from two cases is listed once",
+  "system_linked": "pair is in the headline evaluator's alert set over all 60 cases (linker alert and skeptic approve)"
+ },
+ "cases": [
+  "CHN-AD-2026-001071",
+  "CHN-AD-2026-001182",
+  "CHN-AM-2025-001042",
+  "CHN-AV-2026-000609",
+  "CHN-GU-2025-000055",
+  "CHN-IC-2025-001225",
+  "CHN-KD-2025-000125",
+  "CHN-KO-2026-000043",
+  "CHN-KU-2025-001216",
+  "CHN-MG-2025-000079",
+  "CHN-MM-2025-000040",
+  "CHN-MY-2025-001289",
+  "CHN-NU-2025-000748",
+  "CHN-PO-2025-001230",
+  "CHN-RO-2025-001330",
+  "CHN-ST-2025-001032",
+  "CHN-TI-2026-001087",
+  "CHN-TM-2025-000881",
+  "CHN-VI-2025-000079",
+  "CHN-VL-2026-001035"
+ ],
+ "pairs": [
+  {
+   "pair": "CHN-AD-2026-001071|CHN-AD-2026-001084",
+   "case": "CHN-AD-2026-001071",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-000987|CHN-AD-2026-001071",
+   "case": "CHN-AD-2026-001071",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-AD-2026-001221",
+   "case": "CHN-AD-2026-001071",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-AD-2026-001150",
+   "case": "CHN-AD-2026-001071",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-VL-2026-001113",
+   "case": "CHN-AD-2026-001071",
+   "rank": 5,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-VL-2026-001046",
+   "case": "CHN-AD-2026-001071",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-000963|CHN-AD-2026-001071",
+   "case": "CHN-AD-2026-001071",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-AD-2026-001075",
+   "case": "CHN-AD-2026-001071",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-VL-2026-001111",
+   "case": "CHN-AD-2026-001071",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001071|CHN-VL-2026-001145",
+   "case": "CHN-AD-2026-001071",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001078|CHN-AD-2026-001182",
+   "case": "CHN-AD-2026-001182",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-AD-2026-001214",
+   "case": "CHN-AD-2026-001182",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001075|CHN-AD-2026-001182",
+   "case": "CHN-AD-2026-001182",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-SH-2026-001136",
+   "case": "CHN-AD-2026-001182",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-TI-2026-001036",
+   "case": "CHN-AD-2026-001182",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-TI-2026-001119",
+   "case": "CHN-AD-2026-001182",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-TI-2026-001148",
+   "case": "CHN-AD-2026-001182",
+   "rank": 7,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-SH-2026-001102",
+   "case": "CHN-AD-2026-001182",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-TI-2026-001174",
+   "case": "CHN-AD-2026-001182",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001182|CHN-TI-2026-001134",
+   "case": "CHN-AD-2026-001182",
+   "rank": 10,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-ST-2025-001153",
+   "case": "CHN-AM-2025-001042",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-AM-2025-001179",
+   "case": "CHN-AM-2025-001042",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001035|CHN-AM-2025-001042",
+   "case": "CHN-AM-2025-001042",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-000967|CHN-AM-2025-001042",
+   "case": "CHN-AM-2025-001042",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-AM-2025-001191",
+   "case": "CHN-AM-2025-001042",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-000906|CHN-AM-2025-001042",
+   "case": "CHN-AM-2025-001042",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001022|CHN-AM-2025-001042",
+   "case": "CHN-AM-2025-001042",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-ST-2025-001129",
+   "case": "CHN-AM-2025-001042",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-ST-2025-000901",
+   "case": "CHN-AM-2025-001042",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001042|CHN-AM-2025-001207",
+   "case": "CHN-AM-2025-001042",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AV-2026-000609|CHN-PT-2026-000608",
+   "case": "CHN-AV-2026-000609",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-GU-2025-000197",
+   "case": "CHN-GU-2025-000055",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-MG-2025-000110",
+   "case": "CHN-GU-2025-000055",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-MG-2025-000129",
+   "case": "CHN-GU-2025-000055",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-ST-2025-000018",
+   "case": "CHN-GU-2025-000055",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-ST-2025-000174",
+   "case": "CHN-GU-2025-000055",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-ST-2025-000084",
+   "case": "CHN-GU-2025-000055",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-SA-2024-001472",
+   "case": "CHN-GU-2025-000055",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-MG-2025-000013",
+   "case": "CHN-GU-2025-000055",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-KU-2024-001496",
+   "case": "CHN-GU-2025-000055",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-GU-2025-000055|CHN-KU-2025-000206",
+   "case": "CHN-GU-2025-000055",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001189|CHN-IC-2025-001225",
+   "case": "CHN-IC-2025-001225",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-IC-2025-001308",
+   "case": "CHN-IC-2025-001225",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001204|CHN-IC-2025-001225",
+   "case": "CHN-IC-2025-001225",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-IC-2025-001295",
+   "case": "CHN-IC-2025-001225",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-RO-2025-001318",
+   "case": "CHN-IC-2025-001225",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-TR-2025-001068",
+   "case": "CHN-IC-2025-001225",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AN-2025-001242|CHN-IC-2025-001225",
+   "case": "CHN-IC-2025-001225",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-TR-2025-001329",
+   "case": "CHN-IC-2025-001225",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001225|CHN-TR-2025-001049",
+   "case": "CHN-IC-2025-001225",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AN-2025-001067|CHN-IC-2025-001225",
+   "case": "CHN-IC-2025-001225",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-VY-2025-000125",
+   "case": "CHN-KD-2025-000125",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-VY-2025-000058",
+   "case": "CHN-KD-2025-000125",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-VY-2025-000119",
+   "case": "CHN-KD-2025-000125",
+   "rank": 3,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-VY-2025-000199",
+   "case": "CHN-KD-2025-000125",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-VY-2025-000068",
+   "case": "CHN-KD-2025-000125",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-OT-2025-000020",
+   "case": "CHN-KD-2025-000125",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-OT-2024-001456",
+   "case": "CHN-KD-2025-000125",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-OT-2025-000231",
+   "case": "CHN-KD-2025-000125",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000125|CHN-OT-2025-000149",
+   "case": "CHN-KD-2025-000125",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KD-2025-000086|CHN-KD-2025-000125",
+   "case": "CHN-KD-2025-000125",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KO-2026-000043|CHN-NO-2026-000043",
+   "case": "CHN-KO-2026-000043",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001209",
+   "case": "CHN-KU-2025-001216",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001114",
+   "case": "CHN-KU-2025-001216",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001202",
+   "case": "CHN-KU-2025-001216",
+   "rank": 3,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001169",
+   "case": "CHN-KU-2025-001216",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001243",
+   "case": "CHN-KU-2025-001216",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001327",
+   "case": "CHN-KU-2025-001216",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001301",
+   "case": "CHN-KU-2025-001216",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001096",
+   "case": "CHN-KU-2025-001216",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001326",
+   "case": "CHN-KU-2025-001216",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-001216|CHN-SA-2025-001059",
+   "case": "CHN-KU-2025-001216",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MG-2025-000077|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 1,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-MG-2025-000079|CHN-MG-2025-000182",
+   "case": "CHN-MG-2025-000079",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MG-2025-000019|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-000266|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2024-001480|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MG-2025-000013|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-000206|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-000078|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 8,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-MG-2025-000079|CHN-MG-2025-000129",
+   "case": "CHN-MG-2025-000079",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2024-001496|CHN-MG-2025-000079",
+   "case": "CHN-MG-2025-000079",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2024-001369|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AS-2025-000080|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-000040|CHN-SA-2025-000005",
+   "case": "CHN-MM-2025-000040",
+   "rank": 3,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-MM-2025-000040|CHN-MM-2025-000132",
+   "case": "CHN-MM-2025-000040",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-000040|CHN-SA-2024-001484",
+   "case": "CHN-MM-2025-000040",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-KU-2025-000082|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AS-2025-000180|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AS-2025-000141|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-000040|CHN-PO-2025-000112",
+   "case": "CHN-MM-2025-000040",
+   "rank": 9,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AS-2025-000212|CHN-MM-2025-000040",
+   "case": "CHN-MM-2025-000040",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MA-2025-001323|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MY-2025-001115|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MY-2025-001162|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-FO-2025-001265|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-IC-2025-001295|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001317|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MY-2025-001289|CHN-RO-2025-001318",
+   "case": "CHN-MY-2025-001289",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001132|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MY-2025-001289|CHN-RO-2025-001330",
+   "case": "CHN-MY-2025-001289",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-FO-2025-001275|CHN-MY-2025-001289",
+   "case": "CHN-MY-2025-001289",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000728|CHN-NU-2025-000748",
+   "case": "CHN-NU-2025-000748",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-NU-2025-000854",
+   "case": "CHN-NU-2025-000748",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-TH-2025-000685",
+   "case": "CHN-NU-2025-000748",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-NU-2025-000894",
+   "case": "CHN-NU-2025-000748",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-TE-2025-000884",
+   "case": "CHN-NU-2025-000748",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-NU-2025-000864",
+   "case": "CHN-NU-2025-000748",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-NU-2025-000899",
+   "case": "CHN-NU-2025-000748",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000717|CHN-NU-2025-000748",
+   "case": "CHN-NU-2025-000748",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-TH-2025-000798",
+   "case": "CHN-NU-2025-000748",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-NU-2025-000748|CHN-TH-2025-000813",
+   "case": "CHN-NU-2025-000748",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-PO-2025-001230|CHN-PO-2025-001296",
+   "case": "CHN-PO-2025-001230",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001096|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-PO-2025-001201|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001050|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001320|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001313|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 6,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-PO-2025-001230|CHN-PO-2025-001289",
+   "case": "CHN-PO-2025-001230",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001314|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MM-2025-001211|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 9,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-MM-2025-001053|CHN-PO-2025-001230",
+   "case": "CHN-PO-2025-001230",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-RO-2025-001295|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-RO-2025-001187|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001210|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001317|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-RO-2025-001318|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001218|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MY-2025-001162|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001275|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001330|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AB-2025-001292|CHN-RO-2025-001330",
+   "case": "CHN-RO-2025-001330",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-000901|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-001032|CHN-ST-2025-001108",
+   "case": "CHN-ST-2025-001032",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-001032|CHN-ST-2025-001097",
+   "case": "CHN-ST-2025-001032",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-000956|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-001032|CHN-ST-2025-001129",
+   "case": "CHN-ST-2025-001032",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-001032|CHN-ST-2025-001050",
+   "case": "CHN-ST-2025-001032",
+   "rank": 6,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-AM-2025-000865|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-000940|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AM-2025-001207|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-ST-2025-000972|CHN-ST-2025-001032",
+   "case": "CHN-ST-2025-001032",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001174",
+   "case": "CHN-TI-2026-001087",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001001|CHN-TI-2026-001087",
+   "case": "CHN-TI-2026-001087",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001124",
+   "case": "CHN-TI-2026-001087",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001134",
+   "case": "CHN-TI-2026-001087",
+   "rank": 4,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-TI-2026-001058|CHN-TI-2026-001087",
+   "case": "CHN-TI-2026-001087",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001119",
+   "case": "CHN-TI-2026-001087",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001036|CHN-TI-2026-001087",
+   "case": "CHN-TI-2026-001087",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001219",
+   "case": "CHN-TI-2026-001087",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-000901|CHN-TI-2026-001087",
+   "case": "CHN-TI-2026-001087",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TI-2026-001087|CHN-TI-2026-001148",
+   "case": "CHN-TI-2026-001087",
+   "rank": 10,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-TM-2025-000881|CHN-TM-2025-000920",
+   "case": "CHN-TM-2025-000881",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TM-2025-000881|CHN-TM-2025-000931",
+   "case": "CHN-TM-2025-000881",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TM-2025-000881|CHN-TM-2025-001050",
+   "case": "CHN-TM-2025-000881",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SL-2025-000985|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SL-2025-001034|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-TM-2025-000881|CHN-TM-2025-000979",
+   "case": "CHN-TM-2025-000881",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SL-2025-001024|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SL-2025-001030|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SN-2025-000954|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-SL-2025-000882|CHN-TM-2025-000881",
+   "case": "CHN-TM-2025-000881",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VA-2025-000132|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VA-2025-000080|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VA-2025-000065|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 3,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-VI-2025-000052|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MG-2025-000019|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-MG-2025-000077|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 6,
+   "system_linked": true
+  },
+  {
+   "pair": "CHN-MG-2025-000182|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VA-2025-000154|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-RA-2025-000225|CHN-VI-2025-000079",
+   "case": "CHN-VI-2025-000079",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VI-2025-000079|CHN-VI-2025-000110",
+   "case": "CHN-VI-2025-000079",
+   "rank": 10,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-001035|CHN-VL-2026-001111",
+   "case": "CHN-VL-2026-001035",
+   "rank": 1,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-001035|CHN-VL-2026-001145",
+   "case": "CHN-VL-2026-001035",
+   "rank": 2,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-001035|CHN-VL-2026-001203",
+   "case": "CHN-VL-2026-001035",
+   "rank": 3,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-001035|CHN-VL-2026-001046",
+   "case": "CHN-VL-2026-001035",
+   "rank": 4,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-001035|CHN-VL-2026-001113",
+   "case": "CHN-VL-2026-001035",
+   "rank": 5,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-000993|CHN-VL-2026-001035",
+   "case": "CHN-VL-2026-001035",
+   "rank": 6,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-000959|CHN-VL-2026-001035",
+   "case": "CHN-VL-2026-001035",
+   "rank": 7,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-VL-2026-000877|CHN-VL-2026-001035",
+   "case": "CHN-VL-2026-001035",
+   "rank": 8,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001150|CHN-VL-2026-001035",
+   "case": "CHN-VL-2026-001035",
+   "rank": 9,
+   "system_linked": false
+  },
+  {
+   "pair": "CHN-AD-2026-001084|CHN-VL-2026-001035",
+   "case": "CHN-VL-2026-001035",
+   "rank": 10,
+   "system_linked": true
+  }
+ ],
+ "system_alerts_touching_cases": [
+  "CHN-AB-2025-001198|CHN-KU-2025-001216",
+  "CHN-AD-2026-001071|CHN-AD-2026-001078",
+  "CHN-AD-2026-001071|CHN-AD-2026-001182",
+  "CHN-AD-2026-001071|CHN-TI-2026-001056",
+  "CHN-AD-2026-001071|CHN-TI-2026-001087",
+  "CHN-AD-2026-001071|CHN-TI-2026-001134",
+  "CHN-AD-2026-001071|CHN-TI-2026-001148",
+  "CHN-AD-2026-001071|CHN-VL-2026-000877",
+  "CHN-AD-2026-001071|CHN-VL-2026-001113",
+  "CHN-AD-2026-001078|CHN-AD-2026-001182",
+  "CHN-AD-2026-001078|CHN-TI-2026-001087",
+  "CHN-AD-2026-001084|CHN-VL-2026-001035",
+  "CHN-AD-2026-001182|CHN-AS-2026-001051",
+  "CHN-AD-2026-001182|CHN-TI-2026-001056",
+  "CHN-AD-2026-001182|CHN-TI-2026-001087",
+  "CHN-AD-2026-001182|CHN-TI-2026-001134",
+  "CHN-AD-2026-001182|CHN-TI-2026-001148",
+  "CHN-AD-2026-001182|CHN-VL-2026-000877",
+  "CHN-AD-2026-001182|CHN-VL-2026-001113",
+  "CHN-AM-2025-000057|CHN-GU-2025-000055",
+  "CHN-AM-2025-000865|CHN-AM-2025-001042",
+  "CHN-AM-2025-001042|CHN-GU-2025-000945",
+  "CHN-AM-2025-001042|CHN-GU-2025-001149",
+  "CHN-AM-2025-001042|CHN-NA-2025-000990",
+  "CHN-AM-2025-001042|CHN-ST-2025-001108",
+  "CHN-AS-2025-000080|CHN-MG-2025-000079",
+  "CHN-AS-2025-000080|CHN-VI-2025-000079",
+  "CHN-AS-2025-000141|CHN-MG-2025-000079",
+  "CHN-AV-2026-000609|CHN-PT-2026-000608",
+  "CHN-GU-2025-000055|CHN-RA-2025-000019",
+  "CHN-KA-2025-000077|CHN-MG-2025-000079",
+  "CHN-KA-2025-000077|CHN-VI-2025-000079",
+  "CHN-KD-2025-000125|CHN-KI-2025-000124",
+  "CHN-KD-2025-000125|CHN-NE-2025-000107",
+  "CHN-KD-2025-000125|CHN-VY-2025-000119",
+  "CHN-KD-2025-000125|CHN-VY-2025-000125",
+  "CHN-KO-2026-000043|CHN-NO-2026-000043",
+  "CHN-KU-2025-000078|CHN-MG-2025-000079",
+  "CHN-KU-2025-000078|CHN-VI-2025-000079",
+  "CHN-KU-2025-000082|CHN-MG-2025-000079",
+  "CHN-KU-2025-000082|CHN-VI-2025-000079",
+  "CHN-KU-2025-001216|CHN-MG-2025-001225",
+  "CHN-KU-2025-001216|CHN-PO-2025-001201",
+  "CHN-KU-2025-001216|CHN-SA-2025-001202",
+  "CHN-KU-2025-001216|CHN-SA-2025-001209",
+  "CHN-KU-2025-001216|CHN-SA-2025-001239",
+  "CHN-KU-2025-001216|CHN-VL-2025-001220",
+  "CHN-MG-2025-000077|CHN-MG-2025-000079",
+  "CHN-MG-2025-000077|CHN-VI-2025-000079",
+  "CHN-MG-2025-000079|CHN-PO-2025-000068",
+  "CHN-MG-2025-000079|CHN-RA-2025-000069",
+  "CHN-MG-2025-000079|CHN-VI-2025-000079",
+  "CHN-MM-2025-000040|CHN-PO-2025-000068",
+  "CHN-MM-2025-000040|CHN-PO-2025-000112",
+  "CHN-MM-2025-000040|CHN-SA-2025-000005",
+  "CHN-MM-2025-001211|CHN-PO-2025-001230",
+  "CHN-MM-2025-001313|CHN-PO-2025-001230",
+  "CHN-PO-2025-000068|CHN-VI-2025-000079",
+  "CHN-PO-2025-001229|CHN-PO-2025-001230",
+  "CHN-RA-2025-000069|CHN-VI-2025-000079",
+  "CHN-ST-2025-001032|CHN-ST-2025-001050",
+  "CHN-TI-2026-001056|CHN-TI-2026-001087",
+  "CHN-TI-2026-001087|CHN-TI-2026-001134",
+  "CHN-TI-2026-001087|CHN-TI-2026-001148",
+  "CHN-TI-2026-001087|CHN-VL-2026-000877",
+  "CHN-TI-2026-001087|CHN-VL-2026-001113",
+  "CHN-VA-2025-000065|CHN-VI-2025-000079",
+  "CHN-VI-2025-000053|CHN-VI-2025-000079"
+ ]
+}

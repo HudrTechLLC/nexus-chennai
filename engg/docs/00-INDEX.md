@@ -37,6 +37,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [WS3-06 / WS3-10 gate](validation/WS3-06-WS3-10-2026-10-26.md): case file, search and FIR capture vs CAP-01…10 and SRCH-01…07, with live evidence and open gaps
 - [WS5-08 checklist](validation/WS5-08-checklist.md): Tuesday fresh-clone validation (L3), every Disqualification Checklist item with its command and PASS rule
 - [WS5-08 results](validation/WS5-08-2026-10-27.md): the checklist run; part 1 pre-run (secrets incl. full history, hygiene, README, licences, vendored engines), part 2 on Tuesday
+- [NEMOTRON_ALONE_PREREG](eval/NEMOTRON_ALONE_PREREG.md): pre-registered baseline, Nemotron Ultra alone vs the full system on the same 182 headline pairs (case list, prompt, scoring and stop rules fixed before any call)
 
 ## Hackathon
 - [DIGEST](hackathon/DIGEST.md): rules, scoring, disqualifiers, resource links
