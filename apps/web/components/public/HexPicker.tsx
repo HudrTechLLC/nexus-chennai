@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import { cellToBoundary, cellToLatLng, latLngToCell } from "h3-js";
 import { CITY } from "@/lib/city";
+import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
 import { fetchPlaces, GEOCODE_DEBOUNCE_MS, GEOCODE_MIN_CHARS, type PlaceSuggestion } from "@/lib/geocodeClient";
 import { AREA_SIZES, cellRes, suggestedRes, DEFAULT_AREA_RES, resizeCell, zoomFor, type AreaRes, type Point } from "@/lib/tipArea";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -46,8 +47,9 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     if (!el.current) return;
     // A prefilled area (WS4-12) opens centred on its hexagon, close enough to see it.
     const [lat, lng] = cell ? cellToLatLng(cell) : [0, 0];
+    const theme = currentMapTheme();
     const m = new maplibregl.Map({
-      container: el.current, style: "/map/light.json",
+      container: el.current, style: mapStyleUrl(theme),
       center: cell ? [lng, lat] : CITY.map.center,
       zoom: cell ? Math.max(CITY.map.zoom, zoomFor(cellRes(cell))) : CITY.map.zoom,
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
@@ -56,8 +58,8 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
       // Start the compact attribution collapsed (the ⓘ still opens it): expanded it covers the hexagon on phones.
       el.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       m.addSource("pick", { type: "geojson", data: geo(cellRef.current) });
-      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": "#0e7c86", "fill-opacity": 0.3 } });
-      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": "#0e7c86", "line-width": 2 } });
+      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": MAP_INK[theme].signal, "fill-opacity": 0.3 } });
+      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": MAP_INK[theme].signal, "line-width": 2 } });
     });
     m.on("click", (e) => {
       point.current = { lat: e.lngLat.lat, lng: e.lngLat.lng };
