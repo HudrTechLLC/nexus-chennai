@@ -140,6 +140,10 @@ _GENERIC_TOKENS = _GENERIC_PLACE_WORDS | _LANDMARK_WORDS | frozenset({
     "center", "trade", "toilet", "post", "police", "fire", "court", "library", "museum", "zoo", "stadium", "gym",
     "boys", "girls", "children", "kids", "quiet", "dark", "isolated", "busy", "crowded", "establishment",
     "building", "worship", "tasmac", "office", "temple", "mosque", "hospital", "airport",
+    # people: a person word before a landmark word is a role ("woman_bank_employee"), never a place name
+    "woman", "women", "man", "men", "person", "persons", "people", "complainant", "victim", "elderly", "lone",
+    "pedestrian", "passenger", "owner", "employee", "staff", "student", "worker", "driver", "customer", "visitor",
+    "devotee", "shopkeeper", "vendor", "aged", "about", "young", "old", "senior", "child", "boy", "girl",
 })
 
 

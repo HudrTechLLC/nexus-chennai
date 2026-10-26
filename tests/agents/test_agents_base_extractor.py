@@ -535,7 +535,8 @@ def test_place_terms_come_from_the_city_pack():
                                    "woman_near_atm", "near_temple", "man_near_bank", "near_airport", "near_wine_shop",
                                    "near_tasmac", "near_bus_depot", "near_place_of_worship", "near_public_building",
                                    "near_establishment", "road_near_hotel", "bus_stand", "temple_complex",
-                                   "college_campus", "hospital", "school_premises", "canteen_area", "atm"])
+                                   "college_campus", "hospital", "school_premises", "canteen_area", "atm",
+                                   "woman_bank_employee", "elderly_temple_visitor"])
 def test_strip_place_terms_leaves_generic_labels_alone(label):
     assert strip_place_terms(label) == (label, False)
 
