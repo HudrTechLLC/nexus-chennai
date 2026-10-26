@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T21:13:46+05:30",
+  "updated": "2026-10-26T21:16:57+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -618,8 +618,8 @@
           "id": "WS3-22",
           "phase": "P7",
           "title": "Pulse Map opens framed on the visible data (per role)",
-          "status": "in_progress",
-          "note": "nexus-4 · user request"
+          "status": "done",
+          "note": "nexus-4 · #272 (fits once per role; phone layers panel collapsed)"
         },
         {
           "id": "WS3-23",
@@ -740,7 +740,7 @@
           "id": "WS4-14",
           "phase": "P8",
           "title": "Synthetic published appeals from several stations",
-          "status": "todo",
+          "status": "in_progress",
           "note": "nexus-2 · seed through the live publish guard; hero/judge cases excluded"
         }
       ]
