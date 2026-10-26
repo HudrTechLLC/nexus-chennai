@@ -16,8 +16,8 @@ ROWS = [
     # crime_id, source, station, category, occurred_from, occurred_to, reported_at, lat, lon, h3_r9, sections_raw
     ("C1", "sb.crimes", "PS-A", "chain_snatching", "2026-10-01 19:00", "2026-10-01 19:10", "2026-10-01 21:00",
      13.00, 80.25, "89a", None),
-    ("C2", "sb.crimes", "PS-B", "chain_snatching", "2026-10-01 19:45", None, "2026-10-02 09:00",
-     13.00, 80.25, "89a", None),                                             # duplicate of C1 at another station
+    ("C2", "sb.crimes", "PS-B", "chain_snatching", "2026-10-01 19:20", None, "2026-10-02 09:00",
+     13.001, 80.2505, "89x", None),     # duplicate of C1 at another station, geocoded into a neighbouring cell
     ("C3", "sb.crimes", "PS-A", "chain_snatching", "2026-10-03 19:00", None, "2026-10-03 20:00",
      13.00, 80.25, "89a", None),                                             # same cell, 2 days later: clean
     ("C4", "s3csv.cctns", "PS-A", "theft", "2026-10-04 10:00", None, "2026-10-04 09:00",
@@ -65,7 +65,7 @@ def test_only_requested_ids_are_returned(client):
 def test_details_are_written_in_code(client):
     rows = client.named("q_dq_flags", agent="Planner", ids="C1,C4").dicts()
     dup = next(r for r in rows if r["rule"] == "duplicate_fir")
-    assert dup["detail"] == "same chain_snatching in cell 89a within 45 min, filed at PS-B via sb.crimes"
+    assert dup["detail"] == "same chain_snatching within 20 min and 111 m, filed at PS-B via sb.crimes"
     geo = next(r for r in rows if r["rule"] == "bad_geo")
     assert geo["detail"].startswith("outside city bounds: 12.5")
 
@@ -82,7 +82,7 @@ def test_zetaris_file_is_generated_from_the_same_rules():
     committed = (ROOT / "zetaris" / "20_dq.sql").read_text(encoding="utf-8").replace("\r\n", "\n")
     assert committed == dq_rules.dq_file(), "regenerate: cd services/api && python -m app.adapters.dq_rules"
     for view in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections", "dq_flags",
-                 "dq_orphan_evidence", "dq_tip_without_incident"):
+                 "dq_orphan_evidence", "dq_tip_without_incident", "dq_stale_cameras"):
         assert f"CREATE OR REPLACE SCHEMASTORE VIEW {view} WITH CONTAINER nexus AS" in committed
     assert "{{city:map.bounds.west}}" in committed and "80.05" not in committed
     # Same rule text in both dialects, modulo the dialect substitutions.
