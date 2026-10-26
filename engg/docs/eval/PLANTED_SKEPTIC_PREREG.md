@@ -4,7 +4,7 @@ tags: [nexus, eval, prereg]
 
 # Planted false-link test for the Skeptic: pre-registration
 
-Related: [00-INDEX](../00-INDEX.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
+Related: [00-INDEX](../00-INDEX.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md) · [SKEPTIC_CONTRADICTION_PREREG](SKEPTIC_CONTRADICTION_PREREG.md) (the pre-registered fix)
 
 **Status: run on 27 Oct 2026; FAIL (primary 0 of 24). Results are at the end of this note; the method text above them is unchanged.** Pre-registered: This note, the case file and the harness are committed **before any model
 call** for this test. The results will be published as `output_examples/planted_skeptic.json` whatever they are, in a
