@@ -18,7 +18,7 @@ Related: [ARCHITECTURE](ARCHITECTURE.md) · [PROGRESS](PROGRESS.md) · [00-INDEX
 | 5 | Zetaris local platform (`C:\Apps\zetaris-platform`, UI http://localhost:3000, REST :8888) | ✅ running; live `SELECT 1` PASS; org ID `1` | app `.env`: `ZETARIS_REST_URL`, `ZETARIS_ORG_ID=1`, `ZETARIS_API_KEY_FILE=~/.secrets/nexus-zetaris.key` |
 | 6 | Meterless Nightshift 1.2.7 | ✅ running; NVIDIA connected; lanes per D-017 | app `.env`: `METERLESS_BASE_URL`, `METERLESS_RUNTIME_TOKEN` |
 | 7 | NVIDIA build.nvidia.com | ✅ key in Nightshift Providers only | Nightshift Providers tab only |
-| 8 | Object storage for Zetaris CSV/Parquet: **Supabase Storage** private bucket `nexus-chennai-data` via its S3-compatible endpoint (D-022). **AWS is not used** (fallback only) | ✅ S3 enabled; access key at `~/.secrets/nexus-s3.key` (line 1 id, line 2 secret); delete after the hackathon | Zetaris source definition, read from the file at registration time |
+| 8 | Object storage for Zetaris CSV/Parquet: **Zetaris internal file store** (D-022a). The Supabase Storage bucket `nexus-chennai-data` is a backup copy only, because the Zetaris JVM can't complete TLS with Supabase S3. **AWS is not used** | ✅ S3 enabled; access key at `~/.secrets/nexus-s3.key` (line 1 id, line 2 secret); delete after the hackathon | Zetaris source definition, read from the file at registration time |
 | 9 | ElevenLabs | ⏳ | build-time `.env`: `ELEVENLABS_API_KEY` |
 | 10 | YouTube (unlisted) + Drive | ⏳ | README + form |
 | 11 | Map tiles (Protomaps PMTiles or MapTiler) | ⏳ | `NEXT_PUBLIC_MAPTILER_KEY` if MapTiler |
