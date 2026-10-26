@@ -29,6 +29,14 @@ export function HexPanel({ state, hex, error, minCount }: { state: MapState; hex
         <p className="text-sm text-muted">
           No individual crimes are shown here. To protect victims, a crime appears only when at least {minCount} of the same
           type were reported in this hexagon in the period.
+          {state.days < 90 && (
+            <>
+              {" "}
+              <Link href={mapHref({ ...state, days: 90 })} scroll={false} className="font-medium text-ink underline">
+                Show the last 90 days
+              </Link>
+            </>
+          )}
         </p>
       )}
       <div className="space-y-3">
