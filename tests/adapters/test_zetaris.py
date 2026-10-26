@@ -70,3 +70,48 @@ def test_render_escapes_strings_and_rejects_unknown_types():
         render(":x", {"x": object()})
     with pytest.raises(KeyError):
         render(":missing", {})
+
+
+DNS_400 = 'Caused by: java.net.UnknownHostException: aws-0-ap-southeast-1.pooler.supabase.com'
+
+
+def test_transient_source_400_is_retried_and_traced(tmp_path):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(400, text=DNS_400)
+        return httpx.Response(200, json={"data": [["1"]]})
+
+    tracer = Tracer("z2", tmp_path, echo=False)
+    r = ZetarisClient(settings(), tracer, transport=httpx.MockTransport(handler)).named("q_ping", agent="Planner")
+    assert r.rows == [["1"]] and len(calls) == 2
+    (event,) = tracer.read()
+    assert event["retry_count"] == 1 and "retries=1" in event["output_summary"]
+
+
+def test_transient_400_gives_up_after_two_retries():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(400, text="PSQLException: The connection attempt failed.")
+
+    c = ZetarisClient(settings(), transport=httpx.MockTransport(handler))
+    with pytest.raises(ZetarisError, match="transient"):
+        c.named("q_ping", agent="Planner")
+    assert len(calls) == 3
+
+
+def test_bad_sql_400_is_not_retried():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(400, text="[UNRESOLVED_COLUMN] nope")
+
+    c = ZetarisClient(settings(), transport=httpx.MockTransport(handler))
+    with pytest.raises(ZetarisError):
+        c.named("q_ping", agent="Planner")
+    assert len(calls) == 1
