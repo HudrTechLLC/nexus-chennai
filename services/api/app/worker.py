@@ -73,7 +73,8 @@ class Worker:
         self.tracer = tracer or Tracer(new_run_id("worker"), settings.logs_dir)
         self.zetaris = zetaris or ZetarisClient(settings, self.tracer)
         self.nightshift = nightshift or NightshiftClient(settings, self.tracer)
-        self.run_case = run_case or (lambda cid: run_request("case", {"crime_id": cid}, {}, settings,
+        case_settings = settings.model_copy(update={"run_deadline_seconds": settings.case_run_deadline_seconds})
+        self.run_case = run_case or (lambda cid: run_request("case", {"crime_id": cid}, {}, case_settings,
                                                              store_factory=lambda s, t: SupabaseStore(sb, t)))
         self.deps = AgentDeps(tracer=self.tracer, zetaris=self.zetaris, nightshift=self.nightshift, engines=engines)
         self._dossier_failed: set[str] = set()

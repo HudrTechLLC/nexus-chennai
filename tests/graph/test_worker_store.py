@@ -276,3 +276,23 @@ def test_approval_also_notifies_analysts_and_supervisors(tmp_path, monkeypatch):
     assert all(n["link"] == "/console/alerts/LA-2" for n in approved)
     rejected = [n for n in notes if n["kind"] == "alert_decision"]
     assert sorted(n["user_id"] for n in rejected) == ["s1", "u1"]
+
+
+# ----- single-case deadline (chief, 2026-10-27) -----------------------------------------------------------------
+
+
+def test_worker_case_runs_get_the_longer_single_case_deadline(tmp_path, monkeypatch):
+    # run_3d845f76: a filed FIR needs Planner + Linker + an ~90 s Skeptic critique and a second round; 300 s was
+    # not enough. Worker (filing) case runs get case_run_deadline_seconds; /run and batches keep 300 s.
+    import app.worker as w
+
+    seen = []
+    monkeypatch.setattr(w, "run_request", lambda kind, payload, options, settings, **kw: seen.append(
+        (kind, payload["crime_id"], settings.run_deadline_seconds)))
+    s = Settings(_env_file=None)
+    assert s.case_run_deadline_seconds == 420 and s.run_deadline_seconds == 300
+    wk = Worker(s, object(), zetaris=FakeZetaris(default_handlers()), nightshift=FakeNightshift(lambda *a: "{}"),
+                tracer=Tracer("w", tmp_path, echo=False))
+    wk.run_case("CHN-VL-2026-001221")
+    assert seen == [("case", "CHN-VL-2026-001221", 420)]
+    assert s.run_deadline_seconds == 300  # the shared settings are not changed

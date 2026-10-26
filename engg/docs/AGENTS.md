@@ -56,7 +56,7 @@ Caps:
 
 - the Planner runs at most 3 rounds;
 - the Skeptic sends back at most 2 times (its `requery` days/ring override the model's);
-- the run deadline is `RUN_DEADLINE_SECONDS` (300). With under 45 s left, the model calls are skipped and the code results stand. Past the deadline, only Skeptic-approved pairs are written.
+- the run deadline is `RUN_DEADLINE_SECONDS` (300) for `/run` and batch runs, and `CASE_RUN_DEADLINE_SECONDS` (420) for the worker's per-case (filing) runs. With under 45 s left, the model calls are skipped and the code results stand. Past the deadline, Skeptic-approved pairs are written, and pairs the Skeptic sent back that no later round resolved are written as `needs_revision` (traced `deadline_partial_write`), never as approved.
 
 ## API (Part H)
 
