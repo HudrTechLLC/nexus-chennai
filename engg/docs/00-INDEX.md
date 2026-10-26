@@ -39,6 +39,10 @@ Entry point for every project document. **Start here, then read the note for you
 - [RULES_CHECK](hackathon/RULES_CHECK.md): our plan checked against the four official documents, with gaps and owners
 - [EVIDENCE](submission/EVIDENCE.md): every submission claim with the file, test or CI job that proves it (PENDING rows show what's still open)
 - [README_DRAFT](submission/README_DRAFT.md): draft of the public README
+- [SPONSOR_TECH_FINAL](submission/SPONSOR_TECH_FINAL.md): paste-ready sponsor technology text for the form
+- [FORM](submission/FORM.md): paste-ready HackOS form answers (description, links, pre-existing declaration)
+- [DECK](submission/DECK.md): slide-by-slide deck content, with the screenshot each slide needs
+- [VIDEO_SCRIPT](submission/VIDEO_SCRIPT.md): demo video script (Red Pulsar story) and ElevenLabs narration
 - [SPONSOR_TECH](SPONSOR_TECH.md): sponsor technology text for the form (draft, evidence-backed only)
 
 ## Diagrams
