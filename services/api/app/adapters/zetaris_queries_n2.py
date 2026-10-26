@@ -40,6 +40,35 @@ Q_HEX_COUNTS = dict(
     columns=_HEX_COLUMNS,
 )
 
+def slots(n: int) -> list[str]:
+    """Parameter names id01..idNN for an IN list of n fixed slots."""
+    return [f"id{i:02d}" for i in range(1, n + 1)]
+
+
+def slot_params(ids, n: int) -> list[dict[str, str]]:
+    """Parameter dicts for any number of ids: deduplicated, chunked by n, each chunk padded with '' (no id is '')."""
+    uniq = list(dict.fromkeys(str(i) for i in ids if i))
+    names = slots(n)
+    return [{slot: (chunk[k] if k < len(chunk) else "") for k, slot in enumerate(names)}
+            for chunk in (uniq[start:start + n] for start in range(0, len(uniq), n))]
+
+
+DQ_IDS_PER_CALL = 50
+DQ_IDS_MAX = 200  # more than this is not a plausible Planner request: refuse rather than run 5+ calls
+
+
+def dq_flags_params(params: dict) -> list[dict]:
+    """q_dq_flags live parameters: the comma-joined `ids` into :id01..:id50 slots, one dict per 50 ids. `ids`
+    stays in every dict, so the files-mode SQL (and nothing else) can still bind it."""
+    from .zetaris import ZetarisError
+
+    ids = [i.strip() for i in str(params.get("ids") or "").split(",") if i.strip()]
+    if len(dict.fromkeys(ids)) > DQ_IDS_MAX:
+        raise ZetarisError(f"q_dq_flags: {len(dict.fromkeys(ids))} ids is more than {DQ_IDS_MAX}")
+    batches = slot_params(ids, DQ_IDS_PER_CALL) or [{k: "" for k in slots(DQ_IDS_PER_CALL)}]
+    return [{**params, **b} for b in batches]
+
+
 # Data-quality flags (WS1-14) for a list of crimes. `ids` is a comma-joined string of crime ids
 # (render() binds scalars only). Zetaris reads the nexus.dq_flags view from zetaris/20_dq.sql;
 # the DuckDB twin applies the same rule text (adapters/dq_rules.py) inline.
@@ -50,10 +79,24 @@ def _dq_query() -> dict:
     bounds = dq_rules.city_bounds(load_city(get_settings().city))
     return dict(
         name="q_dq_flags",
+        # Live (0007_14): the snapshot app.dq_status writes after each full pass, filtered by a literal IN list that
+        # Spark JDBC pushes down to Postgres (the PK leads with crime_id). The rule views cannot take the id filter
+        # (sorted UNION + duplicate self-join, 55-80 s per call; PATH2 §3). computed_at is the extra last column
+        # the client strips into the trace (as_of_column). other_id '' means "none" and comes back NULL as before.
         lightning=(
-            "SELECT crime_id, rule, other_id, detail FROM nexus.dq_flags "
-            "WHERE array_contains(split(:ids, ','), crime_id) ORDER BY crime_id, rule"  # ORDER BY: D-031
+            "SELECT crime_id, rule, NULLIF(other_id, '') AS other_id, detail, "
+            "CAST(computed_at AS STRING) AS computed_at FROM sb.dq_flags_snapshot "
+            f"WHERE crime_id IN ({', '.join(':' + x for x in slots(DQ_IDS_PER_CALL))}) "
+            "ORDER BY crime_id, rule, other_id"  # ORDER BY: D-031; other_id is part of the key
         ),
+        # Files mode (WS1-19) has no snapshot table: it keeps reading the rule views, as before.
+        lightning_files=(
+            "SELECT crime_id, rule, other_id, detail FROM nexus.dq_flags "
+            "WHERE array_contains(split(:ids, ','), crime_id) ORDER BY crime_id, rule"
+        ),
+        expand=dq_flags_params,
+        as_of_column=True,
+        timeout_s=10.0,
         sample=(
             f"SELECT crime_id, rule, other_id, detail FROM ({dq_rules.flags_sql(dq_rules.DUCK, bounds)}) f "
             "WHERE list_contains(string_split(:ids, ','), crime_id)"
@@ -65,8 +108,27 @@ def _dq_query() -> dict:
 
 Q_DQ_FLAGS = _dq_query()
 
+
+def _dq_all_query() -> dict:
+    """Every crime-level flag, for the snapshot app.dq_status writes (0007_14). The full pass: 55-80 s live."""
+    from ..config import get_settings, load_city
+    from . import dq_rules
+
+    bounds = dq_rules.city_bounds(load_city(get_settings().city))
+    return dict(
+        name="q_dq_flags_all",
+        lightning="SELECT crime_id, rule, other_id, detail FROM nexus.dq_flags ORDER BY crime_id, rule, other_id",
+        sample=(f"SELECT crime_id, rule, other_id, detail FROM ({dq_rules.flags_sql(dq_rules.DUCK, bounds)}) f "
+                "ORDER BY crime_id, rule, other_id"),
+        description="All data-quality flags (the snapshot app.dq_status writes for live q_dq_flags)",
+        columns=dq_rules.COLUMNS, timeout_s=180.0,
+    )
+
+
+Q_DQ_FLAGS_ALL = _dq_all_query()
+
 # NamedQuery keyword arguments; adapters/zetaris.py builds the NamedQuery objects (no import cycle).
-N2_SPECS: dict[str, dict] = {q["name"]: q for q in (Q_HEX_COUNTS, Q_DQ_FLAGS)}
+N2_SPECS: dict[str, dict] = {q["name"]: q for q in (Q_HEX_COUNTS, Q_DQ_FLAGS, Q_DQ_FLAGS_ALL)}
 
 
 # ------------------------------------------------------------------------------------------------
@@ -452,12 +514,7 @@ _SLOTS = [f"id{i:02d}" for i in range(1, CASES_MAX + 1)]
 
 def cases_params(ids) -> list[dict[str, str]]:
     """q_cases parameter dicts for any number of ids (deduplicated, chunked by CASES_MAX)."""
-    uniq = list(dict.fromkeys(str(i) for i in ids if i))
-    out = []
-    for start in range(0, len(uniq), CASES_MAX):
-        chunk = uniq[start:start + CASES_MAX]
-        out.append({slot: (chunk[n] if n < len(chunk) else "") for n, slot in enumerate(_SLOTS)})
-    return out
+    return slot_params(ids, CASES_MAX)
 
 
 def _q_cases() -> dict:

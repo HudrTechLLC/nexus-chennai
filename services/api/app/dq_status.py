@@ -13,12 +13,18 @@ heartbeat rows:
 - detail: one key per rule with its row count, total, source, ms, and the Zetaris query id (the trace
   file of this run records the same id).
 
+After a live pass it also stores every crime-level flag (q_dq_flags_all) in public.dq_flags_snapshot through the
+service-role RPC replace_dq_flags_snapshot (one transaction; 0007_14). Live q_dq_flags reads that snapshot, because
+the rule views cannot take an id filter fast enough for the Planner. The 'zetaris:dq' row records snapshot_at and
+snapshot_rows. Nothing is written when Zetaris failed, only the sample twin answered, or the answer filled the row
+limit (possibly truncated, D-031): the last good snapshot stays.
+
 It also runs q_source_counts (WS3-27) and upserts component 'zetaris:sources': detail.counts holds the row
 count of every federated source, keyed by the console Data sources page's source ids, which the page shows
 "as of <checked_at>, via Zetaris". That row is written only when Zetaris itself answered: a failure or a
 sample-mode answer leaves the last good row (and its real checked_at) in place.
 
-    python -m app.dq_status [--only dq|sources]
+    python -m app.dq_status [--only dq|snapshot|sources]
 
 It is separate from the worker on purpose: the worker's pass is synchronous, and an 80 s query on every
 heartbeat would hold up new FIRs. Run it after a re-seed and before a demo.
@@ -31,10 +37,12 @@ from typing import Any
 
 from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient
+from .adapters.dq_rules import SEVERITY
 from .adapters.zetaris_queries_n1 import DQ_RULE_VIEWS
 from .config import Settings, get_settings
 from .tracing import IST, Tracer, new_run_id
 
+SNAPSHOT_LIMIT = 20000  # far above today's ~60 flags; an answer that fills it may be truncated (D-031)
 COMPONENT = "zetaris:dq"
 SOURCES_COMPONENT = "zetaris:sources"
 AGENT = "DQStatus"
@@ -98,8 +106,42 @@ def build_sources_row(zetaris: Any) -> tuple[dict[str, Any] | None, str]:
     return {"component": SOURCES_COMPONENT, "state": "live", "detail": detail, "checked_at": _now()}, "ok"
 
 
-def run(settings: Settings, sb: Any, zetaris: Any, tracer: Tracer) -> dict[str, Any]:
+def build_snapshot(zetaris: Any) -> tuple[list[dict[str, Any]] | None, str, str | None]:
+    """(rows for replace_dq_flags_snapshot, why, query id), or (None, why, id) when there is nothing true to write."""
+    try:
+        r = zetaris.named("q_dq_flags_all", agent=AGENT, limit=SNAPSHOT_LIMIT)
+    except Exception as exc:
+        return None, f"q_dq_flags_all failed: {str(exc)[:200]}", None
+    if r.source != "zetaris":
+        return None, f"answered by {r.source}, not Zetaris: snapshot not written", r.query_id
+    if len(r.rows) >= SNAPSHOT_LIMIT:
+        return None, f"{len(r.rows)} rows filled the limit (possibly truncated): snapshot not written", r.query_id
+    rows = [{"crime_id": c, "rule": rule, "other_id": other or "", "severity": SEVERITY.get(rule, "warn"),
+             "detail": detail or ""} for c, rule, other, detail in r.rows if rule in SEVERITY]
+    return rows, "ok", r.query_id
+
+
+def run_snapshot(sb: Any, zetaris: Any, tracer: Tracer) -> dict[str, Any]:
+    """Replace the live flags snapshot. Returns what to record on the 'zetaris:dq' row."""
+    rows, why, qid = build_snapshot(zetaris)
+    if rows is None:
+        tracer.emit(AGENT, "dq_snapshot", input_summary="dq_flags_snapshot", output_summary=why,
+                    zetaris_query_ids=[qid] if qid else [], status="error")
+        return {"snapshot_error": why}
+    at = _now()
+    n = sb.rpc("replace_dq_flags_snapshot", {"p_rows": rows, "p_computed_at": at})
+    tracer.emit(AGENT, "dq_snapshot", input_summary="dq_flags_snapshot", output_summary=f"rows={n} at={at}",
+                zetaris_query_ids=[qid] if qid else [], status="ok")
+    return {"snapshot_at": at, "snapshot_rows": n}
+
+
+def run(settings: Settings, sb: Any, zetaris: Any, tracer: Tracer, snapshot: bool = True) -> dict[str, Any]:
     row = build_row(zetaris, _previous(sb))
+    if snapshot and row["state"] == "live":
+        try:
+            row["detail"].update(run_snapshot(sb, zetaris, tracer))
+        except Exception as exc:  # the counts row is still worth writing
+            row["detail"]["snapshot_error"] = str(exc)[:200]
     sb.upsert("system_status", [row], on_conflict="component")
     tracer.emit(AGENT, "dq_status", input_summary=COMPONENT,
                 output_summary=f"state={row['state']} total={row['detail'].get('total')}",
@@ -123,7 +165,8 @@ def main(argv: list[str] | None = None) -> None:
     import argparse
 
     ap = argparse.ArgumentParser(prog="python -m app.dq_status", description=__doc__.splitlines()[0])
-    ap.add_argument("--only", choices=("dq", "sources"), help="run just one of the two (default: both)")
+    ap.add_argument("--only", choices=("dq", "snapshot", "sources"),
+                    help="dq = counts only; snapshot = counts + flags snapshot; sources = source counts (default: all)")
     args = ap.parse_args(argv)
     s = get_settings()
     sb = SupabaseClient(s)
@@ -135,8 +178,8 @@ def main(argv: list[str] | None = None) -> None:
     why = ""
     try:
         if args.only != "sources":
-            row = run(s, sb, z, tracer)
-        if args.only != "dq":
+            row = run(s, sb, z, tracer, snapshot=args.only != "dq")
+        if args.only not in ("dq", "snapshot"):
             src, why = run_sources(sb, z, tracer)
     finally:
         z.close()
@@ -145,8 +188,10 @@ def main(argv: list[str] | None = None) -> None:
         d = row["detail"]
         print(f"{COMPONENT}: {row['state']} total={d.get('total')} source={d.get('source')} ms={d.get('ms')}"
               + (f" not_measured={d['not_measured']}" if d.get("not_measured") else "")
+              + (f" snapshot_rows={d['snapshot_rows']} snapshot_at={d['snapshot_at']}" if "snapshot_at" in d else "")
+              + (f" snapshot_error={d['snapshot_error']}" if d.get("snapshot_error") else "")
               + (f" error={d['error']}" if d.get("error") else ""), flush=True)
-    if args.only != "dq":
+    if args.only not in ("dq", "snapshot"):
         if src is not None:
             d = src["detail"]
             print(f"{SOURCES_COMPONENT}: written {len(d['counts'])} sources ms={d['ms']}"

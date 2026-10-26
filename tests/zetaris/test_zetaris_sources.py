@@ -36,7 +36,9 @@ def test_files_mode_rewrites_every_named_query_off_sb_and_the_live_container():
 
 
 def test_every_sb_object_a_query_reads_has_a_file_table():
-    read = {t for q in NAMED_QUERIES.values() for t in re.findall(r"\bsb\.([a-z_]+)", q.lightning)}
+    # The SQL files mode actually runs: a query with its own lightning_files (q_dq_flags, 0007_14: the snapshot is
+    # Supabase-only) uses that instead.
+    read = {t for q in NAMED_QUERIES.values() for t in re.findall(r"\bsb\.([a-z_]+)", q.lightning_files or q.lightning)}
     assert read <= set(FILE_TABLES)
 
 

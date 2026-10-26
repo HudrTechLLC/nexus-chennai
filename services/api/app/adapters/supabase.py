@@ -97,6 +97,14 @@ class SupabaseClient:
             raise SupabaseError(f"update of {table} failed: HTTP {resp.status_code} {resp.text[:300]}")
         return resp.json()
 
+    def rpc(self, fn: str, args: dict[str, Any]) -> Any:
+        """Call a Postgres function through PostgREST (POST /rest/v1/rpc/<fn>) with the service role."""
+        self._require()
+        resp = self._client.post(f"/rest/v1/rpc/{fn}", json=args, headers=self._headers())
+        if resp.status_code >= 400:
+            raise SupabaseError(f"rpc {fn} failed: HTTP {resp.status_code} {resp.text[:300]}")
+        return resp.json() if resp.content else None
+
     def delete(self, table: str, match: dict[str, str]) -> list[dict[str, Any]]:
         """DELETE rows matching PostgREST filters. A filter is required (never deletes a whole table)."""
         self._require()

@@ -28,6 +28,8 @@ DUP_WINDOW_MIN = 30
 DUP_MAX_DEG = 0.0025
 STALE_CAMERA_DAYS = 180
 RULES = ("duplicate_fir", "bad_geo", "time_inconsistent", "unmapped_section")
+# Severity stored with each flag in the live snapshot (0007_14): a mapping gap is informational, the rest need a look.
+SEVERITY = {"duplicate_fir": "warn", "bad_geo": "warn", "time_inconsistent": "warn", "unmapped_section": "info"}
 COLUMNS = ("crime_id", "rule", "other_id", "detail")
 
 # Live source for the crime-level rules: the unified crime view (nexus-1's 10_views.sql, live), so legacy rows

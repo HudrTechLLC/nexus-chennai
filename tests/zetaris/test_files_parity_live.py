@@ -31,7 +31,9 @@ pytestmark = pytest.mark.skipif(os.environ.get("NEXUS_LIVE") != "1" or not KEY.i
 JUDGE = ["CHN-AD-2026-001182", "CHN-KU-2025-000078", "CHN-GU-2025-000945"]
 HERO_PAIR = "CHN-VL-2026-000877"
 # Queries without an ORDER BY or with an unsorted collect_list: compare as sorted rows with sorted id lists.
-UNORDERED = {"q_hex_counts"}
+# q_dq_flags: live reads the 0007_14 snapshot (ordered by crime_id, rule, other_id), files still read the rule views
+# (crime_id, rule); the rows match as a set when the snapshot is fresh (run app.dq_status first).
+UNORDERED = {"q_hex_counts", "q_dq_flags"}
 SINCE, UNTIL = "2026-09-25", "2026-10-26"
 
 
