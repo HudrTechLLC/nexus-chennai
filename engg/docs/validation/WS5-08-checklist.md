@@ -4,7 +4,7 @@ tags: [nexus, testcases]
 
 # WS5-08 · Final fresh-clone validation (L3): checklist
 
-This is the step-by-step run for **Tue 27 Oct, morning**, before the 14:00 IST freeze (moved from 12:00 on 27 Oct). It covers every item in the Disqualification Checklist ([RULES_CHECK](../hackathon/RULES_CHECK.md)) and SPEC [L3](../SPEC.md#deliverables). Each step gives the exact command and the result that counts as **PASS**. Write the results to `engg/docs/validation/WS5-08-2026-10-27.md` (one line per step: PASS/FAIL + evidence) and add a row to [validation/README](README.md).
+This is the step-by-step run for **Tue 27 Oct, morning**, before the freeze: on-camera UI at 14:00 IST, hard freeze for evidence and docs at 19:00 IST (split by Ravee on 27 Oct). It covers every item in the Disqualification Checklist ([RULES_CHECK](../hackathon/RULES_CHECK.md)) and SPEC [L3](../SPEC.md#deliverables). Each step gives the exact command and the result that counts as **PASS**. Write the results to `engg/docs/validation/WS5-08-2026-10-27.md` (one line per step: PASS/FAIL + evidence) and add a row to [validation/README](README.md).
 Related: [README](README.md) · [Results](WS5-08-2026-10-27.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md) · [EVIDENCE](../submission/EVIDENCE.md) · [00-INDEX](../00-INDEX.md)
 
 **Conventions**
@@ -160,6 +160,8 @@ EOF
 | 10.4 | Compare the video narration with [VIDEO_SCRIPT](../submission/VIDEO_SCRIPT.md)'s "facts to re-check" table | Every spoken number matches the screen |
 | 10.5 | `grep -rn 'PENDING:' engg/docs/submission/` | Only items the team chose to leave; none pasted into the form |
 | 10.6 | Demo console logins (the 5 `@nexus.demo` accounts) | Before submission, decide with Ravee whether to rotate the demo passwords to stronger ones for judges. Credentials go only in the submission form, never in the repo |
+| 10.7 | Before submitting: `python -m app.dq_status --only snapshot` (about 90 s; reads Zetaris only and replaces the live DQ flags snapshot, so FIRs filed since the last pass get their flags; nexus-2) | Exit 0; `zetaris:dq` shows a fresh `snapshot_at` |
+| 10.8 | `git diff --stat 6e93aab <hard-freeze sha>` | Only docs changed. If code, fixtures or `output_examples` changed, re-run sections 3, 4 and 6.3 |
 
 ## Result
 
