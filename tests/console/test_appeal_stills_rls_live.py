@@ -155,13 +155,11 @@ def test_images_guard(cur):
     assert _images(cur, u["appeal"], [])                                                            # detach all
 
 
-def test_other_station_cannot_edit_images_and_anon_sees_nothing(cur):
+def test_other_station_cannot_edit_images_and_buckets_are_right(cur):
     u = _seed(cur)
     _as(cur, u["officerB"])
     cur.execute("update public.public_incidents set images = '[]'::jsonb where public_incident_id = %s", (u["appeal"],))
     assert cur.rowcount == 0
-    _as(cur, None)
-    assert _refused(cur, "select count(*) from storage.objects where bucket_id = 'appeal-public'") or True
     cur.execute("reset role")
     cur.execute("select public from storage.buckets where id = 'appeal-public'")
     assert cur.fetchone()[0] is True

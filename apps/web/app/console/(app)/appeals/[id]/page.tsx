@@ -5,6 +5,7 @@ import { consoleServerClient } from "@/lib/supabase/server";
 import { STATUS_LABEL, type Appeal } from "@/lib/appeals";
 import { canWriteCase } from "@/lib/cases";
 import { AppealEditor } from "@/components/console/appeals/AppealForms";
+import { StillsPanel } from "@/components/console/appeals/StillsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export default async function AppealPage({ params }: { params: { id: string } })
           </div>
         </section>
       </div>
+      <StillsPanel appealId={a.public_incident_id} crimeId={a.crime_id} images={(data as { images?: unknown }).images} status={a.status} canWrite={canWrite} />
     </div>
   );
 }
