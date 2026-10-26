@@ -98,6 +98,20 @@ def test_more_than_fifty_ids_run_as_several_calls_merged_in_order():
     assert len(sent) == 3 and [row[0] for row in r.rows] == sorted(row[0] for row in r.rows)
 
 
+def test_batched_calls_cite_every_query_id_and_respect_the_limit(tmp_path):
+    def answer(sql: str) -> httpx.Response:
+        first = re.search(r"IN \('([^']+)'", sql).group(1)
+        return httpx.Response(200, json={"data": [[first, "bad_geo", None, "x", "t"], [first, "time_inconsistent", None, "y", "t"]]})
+
+    c, sent = _client(answer)
+    c.tracer = Tracer("b", tmp_path, echo=False)
+    r = c.named("q_dq_flags", agent="Planner", limit=5, ids=",".join(f"C{i:03d}" for i in range(120)))
+    assert len(sent) == 3 and len(r.rows) == 5  # 6 merged rows, sliced to the caller's limit
+    ev = [json.loads(line) for line in (tmp_path / "trace-b.jsonl").read_text(encoding="utf-8").splitlines()]
+    q = [e for e in ev if e["action"] == "zetaris_query"][-1]
+    assert len(set(q["zetaris_query_ids"])) == 3 and q["zetaris_query_ids"][-1] == r.query_id
+
+
 def test_files_mode_keeps_the_rule_views_with_its_suffix(monkeypatch):
     monkeypatch.setenv("ZETARIS_FILES_SUFFIX", "2")
     c, sent = _client(lambda sql: httpx.Response(200, json={"data": [["C1", "bad_geo", None, "x"]]}), zetaris_data="files")
@@ -162,6 +176,13 @@ def test_live_pass_becomes_snapshot_rows_with_severity():
     ]
 
 
+def test_a_repeated_flag_is_written_once():
+    z = FakeZ(QueryResult(name="q_dq_flags_all", query_id="all-2", ms=1, source="zetaris",
+                          rows=[["C1", "bad_geo", None, "x"], ["C1", "bad_geo", None, "x again"], ["C1", "bad_geo", "", "y"]]))
+    rows, why, _ = build_snapshot(z)
+    assert why == "ok" and rows == [{"crime_id": "C1", "rule": "bad_geo", "other_id": "", "severity": "warn", "detail": "x"}]
+
+
 @pytest.mark.parametrize("z", [FakeZ(_all("sample")), FakeZ(_all(n=SNAPSHOT_LIMIT)), FakeZ(exc=RuntimeError("down"))])
 def test_sample_truncated_or_failed_passes_write_nothing(z, tmp_path):
     sb = FakeSb()
@@ -191,6 +212,7 @@ def test_migration_locks_the_table_down():
     assert "revoke execute on function public.replace_dq_flags_snapshot(jsonb, timestamptz) from public, anon, authenticated" in sql
     assert "grant execute on function public.replace_dq_flags_snapshot(jsonb, timestamptz) to service_role" in sql
     assert "-- rollback:" in sql
+    assert "on conflict (crime_id, rule, other_id) do nothing" in sql  # a repeated flag cannot void the snapshot
     assert not re.search(r"grant (insert|update|delete|all)[^;]*zetaris_reader", sql)
 
 

@@ -12,7 +12,7 @@
 --     for '' so its output is unchanged). The PK leads with crime_id, so it is also the index the IN filter uses.
 --   * detail is text, not jsonb: it is plain text today, and a plain text column maps over Spark JDBC without a
 --     datasource view.
--- Access: RLS on. Only zetaris_reader may read (column grant + SELECT policy; it has no BYPASSRLS). No anon or
+-- Access: RLS on. Only zetaris_reader may read (table grant + SELECT policy; it has no BYPASSRLS). No anon or
 -- authenticated access. Only the service role writes, through replace_dq_flags_snapshot(), which swaps every row in
 -- one transaction (PostgREST cannot run a multi-statement transaction).
 
@@ -47,7 +47,8 @@ begin
   delete from public.dq_flags_snapshot where true;
   insert into public.dq_flags_snapshot (crime_id, rule, other_id, severity, detail, computed_at)
   select r ->> 'crime_id', r ->> 'rule', coalesce(r ->> 'other_id', ''), r ->> 'severity', r ->> 'detail', p_computed_at
-  from jsonb_array_elements(p_rows) r;
+  from jsonb_array_elements(p_rows) r
+  on conflict (crime_id, rule, other_id) do nothing;  -- a repeated flag must not void the whole snapshot
   get diagnostics v_n = row_count;
   return v_n;
 end;

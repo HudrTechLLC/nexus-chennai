@@ -116,9 +116,13 @@ def build_snapshot(zetaris: Any) -> tuple[list[dict[str, Any]] | None, str, str 
         return None, f"answered by {r.source}, not Zetaris: snapshot not written", r.query_id
     if len(r.rows) >= SNAPSHOT_LIMIT:
         return None, f"{len(r.rows)} rows filled the limit (possibly truncated): snapshot not written", r.query_id
-    rows = [{"crime_id": c, "rule": rule, "other_id": other or "", "severity": SEVERITY.get(rule, "warn"),
-             "detail": detail or ""} for c, rule, other, detail in r.rows if rule in SEVERITY]
-    return rows, "ok", r.query_id
+    rows: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for c, rule, other, detail in r.rows:
+        key = (c, rule, other or "")
+        if rule in SEVERITY and key not in rows:  # one row per primary key; a repeated flag is kept once
+            rows[key] = {"crime_id": c, "rule": rule, "other_id": key[2], "severity": SEVERITY[rule],
+                         "detail": detail or ""}
+    return list(rows.values()), "ok", r.query_id
 
 
 def run_snapshot(sb: Any, zetaris: Any, tracer: Tracer) -> dict[str, Any]:

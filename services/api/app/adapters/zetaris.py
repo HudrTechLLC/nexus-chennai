@@ -240,6 +240,7 @@ class ZetarisClient:
         caps = [t for t in (q.timeout_s, timeout_s) if t is not None]
         fast = min(caps) if caps else None
         query_id = str(uuid.uuid4())
+        earlier: list[str] = []  # query ids of earlier batches (expand), cited in the trace with the last one
         started = time.perf_counter()
         source = "zetaris"
         if fast is not None and self._tripped.get(name, 0.0) > time.monotonic():
@@ -255,6 +256,7 @@ class ZetarisClient:
             rows = []
             for n, batch in enumerate(batches):
                 if n:
+                    earlier.append(query_id)
                     query_id = str(uuid.uuid4())
                 sql = render(template, batch)
                 if fast is not None:
@@ -267,6 +269,7 @@ class ZetarisClient:
                         query_id = used
             if len(batches) > 1:  # each batch is ordered; keep the merged answer in one order too (D-031)
                 rows.sort(key=lambda r: tuple("" if v is None else str(v) for v in r))
+                rows = rows[:limit] if limit else rows
             if q.as_of_column and not files_sql:
                 stamps = [str(r[-1]) for r in rows if r and r[-1] is not None]
                 rows = [r[:-1] for r in rows]
@@ -289,7 +292,7 @@ class ZetarisClient:
             msg = f"'{name}' returned {len(bad)} columns via {source}, declared {len(q.columns)}"
             self._trace(agent, name, query_id, len(rows), ms, "error", msg)
             raise ZetarisError(msg)
-        self._trace(agent, name, query_id, len(rows), ms, "ok", source)
+        self._trace(agent, name, query_id, len(rows), ms, "ok", source, earlier)
         source = source.split(" ", 1)[0]  # the as_of note is for the trace; results say "zetaris" or "sample"
         if limit and len(rows) >= limit and self.tracer is not None:
             # D-031: Zetaris pushes the REST limit into the JDBC scan before filters it cannot push
@@ -299,7 +302,7 @@ class ZetarisClient:
                              zetaris_query_ids=[query_id], status="error")
         return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source, columns=q.columns)
 
-    def _trace(self, agent, name, query_id, rows, ms, status, note) -> None:
+    def _trace(self, agent, name, query_id, rows, ms, status, note, earlier: list[str] | None = None) -> None:
         retries = self._retries.pop(query_id, 0)
         if self.tracer is None:
             return
@@ -308,7 +311,7 @@ class ZetarisClient:
             "zetaris_query",
             input_summary=name,
             output_summary=f"rows={rows} ms={ms} via={note}" + (f" retries={retries}" if retries else ""),
-            zetaris_query_ids=[query_id],
+            zetaris_query_ids=[*(earlier or []), query_id],
             status=status,
             retry_count=retries,
         )

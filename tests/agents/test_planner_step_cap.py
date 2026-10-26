@@ -10,11 +10,15 @@ nothing to score.
 import httpx
 import pytest
 
-from app.adapters.zetaris import ZetarisClient
+from app.adapters.zetaris import NAMED_QUERIES, ZetarisClient
 from app.agents import AgentDeps, MemoryStore
 from app.agents.planner import STEP_TIMEOUT_S, Plan, Planner, PlanStep
 from app.config import Settings
 from app.tracing import Tracer
+
+
+# Live q_dq_flags reads the snapshot since 0007_14 (the files-mode SQL still reads nexus.dq_flags).
+DQ = "dq_flags"
 
 
 class SlowDq:
@@ -26,7 +30,7 @@ class SlowDq:
     def __call__(self, request: httpx.Request) -> httpx.Response:
         sql = request.read().decode()
         self.calls.append((sql, request.extensions.get("timeout", {})))
-        if "nexus.dq_flags" in sql:
+        if DQ in sql:
             raise httpx.ReadTimeout("Zetaris busy", request=request)
         return httpx.Response(200, json={"data": []})
 
@@ -58,7 +62,8 @@ def test_a_hanging_optional_step_gives_up_once_is_traced_degraded_and_the_rest_r
     fake, planner, tracer = run
     out = planner.execute(plan())
     assert "q_dq_flags" not in out and {"q_candidates", "q_context"} <= set(out)
-    assert fake.timeouts("nexus.dq_flags") == [STEP_TIMEOUT_S]  # one attempt, capped: no 60 s x 3
+    # one attempt, capped by the shorter of the Planner's budget and the query's own fail-fast: no 60 s x 3
+    assert fake.timeouts(DQ) == [min(STEP_TIMEOUT_S, NAMED_QUERIES["q_dq_flags"].timeout_s or STEP_TIMEOUT_S)]
     ev = [e for e in tracer.read() if e["action"] in ("step_degraded", "step_failed")]
     assert [(e["action"], e["input_summary"], e["status"]) for e in ev] == [("step_degraded", "q_dq_flags", "degraded")]
     assert "run continues" in ev[0]["output_summary"]
@@ -68,14 +73,14 @@ def test_the_next_round_skips_it_without_calling_zetaris(run):
     fake, planner, tracer = run
     planner.execute(plan(1))
     planner.execute(plan(2))
-    assert len(fake.timeouts("nexus.dq_flags")) == 1
+    assert len(fake.timeouts(DQ)) == 1
     assert [e["status"] for e in tracer.read() if e["action"] == "step_degraded"] == ["degraded", "degraded"]
 
 
 def test_q_candidates_is_not_capped(run):
     fake, planner, _ = run
     planner.execute(plan())
-    cand = [t for sql, t in fake.calls if "nexus.dq_flags" not in sql][0]
+    cand = [t for sql, t in fake.calls if DQ not in sql][0]
     assert cand.get("read") != STEP_TIMEOUT_S  # the client's normal timeout, with retries
 
 
