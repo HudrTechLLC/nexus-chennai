@@ -129,9 +129,6 @@ def default_handlers() -> dict[str, Callable[[dict[str, Any]], list[dict[str, An
         c = CRIMES.get(p["crime_id"])
         return [as_row(c)] if c else []
 
-    def q_cases(p):  # id01..id25 slots, "" = unused (zetaris_queries_n2.cases_params)
-        return [as_row(CRIMES[v]) for _, v in sorted(p.items()) if v in CRIMES]
-
     def q_features(p):
         ids = str(p["ids"]).split(",")
         return [as_row(FEATURES[i]) for i in ids if i in FEATURES]
@@ -146,8 +143,7 @@ def default_handlers() -> dict[str, Callable[[dict[str, Any]], list[dict[str, An
         return [{"read_id": "ANPR-1", "plate_text": "TN09BX4471", "crime_id": ADYAR["crime_id"]},
                 {"read_id": "ANPR-2", "plate_text": "TN09BX4471", "crime_id": VELACHERY["crime_id"]}]
 
-    return {"q_case": q_case, "q_cases": q_cases, "q_features": q_features, "q_candidates": q_candidates,
-            "q_vehicle_trail": trail,
+    return {"q_case": q_case, "q_features": q_features, "q_candidates": q_candidates, "q_vehicle_trail": trail,
             "q_offender_return": empty, "q_tip_corroboration": empty, "q_calls_near": empty, "q_news": empty,
             "q_context": empty, "q_dq_flags": empty, "q_hex_counts": empty}
 
