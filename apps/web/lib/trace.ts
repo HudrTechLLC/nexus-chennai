@@ -161,3 +161,16 @@ export function stateTone(state: string): "good" | "warn" | "bad" | "muted" {
 export function isRunId(v: string): boolean {
   return /^[A-Za-z0-9_-]{1,80}$/.test(v);
 }
+
+/**
+ * Pill tone for a run status. "interrupted" (a run stopped mid-way, 0006_04) is amber, not red:
+ * it is not a failure of the pipeline.
+ */
+export function runTone(status: string | null | undefined): "good" | "warn" | "bad" | "muted" {
+  switch ((status ?? "").toLowerCase()) {
+    case "success": return "good";
+    case "running": return "muted";
+    case "interrupted": return "warn";
+    default: return "bad";
+  }
+}

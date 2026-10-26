@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import {
+  runTone,
   isRunId,
   KIND_LABEL,
   querySource,
@@ -13,6 +14,13 @@ import {
   type StepKind,
   type TraceRow,
 } from "@/lib/trace";
+
+const RUN_TONE = {
+  good: "border-signal text-signal",
+  warn: "border-accent text-accent",
+  bad: "border-red-500 text-red-600",
+  muted: "border-line text-muted",
+} as const;
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +61,7 @@ export default async function TracePage({ params }: { params: { runId: string } 
         <Link href="/console/system" className="text-sm text-muted hover:text-ink">← System</Link>
         <h1 className="mt-1 text-2xl font-bold">Run <span className="font-mono">{runId}</span></h1>
         <p className="text-sm text-muted">
-          {r ? `${r.kind} · ${r.status}` : "run row not found"}
+          {r ? <>{r.kind} · <span className={`rounded-full border px-2 py-0.5 text-xs ${RUN_TONE[runTone(r.status)]}`}>{r.status}</span></> : "run row not found"}
           {r?.log_path ? <> · trace file <span className="font-mono text-xs">{r.log_path}</span></> : null}
           {s.seconds !== null ? ` · ${s.seconds}s` : ""}
         </p>

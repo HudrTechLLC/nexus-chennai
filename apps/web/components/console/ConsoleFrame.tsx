@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { navFor, ROLE_LABEL } from "@/lib/roles";
 import type { Officer } from "@/lib/auth";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 /** Police console frame: role-gated nav, who is signed in, sign out. */
-export function ConsoleFrame({ officer, children }: { officer: Officer; children: ReactNode }) {
+export function ConsoleFrame({ officer, unread = 0, children }: { officer: Officer; unread?: number; children: ReactNode }) {
   const links = navFor(officer.role).map((n) => (
     <Link key={n.href} href={n.href} className="hover:text-ink">
       {n.label}
@@ -34,8 +35,10 @@ export function ConsoleFrame({ officer, children }: { officer: Officer; children
             {links}
           </nav>
           <div className="hidden md:flex">{who}</div>
+          {/* the bell is mounted once (one Realtime channel), outside both copies of the nav */}
+          <div className="ml-auto md:ml-0"><NotificationBell userId={officer.userId} initial={unread} /></div>
           {/* phones: one-line bar, everything else behind a native disclosure (no client JS) */}
-          <details className="group ml-auto md:hidden">
+          <details className="group md:hidden">
             <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-line px-3 py-1.5 text-sm [&::-webkit-details-marker]:hidden">
               <span aria-hidden>☰</span> Menu
             </summary>

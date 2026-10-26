@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
-import { stateTone, type RunRow, type StatusRow } from "@/lib/trace";
+import { runTone, stateTone, type RunRow, type StatusRow } from "@/lib/trace";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export default async function SystemPage() {
                   <td>{r.kind}</td>
                   <td className="text-xs">{when(r.started)}</td>
                   <td className="text-xs">{when(r.finished)}</td>
-                  <td><span className={`rounded-full border px-2 py-0.5 text-xs ${TONE[r.status === "success" ? "good" : r.status === "running" ? "muted" : "bad"]}`}>{r.status}</span></td>
+                  <td><span className={`rounded-full border px-2 py-0.5 text-xs ${TONE[runTone(r.status)]}`}>{r.status}</span></td>
                 </tr>
               ))}
             </tbody>
