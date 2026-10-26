@@ -12,5 +12,5 @@ services:
   worker:
     build: { context: ., dockerfile: services/api/Dockerfile }
     env_file: [{ path: .env, required: false }]
-    command: ["python", "-c", "print('worker arrives in P3')"]
+    command: ["python", "-m", "app.worker"]
     profiles: ["worker"]

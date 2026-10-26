@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T12:01:03+05:30",
+  "updated": "2026-10-26T12:17:06+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -80,15 +80,16 @@
           "id": "WS1-07",
           "phase": "P1",
           "title": "Chennai reference data: stations, wards, POIs, IPC-BNS map, calendar",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "nexus-1: reference data"
+          "note": "nexus-1: reference data",
+          "ref": "#21"
         },
         {
           "id": "WS1-08",
           "phase": "P1",
           "title": "Seeded generator: 14k FIRs, 70 stations, 30 planted series, decoys, duplicates, vehicle chains, offender returns",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-1"
         },
         {
@@ -131,7 +132,7 @@
           "phase": "P2",
           "title": "Data-quality views: duplicate FIRs, bad geo, unmapped sections",
           "status": "todo",
-          "owner": "nexus-1"
+          "owner": "nexus-2"
         },
         {
           "id": "WS1-15",
@@ -145,7 +146,7 @@
           "phase": "P9",
           "title": "News and social REST feeds in Zetaris",
           "status": "todo",
-          "owner": "nexus-1"
+          "owner": "nexus-2"
         },
         {
           "id": "WS1-17",
@@ -232,16 +233,18 @@
           "id": "WS2-08",
           "phase": "P3",
           "title": "Scout Intent + Tip Guard + fixtures",
-          "status": "in_progress",
+          "status": "done",
           "note": "first classifier in; 120 fixtures pending",
-          "owner": "nexus-2"
+          "owner": "nexus-2",
+          "ref": "#22"
         },
         {
           "id": "WS2-09",
           "phase": "P4",
           "title": "LangGraph graph: router, Planner loop, Skeptic loop, human gate",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "done",
+          "owner": "nexus-3",
+          "ref": "#27"
         },
         {
           "id": "WS2-10",
@@ -281,7 +284,7 @@
           "id": "WS2-14",
           "phase": "P4",
           "title": "Evaluation vs rules-only baseline (eval_report.json)",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-3"
         },
         {
@@ -297,8 +300,10 @@
           "id": "WS2-16",
           "phase": "P6",
           "title": "Judge path: real /run, 3 input examples, real outputs, sample mode end to end",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "in_progress",
+          "owner": "nexus-3",
+          "note": "/run real; judge inputs CHN-AD-2026-001182, CHN-KU-2025-000078, CHN-GU-2025-000945; waits on sample bundle (WS1-11)",
+          "ref": "#27"
         },
         {
           "id": "WS2-17",
@@ -314,7 +319,7 @@
           "phase": "P4",
           "title": "Hotspot detector (statistical, no model)",
           "status": "todo",
-          "owner": "nexus-3"
+          "owner": "nexus-2"
         },
         {
           "id": "WS2-19",
