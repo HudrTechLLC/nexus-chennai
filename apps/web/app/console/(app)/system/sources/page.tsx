@@ -9,7 +9,7 @@ import { dqCounts, isMissingTable, type DqFinding } from "@/lib/onboarding";
 export const dynamic = "force-dynamic";
 
 const when = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "—";
+  iso ? new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
 const fmt = (n: number) => n.toLocaleString("en-IN");
 
 /**
@@ -85,14 +85,15 @@ export default async function DataSourcesPage() {
       )}
 
       {SOURCE_TYPES.map((type) => (
-        <section key={type} className="rounded-xl border border-line bg-surface p-5">
+        // a section heading over a grid of source cards (no card inside a card)
+        <section key={type} className="pt-2">
           <h2 className="mb-3 font-semibold">{type}</h2>
           <ul className="grid gap-3 lg:grid-cols-2">
             {DATA_SOURCES.filter((s) => s.type === type).map((s) => {
               const num = sourceNumber(s, zCounts, zSources?.checked_at ?? null, mirrorCounts);
               const flags = Object.entries(dqFor(s, dq));
               return (
-                <li key={s.id} className="rounded-lg border border-line p-3">
+                <li key={s.id} className="rounded-xl border border-line bg-surface p-4 shadow-[0_1px_2px_rgb(19_33_48/0.06)]">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-medium">{s.label}</div>

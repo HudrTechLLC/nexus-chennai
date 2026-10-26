@@ -179,3 +179,10 @@ export function failureOutcome(steps: AlertStep[], i: number): "retried" | "reco
   if (later.some((y) => y.agent === x.agent && y.action !== "step_failed" && y.status !== "error")) return "retried";
   return later.length ? "recovered" : "fatal";
 }
+
+/** MO tags present in every one of the linked crimes (two cards on a pair alert); empty when fewer than two have tags. */
+export function sharedTags(tagLists: string[][]): Set<string> {
+  const lists = tagLists.filter((l) => l.length > 0);
+  if (lists.length < 2) return new Set();
+  return new Set(lists[0].filter((t) => lists.every((l) => l.includes(t))));
+}
