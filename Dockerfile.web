@@ -1,0 +1,28 @@
+# Web app (public portal + police console) for the local stack: `docker compose up` serves it on :3001.
+# Production runs on Vercel (DECISIONS D-003); this image is the same Next.js app for a fresh-clone run.
+# Build context is the repo root: the prebuild step reads engg/docs (sync-docs) and cities/ (sync-city).
+# Only PUBLIC values are build args (Next inlines NEXT_PUBLIC_* at build time). Never pass a secret as an ARG.
+FROM node:20-alpine AS build
+WORKDIR /repo/apps/web
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY engg/docs /repo/engg/docs
+COPY cities /repo/cities
+COPY apps/web ./
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+ARG NEXT_PUBLIC_MAPTILER_KEY=""
+ARG CITY=chennai
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
+    NEXT_PUBLIC_MAPTILER_KEY=$NEXT_PUBLIC_MAPTILER_KEY \
+    CITY=$CITY \
+    NEXT_TELEMETRY_DISABLED=1
+RUN npm run build && npm prune --omit=dev
+
+FROM node:20-alpine
+WORKDIR /repo/apps/web
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=build /repo/apps/web ./
+EXPOSE 3001
+CMD ["npx", "next", "start", "-p", "3001", "-H", "0.0.0.0"]

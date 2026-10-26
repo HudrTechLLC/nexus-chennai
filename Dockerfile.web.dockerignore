@@ -1,0 +1,15 @@
+# Used by BuildKit for Dockerfile.web only (the judge image has its own explicit COPY list).
+**/node_modules
+**/.next
+apps/web/content
+apps/web/public/engg-docs
+apps/web/lib/city.generated.json
+**/.env
+**/.env.*
+!.env.example
+.secrets
+**/.secrets
+logs
+.git
+**/__pycache__
+.venv
