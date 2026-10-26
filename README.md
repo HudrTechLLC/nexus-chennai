@@ -212,7 +212,7 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 
 ## Limitations
 
-- **Synthetic data.** All data is generated for this hackathon. Any quality number is measured on planted structure, not on real police data.
+- **Synthetic data.** All crime, person, vehicle, call, tip, statement, evidence, news and social data is generated for this hackathon. Any quality number is measured on planted structure, not on real police data. The only real data is public reference data: map places, ward boundaries, the station list and weather (see [data/README.md](data/README.md)).
 - **Audio statements and evidence photos are not read by a model yet.** The Extractor has both paths wired: an audio lane would transcribe recordings, and the vision lane (Nemotron Super VL, pinned by default) would tag what a photo shows.
   - No audio model is pinned on our Nightshift, so audio statements use the transcript recorded with them.
   - The Nightshift build we run (1.2.7) refuses every image request (`no_vision_model`, reported to Meterless), so photos get no new vision tags. They keep the officer's caption and any tags already on record.
@@ -235,7 +235,7 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 - **Tips are untrusted.** Tip Guard screens every tip and fails closed. Agents read only the redacted text of tips that passed. Zetaris sees tips only through a view of safe columns.
 - **Public privacy.** The public map uses fuzzed hex cells with a minimum-count cutoff. Tip photos have their EXIF metadata stripped.
 - **Protected attributes** (religion, caste, community) are never used for scoring or written into public text.
-- **Synthetic data only.** No real personal data is used anywhere.
+- **No real personal or crime data.** Every person, case and tip is synthetic. The real data used is public reference data only: map places, ward boundaries, station names and weather.
 
 ## Live app
 
@@ -259,12 +259,14 @@ Demo police accounts (station officer, analyst, supervisor) are provided to judg
 ## Third-party code and pre-existing work
 
 - **Meterless engines.** The World Model, H-MEM and Markovian TypeScript reference implementations and their conformance suites are vendored unmodified from github.com/Meterless/Meterless @ `1742dec56a66e58eef9dda2d2b865823758ca8cd` (Apache-2.0) in `engines-ts/` (see `engines-ts/NOTICE`). Scout Intent is implemented by Nexus from the Meterless Scout spec. The Python sample backends in `services/api/app/engines/*/core.py` are Nexus ports of the reference algorithms.
-- **Pre-existing components:** only the vendored Meterless engines above. The repository and the product spec were written inside the build window (spec 23–26 Oct 2026). All data is synthetic and was generated during the window.
+- **Pre-existing components:** only the vendored Meterless engines above. The repository and the product spec were written inside the build window (spec 23–26 Oct 2026). All crime, person, case and tip data is synthetic and was generated during the window; real public reference data (OpenStreetMap places, DataMeet ward boundaries, the public police-station list and live Open-Meteo weather) is listed with its licence in [data/README.md](data/README.md).
 - **Open-source libraries:** FastAPI, Uvicorn, Pydantic, httpx, tenacity, DuckDB, PyYAML, h3 and LangGraph (Python); Next.js, React, Supabase JS, MapLibre GL, deck.gl and h3-js (web). Licences: see [Licences](#licences).
 
 ## Licences
 
 Versions are pinned in `services/api/requirements*.txt` and `apps/web/package.json`. Licences are read from each package's own metadata.
+
+**Data:** data sources, counts and licences: [data/README.md](data/README.md). Attribution: Map data © OpenStreetMap contributors (ODbL). Ward boundaries © DataMeet / Transparent Chennai (CC BY-SA 2.5 IN). Weather data by Open-Meteo.com (CC BY 4.0).
 
 **Vendored code:** Meterless World Model, H-MEM and Markovian reference engines and conformance suites, vendored unmodified @ `1742dec5` (Apache-2.0); see `engines-ts/NOTICE` and `engines-ts/LICENSE`.
 

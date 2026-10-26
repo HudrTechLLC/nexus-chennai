@@ -84,7 +84,7 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 1. **Meterless reference engines and conformance suites.** The World Model, H-MEM and Markovian TypeScript reference implementations and their conformance suites are vendored unmodified from github.com/Meterless/Meterless @ `1742dec56a66e58eef9dda2d2b865823758ca8cd` (Apache-2.0), in `engines-ts/` (see `engines-ts/NOTICE`). Scout Intent is implemented by Nexus from the Meterless Scout spec. The Python backends in `services/api/app/engines/*/core.py` are Nexus ports of the reference algorithms, written during the build window.
 2. **Open-source libraries** used as dependencies: FastAPI, LangGraph, DuckDB, Next.js, MapLibre GL, deck.gl and others, listed in the README.
-3. **Nothing else is pre-existing.** The repository, code and product specification were all written inside the build window; the spec was started on 23 Oct and completed on 26 Oct 2026. All data is synthetic, generated during the window and labelled `synthetic: true`. No real crime or personal data is used.
+3. **Nothing else is pre-existing.** The repository, code and product specification were all written inside the build window; the spec was started on 23 Oct and completed on 26 Oct 2026. All crime, person, case and tip data is synthetic, generated during the window and labelled `synthetic: true`. No real crime or personal data is used. The only real data is third-party public reference data, listed with its licence in `data/README.md`: OpenStreetMap places (ODbL), DataMeet ward boundaries (CC BY-SA 2.5 IN), the public police-station list, and live Open-Meteo weather (CC BY 4.0).
 
 ## AI usage
 
