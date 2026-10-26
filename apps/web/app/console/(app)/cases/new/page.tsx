@@ -14,6 +14,12 @@ export default async function NewFirPage() {
     officer.role === "admin" ? stationOptions(sb) : Promise.resolve([]),
   ]);
   const own = officer.stationId ? (await stationOptions(sb)).find((s) => s.station_id === officer.stationId) : undefined;
+  // Open the map on the officer's own station (centroid is GeoJSON from PostGIS).
+  const { data: st } = officer.stationId
+    ? await sb.from("stations").select("centroid").eq("station_id", officer.stationId).maybeSingle()
+    : { data: null };
+  const c = (st?.centroid as { coordinates?: [number, number] } | null)?.coordinates;
+  const home: [number, number] | null = c && Number.isFinite(c[0]) && Number.isFinite(c[1]) ? [c[0], c[1]] : null;
 
   return (
     <div className="space-y-4">
@@ -24,7 +30,7 @@ export default async function NewFirPage() {
           statements, and checks for links to other cases; the case file shows the result and the run trace.
         </p>
       </div>
-      <FirFormView sections={(sections ?? []) as SectionOption[]} stations={stations} ownStationId={officer.stationId} isAdmin={officer.role === "admin"} />
+      <FirFormView sections={(sections ?? []) as SectionOption[]} stations={stations} ownStationId={officer.stationId} isAdmin={officer.role === "admin"} home={home} />
     </div>
   );
 }

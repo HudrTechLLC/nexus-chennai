@@ -54,8 +54,9 @@ function Rows<T>({ rows, blank, max, label, onChange, render }: {
 
 const sectionCode = (s: SectionOption) => (s.bns_code ?? s.ipc_code) as string;
 
-export function FirFormView({ sections, stations, ownStationId, isAdmin }: {
+export function FirFormView({ sections, stations, ownStationId, isAdmin, home }: {
   sections: SectionOption[]; stations: { station_id: string; name: string }[]; ownStationId: string | null; isAdmin: boolean;
+  home?: [number, number] | null;
 }) {
   const [f, setF] = useState<FirForm>(emptyFir());
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -188,7 +189,7 @@ export function FirFormView({ sections, stations, ownStationId, isAdmin }: {
       </Section>
 
       <Section title="Place" hint="Click the scene on the map. The ward and police station are looked up from their boundaries.">
-        <PlacePicker lat={f.lat} lon={f.lon} onPick={pick} />
+        <PlacePicker lat={f.lat} lon={f.lon} onPick={pick} home={home} />
         <Err msg={errors.place} />
         {f.lat !== null && (
           <p className="text-xs text-muted">
