@@ -1,0 +1,49 @@
+{
+  "synthetic": true,
+  "weights_version": "w-2026-10-26a",
+  "method": "blocking (q_candidates, default plan) -> F2 code scoring -> Skeptic re-query/strike; no model calls (models only explain, R7)",
+  "cases_evaluated": 5,
+  "features": {
+    "with_live_model_features": 3,
+    "without_features": ["CHN-AD-2025-000101"],
+    "features_without_receipt": ["CHN-VL-2025-000202"]
+  },
+  "excluded_non_generated": ["CHN-AD-2026-001231", "CHN-VL-2026-001220"],
+  "truth_positive_pairs": 8,
+  "agent": {
+    "tp": 6, "fp": 1, "fn": 2, "precision": 0.8571, "recall": 0.75, "f1": 0.8,
+    "alerts": 7,
+    "by_band": {
+      "high": { "alerts": 4, "precision": 1.0, "tp": 4, "fp": 0 },
+      "medium": { "alerts": 3, "precision": 0.6667, "tp": 2, "fp": 1 }
+    },
+    "by_crime_type": {
+      "chain_snatching": { "tp": 4, "fp": 0, "fn": 1, "precision": 1.0, "recall": 0.8, "f1": 0.8889 },
+      "house_break": { "tp": 2, "fp": 1, "fn": 1, "precision": 0.6667, "recall": 0.6667, "f1": 0.6667 }
+    },
+    "false_alerts_per_100_cases": 20.0,
+    "skeptic_strikes": 2,
+    "series": { "predicted_series": 2, "mean_purity": 0.9 }
+  },
+  "baseline_rules_only": {
+    "tp": 4, "fp": 5, "fn": 4, "precision": 0.4444, "recall": 0.5, "f1": 0.4706,
+    "alerts": 9, "rule": "same category, <= 2 km, <= 14 days", "false_alerts_per_100_cases": 100.0
+  },
+  "duplicates": { "truth_pairs": 1, "flagged_by_agent": 0, "flagged_by_baseline": 1 },
+  "timing": { "median_seconds_per_case": 1.234 },
+  "beats_baseline": { "precision": true, "recall": true },
+  "mo_cosine": "off",
+  "mo_cosine_trial": {
+    "off": { "precision": 0.8571, "recall": 0.75, "tp": 6, "fp": 1, "fn": 2, "alerts": 7 },
+    "on": { "precision": 0.75, "recall": 0.75, "tp": 6, "fp": 2, "fn": 2, "alerts": 8 }
+  },
+  "hmem": "off: no memory adjusts any score (reproducible; live analyst decisions excluded)",
+  "truth_dir": "data/sample/_truth",
+  "sample_mode": true,
+  "run_id": "eval-20261026-abcdef",
+  "log_file": "logs/trace-eval-20261026-abcdef.jsonl",
+  "band_accuracy_text": {
+    "high": "alerts in the high band were correct 100% of the time on the evaluation set (4 alerts)",
+    "medium": "alerts in the medium band were correct 67% of the time on the evaluation set (3 alerts)"
+  }
+}
