@@ -56,7 +56,7 @@ export const NAV: NavItem[] = [
   { href: "/console/memory", label: "Memory", access: "analyst+" },
   { href: "/console/notifications", label: "Notifications", access: "all", hidden: true }, // WS3-12, nexus-4
   { href: "/console/system", label: "System", access: "admin" },
-  { href: "/console/admin", label: "Admin", access: "admin", hidden: true }, // not built yet
+  { href: "/console/admin", label: "Admin", access: "admin" },
 ];
 
 export function navFor(role: Role | null | undefined): NavItem[] {
