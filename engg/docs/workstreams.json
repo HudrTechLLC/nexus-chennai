@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T14:00:46+05:30",
+  "updated": "2026-10-26T14:19:21+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -354,7 +354,9 @@
           "phase": "P4",
           "title": "Embed lane (E2): similar-MO + text search vectors via Nightshift embed, TF-IDF fallback",
           "status": "in_progress",
-          "owner": "nexus-2"
+          "owner": "nexus-2",
+          "note": "similarity.py merged (TF-IDF fallback, D-027); Linker wiring behind flag (nexus-3)",
+          "ref": "#75"
         }
       ]
     },
@@ -456,8 +458,8 @@
           "title": "Series pages, station link matrix, memory page, case graph explorer",
           "status": "in_progress",
           "owner": "nexus-6",
-          "note": "Series + stations pages merged; memory + graph next",
-          "ref": "#70"
+          "note": "All 4 screens merged (series, stations, memory, graph); live check pending real rows",
+          "ref": "#70, #85"
         }
       ]
     },
