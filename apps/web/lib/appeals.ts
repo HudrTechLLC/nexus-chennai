@@ -82,3 +82,10 @@ export const STATUS_LABEL: Record<AppealStatus, string> = {
   published: "Published",
   withdrawn: "Withdrawn",
 };
+
+/** Tips per appeal (console list). Tips not attached to an appeal are ignored. */
+export function tipCounts(rows: { public_incident_id: string | null }[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const r of rows) if (r.public_incident_id) m.set(r.public_incident_id, (m.get(r.public_incident_id) ?? 0) + 1);
+  return m;
+}

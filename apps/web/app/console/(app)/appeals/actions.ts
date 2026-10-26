@@ -4,6 +4,7 @@ import { getOfficer } from "@/lib/auth";
 import { allows } from "@/lib/roles";
 import { isCrimeId, parseLookingFor, validateAppeal } from "@/lib/appeals";
 import { consoleServerClient } from "@/lib/supabase/server";
+import { audit } from "@/lib/alertsData";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -25,6 +26,7 @@ export async function requestDraft(crimeId: string): Promise<ActionResult> {
   const sb = consoleServerClient();
   const { error } = await sb.from("appeal_requests").insert({ crime_id: id, requested_by: w.officer.userId });
   if (error) return { ok: false, error: error.code === "42501" ? "You can only request appeals for your own station's cases." : error.message };
+  await audit(sb, "request_appeal_draft", "crime", id);
   revalidatePath("/console/appeals");
   return { ok: true };
 }
@@ -49,9 +51,14 @@ export async function saveAppeal(
       ? { status: "withdrawn" }
       : { ...edit, ...(input.action === "publish" ? { status: "published" } : {}) };
   const sb = consoleServerClient();
-  const { data, error } = await sb.from("public_incidents").update(values).eq("public_incident_id", id).select("public_incident_id");
+  const { data, error } = await sb.from("public_incidents").update(values).eq("public_incident_id", id).select("public_incident_id, crime_id, status");
   if (error) return { ok: false, error: error.message };
   if (!data || data.length === 0) return { ok: false, error: "You can only edit appeals for your own station's cases." };
+  // J4: publishing to the public is the most consequential console action, so every save is audited.
+  await audit(sb, `appeal_${input.action}`, "public_incident", id, {
+    crime_id: data[0].crime_id, status: data[0].status,
+    ...(input.action === "withdraw" ? {} : { title: edit.title, looking_for: edit.looking_for.length }),
+  });
   revalidatePath(`/console/appeals/${encodeURIComponent(id)}`);
   revalidatePath("/console/appeals");
   return { ok: true };
