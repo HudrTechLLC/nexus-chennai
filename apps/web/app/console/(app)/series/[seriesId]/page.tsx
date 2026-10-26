@@ -11,6 +11,8 @@ import { alertsTouching, briefsChunked, fetchMemberIds, fetchSeries, taskforcesF
 import { dossierAuthor, memberLonLat, parseDossier, seriesHull, splitCitations, timeline, tokenSaving, type MemberPoint } from "@/lib/series";
 import { BandPill, StatusPill } from "@/components/console/alerts/AlertBits";
 import { SeriesStatusPill } from "@/components/console/series/SeriesBits";
+import { TfStatusPill } from "@/components/console/taskforces/TfBits";
+import { canPropose } from "@/lib/taskforces";
 import { SeriesMapLoader } from "@/components/console/series/SeriesMapLoader";
 import type { SeriesMapPoint } from "@/components/console/series/SeriesMap";
 
@@ -128,14 +130,20 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
           </section>
 
           <section className="rounded-xl border border-line bg-surface p-5" aria-labelledby="tf">
-            <h2 id="tf" className="text-lg font-semibold">Joint task force</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="tf" className="text-lg font-semibold">Joint task force</h2>
+              {canPropose(officer.role) && memberIds.length > 0 && (
+                <Link href={`/console/taskforces/new?series_id=${encodeURIComponent(series.series_id)}`} className="text-sm text-signal hover:underline">Propose joint task force →</Link>
+              )}
+            </div>
             {taskforces.length === 0
               ? <p className="mt-2 text-sm text-muted">No joint task force has been opened on this series.</p>
               : (
                 <ul className="mt-2 space-y-1 text-sm">
                   {taskforces.map((t) => (
-                    <li key={t.taskforce_id}>
-                      <b>{t.name}</b> <span className="font-mono text-xs text-muted">{t.taskforce_id}</span> · {t.status}
+                    <li key={t.taskforce_id} className="flex flex-wrap items-center gap-2">
+                      <Link href={`/console/taskforces/${encodeURIComponent(t.taskforce_id)}`} className="font-semibold text-signal hover:underline">{t.name}</Link>
+                      <TfStatusPill status={t.status} />
                     </li>
                   ))}
                 </ul>
