@@ -302,3 +302,13 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Where it applies:** the Extractor, Sanitiser and Briefer (structured-output jobs) run Lightning with thinking **off**. The Planner on Nemotron Ultra keeps reasoning on.
 - **Supersedes:** the D-017 rule "`max_tokens` ≥ 1024", for thinking-off calls only.
 - **Traceability:** the trace records the model and the receipt on every call.
+
+## D-027 · The embed lane uses TF-IDF and feature vectors in code (nexus-2) (2026-10-26)
+- **The finding:** Nightshift 1.2.7's local API (`engine/server.mjs`) serves only `POST /v1/chat/completions` for model calls.
+  - `POST /v1/embeddings` returns 404 for every embed model it lists.
+  - Those models are internal R11 "scribe" lanes (`js/engine/genverify.js`, `lane-state.js --embeddings`).
+  - The in-app embedder (`js/engine/embed.js`) uses a local Ollama with no models installed.
+- **The decision:** `services/api/app/engines/similarity.py` serves `embed(texts)` with the spec E2 fallback: TF-IDF plus feature vectors, with no model call. It traces each use as `embed_fallback`. Similar-MO matching and text search use it.
+- **What we don't do:** call scribe or Ollama ports directly, which would bypass Nightshift (R2).
+- **Later:** if Nightshift exposes `/v1/embeddings`, pinning `LANE_EMBED` turns the live path on with no code change.
+- **Submission:** the Nemotron embed model is **not** claimed.
