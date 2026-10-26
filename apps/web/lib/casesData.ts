@@ -75,6 +75,7 @@ export type Forensic = { forensic_id: string; kind: string; match_code: string |
 export type PersonLink = { person_id: string; role: string; persons: { name: string | null; aliases: string[]; descriptors: Record<string, unknown> } | null };
 export type SeriesRef = { series_id: string; name: string; status: string; added_at: string };
 export type RunRef = { run_id: string; status: string; started: string };
+export type MoReview = { review_id: number; corrections: Record<string, unknown>; note: string | null; reviewed_by: string; reviewed_at: string };
 
 export type CaseFile = {
   crime: Crime;
@@ -88,6 +89,7 @@ export type CaseFile = {
   alerts: LinkAlert[];
   series: SeriesRef[];
   run: RunRef | null;
+  reviews: MoReview[];
 };
 
 const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, severity, status";
@@ -148,6 +150,8 @@ export async function fetchCaseFile(sb: SupabaseClient, crimeId: string): Promis
     sb.from("series_members").select("series_id, added_at, series(name, status)").eq("crime_id", crimeId),
     latestRun(sb, crimeId),
   ]);
+  const { data: reviews } = await sb.from("crime_feature_reviews").select("review_id, corrections, note, reviewed_by, reviewed_at")
+    .eq("crime_id", crimeId).order("reviewed_at", { ascending: false }).limit(20);
   return {
     crime: crime as Crime,
     features: (features.data as Features | null) ?? null,
@@ -162,6 +166,7 @@ export async function fetchCaseFile(sb: SupabaseClient, crimeId: string): Promis
       series_id: m.series_id, added_at: m.added_at, name: m.series?.name ?? m.series_id, status: m.series?.status ?? "candidate",
     })),
     run,
+    reviews: (reviews ?? []) as MoReview[],
   };
 }
 

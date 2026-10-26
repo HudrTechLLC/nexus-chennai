@@ -4,12 +4,13 @@ import { Fragment, type ReactNode } from "react";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { decisionState, pct } from "@/lib/alerts";
-import { audit, crimeBriefs, crimeTitle, stationNames } from "@/lib/alertsData";
-import { buildTimeline, canWriteCase, describe, humanise, maskPii, moRows, type TimelineItem } from "@/lib/cases";
+import { audit, crimeBriefs, crimeTitle, officerNames, stationNames } from "@/lib/alertsData";
+import { buildTimeline, canWriteCase, describe, humanise, maskPii, moRows, moToText, type TimelineItem } from "@/lib/cases";
 import { fetchCaseFile, fetchCitywide, type CaseFile } from "@/lib/casesData";
 import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { AppealButton } from "../_components/AppealButton";
 import { EvidenceUpload } from "../_components/EvidenceUpload";
+import { MoReview } from "../_components/MoReview";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,10 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
   const otherIds = file.alerts.flatMap((a) => a.crimes).filter((id) => id !== crime.crime_id);
   const [names, briefs] = await Promise.all([stationNames(sb, [crime.station_id]), crimeBriefs(sb, otherIds)]);
   const station = names[crime.station_id] ?? crime.station_id;
+  // Latest officer review wins (crime_feature_reviews is append-only); the Extractor's MO is never edited.
+  const latestReview = file.reviews[0] ?? null;
+  const corrected: Record<string, unknown> = latestReview?.corrections ?? {};
+  const reviewerNames = latestReview ? await officerNames(sb, [latestReview.reviewed_by]) : {};
   // Audio statements play from short-lived links signed as this officer (storage policy: can_read_crime).
   const audioPaths = file.statements.map((s) => s.audio_path).filter((p): p is string => !!p);
   const audioUrls: Record<string, string> = audioPaths.length
@@ -224,8 +229,26 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
             ) : (
               <div className="space-y-3">
                 <dl className="grid grid-cols-[7.5rem_1fr] gap-y-1">
-                  {moRows(features.mo).map(([k, v]) => <Fragment key={k}><dt className="text-muted">{humanise(k)}</dt><dd>{v}</dd></Fragment>)}
+                  {moRows(features.mo).map(([k, v]) => (
+                    <Fragment key={k}>
+                      <dt className="text-muted">{humanise(k)}</dt>
+                      <dd>
+                        {k in corrected ? (
+                          <><span className="text-muted line-through" title="Extractor said">{v}</span> → <span className="font-semibold" title="Officer corrected to">{moToText(corrected[k]) || "none"}</span></>
+                        ) : v}
+                      </dd>
+                    </Fragment>
+                  ))}
+                  {Object.keys(corrected).filter((k) => !moRows(features.mo).some(([m]) => m === k)).map((k) => (
+                    <Fragment key={k}><dt className="text-muted">{humanise(k)}</dt><dd><span className="text-muted">—</span> → <span className="font-semibold">{moToText(corrected[k]) || "none"}</span></dd></Fragment>
+                  ))}
                 </dl>
+                {latestReview && (
+                  <p className="rounded-md bg-bg px-2 py-1 text-xs">
+                    {Object.keys(corrected).length ? "Officer-corrected" : "Confirmed"} by {reviewerNames[latestReview.reviewed_by] ?? "an officer"} on {fmt(latestReview.reviewed_at)}
+                    {latestReview.note ? ` · “${latestReview.note}”` : ""}. Struck values are the Extractor&apos;s original, which stays on record.
+                  </p>
+                )}
                 {features.visual_tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">{features.visual_tags.map((t) => <span key={t} className="rounded bg-bg px-1.5 py-0.5 text-xs">{humanise(t)}</span>)}</div>
                 )}
@@ -234,7 +257,8 @@ async function FullCase({ file, canWrite }: { file: CaseFile; canWrite: boolean 
                   {features.receipt_id ? <> · receipt <span className="font-mono">{features.receipt_id.slice(0, 18)}…</span></> : null}
                   {file.run ? <> · <Link href={`/console/system/trace/${encodeURIComponent(file.run.run_id)}`} className="text-signal hover:underline">trace</Link></> : null}
                 </p>
-                <p className="text-xs text-muted">{features.reviewed_at ? `Reviewed by an officer on ${fmt(features.reviewed_at)}.` : "Not reviewed by an officer yet."}</p>
+                {!latestReview && <p className="text-xs text-muted">Not reviewed by an officer yet.</p>}
+                {canWrite && <MoReview crimeId={crime.crime_id} mo={{ ...features.mo, ...corrected }} />}
               </div>
             )}
           </Card>
