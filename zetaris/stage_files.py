@@ -34,7 +34,20 @@ LAYOUT = [
 # The crime data as files (WS1-19, data/fs_export.py), one folder per nexus_fs table (zetaris/02_fs.sql).
 FS_TABLES = ("crimes", "statements", "crime_vehicles", "evidence_media", "forensics", "crime_features_v",
              "tips_v", "section_map", "stations", "link_alerts", "case_bundle_v")
-FS_LAYOUT = [(f"fs/{t}/part-0.parquet", f"fs/{t}") for t in FS_TABLES]
+
+
+def _fs_dir() -> str:
+    """Staging folder for the nexus_fs tables (fs, or fs<suffix>), from the shared source map."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[1] / "services" / "api" / "app" / "adapters" / "zetaris_sources.py"
+    spec = importlib.util.spec_from_file_location("zetaris_sources", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod.sources("files")["fsdir"]
+
+
+FS_LAYOUT = [(f"fs/{t}/part-0.parquet", f"{_fs_dir()}/{t}") for t in FS_TABLES]
 
 
 def plan(src: Path, fs: bool = False, only_fs: bool = False) -> list[tuple[Path, str]]:

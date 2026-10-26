@@ -110,8 +110,11 @@ def test_tips_keep_only_tips_v_columns_and_the_recorded_verdict(tmp_path):
 
 def test_registration_staging_and_export_name_the_same_tables():
     assert tuple(stage_files.FS_TABLES) == FILE_TABLES
-    sql = (ROOT / "zetaris" / "02_fs.sql").read_text(encoding="utf-8")
-    assert re.findall(r"FILESTORE TABLE (\w+) FROM nexus_fs", sql) == list(FILE_TABLES)
+    from zetaris.register import fill, statements
+
+    raw = (ROOT / "zetaris" / "02_fs.sql").read_text(encoding="utf-8")
+    sql = "\n".join(fill(s, {}, "x", "y", "files")[0] for s in statements(raw))
+    assert re.findall(r"FILESTORE TABLE (\w+) FROM nexus_fs ", sql) == list(FILE_TABLES)
     for t in FILE_TABLES:
         assert f'path "file:///home/zetaris/customer-data/shared/nexus/fs/{t}/"' in sql
 
