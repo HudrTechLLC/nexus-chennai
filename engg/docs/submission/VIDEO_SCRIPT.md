@@ -183,7 +183,7 @@ Use it only if #320 ("From the public" on alert and series pages) is merged and 
 
 ## ElevenLabs narration text (one block per segment)
 
-Paste each block into `demo/script.md` for `demo/narrate.py` (SPEC M1). Settings: one voice, Indian English if available, stability ~0.5, similarity ~0.75. These blocks are identical to the narration above; if you edit one, edit both.
+`demo/narrate.py` reads these blocks directly and writes `demo/out/seg_NN.mp3` through the ElevenLabs API: `python demo/narrate.py --key-file ~/.secrets/elevenlabs.key --voice <id>` (`--list-voices` to pick, `--only seg_03` to redo one, `--dry-run` for word counts and timings). The key is read from the file and never printed. Settings: one voice, Indian English if available, stability ~0.5, similarity ~0.75. These blocks are identical to the narration above; if you edit one, edit both.
 
 ```
 [seg_01]
