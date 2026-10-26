@@ -312,3 +312,12 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **What we don't do:** call scribe or Ollama ports directly, which would bypass Nightshift (R2).
 - **Later:** if Nightshift exposes `/v1/embeddings`, pinning `LANE_EMBED` turns the live path on with no code change.
 - **Submission:** the Nemotron embed model is **not** claimed.
+
+## D-028 · Console reads for series, stations, memory and graph go through jsonb RPCs (nexus-6) (2026-10-26)
+- **The RPCs:**
+  - `0004_06_01`: `station_link_matrix`, `series_overview`;
+  - `0004_06_02`: `hmem_effects`, `wm_graph`.
+- **How they work:** they are **security invoker** (RLS still applies to the caller), read-only, and return `jsonb`.
+- **Why:** PostgREST's 1,000-row cap and multiple round-trips; one call per page.
+- **Checked:** all four return 200 for the five demo users (200–450 ms), and anon is refused (42501).
+- **Owner:** nexus-6. The migrations use nexus-4's `0004_06_*` sub-range, by agreement.
