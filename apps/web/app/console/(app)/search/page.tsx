@@ -16,6 +16,10 @@ export const dynamic = "force-dynamic";
 
 const input = "rounded-md border border-line bg-bg px-2 py-1.5 text-sm";
 
+function fmtTime(at: string) {
+  return new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+
 function fmt(at: string) {
   return new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
 }
@@ -138,6 +142,37 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
             </Group>
           )}
 
+          {p.kind === "plate" && (
+            <Group title="ANPR reads" count={res.anpr.length}>
+              <ul className="divide-y divide-line">
+                {res.anpr.map((r) => (
+                  <li key={r.read_id} className="py-1.5">
+                    <span className="font-mono">{r.plate_text}</span> · camera <span className="font-mono text-xs">{r.camera_id}</span> · {fmtTime(r.read_at)}
+                    {r.plate_confidence != null && <span className="text-muted"> · read confidence {Math.round(r.plate_confidence * 100)}%</span>}
+                    {r.crime_id && <> · <Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`} className="text-signal hover:underline">{r.crime_id}</Link></>}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted">Camera reads of matching plates, newest first. A read is a sighting, not proof of involvement.</p>
+            </Group>
+          )}
+
+          {(p.kind === "crime_id" || p.kind === "text") && (
+            <Group title="Evidence" count={res.evidence.length}>
+              <ul className="divide-y divide-line">
+                {res.evidence.map((e) => (
+                  <li key={e.evidence_id} className="py-1.5">
+                    {humanise(e.kind)}
+                    {e.camera_id && <> · camera <span className="font-mono text-xs">{e.camera_id}</span></>}
+                    {e.captured_at && <span className="text-muted"> · {fmtTime(e.captured_at)}</span>} ·{" "}
+                    <Link href={`/console/cases/${encodeURIComponent(e.crime_id)}/evidence`} className="text-signal hover:underline">{e.crime_id}</Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted">Matches a camera id, or an evidence type such as &ldquo;cctv&rdquo; or &ldquo;photo&rdquo;. Only cases you may open are shown.</p>
+            </Group>
+          )}
+
           {p.kind === "text" && tagHits && (
             <Group title="Visual and MO tags" count={tagHits.rows.length}>
               <ul className="divide-y divide-line">
@@ -182,7 +217,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
               {tagHits && <li><span className="font-mono">crimes_citywide (tags)</span> → {tagHits.rows.length}{tagHits.error ? ` · error: ${tagHits.error}` : ""}</li>}
               {res.sources.map((s) => <li key={s.group}><span className="font-mono">{s.source}</span> → {s.rows}{s.error ? ` · error: ${s.error}` : ""}</li>)}
             </ul>
-            <p className="mt-1">Agent-side searches (Scout Intent routing, similar-MO, ANPR, calls, news) run through Zetaris named queries on the local pipeline and are listed with their query ids in each run trace.</p>
+            <p className="mt-1">Agent-side searches (Scout Intent routing, ANPR trails, 112 calls, news) run through Zetaris named queries on the local pipeline and are listed with their query ids in each run trace.</p>
           </footer>
         </>
       )}
