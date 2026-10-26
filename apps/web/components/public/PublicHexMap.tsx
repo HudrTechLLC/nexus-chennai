@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef } from "react";
 import maplibregl from "maplibre-gl";
+import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
 import { cellToBoundary } from "h3-js";
 import { CITY } from "@/lib/city";
 import type { PublicCell } from "@/lib/publicData";
@@ -45,8 +46,9 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
   useEffect(() => {
     if (!el.current) return;
     const fb = selected ? cellBounds(selected) : null;
+    const theme = currentMapTheme();
     const m = new maplibregl.Map({
-      container: el.current, style: "/map/light.json",
+      container: el.current, style: mapStyleUrl(theme),
       center: initialAt ? [initialAt[0], initialAt[1]] : CITY.map.center, zoom: initialAt ? initialAt[2] : CITY.map.zoom,
       // opened on one hex with no saved view (/map?cell= from an appeal): start framed on it, neighbourhood around
       ...(!initialAt && fb ? { bounds: [[fb[0], fb[1]], [fb[2], fb[3]]] as [[number, number], [number, number]], fitBoundsOptions: { padding: framePadding(el.current.clientWidth, el.current.clientHeight), maxZoom: 14 } } : {}),
@@ -65,11 +67,11 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
       m.addLayer({ id: "hex-line", type: "line", source: "hex", paint: { "line-color": "#ffffff", "line-width": 0.6, "line-opacity": 0.7 } });
       m.addLayer({
         id: "hex-appeal", type: "line", source: "hex", filter: ["==", ["get", "appeal"], 1],
-        paint: { "line-color": "#0e7c86", "line-width": 3, "line-opacity": 0.9 },
+        paint: { "line-color": MAP_INK[theme].signal, "line-width": 3, "line-opacity": 0.9 },
       });
       m.addLayer({
         id: "hex-selected", type: "line", source: "hex", filter: ["==", ["get", "cell"], selectedRef.current ?? ""],
-        paint: { "line-color": "#111827", "line-width": 3.5 },
+        paint: { "line-color": MAP_INK[theme].selected, "line-width": 3.5 },
       });
       m.on("click", "hex-fill", (e) => {
         const cell = e.features?.[0]?.properties?.cell as string | undefined;
