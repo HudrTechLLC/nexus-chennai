@@ -37,3 +37,11 @@ Supabase Storage's S3-compatible endpoint works with standard S3 clients. The bu
 The team chose not to change the running container mid-build (D-022a). File sources therefore use Zetaris's internal file store, still registered as file sources, and the bucket stays a backup copy.
 
 **To switch back later:** fix the S3A channel (for example `fs.s3a.ssl.channel.mode=default_jsse_with_gcm`, or a newer JDK/wildfly-openssl). Then set `s3Endpoint "ukrujnsjucwvytnokbtw.storage.supabase.co/storage/v1/s3"` and `useS3PathStyleAccess "true"` on the file tables, with keys `{{secret:s3_key_id}}` / `{{secret:s3_secret}}`. That is a one-line change per table in `00_sources.sql`.
+
+## News and social feeds: the API must be up first (40_feeds.sql)
+**Live runs need the Nexus API on :8000 before Zetaris reads feeds.** The `nexus_feeds.rest_news` / `rest_social` REST tables call `http://host.docker.internal:8000/mock-feeds/*` (`services/api/app/feeds.py`), both when they are registered and every time `nexus.news_items`, `nexus.social_posts` or `nexus.v_news_mentions` is queried. So a live `q_news` is a call from the API into Zetaris and back into the API.
+
+- The API handlers are sync (`def`), so the callback is served on another threadpool thread. A single uvicorn worker is enough.
+- `q_news` fails fast: one attempt with an 8 s timeout, no retries, then it is skipped for 60 s on that client (`NamedQuery.timeout_s`, `BREAKER_SECONDS`). Planner and Linker treat a failure as "no news" with a `step_failed` / `support_failed` trace line; it never fails a `/run`.
+- Order for a live demo: start the API on port 8000 (`python run.py`), then register or query the feed views.
+- Keep the default bind, 127.0.0.1. Docker Desktop forwards `host.docker.internal` to the host's loopback (checked 2026-10-26: `docker exec zetaris-driver-1 curl http://host.docker.internal:8000/mock-feeds/news?limit=1` returned 200 in 46 ms with the API on 127.0.0.1:8000). Do not bind 0.0.0.0.
