@@ -45,6 +45,11 @@ The team chose not to change the running container mid-build (D-022a). File sour
 **To switch back later:** fix the S3A channel (for example `fs.s3a.ssl.channel.mode=default_jsse_with_gcm`, or a newer JDK/wildfly-openssl). Then set `s3Endpoint "ukrujnsjucwvytnokbtw.storage.supabase.co/storage/v1/s3"` and `useS3PathStyleAccess "true"` on the file tables, with keys `{{secret:s3_key_id}}` / `{{secret:s3_secret}}`. That is a one-line change per table in `00_sources.sql`.
 
 ## News and social feeds: the API must be up first (40_feeds.sql)
+**Status (2026-10-26): weather is live; news and social are PENDING.**
+- Registered: `nexus_feeds` (#2), `rest_weather` (#8), `nexus.weather_hourly` (#9, 744 rows).
+- Not registered yet: `rest_news`, `rest_social`, `news_items`, `social_posts` and `v_news_mentions` (#3–#7). They are waiting on the feed generator (WS1-16), so a live `q_news` returns no rows until they land.
+- `20_dq.sql` is fully live (all 8 views).
+
 **Live runs need the Nexus API on :8000 before Zetaris reads feeds.** The `nexus_feeds.rest_news` / `rest_social` REST tables call `http://host.docker.internal:8000/mock-feeds/*` (`services/api/app/feeds.py`), both when they are registered and every time `nexus.news_items`, `nexus.social_posts` or `nexus.v_news_mentions` is queried. So a live `q_news` is a call from the API into Zetaris and back into the API.
 
 - The API handlers are sync (`def`), so the callback is served on another threadpool thread. A single uvicorn worker is enough.
