@@ -33,6 +33,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [SETUP](SETUP.md): accounts, services, environment variables, Nightshift and Zetaris contracts
 - [TOOLING](TOOLING.md): Claude Code skills, subagents and hooks for this repo
 - [validation](validation/README.md): gate reports
+- [WS3-06 / WS3-10 gate](validation/WS3-06-WS3-10-2026-10-26.md): case file, search and FIR capture vs CAP-01…10 and SRCH-01…07, with live evidence and open gaps
 - [WS5-08 checklist](validation/WS5-08-checklist.md): Tuesday fresh-clone validation (L3), every Disqualification Checklist item with its command and PASS rule
 
 ## Hackathon
