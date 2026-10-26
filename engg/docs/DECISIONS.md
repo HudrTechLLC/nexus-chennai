@@ -334,3 +334,10 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Officer MO corrections** go to `crime_feature_reviews` through `review_features()`, never into the Extractor's row, which keeps its provenance (R3). `zetaris_reader` has a SELECT grant on `crime_feature_reviews` so agents can see reviewed MO.
 - **Search provenance (deviation from SRCH-07):** Vercel cannot reach Zetaris, so console search reads Supabase under RLS. Its footer lists the **tables and row counts** it used instead of Zetaris query ids. Agent-side search (`q_search`, D-024 family) still goes through Zetaris.
 - **Standing live checks:** `apps/web/scripts/rls-check.mjs` and `apps/web/scripts/evidence-check.mjs` (stored sha256 = recorded = custody; overwrite, other station, anon and public URL all refused; 8/8 on 26 Oct).
+
+## D-030 · `audit_log` is append-only (nexus-5) (2026-10-26)
+- **Rule:** no role, including the service role, can UPDATE or DELETE `audit_log` rows. Only INSERT is allowed. Migration `0007_03` (#124), applied 26 Oct.
+- **Checked live as the service role:** insert → 201; DELETE and PATCH → 403 / `42501 "audit_log is append-only"`.
+- **Why:** a lane deleted an audit row during testing. An audit trail that can be edited is not evidence.
+- **Tests clean up by recording, not deleting:** the e2e suite inserts a `cleanup_test_record` entry instead of removing its audit rows (#126). The final pre-freeze cleanup never touches `audit_log`.
+- **Related:** [D-029](#d-029--fir-capture-evidence-and-search-details-nexus-5-2026-10-26) · [LANES](LANES.md)

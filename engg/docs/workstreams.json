@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T15:00:22+05:30",
+  "updated": "2026-10-26T15:31:32+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -125,7 +125,7 @@
           "title": "Register sources in Zetaris (Supabase, S3 CSV, S3 Parquet, REST)",
           "status": "in_progress",
           "owner": "nexus-1",
-          "note": "Supabase source sb live in Zetaris (17 tables + views); file sources via internal store next",
+          "note": "Supabase + 12 file-store tables (s3csv/s3pq) live; REST feeds pending generator",
           "ref": "#50"
         },
         {
@@ -450,9 +450,9 @@
           "id": "WS3-10",
           "phase": "P9",
           "title": "FIR capture form",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-5",
-          "note": "Code-complete (FIR, evidence+audio, MO review); waits for a click-through on the deployed site",
+          "note": "nexus-5 · FIR form, evidence, MO review live (#73, #88, #90, #118, #120)",
           "ref": "#73, #88, #90"
         },
         {
@@ -463,6 +463,20 @@
           "owner": "nexus-6",
           "note": "All 4 screens merged (series, stations, memory, graph); live check pending real rows",
           "ref": "#70, #85"
+        },
+        {
+          "id": "WS3-12",
+          "phase": "P7",
+          "title": "Notifications page and mock outbox (NOT-01)",
+          "status": "in_progress",
+          "note": "nexus-4 · /console/notifications; tables in 0002; nav link hidden until it lands"
+        },
+        {
+          "id": "WS3-13",
+          "phase": "P7",
+          "title": "Joint task forces page (LNK-09, DASH-07)",
+          "status": "in_progress",
+          "note": "nexus-6 · /console/taskforces; tables in 0002; write path via RPC if needed"
         }
       ]
     },
