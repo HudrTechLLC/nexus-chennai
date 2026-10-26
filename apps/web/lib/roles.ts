@@ -47,6 +47,7 @@ export const NAV: NavItem[] = [
   { href: "/console/alerts", label: "Link alerts", access: "all" },
   { href: "/console/cases", label: "Cases", access: "all" },
   { href: "/console/search", label: "Search", access: "all" },
+  { href: "/console/vehicles", label: "Vehicles", access: "all" }, // CAP-06
   { href: "/console/series", label: "Series", access: "all" },
   { href: "/console/appeals", label: "Appeals", access: ["station_officer", "supervisor", "admin"] },
   { href: "/console/tips", label: "Tips", access: ["station_officer", "analyst", "supervisor", "admin"] },
