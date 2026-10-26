@@ -28,3 +28,6 @@ data/_truth/
 
 # organiser PDFs stay local (repo goes public)
 engg/docs/hackathon/*.pdf
+
+# generator output and the file-store export built from it (WS1-19): rebuilt by python -m data.setup_live
+data/generated/
