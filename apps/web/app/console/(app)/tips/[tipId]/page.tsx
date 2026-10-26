@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { audit, officerNames } from "@/lib/alertsData";
-import { TIP_CATEGORY_LABEL, type TipRow } from "@/lib/tips";
+import { TIP_CATEGORY_LABEL, tipAreaLabel, type TipRow } from "@/lib/tips";
 import { GuardBadges, UntrustedText } from "@/components/console/tips/TipBits";
 import { ReplyForm, ReviewForm, type Nearby } from "@/components/console/tips/TipActions";
 
@@ -40,7 +40,7 @@ export default async function TipDetail({ params }: { params: { tipId: string } 
           <h1 className="font-mono text-xl font-bold">{tip.tip_id}</h1>
           <span className="text-sm text-muted">
             {TIP_CATEGORY_LABEL[tip.category] ?? tip.category} · week {tip.received_week} · {tip.channel} · status {tip.status}
-            {tip.approx_cell ? ` · area ${tip.approx_cell.slice(0, 9)}…` : " · no area"}
+            {` · ${tipAreaLabel(tip)}`}
           </span>
         </div>
         <GuardBadges guard={tip.guard} status={tip.status} />
