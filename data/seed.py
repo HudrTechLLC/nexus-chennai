@@ -15,6 +15,8 @@ table, so column types come from the schema itself.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import sys
 import uuid
@@ -149,6 +151,17 @@ def seed(src: Path, dry_run: bool, retire: bool = False) -> None:
                         "(r).make_model, (r).colour, (r).synthetic "
                         "from (select jsonb_populate_record(null::public.crime_vehicles, doc) r from _stage) s")
             print(f"crime_vehicles: {cur.rowcount} inserted of {n} generated")
+            # evidence_media (WS1-09 stills): insert-only, after the objects are in the bucket (upload_stills).
+            if (sb / "evidence_media.jsonl").is_file():
+                n = _load(cur, sb / "evidence_media.jsonl")
+                cur.execute("insert into public.evidence_media (evidence_id, crime_id, kind, storage_path, sha256, "
+                            "captured_at, camera_id, uploaded_by, vision, custody, source, source_row_id, synthetic) "
+                            "select (r).evidence_id, (r).crime_id, (r).kind, (r).storage_path, (r).sha256, "
+                            "(r).captured_at, (r).camera_id, (r).uploaded_by, (r).vision, (r).custody, (r).source, "
+                            "(r).source_row_id, true "
+                            "from (select jsonb_populate_record(null::public.evidence_media, doc) r from _stage) s "
+                            "on conflict (evidence_id) do nothing")
+                print(f"evidence_media: {cur.rowcount} inserted of {n} generated (existing rows untouched)")
             # person_links: composite key, insert missing only.
             if (sb / "person_links.jsonl").is_file():
                 n = _load(cur, sb / "person_links.jsonl")
@@ -201,6 +214,52 @@ class _DryRun(Exception):
     pass
 
 
+def _supabase_url() -> str:
+    url = os.environ.get("SUPABASE_URL")
+    if url:
+        return url.rstrip("/")
+    for line in (ROOT / ".env.example").read_text(encoding="utf-8").splitlines():
+        if line.startswith("SUPABASE_URL="):
+            return line.split("=", 1)[1].strip().rstrip("/")
+    raise SystemExit("SUPABASE_URL is not set")
+
+
+def upload_stills(src: Path, dry_run: bool) -> None:
+    """Put the generated stills (data/generator/stills.py) into the private `evidence` bucket.
+
+    Service-role key read from its file for this process only (never printed). Existing objects are
+    never replaced (the bucket is append-only for custody); a re-run skips them."""
+    rows = [json.loads(x) for x in (src / "supabase" / "evidence_media.jsonl").read_text(encoding="utf-8").splitlines()
+            if x] if (src / "supabase" / "evidence_media.jsonl").is_file() else []
+    if not rows:
+        return
+    import httpx
+
+    key_file = Path(os.path.expanduser(os.environ.get("SUPABASE_SERVICE_ROLE_KEY_FILE", "~/.secrets/nexus-service-role.key")))
+    key = key_file.read_text(encoding="utf-8").strip()
+    base = _supabase_url()
+    hdr = {"Authorization": f"Bearer {key}", "apikey": key}
+    new = exists = 0
+    with httpx.Client(timeout=60) as http:
+        for r in rows:
+            body = (src / "evidence" / r["storage_path"]).read_bytes()
+            if hashlib.sha256(body).hexdigest() != r["sha256"]:
+                raise RuntimeError(f"{r['storage_path']}: file does not match its sha256")
+            info = http.get(f"{base}/storage/v1/object/info/evidence/{r['storage_path']}", headers=hdr)
+            if info.status_code == 200:
+                exists += 1
+                continue
+            if dry_run:
+                new += 1
+                continue
+            up = http.post(f"{base}/storage/v1/object/evidence/{r['storage_path']}", content=body,
+                           headers=hdr | {"Content-Type": "image/jpeg", "x-upsert": "false"})
+            if up.status_code not in (200, 201):
+                raise RuntimeError(f"upload {r['storage_path']}: HTTP {up.status_code} {up.text[:200]}")
+            new += 1
+    print(f"evidence bucket: {new} {'to upload' if dry_run else 'uploaded'}, {exists} already there")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="src", default=str(ROOT / "data" / "generated"))
@@ -211,6 +270,7 @@ def main() -> None:
     if not os.environ.get("NEXUS_DB_PASSWORD"):
         sys.exit("NEXUS_DB_PASSWORD is not set (read it from the password file for this command only)")
     try:
+        upload_stills(Path(a.src), a.dry_run)
         seed(Path(a.src), a.dry_run, a.retire)
     except _DryRun:
         print("dry run: rolled back")
