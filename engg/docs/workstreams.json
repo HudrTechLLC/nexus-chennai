@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T00:49:01+05:30",
+  "updated": "2026-10-27T00:58:08+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -412,8 +412,8 @@
           "id": "WS2-24",
           "phase": "P4",
           "title": "Series quality: test-FIR exclusion (D-033), readable names, cited dossier",
-          "status": "in_progress",
-          "note": "nexus-3 · #239, #245, #234 merged; Red Pulsar dossier regeneration pending"
+          "status": "done",
+          "note": "nexus-3 · #239 #245 #234 #317; D-033 applied (9 members), dossier regenerated + merged (30/30 cited)"
         },
         {
           "id": "WS2-25",
@@ -426,8 +426,8 @@
           "id": "WS2-26",
           "phase": "P6",
           "title": "Red Pulsar live re-run on fixed code (hero stays pending)",
-          "status": "in_progress",
-          "note": "nexus-3 · rp7; model critique on every alert, fresh ANPR vehicle check"
+          "status": "done",
+          "note": "nexus-3 · Red Pulsar 4 cases run (run_866f913f); hero LA-2026-E38C6B38B865 pending 0.7887; 0/24 fallback rationales after re-explain"
         },
         {
           "id": "WS2-27",
@@ -848,17 +848,17 @@
           "id": "WS5-04",
           "phase": "P10",
           "title": "Sponsor technology text (evidence-backed)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-chief",
-          "note": "Paste-ready text: engg/docs/submission/SPONSOR_TECH_FINAL.md (nexus-7); evidence in submission/EVIDENCE.md"
+          "note": "nexus-7 · SPONSOR_TECH_FINAL final (#298, #305, #337, #345)"
         },
         {
           "id": "WS5-05",
           "phase": "P10",
           "title": "metadata.json final (claims only what passes)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-chief",
-          "note": "metadata.json corrected to what passes on main (4 engines; Lightning + Ultra)"
+          "note": "nexus-7/chief · metadata.json final (#302, #307, #339, #350)"
         },
         {
           "id": "WS5-06",
@@ -899,9 +899,9 @@
           "id": "WS5-11",
           "phase": "P6",
           "title": "Early clean-clone dry run (Mon): root Dockerfile, docker run via host.docker.internal, curl /run x3, SAMPLE_MODE with empty .env and services stopped",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-chief",
-          "note": "Root Dockerfile + CI docker-judge-path (sample mode, no creds) green; live host.docker.internal run pending",
+          "note": "Root Dockerfile + judge-path and judge-offline CI green; fresh-clone judge run PASS (nexus-7)",
           "ref": "#49"
         },
         {
