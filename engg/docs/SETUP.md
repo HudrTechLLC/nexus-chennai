@@ -49,3 +49,13 @@ Related: [ARCHITECTURE](ARCHITECTURE.md) · [PROGRESS](PROGRESS.md) · [00-INDEX
 | Timeout and retries | 60 s, 2 retries |
 | DDL | one statement at a time, dry-run before any CREATE (R12) |
 | API reference | `http://localhost:8888/redoc/index.html` after install |
+
+## Demo users (police console)
+Five demo users exist on `nexus-qa`: 2 station officers, an analyst, a supervisor and an admin.
+
+- **How they're made:** `apps/web/scripts/seed-demo-users.mjs` creates them through the Supabase Admin API.
+  - It reads the service-role key from `~/.secrets/nexus-service-role.key`.
+  - It reads the passwords from `~/.secrets/nexus-demo-users.json`. They are random, never printed, and never committed.
+- **How they're checked:** `apps/web/scripts/rls-check.mjs` signs in as each role with the publishable key and checks what that role can read.
+- **Sign-ups:** public sign-ups must stay off (Supabase → Authentication → Sign In / Providers). No profile is ever created automatically, so a stray account sees nothing anyway.
+- **For judges:** whether they get a published demo login is decided at submission (WS5).
