@@ -2,44 +2,73 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Note, SpecTab } from "@/lib/docs";
+import { useEffect, useRef } from "react";
+import type { NavGroup } from "@/lib/docs";
 
-/** Engg Docs menu: progress, the 16 spec tabs, and the project notes. */
-export function DocsNav({ tabs, notes }: { tabs: SpecTab[]; notes: Note[] }) {
-  const path = usePathname();
-  const tab = (href: string, label: string) => {
-    const on = path === href;
-    return (
-      <Link
-        key={href}
-        href={href}
-        aria-current={on ? "page" : undefined}
-        className={`flex-none border-b-[3px] px-3 py-2 text-sm font-semibold uppercase tracking-wide ${
-          on ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
-        }`}
-      >
-        {label}
-      </Link>
-    );
-  };
+function Groups({ groups, path }: { groups: NavGroup[]; path: string }) {
   return (
-    <div className="grid gap-1">
-      <nav aria-label="Spec tabs" className="flex overflow-x-auto">
-        {tab("/docs/progress", "Progress")}
-        {tabs.map((t) => tab(`/docs/${t.id}`, t.label))}
-      </nav>
-      <nav aria-label="Project notes" className="flex flex-wrap gap-x-4 gap-y-1 px-3 pb-2 text-xs text-muted">
-        <span className="font-mono uppercase tracking-widest">Notes</span>
-        {notes.map((n) => (
-          <Link
-            key={n.slug}
-            href={`/docs/notes/${n.slug}`}
-            className={path === `/docs/notes/${n.slug}` ? "text-ink underline" : "hover:text-ink"}
-          >
-            {n.label}
-          </Link>
-        ))}
-      </nav>
+    <div className="grid gap-6">
+      {groups.map((g) => (
+        <section key={g.title} aria-labelledby={`nav-${g.title}`}>
+          <h2 id={`nav-${g.title}`} className="mb-1.5 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            {g.title}
+          </h2>
+          <ul className="grid gap-0.5">
+            {g.items.map((it) => {
+              const on = path === it.href;
+              return (
+                <li key={it.href}>
+                  <Link
+                    href={it.href}
+                    aria-current={on ? "page" : undefined}
+                    className={`block rounded-md border-l-2 px-3 py-1.5 text-[14px] leading-snug transition-colors ${
+                      on
+                        ? "border-accent bg-accent-soft font-semibold text-ink"
+                        : "border-transparent text-muted hover:bg-bg hover:text-ink"
+                    }`}
+                  >
+                    {it.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
+  );
+}
+
+/** Desktop: sticky grouped sidebar. Phone: a collapsible menu that closes on navigation. */
+export function DocsNav({ groups }: { groups: NavGroup[] }) {
+  const path = usePathname();
+  const current = groups.flatMap((g) => g.items).find((i) => i.href === path)?.label ?? "Menu";
+  const mobile = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (mobile.current) mobile.current.open = false;
+  }, [path]);
+
+  return (
+    <>
+      <details ref={mobile} className="group border-b border-line bg-surface lg:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold">
+          <span>
+            <span className="mr-2 font-mono text-[11px] uppercase tracking-widest text-muted">Docs</span>
+            {current}
+          </span>
+          <span aria-hidden className="text-muted transition-transform group-open:rotate-180">▾</span>
+        </summary>
+        <nav aria-label="Documentation" className="max-h-[70vh] overflow-y-auto px-2 pb-4">
+          <Groups groups={groups} path={path} />
+        </nav>
+      </details>
+
+      <nav
+        aria-label="Documentation"
+        className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-line py-6 pr-3 [scrollbar-width:thin] lg:block"
+      >
+        <Groups groups={groups} path={path} />
+      </nav>
+    </>
   );
 }

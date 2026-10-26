@@ -92,7 +92,7 @@ export default function ProgressPage() {
           <p className="font-mono text-xs uppercase tracking-widest text-muted">Overall</p>
           <p className="mt-1 text-5xl font-bold tabular-nums">{pct}%</p>
           <p className="text-sm text-muted">{c.done} of {scope} tasks done · {c.cut} cut to future work</p>
-          <ul className="mt-3 grid grid-cols-2 gap-1 text-sm">
+          <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
             {(["done", "in_progress", "blocked", "todo"] as TaskStatus[]).map((s) => (
               <li key={s} className="flex items-center justify-between gap-2">
                 <Badge status={s} label={t.statuses[s]} />
