@@ -151,6 +151,7 @@ def test_q_candidates_hero_on_the_generated_city(tmp_path):
                              f"'{(d / 'sb' / 'crimes.parquet').as_posix()}' (FORMAT PARQUET)")
     rows = _client(d, tmp_path).named("q_candidates", agent="Linker", crime_id="CHN-AD-2026-001182",
                                       days=45, ring=6, limit=5000).dicts()
+    assert len(rows) == 106  # live Zetaris returns exactly 106 (nexus-1, PR #56)
     first = rows[0]
     assert (first["crime_id"], first["km_apart"], first["days_apart"]) == ("CHN-AD-2026-001078", 0.162, 24)
     assert all(r["km_apart"] <= 6 and r["days_apart"] <= 45 for r in rows)
