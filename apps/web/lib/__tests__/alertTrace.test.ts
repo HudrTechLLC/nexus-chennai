@@ -4,7 +4,7 @@
  * rationale, friendly model names and the honest vision-lane note.
  */
 import { describe, expect, it } from "vitest";
-import { alertSteps, friendlyModel, pairKey, stepsSummary, visionLane } from "../alertTrace";
+import { alertSteps, failureOutcome, friendlyModel, pairKey, stepsSummary, visionLane, type AlertStep } from "../alertTrace";
 import type { TraceRow } from "../trace";
 
 const A = "CHN-AD-2026-001182", V = "CHN-VL-2026-000877", T = "CHN-TI-2026-001134";
@@ -151,5 +151,22 @@ describe("visionLane", () => {
   });
   it("leaves the heartbeat alone when no vision event was recorded", () => {
     expect(visionLane(null)).toBeNull();
+  });
+});
+
+describe("failureOutcome", () => {
+  const st = (seq: number, agent: string, action: string, status: string | null = "ok"): AlertStep =>
+    ({ runId: "run_x", seq, agent, action, model: null, routedModel: null, receipt: null, zetaris: 0, status, round: null });
+  // the hero run's shape: plan, failed, link, skeptic, re-plan, failed again, alert writer
+  const run = [st(1, "Planner", "plan"), st(2, "Planner", "step_failed", "error"), st(3, "Linker", "score_pair"),
+    st(4, "Skeptic", "approve", "approved"), st(5, "Planner", "plan"), st(6, "Planner", "step_failed", "error"), st(7, "Alert writer", "write_alert")];
+  it("says retried only when the same agent ran again later", () => {
+    expect(failureOutcome(run, 1)).toBe("retried");
+    expect(failureOutcome(run, 5)).toBe("recovered");
+  });
+  it("is fatal when nothing ran after the failure, and null for steps that did not fail", () => {
+    expect(failureOutcome(run.slice(0, 2), 1)).toBe("fatal");
+    expect(failureOutcome(run, 0)).toBeNull();
+    expect(failureOutcome(run, 3)).toBeNull();
   });
 });

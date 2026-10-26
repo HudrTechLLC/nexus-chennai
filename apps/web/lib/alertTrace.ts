@@ -166,3 +166,16 @@ export function visionLane(latest: TraceRow | null): { state: "working" | "unava
         at: latest.ts,
       };
 }
+
+/**
+ * How serious a failed step looks, from what the run did next (never guessed):
+ * "retried" = the same agent ran again later in this run; "recovered" = the run carried on with other steps;
+ * "fatal" = nothing ran after it. Steps that did not fail return null.
+ */
+export function failureOutcome(steps: AlertStep[], i: number): "retried" | "recovered" | "fatal" | null {
+  const x = steps[i];
+  if (!x || !(x.status === "error" || x.action === "step_failed")) return null;
+  const later = steps.slice(i + 1).filter((y) => y.runId === x.runId);
+  if (later.some((y) => y.agent === x.agent && y.action !== "step_failed" && y.status !== "error")) return "retried";
+  return later.length ? "recovered" : "fatal";
+}

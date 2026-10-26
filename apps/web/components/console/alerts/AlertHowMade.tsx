@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { stepsSummary, type AlertStep } from "@/lib/alertTrace";
+import { failureOutcome, stepsSummary, type AlertStep } from "@/lib/alertTrace";
 
 const STATUS_TONE: Record<string, string> = {
   approved: "text-signal", needs_revision: "text-accent", rejected: "text-red-600", degraded: "text-accent",
@@ -7,6 +7,14 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 const ACTION_LABEL: Record<string, string> = { rationale_reexplained: "rationale re-explained (later run)" };
+
+/** A failed step the run went on from reads amber, not red; red only when nothing ran after it. */
+const FAILURE_TONE = { retried: "text-amber-700", recovered: "text-amber-700", fatal: "text-red-600" } as const;
+const FAILURE_TITLE = {
+  retried: "This step failed and the same agent ran again later in this run.",
+  recovered: "This step failed; the run carried on without it.",
+  fatal: "This step failed and the run stopped here.",
+} as const;
 
 /**
  * "How this alert was made" (WS3-25): each recorded step of the agent run that concerns this alert, with the
@@ -40,7 +48,9 @@ export function AlertHowMade({ steps, runId, verdict, canOpenTrace }: {
       </summary>
       {steps.length > 0 && (
         <ol className="mt-3 space-y-1.5 text-sm">
-          {steps.map((x) => (
+          {steps.map((x, i) => {
+            const failed = failureOutcome(steps, i);
+            return (
             <li key={`${x.runId}:${x.seq}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-t border-line pt-1.5 first:border-t-0 first:pt-0">
               <span className="font-medium">{x.agent}</span>
               <span className="font-mono text-xs text-muted">{ACTION_LABEL[x.action] ?? x.action}{x.round ? ` · ${x.round}` : ""}</span>
@@ -60,10 +70,17 @@ export function AlertHowMade({ steps, runId, verdict, canOpenTrace }: {
               )}
               {x.receipt && <span className="font-mono text-xs text-muted">receipt {x.receipt}</span>}
               {x.status && !["ok", "success"].includes(x.status) && (
-                <span className={`text-xs ${STATUS_TONE[x.status] ?? "text-muted"}`}>{x.status.replaceAll("_", " ")}</span>
+                <span
+                  className={`text-xs ${failed ? FAILURE_TONE[failed] : STATUS_TONE[x.status] ?? "text-muted"}`}
+                  title={failed ? FAILURE_TITLE[failed] : undefined}
+                >
+                  {failed === "retried" && <span aria-hidden className="mr-0.5">↻</span>}
+                  {x.status.replaceAll("_", " ")}
+                </span>
               )}
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
       <p className="mt-2 text-xs text-muted">
