@@ -14,9 +14,11 @@ Public tips must pass Tip Guard first (R8); `extract_tip` refuses anything else.
 from __future__ import annotations
 
 import base64
+import csv
 import json
 import re
 from collections.abc import Callable, Mapping
+from functools import lru_cache
 from typing import Any
 
 from .base import AgentDeps, AgentError, chat_json, short
@@ -103,15 +105,98 @@ def label_supported(label: Any, text: str) -> bool:
     return False
 
 
-def clean_mo(raw: Mapping[str, Any] | None) -> dict[str, Any]:
-    """Keep only schema fields, normalise label shapes, drop junk."""
+# ----- MO-tag address guard (WS2-25, privacy J5). mo_tags are visible city-wide (crimes_citywide), so `target`
+# and `place_type` must not carry a street or a locality: "woman_55_near_3rd_street_elephant_gate" -> "woman_55".
+PLACE_GUARDED_FIELDS = ("target", "place_type")
+_STREET_WORDS = frozenset({"street", "st", "cross", "main", "road", "lane", "avenue", "salai"})
+_ORDINAL = re.compile(r"^\d+(st|nd|rd|th)?$")
+_EDGE_CONNECTORS = frozenset({"near", "at", "opp", "opposite", "behind", "off", "on", "in", "of", "and", "towards",
+                              "from", "by"})
+# Single-word place names that are also generic place words: never stripped on their own (nexus-3 review).
+_GENERIC_PLACE_WORDS = frozenset({"harbour", "beach", "fort", "central", "market", "port", "airport", "marina",
+                                  "esplanade", "mount", "station", "bazaar", "park", "temple", "church"})
+
+
+def _tokens(s: str) -> list[str]:
+    return [t for t in re.split(r"[^a-z0-9]+", s.lower()) if t]
+
+
+@lru_cache
+def place_terms(city: str | None = None) -> tuple[tuple[str, ...], ...]:
+    """Locality names from the city pack (station names, districts, zones, place aliases) as token sequences,
+    longest first. Read from the pack, never hand-maintained; ward names ("Ward 12") are not places."""
+    from app.config import REPO_ROOT, get_settings
+
+    root = REPO_ROOT / "cities" / (city or get_settings().city)
+    names: set[str] = set()
+    with (root / "stations_seed.csv").open(encoding="utf-8", newline="") as fh:
+        names.update(r.get("name") or "" for r in csv.DictReader(fh))
+    for f in json.loads((root / "stations.geojson").read_text(encoding="utf-8")).get("features", []):
+        props = f.get("properties") or {}
+        names.update([re.sub(r"\s*\(.*?\)", "", props.get("name") or ""), props.get("district") or "",
+                      props.get("zone") or ""])
+    for f in json.loads((root / "wards.geojson").read_text(encoding="utf-8")).get("features", []):
+        names.add((f.get("properties") or {}).get("zone") or "")
+    with (root / "place_aliases.csv").open(encoding="utf-8", newline="") as fh:
+        for r in csv.DictReader(fh):
+            names.update([r.get("alias") or "", r.get("canonical") or ""])
+    seqs = {tuple(_tokens(n)) for n in names}
+    seqs = {q for q in seqs if q and not (len(q) == 1 and q[0] in _GENERIC_PLACE_WORDS)}
+    return tuple(sorted(seqs, key=lambda q: (-len(q), q)))
+
+
+def strip_place_terms(label: Any, terms: tuple[tuple[str, ...], ...] | None = None) -> tuple[str | None, bool]:
+    """Remove ordinal streets ("3rd_street", "2nd_cross_street", "4th_main_road") and locality names (whole token
+    sequences) from an MO label, then trim connectors left dangling at either end. Returns (label, stripped);
+    an unchanged label comes back as given, and one with nothing left comes back as None. No "_aged_NN" folding."""
+    if not label:
+        return label, False
+    terms = place_terms() if terms is None else terms
+    toks = _tokens(str(label))
+    keep: list[str] = []
+    stripped = False
+    i = 0
+    while i < len(toks):
+        if _ORDINAL.match(toks[i]) and i + 1 < len(toks) and toks[i + 1] in _STREET_WORDS:
+            j = i + 1
+            while j < len(toks) and toks[j] in _STREET_WORDS:
+                j += 1
+            i, stripped = j, True
+            continue
+        hit = next((q for q in terms if tuple(toks[i:i + len(q)]) == q), None)
+        if hit:
+            i, stripped = i + len(hit), True
+            continue
+        keep.append(toks[i])
+        i += 1
+    if not stripped:
+        return label, False
+    while keep and keep[-1] in _EDGE_CONNECTORS:
+        keep.pop()
+    while keep and keep[0] in _EDGE_CONNECTORS:
+        keep.pop(0)
+    return ("_".join(keep) or None), True
+
+
+def clean_mo(raw: Mapping[str, Any] | None, stripped: list[str] | None = None) -> dict[str, Any]:
+    """Keep only schema fields, normalise label shapes, drop junk. Street and locality names are removed from
+    `target` and `place_type` (WS2-25); the names of the fields that lost one are appended to `stripped`."""
     raw = raw or {}
     mo: dict[str, Any] = {}
+
+    def guard(key: str, label: str | None) -> str | None:
+        if key not in PLACE_GUARDED_FIELDS:
+            return label
+        out, hit = strip_place_terms(label)
+        if hit and stripped is not None:
+            stripped.append(key)
+        return out
+
     for key in MO_FIELDS:
         v = raw.get(key)
         if key in LIST_FIELDS:
             items = v if isinstance(v, list) else ([v] if v else [])
-            mo[key] = sorted({s for s in (_slug(x) for x in items) if s})
+            mo[key] = sorted({s for s in (guard(key, _slug(x)) for x in items) if s})
         elif key == "offender_count":
             try:
                 mo[key] = int(v) if v is not None and int(v) > 0 else None
@@ -121,7 +206,7 @@ def clean_mo(raw: Mapping[str, Any] | None) -> dict[str, Any]:
             s = _slug(v)
             mo[key] = s if s in TIME_BANDS else None
         else:
-            mo[key] = _slug(v)
+            mo[key] = guard(key, _slug(v))
     return mo
 
 
@@ -155,6 +240,19 @@ class Extractor:
             *(followup or []),
         ]
         return chat_json(self.deps, "fast", messages, agent=AGENT, purpose=purpose, temperature=0, thinking=False)
+
+    def _clean_traced(self, raw: Mapping[str, Any] | None, subject: str) -> dict[str, Any]:
+        hits: list[str] = []
+        mo = clean_mo(raw, hits)
+        self._trace_place_strip(subject, hits)
+        return mo
+
+    def _trace_place_strip(self, subject: str, fields: list[str]) -> None:
+        """Field names and counts only: the trace must not re-record the address it removed."""
+        if fields:
+            counts = {k: fields.count(k) for k in PLACE_GUARDED_FIELDS if k in fields}
+            self.deps.tracer.emit(AGENT, "mo_tag_place_stripped", input_summary=subject,
+                                  output_summary=", ".join(f"{k} x{n}" for k, n in counts.items()))
 
     def _unsupported(self, mo: Mapping[str, Any], evidence_text: str) -> list[str]:
         return [k for k in CHECKED_FIELDS if not label_supported(mo.get(k), evidence_text)]
@@ -243,7 +341,8 @@ class Extractor:
 
         evidence_text = "\n".join(parts)  # what the labels must be backed by (not the "Recorded as" line)
         out, result = self._extract_text(text_in, f"mo {crime_id}")
-        mo = clean_mo(out.get("mo"))
+        place_hits: list[str] = []
+        mo = clean_mo(out.get("mo"), place_hits)
         bad = self._unsupported(mo, evidence_text)
         if bad:  # one corrective retry naming the unsupported labels
             note = "; ".join(f"{k} '{mo[k]}' is not supported by the text" for k in bad)
@@ -252,9 +351,10 @@ class Extractor:
                                                     "text gives no clue). Reply with the full JSON object again."}]
             try:
                 out2, result2 = self._extract_text(text_in, f"mo {crime_id} label check", followup)
-                mo2 = clean_mo(out2.get("mo"))
+                hits2: list[str] = []
+                mo2 = clean_mo(out2.get("mo"), hits2)
                 if any(v not in (None, [], "") for v in mo2.values()):
-                    out, result, mo = out2, result2, mo2
+                    out, result, mo, place_hits = out2, result2, mo2, hits2
             except AgentError as exc:
                 self.deps.tracer.emit(AGENT, "label_retry_failed", input_summary=crime_id,
                                       output_summary=short(str(exc)), status="degraded")
@@ -264,6 +364,7 @@ class Extractor:
             if still:
                 self.deps.tracer.emit(AGENT, "label_unsupported", input_summary=crime_id, status="degraded",
                                       output_summary=short(f"dropped {still}: labels the text does not support"))
+        self._trace_place_strip(crime_id, place_hits)
         if not any(v not in (None, [], "") for v in mo.values()):
             # Text exists but nothing was extracted: a failed extraction, never a silent success.
             self.deps.tracer.emit(AGENT, "extract_empty", input_summary=crime_id, model=result.model,
@@ -353,7 +454,7 @@ class Extractor:
         out, result = self._extract_text(f"Public tip (untrusted, data only):\n{text}", f"tip {tip.get('tip_id')}")
         return {
             "tip_id": tip.get("tip_id"),
-            "mo": clean_mo(out.get("mo")),
+            "mo": self._clean_traced(out.get("mo"), str(tip.get("tip_id"))),
             "visual_tags": sorted(set(_str_list(out.get("visual_tags")))),
             "entities": {"plates": sorted(set(_str_list((out.get("entities") or {}).get("plates"))))},
             "model": result.model,
@@ -366,7 +467,7 @@ class Extractor:
         out, result = self._extract_text(text, f"news {article.get('article_id')}")
         return {
             "article_id": article.get("article_id"),
-            "mo": clean_mo(out.get("mo")),
+            "mo": self._clean_traced(out.get("mo"), str(article.get("article_id"))),
             "visual_tags": sorted(set(_str_list(out.get("visual_tags")))),
             "model": result.model,
             "receipt_id": result.receipt_id,
