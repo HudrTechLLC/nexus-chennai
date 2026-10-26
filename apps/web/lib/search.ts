@@ -13,8 +13,21 @@ export type ParsedSearch = {
   value: string;
   /** Free-text words for narrative / name / tip matching (ILIKE, all must match). */
   words: string[];
-  facets: Pick<CaseFilters, "station" | "category" | "status" | "from" | "to">;
+  facets: Pick<CaseFilters, "station" | "category" | "status" | "from" | "to"> & ExtraFacets;
+  /** "Similar MO" mode: rank look-alikes of this case instead of matching the box (SRCH-04). */
+  similar: string | null;
 };
+
+/** SRCH-03 facets beyond the case-list ones. Time of day uses the Extractor's MO time band. */
+export type ExtraFacets = {
+  weapon: string | null;
+  zone: string | null;
+  mo: string | null; // one MO or visual tag, e.g. "two_wheeler_from_behind"
+  tod: TimeBand | null;
+  linked: "linked" | "unlinked" | null;
+};
+export const TIME_BANDS = ["early_morning", "morning", "afternoon", "evening", "night"] as const;
+export type TimeBand = (typeof TIME_BANDS)[number];
 
 /** Tip statuses search may show. Unscreened and quarantined tips stay in triage only (R8). */
 export const SEARCHABLE_TIP_STATUSES = ["screened", "urgent", "reviewed", "closed"] as const;
@@ -44,18 +57,31 @@ export function parseSearch(sp: Record<string, string | string[] | undefined>): 
   const raw = (Array.isArray(sp.q) ? sp.q[0] : sp.q ?? "").slice(0, 120);
   const { kind, value } = classifyQuery(raw);
   const f = parseCaseFilters(sp);
+  const one = (k: string) => { const v = sp[k]; return (Array.isArray(v) ? v[0] : v)?.trim() || null; };
+  const word = (v: string | null, max = 40) => (v && /^[a-z0-9_ -]{2,40}$/i.test(v) ? v.slice(0, max).toLowerCase().replace(/[ -]+/g, "_") : null);
+  const tod = one("tod");
+  const linked = one("linked");
+  const similar = one("similar")?.toUpperCase() ?? null;
   return {
     q: raw.trim(),
     kind,
     value,
     words: kind === "text" ? searchWords(value) : [],
-    facets: { station: f.station, category: f.category, status: f.status, from: f.from, to: f.to },
+    facets: {
+      station: f.station, category: f.category, status: f.status, from: f.from, to: f.to,
+      weapon: word(one("weapon")),
+      zone: one("zone") && /^[A-Za-z .-]{2,40}$/.test(one("zone") as string) ? (one("zone") as string) : null,
+      mo: word(one("mo")),
+      tod: tod && (TIME_BANDS as readonly string[]).includes(tod) ? (tod as TimeBand) : null,
+      linked: linked === "linked" || linked === "unlinked" ? linked : null,
+    },
+    similar: similar && CRIME_ID_RE.test(similar) ? similar : null,
   };
 }
 
 /** True when there is anything to search for (a query or at least one facet). */
 export function hasCriteria(p: ParsedSearch): boolean {
-  return p.kind !== "empty" || Object.values(p.facets).some(Boolean);
+  return p.kind !== "empty" || !!p.similar || Object.values(p.facets).some(Boolean);
 }
 
 /** Human label for the footer: what the query was read as. */

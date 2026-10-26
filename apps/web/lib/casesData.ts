@@ -75,6 +75,7 @@ export type Forensic = { forensic_id: string; kind: string; match_code: string |
 export type PersonLink = { person_id: string; role: string; persons: { name: string | null; aliases: string[]; descriptors: Record<string, unknown> } | null };
 export type SeriesRef = { series_id: string; name: string; status: string; added_at: string };
 export type RunRef = { run_id: string; status: string; started: string };
+export type TipLink = { tip_id: string; useful: boolean; at: string };
 export type MoReview = { review_id: number; corrections: Record<string, unknown>; note: string | null; reviewed_by: string; reviewed_at: string };
 
 export type CaseFile = {
@@ -90,6 +91,7 @@ export type CaseFile = {
   series: SeriesRef[];
   run: RunRef | null;
   reviews: MoReview[];
+  tips: TipLink[];
 };
 
 const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, severity, status";
@@ -134,9 +136,9 @@ export async function fetchCases(sb: SupabaseClient, f: CaseFilters): Promise<{ 
 }
 
 /** Stations for the filters and the FIR form. */
-export async function stationOptions(sb: SupabaseClient): Promise<{ station_id: string; name: string }[]> {
-  const { data } = await sb.from("stations").select("station_id, name").order("name");
-  return (data ?? []) as { station_id: string; name: string }[];
+export async function stationOptions(sb: SupabaseClient): Promise<{ station_id: string; name: string; zone: string | null }[]> {
+  const { data } = await sb.from("stations").select("station_id, name, zone").order("name");
+  return (data ?? []) as { station_id: string; name: string; zone: string | null }[];
 }
 
 // =====================
@@ -159,6 +161,7 @@ export async function fetchCaseFile(sb: SupabaseClient, crimeId: string): Promis
     sb.from("series_members").select("series_id, added_at, series(name, status)").eq("crime_id", crimeId),
     latestRun(sb, crimeId),
   ]);
+  const { data: tipLinks } = await sb.from("tip_reviews").select("tip_id, useful, at").eq("crime_id", crimeId).order("at", { ascending: false }).limit(50);
   const { data: reviews } = await sb.from("crime_feature_reviews").select("review_id, corrections, note, reviewed_by, reviewed_at")
     .eq("crime_id", crimeId).order("reviewed_at", { ascending: false }).limit(20);
   return {
@@ -176,6 +179,7 @@ export async function fetchCaseFile(sb: SupabaseClient, crimeId: string): Promis
     })),
     run,
     reviews: (reviews ?? []) as MoReview[],
+    tips: (tipLinks ?? []) as TipLink[],
   };
 }
 

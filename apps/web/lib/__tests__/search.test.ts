@@ -36,10 +36,27 @@ describe("parseSearch", () => {
     const p = parseSearch({ q: "black helmet", station: "PS-ADYAR-J2", category: "robbery", from: "2026-10-01", status: "nope" });
     expect(p.kind).toBe("text");
     expect(p.words).toEqual(["black", "helmet"]);
-    expect(p.facets).toEqual({ station: "PS-ADYAR-J2", category: "robbery", status: null, from: "2026-10-01", to: null });
+    expect(p.facets).toMatchObject({ station: "PS-ADYAR-J2", category: "robbery", status: null, from: "2026-10-01", to: null });
   });
   it("needs a query or a facet", () => {
     expect(hasCriteria(parseSearch({}))).toBe(false);
     expect(hasCriteria(parseSearch({ category: "theft" }))).toBe(true);
+  });
+});
+
+describe("SRCH-03 facets and similar mode", () => {
+  it("parses weapon, zone, MO tag, time band and linked", () => {
+    const p = parseSearch({ weapon: "Knife", zone: "Adyar", mo: "two wheeler from behind", tod: "night", linked: "unlinked" });
+    expect(p.facets).toMatchObject({ weapon: "knife", zone: "Adyar", mo: "two_wheeler_from_behind", tod: "night", linked: "unlinked" });
+    expect(hasCriteria(p)).toBe(true);
+  });
+  it("drops malformed facet values", () => {
+    const p = parseSearch({ weapon: "knife%", zone: "Adyar;drop", mo: "x", tod: "noon", linked: "maybe" });
+    expect(p.facets).toMatchObject({ weapon: null, zone: null, mo: null, tod: null, linked: null });
+  });
+  it("accepts a case id for similar mode only", () => {
+    expect(parseSearch({ similar: "chn-ad-2026-001231" }).similar).toBe("CHN-AD-2026-001231");
+    expect(parseSearch({ similar: "1231" }).similar).toBeNull();
+    expect(hasCriteria(parseSearch({ similar: "CHN-AD-2026-001231" }))).toBe(true);
   });
 });

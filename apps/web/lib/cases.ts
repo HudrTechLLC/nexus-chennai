@@ -39,7 +39,7 @@ export const CRIME_TYPES: Record<string, string[]> = {
 };
 export const CATEGORIES = Object.keys(CRIME_TYPES);
 
-export type TimelineKind = "occurred" | "fir" | "statement" | "evidence" | "diary" | "alert" | "review";
+export type TimelineKind = "occurred" | "fir" | "statement" | "evidence" | "diary" | "alert" | "review" | "tip";
 export type TimelineItem = { at: string; kind: TimelineKind; label: string; href?: string };
 
 // =====================
