@@ -25,7 +25,6 @@ from typing import Any
 
 import duckdb
 import httpx
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from ..config import Settings
 from ..tracing import Tracer
@@ -112,6 +111,7 @@ class ZetarisTransient(ZetarisError):
 
 # Zetaris reports Spark/JDBC failures as HTTP 400. These texts mean the source connection failed
 # (seen live: intermittent DNS for the Supabase pooler inside the container), not bad SQL.
+REST_ATTEMPTS = 3  # first try + at most 2 retries
 TRANSIENT_400 = ("UnknownHostException", "The connection attempt failed")
 
 
@@ -172,15 +172,21 @@ class ZetarisClient:
             "Content-Type": "application/json",
         }
 
-    @retry(
-        retry=retry_if_exception(_is_retryable),
-        stop=stop_after_attempt(3),  # at most 2 retries
-        wait=wait_exponential(multiplier=0.5, max=4),
-        before_sleep=lambda s: s.args[0]._retries.__setitem__(s.args[2], s.attempt_number),
-        reraise=True,
-    )
-    def _run_rest(self, sql: str, query_id: str, limit: int) -> list[list[Any]]:
-        return self._post(sql, query_id, limit)
+    def _run_rest(self, sql: str, query_id: str, limit: int) -> tuple[list[list[Any]], str]:
+        """Run with at most REST_ATTEMPTS - 1 retries on transient failures. Zetaris refuses a reused queryId
+        ("Query id already exists"), so every retry sends a fresh id; returns the rows and the id that answered,
+        which is the one the trace and the alert card cite."""
+        used = query_id
+        for attempt in range(1, REST_ATTEMPTS + 1):
+            try:
+                return self._post(sql, used, limit), used
+            except Exception as exc:
+                if attempt == REST_ATTEMPTS or not _is_retryable(exc):
+                    raise
+                self._retries[query_id] = attempt
+                time.sleep(min(0.5 * 2 ** (attempt - 1), 4.0))
+                used = str(uuid.uuid4())
+        raise AssertionError("unreachable")
 
     def _post(self, sql: str, query_id: str, limit: int, timeout: float | None = None) -> list[list[Any]]:
         body = {"queryId": query_id, "sql": sql, "source": "SqlEditor", "limit": limit}
@@ -220,8 +226,13 @@ class ZetarisClient:
             if self.settings.sample_mode and not self.settings.zetaris_api_key:
                 raise httpx.ConnectError("sample mode without Zetaris credentials")
             sql = render(q.lightning, params)
-            rows = (self._post(sql, query_id, limit, q.timeout_s) if q.timeout_s is not None
-                    else self._run_rest(sql, query_id, limit))
+            if q.timeout_s is not None:
+                rows = self._post(sql, query_id, limit, q.timeout_s)
+            else:
+                rows, used = self._run_rest(sql, query_id, limit)
+                if used != query_id:  # a retry answered: cite its id, keep the retry count
+                    self._retries[used] = self._retries.pop(query_id, 0)
+                    query_id = used
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
             if q.timeout_s is not None and isinstance(exc, httpx.TimeoutException):
                 self._tripped[name] = time.monotonic() + BREAKER_SECONDS

@@ -115,3 +115,34 @@ def test_bad_sql_400_is_not_retried():
     with pytest.raises(ZetarisError):
         c.named("q_ping", agent="Planner")
     assert len(calls) == 1
+
+
+def test_each_retry_sends_a_fresh_query_id_and_the_answer_cites_it(tmp_path):
+    # Zetaris answers a reused queryId with 400 "Query id already exists", so a retry must never resend one.
+    ids = []
+
+    def handler(request):
+        ids.append(json.loads(request.content)["queryId"])
+        if len(ids) < 3:
+            return httpx.Response(400, text=DNS_400)
+        return httpx.Response(200, json={"data": [["1"]]})
+
+    tracer = Tracer("z3", tmp_path, echo=False)
+    r = ZetarisClient(settings(), tracer, transport=httpx.MockTransport(handler)).named("q_ping", agent="Planner")
+    assert len(ids) == 3 and len(set(ids)) == 3
+    assert r.query_id == ids[-1]
+    (event,) = tracer.read()
+    assert event["zetaris_query_ids"] == [ids[-1]] and event["retry_count"] == 2
+
+
+def test_transport_errors_retry_with_fresh_ids_too():
+    ids = []
+
+    def handler(request):
+        ids.append(json.loads(request.content)["queryId"])
+        if len(ids) == 1:
+            raise httpx.ConnectError("down")
+        return httpx.Response(200, json={"data": [["1"]]})
+
+    r = ZetarisClient(settings(), transport=httpx.MockTransport(handler)).named("q_ping", agent="Planner")
+    assert len(ids) == 2 and ids[0] != ids[1] and r.query_id == ids[1]
