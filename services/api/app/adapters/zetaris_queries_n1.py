@@ -107,6 +107,41 @@ def _q_candidates(tz: str, off: str) -> str:
     )
 
 
+TIP_COLUMNS = ("tip_id", "crime_id", "received_week", "summary", "tags", "verdict", "status", "category",
+               "channel", "approx_cell")
+_TIP_STATUSES = "('screened', 'reviewed', 'urgent')"  # never unscreened ('new') or quarantined tips (R8)
+
+
+def _q_tip_corroboration(tz: str) -> str:
+    """Screened tips in the crime's H3 r8 cell, received from the crime's ISO week to :days after it.
+    Tips are untrusted: only Tip Guard's vocabulary-only summary and tags leave Zetaris, never text."""
+    day = f"date_add(CAST(from_utc_timestamp(c.occurred_from, '{tz}') AS DATE), :days)"
+    week_end = (f"concat(CAST(extract(YEAROFWEEK FROM {day}) AS STRING), '-W', "
+                f"lpad(CAST(weekofyear({day}) AS STRING), 2, '0'))")
+    return (
+        "SELECT t.tip_id, c.crime_id, t.received_week, get_json_object(t.guard, '$.summary') AS summary, "
+        "coalesce(get_json_object(t.guard, '$.tags'), '[]') AS tags, get_json_object(t.guard, '$.verdict') AS verdict, "
+        "t.status, t.category, t.channel, t.approx_cell "
+        "FROM sb.crimes c JOIN sb.tips_v t ON t.approx_cell = c.h3_r8 "
+        f"WHERE c.crime_id = :crime_id AND t.status IN {_TIP_STATUSES} "
+        f"AND t.received_week >= c.week AND t.received_week <= {week_end} "
+        "ORDER BY t.received_week, t.tip_id"
+    )
+
+
+def _q_tip_corroboration_sample(tz: str) -> str:
+    day = f"CAST(timezone('{tz}', c.occurred_from) AS DATE) + CAST(:days AS INTEGER)"
+    return (
+        "SELECT t.tip_id, c.crime_id, t.received_week, json_extract_string(t.guard, '$.summary') AS summary, "
+        "coalesce(CAST(json_extract(t.guard, '$.tags') AS VARCHAR), '[]') AS tags, "
+        "json_extract_string(t.guard, '$.verdict') AS verdict, t.status, t.category, t.channel, t.approx_cell "
+        "FROM 'sb/crimes.parquet' c JOIN 'sb/tips.parquet' t ON t.approx_cell = c.h3_r8 "
+        f"WHERE c.crime_id = :crime_id AND t.status IN {_TIP_STATUSES} "
+        f"AND t.received_week >= c.week AND t.received_week <= strftime({day}, '%G-W%V') "
+        "ORDER BY t.received_week, t.tip_id"
+    )
+
+
 def _twin(name: str, columns: tuple[str, ...]) -> str:
     """The DuckDB twin from nexus-2 when available; otherwise a stub that fails the width check loudly."""
     try:
@@ -135,4 +170,8 @@ def specs() -> dict[str, dict[str, Any]]:
                        "sample": _twin("q_features", FEATURES_COLUMNS),
                        "description": "Extracted MO features for a comma-joined list of crime ids (D3.2)",
                        "columns": FEATURES_COLUMNS},
+        "q_tip_corroboration": {"name": "q_tip_corroboration", "lightning": _q_tip_corroboration(tz),
+                                "sample": _q_tip_corroboration_sample(tz), "defaults": {"days": 30},
+                                "description": "Screened public tips in a crime's H3 r8 cell within :days (default 30)",
+                                "columns": TIP_COLUMNS},
     }
