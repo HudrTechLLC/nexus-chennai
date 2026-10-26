@@ -90,8 +90,9 @@ MAP_PROMPT = (
     "You map the columns of a police station's crime export onto a unified crime schema.\n"
     "Unified fields (use exactly these names, or null to ignore a column): {fields}.\n"
     "Required: {required}.\n"
-    "Transforms: none, trim_upper, date_dmy (dd/mm/yyyy), datetime_dmy_hm (dd/mm/yyyy HH:MM), "
-    "latlong_lat (a single column holding 'lat, lon': map it to lat with latlong_lat; lon is derived from it).\n"
+    "Transforms (put these in \"transform\", never in \"unified_field\"): none, trim_upper, date_dmy (dd/mm/yyyy), "
+    "datetime_dmy_hm (dd/mm/yyyy HH:MM), latlong_lat. A single column holding both coordinates ('13.19, 80.18') "
+    "gets unified_field \"lat\" and transform \"latlong_lat\"; lon is then derived from it, so do not map lon too.\n"
     "Columns with up to 5 example values:\n{columns}\n"
     'Reply with JSON only: {{"mapping": [{{"source_col": "...", "unified_field": "..." or null, "transform": "...", '
     '"confidence": 0.0-1.0, "reason": "one short line"}}]}} with every column exactly once.'
@@ -109,9 +110,11 @@ def validate_mapping(raw: Any, columns: list[str]) -> list[dict[str, Any]]:
         if not isinstance(it, dict) or it.get("source_col") not in columns or it["source_col"] in by_col:
             raise ValueError(f"bad or repeated column: {str(it)[:80]}")
         field = it.get("unified_field") or None
+        t = it.get("transform") or "none"
+        if field in ("latlong_lat", "latlong_lon"):  # the one confusion the fast lane makes: transform in the field slot
+            field, t = "lat", "latlong_lat"
         if field is not None and field not in zo.FIELDS:
             raise ValueError(f"unknown field {field!r}")
-        t = it.get("transform") or "none"
         if t not in zo.TRANSFORMS:
             raise ValueError(f"unknown transform {t!r}")
         conf = float(it.get("confidence", 0))
@@ -119,8 +122,12 @@ def validate_mapping(raw: Any, columns: list[str]) -> list[dict[str, Any]]:
             raise ValueError("confidence out of range")
         by_col[it["source_col"]] = {"source_col": it["source_col"], "unified_field": field, "transform": t,
                                     "confidence": round(conf, 2), "reason": str(it.get("reason") or "")[:300]}
-    if set(by_col) != set(columns):
-        raise ValueError("not every column was mapped")
+    if not by_col:
+        raise ValueError("the mapping is empty")
+    # A column the model left out is ignored, and says so (approve still requires every required field).
+    for c in columns:
+        by_col.setdefault(c, {"source_col": c, "unified_field": None, "transform": "none", "confidence": 0.0,
+                              "reason": "not mapped by the model: ignored"})
     return [by_col[c] for c in columns]
 
 
@@ -172,6 +179,7 @@ class Onboarder:
                  stage: StageFn = docker_stage) -> None:
         self.settings, self.sb, self.zetaris, self.nightshift = settings, sb, zetaris, nightshift
         self.logs_dir, self.stage = logs_dir, stage
+        self.tz = load_city(settings.city)["timezone"]
 
     def process(self) -> int:
         """One uploaded run and one approved run per pass. Nothing to do -> no Zetaris or model call at all."""
@@ -266,14 +274,15 @@ class Onboarder:
 
     def _dq(self, key: str, mapping: list[dict[str, Any]], station_id: str) -> list[dict[str, Any]]:
         full = lat_lon_split(mapping)
+        tz = self.tz
         try:
-            zo.mapped_select(key, full, station_id)
+            zo.mapped_select(key, full, station_id, tz)
         except zo.OnboardRejected as exc:
             return [{"rule": "mapping_incomplete", "severity": "warn", "count": 1, "sample_rows": [str(exc)]}]
         bounds = tuple(load_city(self.settings.city)["map"]["bounds"])
-        counts = self.zetaris.onboard("dq", key, full, station_id, bounds, agent=AGENT).rows[0]
-        samples = self.zetaris.onboard("dq_samples", key, full, station_id, bounds, agent=AGENT).rows
-        dups = self.zetaris.onboard("likely_duplicates", key, full, station_id, agent=AGENT).rows
+        counts = self.zetaris.onboard("dq", key, full, station_id, tz, bounds, agent=AGENT).rows[0]
+        samples = self.zetaris.onboard("dq_samples", key, full, station_id, tz, bounds, agent=AGENT).rows
+        dups = self.zetaris.onboard("likely_duplicates", key, full, station_id, tz, agent=AGENT).rows
         by_rule = {"bad_date": int(counts[1] or 0), "out_of_city": int(counts[2] or 0),
                    "missing_required": int(counts[3] or 0), "repeated_fir_no": int(counts[4] or 0),
                    "ends_before_start": int(counts[5] or 0), "occurred_after_reported": int(counts[6] or 0),
@@ -304,7 +313,7 @@ class Onboarder:
                                                       "run_id": f"eq.{run['run_id']}", "order": "source_col.asc"})
         station_id, _ = station_for(self.settings, run)
         mapping = lat_lon_split([{**r, "source_col": zo.check_header(r["source_col"])} for r in rows])
-        self.zetaris.onboard("create_view", key, mapping, station_id, agent=AGENT)
+        self.zetaris.onboard("create_view", key, mapping, station_id, self.tz, agent=AGENT)
         n = int(self.zetaris.onboard("count_view", key, agent=AGENT).rows[0][0])
         dq = self._dq(key, [r for r in mapping if r["transform"] != "latlong_lon"], station_id)
         self.sb.update("onboarding_runs", match, {"status": "registered", "view_name": zo.ident(key), "row_count": n,

@@ -32,8 +32,9 @@ REQUIRED = ("fir_no", "occurred_from", "category", "lat", "lon")
 TRANSFORMS = {
     "none": "CAST(trim({c}) AS STRING)",
     "trim_upper": "upper(trim({c}))",
-    "date_dmy": "to_timestamp(trim({c}), 'dd/MM/yyyy')",
-    "datetime_dmy_hm": "to_timestamp(trim({c}), 'dd/MM/yyyy HH:mm')",
+    # The export writes local times; Zetaris runs in GMT and stores instants, so read them in the city's zone.
+    "date_dmy": "to_utc_timestamp(to_timestamp(trim({c}), 'dd/MM/yyyy'), '{tz}')",
+    "datetime_dmy_hm": "to_utc_timestamp(to_timestamp(trim({c}), 'dd/MM/yyyy HH:mm'), '{tz}')",
     "latlong_lat": "CAST(trim(split({c}, ',')[0]) AS DOUBLE)",
     "latlong_lon": "CAST(trim(split({c}, ',')[1]) AS DOUBLE)",
 }
@@ -121,10 +122,16 @@ def examples(key: str, columns: list[str], n: int = 5) -> str:
     return f"SELECT {cols} FROM s3csv.{ident(key, raw=True)} LIMIT {int(n)}"
 
 
-def _select_list(mapping: list[dict], station_id: str) -> list[str]:
-    """`<transform SQL> AS <field>` per mapped column, plus the fixed station and source columns."""
+TZ = re.compile(r"^[A-Za-z]+(/[A-Za-z_]+){0,2}$")
+
+
+def _select_list(mapping: list[dict], station_id: str, tz: str) -> list[str]:
+    """`<transform SQL> AS <field>` per mapped column, plus the fixed station and source columns. `tz` is the city
+    pack's time zone (e.g. Asia/Kolkata), checked."""
     if not re.match(r"^[A-Z0-9-]{3,40}$", station_id or ""):
         raise OnboardRejected("station id must be A-Z, 0-9 and -")
+    if not TZ.match(tz or ""):
+        raise OnboardRejected("bad time zone")
     seen: set[str] = set()
     cols = [f"'{station_id}' AS station_id"]
     for m in mapping:
@@ -139,21 +146,21 @@ def _select_list(mapping: list[dict], station_id: str) -> list[str]:
         t = m.get("transform") or "none"
         if t not in TRANSFORMS:
             raise OnboardRejected(f"unknown transform {t!r}")
-        cols.append(f"{TRANSFORMS[t].format(c=q(m['source_col']))} AS {field}")
+        cols.append(f"{TRANSFORMS[t].format(c=q(m['source_col']), tz=tz)} AS {field}")
     missing = [f for f in REQUIRED if f not in seen]
     if missing:
         raise OnboardRejected(f"required fields not mapped: {', '.join(missing)}")
     return cols
 
 
-def mapped_select(key: str, mapping: list[dict], station_id: str) -> str:
-    return f"SELECT {', '.join(_select_list(mapping, station_id))} FROM s3csv.{ident(key, raw=True)}"
+def mapped_select(key: str, mapping: list[dict], station_id: str, tz: str) -> str:
+    return f"SELECT {', '.join(_select_list(mapping, station_id, tz))} FROM s3csv.{ident(key, raw=True)}"
 
 
-def create_view(key: str, mapping: list[dict], station_id: str) -> str:
+def create_view(key: str, mapping: list[dict], station_id: str, tz: str) -> str:
     """The registered, NOT linked, source view in the nexus container (it is not part of v_crime_unified)."""
     return (f"CREATE OR REPLACE SCHEMASTORE VIEW {ident(key)} WITH CONTAINER nexus AS "
-            f"{mapped_select(key, mapping, station_id)}")
+            f"{mapped_select(key, mapping, station_id, tz)}")
 
 
 def count_view(key: str) -> str:
@@ -164,7 +171,7 @@ def _mapped(mapping: list[dict]) -> set[str]:
     return {m["unified_field"] for m in mapping if m.get("unified_field")}
 
 
-def dq(key: str, mapping: list[dict], station_id: str, bounds: tuple[float, float, float, float]) -> str:
+def dq(key: str, mapping: list[dict], station_id: str, tz: str, bounds: tuple[float, float, float, float]) -> str:
     """One row of DQ counts over the mapped rows, the same rules dq_rules applies to Nexus's own crimes:
     n, bad_date (unparseable or in the future), out_of_city (missing or outside the city-pack bounds), missing_required,
     repeated_fir_no (inside the file), ends_before_start, occurred_after_reported (0 when those fields are unmapped).
@@ -173,7 +180,7 @@ def dq(key: str, mapping: list[dict], station_id: str, bounds: tuple[float, floa
     fields = _mapped(mapping)
     ends = ("sum(CASE WHEN occurred_to < occurred_from THEN 1 ELSE 0 END)" if "occurred_to" in fields else "0")
     after = ("sum(CASE WHEN reported_at < occurred_from THEN 1 ELSE 0 END)" if "reported_at" in fields else "0")
-    base = mapped_select(key, mapping, station_id)
+    base = mapped_select(key, mapping, station_id, tz)
     return ("SELECT count(*) AS n, "
             "sum(CASE WHEN occurred_from IS NULL OR occurred_from > current_timestamp() THEN 1 ELSE 0 END) AS bad_date, "
             f"sum(CASE WHEN lat IS NULL OR lon IS NULL OR lat < {s} OR lat > {n} OR lon < {w} OR lon > {e} "
@@ -185,11 +192,12 @@ def dq(key: str, mapping: list[dict], station_id: str, bounds: tuple[float, floa
             f"FROM ({base}) m")
 
 
-def dq_samples(key: str, mapping: list[dict], station_id: str, bounds: tuple[float, float, float, float]) -> str:
+def dq_samples(key: str, mapping: list[dict], station_id: str, tz: str,
+               bounds: tuple[float, float, float, float]) -> str:
     """Up to 20 failing rows (fir_no and which rule), for the review screen."""
     w, s, e, n = (float(x) for x in bounds)
-    base = mapped_select(key, mapping, station_id)
-    return ("SELECT fir_no, CASE "
+    base = mapped_select(key, mapping, station_id, tz)
+    return ("SELECT coalesce(nullif(fir_no, ''), '(no FIR number)') AS fir_no, CASE "
             "WHEN occurred_from IS NULL OR occurred_from > current_timestamp() THEN 'bad_date' "
             f"WHEN lat IS NULL OR lon IS NULL OR lat < {s} OR lat > {n} OR lon < {w} OR lon > {e} THEN 'out_of_city' "
             "ELSE 'missing_required' END AS rule "
@@ -198,7 +206,7 @@ def dq_samples(key: str, mapping: list[dict], station_id: str, bounds: tuple[flo
             "OR fir_no IS NULL OR fir_no = '' OR category IS NULL OR category = '' ORDER BY fir_no LIMIT 20")
 
 
-def likely_duplicates(key: str, mapping: list[dict], station_id: str) -> str:
+def likely_duplicates(key: str, mapping: list[dict], station_id: str, tz: str) -> str:
     """New rows that look like a crime Nexus already holds, with dq_rules' thresholds (DUP_MAX_DEG, ~275 m).
     Time: within DUP_WINDOW_MIN minutes when the file gives a time of occurrence; when it gives a date only, any time
     that day (a window from that midnight, not a date equality). Category is NOT compared: the export uses its own
@@ -210,7 +218,7 @@ def likely_duplicates(key: str, mapping: list[dict], station_id: str) -> str:
     else:
         window = "c.occurred_from >= m.occurred_from AND c.occurred_from < m.occurred_from + INTERVAL 1 DAY"
     deg = float(DUP_MAX_DEG)
-    base = mapped_select(key, mapping, station_id)
+    base = mapped_select(key, mapping, station_id, tz)
     return ("WITH m AS (" + base + "), r AS (SELECT min(occurred_from) AS lo, max(occurred_from) AS hi FROM m "
             "WHERE occurred_from IS NOT NULL) "
             "SELECT m.fir_no, c.crime_id FROM m JOIN r ON true "

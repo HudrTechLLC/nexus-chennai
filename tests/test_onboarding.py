@@ -98,7 +98,7 @@ def _outside_backticks(sql: str) -> str:
 
 
 def test_the_view_sql_uses_only_quoted_columns_and_allowlisted_fields():
-    sql = zo.create_view("redhills_new", ob.lat_lon_split(MAPPING), "PS-REDHILLS-NEW")
+    sql = zo.create_view("redhills_new", ob.lat_lon_split(MAPPING), "PS-REDHILLS-NEW", "Asia/Kolkata")
     assert sql.startswith("CREATE OR REPLACE SCHEMASTORE VIEW onboard_redhills_new WITH CONTAINER nexus AS SELECT ")
     assert "`FIR No.`" in sql and "`Lat/Long`" in sql and "Remarks" not in sql
     outside = _outside_backticks(sql)
@@ -109,18 +109,18 @@ def test_the_view_sql_uses_only_quoted_columns_and_allowlisted_fields():
 
 def test_mapping_errors_never_reach_sql():
     with pytest.raises(zo.OnboardRejected):
-        zo.create_view("k_ok", [{**MAPPING[0], "unified_field": "crime_id"}] + MAPPING[1:], "PS-X1")
+        zo.create_view("k_ok", [{**MAPPING[0], "unified_field": "crime_id"}] + MAPPING[1:], "PS-X1", "Asia/Kolkata")
     with pytest.raises(zo.OnboardRejected):
-        zo.create_view("k_ok", [{**MAPPING[0], "transform": "eval(x)"}] + MAPPING[1:], "PS-X1")
+        zo.create_view("k_ok", [{**MAPPING[0], "transform": "eval(x)"}] + MAPPING[1:], "PS-X1", "Asia/Kolkata")
     with pytest.raises(zo.OnboardRejected):  # lon missing (no split) and so a required field is unmapped
-        zo.create_view("k_ok", MAPPING, "PS-X1")
+        zo.create_view("k_ok", MAPPING, "PS-X1", "Asia/Kolkata")
     with pytest.raises(zo.OnboardRejected):
-        zo.create_view("k_ok", ob.lat_lon_split(MAPPING) + [{**MAPPING[0], "source_col": "Place"}], "PS-X1")
+        zo.create_view("k_ok", ob.lat_lon_split(MAPPING) + [{**MAPPING[0], "source_col": "Place"}], "PS-X1", "Asia/Kolkata")
     with pytest.raises(zo.OnboardRejected):
-        zo.create_view("k_ok", ob.lat_lon_split(MAPPING), "PS-X'1")
+        zo.create_view("k_ok", ob.lat_lon_split(MAPPING), "PS-X'1", "Asia/Kolkata")
     with pytest.raises(zo.OnboardRejected):
         zo.create_view("k_ok", [{**MAPPING[0], "source_col": "x`; DROP VIEW v --"}] + ob.lat_lon_split(MAPPING)[1:],
-                       "PS-X1")
+                       "PS-X1", "Asia/Kolkata")
 
 
 def test_unified_fields_match_the_migration_seed():
@@ -162,7 +162,7 @@ def test_a_valid_model_mapping_is_kept_and_rounded():
 
 
 @pytest.mark.parametrize("bad", [
-    lambda it: it[:-1],                                                   # a column missing
+    lambda it: [],                                                        # nothing mapped
     lambda it: it + [it[0]],                                              # a column twice
     lambda it: [{**it[0], "unified_field": "crime_id"}] + it[1:],         # field not allowed
     lambda it: [{**it[0], "transform": "sql"}] + it[1:],                  # transform not allowed
@@ -179,7 +179,7 @@ def test_a_bad_model_mapping_is_refused(bad):
 def test_rules_map_the_sample_file_completely():
     headers = ob.read_headers(SAMPLE.read_bytes())
     mapping = ob.rules_mapping(headers)
-    sql = zo.mapped_select("redhills_new", ob.lat_lon_split(mapping), "PS-REDHILLS-NEW")
+    sql = zo.mapped_select("redhills_new", ob.lat_lon_split(mapping), "PS-REDHILLS-NEW", "Asia/Kolkata")
     assert all(f" AS {f}" in sql for f in zo.REQUIRED)
     assert {m["reason"] for m in mapping if m["unified_field"]} == {"header keyword rule (model mapping unavailable)"}
 
@@ -323,15 +323,38 @@ def test_duplicates_use_dq_rules_thresholds_and_a_time_window():
     from app.adapters.dq_rules import DUP_MAX_DEG, DUP_WINDOW_MIN
 
     split = ob.lat_lon_split(MAPPING)
-    day = zo.likely_duplicates("k_ok", split, "PS-X1")
+    day = zo.likely_duplicates("k_ok", split, "PS-X1", "Asia/Kolkata")
     assert f"<= {float(DUP_MAX_DEG)}" in day and "INTERVAL 1 DAY" in day and "to_date" not in day
     timed = [{**m, "transform": "datetime_dmy_hm"} if m["unified_field"] == "occurred_from" else m for m in split]
-    assert f"<= {DUP_WINDOW_MIN * 60}" in zo.likely_duplicates("k_ok", timed, "PS-X1")
+    assert f"<= {DUP_WINDOW_MIN * 60}" in zo.likely_duplicates("k_ok", timed, "PS-X1", "Asia/Kolkata")
 
 
 def test_time_order_checks_appear_only_when_those_fields_are_mapped():
     split = ob.lat_lon_split(MAPPING)
     bounds = (80.0, 12.8, 80.4, 13.3)
-    assert "0 AS ends_before_start" in zo.dq("k_ok", split, "PS-X1", bounds)
+    assert "0 AS ends_before_start" in zo.dq("k_ok", split, "PS-X1", "Asia/Kolkata", bounds)
     more = split + [{"source_col": "Reported", "unified_field": "reported_at", "transform": "date_dmy"}]
-    assert "reported_at < occurred_from" in zo.dq("k_ok", more, "PS-X1", bounds)
+    assert "reported_at < occurred_from" in zo.dq("k_ok", more, "PS-X1", "Asia/Kolkata", bounds)
+
+
+def test_file_dates_are_read_in_the_city_time_zone():
+    sql = zo.create_view("k_ok", ob.lat_lon_split(MAPPING), "PS-X1", "Asia/Kolkata")
+    assert "to_utc_timestamp(to_timestamp(trim(`Date of Occurrence`), 'dd/MM/yyyy'), 'Asia/Kolkata')" in sql
+    with pytest.raises(zo.OnboardRejected):
+        zo.create_view("k_ok", ob.lat_lon_split(MAPPING), "PS-X1", "UTC'); DROP")
+
+
+def test_the_transform_in_the_field_slot_is_read_as_the_lat_long_split():
+    items = [{"source_col": c, "unified_field": m["unified_field"], "transform": m["transform"], "confidence": 0.9,
+              "reason": "r"} for c, m in zip(COLS, MAPPING)]
+    items[2] = {**items[2], "unified_field": "latlong_lat", "transform": "none"}  # what Lightning sent live
+    out = ob.validate_mapping(_model(items), COLS)
+    assert (out[2]["unified_field"], out[2]["transform"]) == ("lat", "latlong_lat")
+
+
+def test_a_column_the_model_leaves_out_is_ignored_and_says_so():
+    items = [{"source_col": c, "unified_field": m["unified_field"], "transform": m["transform"], "confidence": 0.9,
+              "reason": "r"} for c, m in zip(COLS, MAPPING)][:-1]
+    out = ob.validate_mapping(_model(items), COLS)
+    assert out[-1] == {"source_col": "Remarks", "unified_field": None, "transform": "none", "confidence": 0.0,
+                       "reason": "not mapped by the model: ignored"}
