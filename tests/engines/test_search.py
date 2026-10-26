@@ -110,3 +110,11 @@ def test_search_on_the_generated_city(tmp_path):
     assert rows and all(r["occurred_from"].endswith("+05:30") for r in rows)
     top = rank_rows("red pulsar chain snatching", rows)[:10]
     assert sum("pulsar" in (r["text"] or "").lower() for r in top) >= 5
+
+
+def test_free_text_console_search_finds_the_pulsar_snatching(client):
+    """Live miss (2026-10-26): "red pulsar chain snatching Adyar" returned nothing. q_search itself matches it;
+    rank_rows puts the Pulsar chain snatching first."""
+    rows = _search(client, "red pulsar chain snatching Adyar")
+    assert "C1" in {r["crime_id"] for r in rows}
+    assert rank_rows("red pulsar chain snatching Adyar", rows)[0]["crime_id"] == "C1"
