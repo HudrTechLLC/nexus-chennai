@@ -203,13 +203,20 @@ def corroboration_items(rows_a: Mapping[str, Sequence[Mapping[str, Any]]],
     return items
 
 
+def described(c: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Suspect descriptions for a prompt: allow-listed keys only (LNK-13). Gender, complexion or any other
+    protected attribute an FIR might carry never reaches the model; key order is kept, so prompts are stable."""
+    return [{k: v for k, v in d.items() if k in F.SUSPECT_ALLOWED_KEYS}
+            for d in c.get("offenders_described") or [] if isinstance(d, Mapping)]
+
+
 def factor_payload(sp: ScoredPair) -> dict[str, Any]:
     """What the reason lane sees for one pair: numbers + the rows behind them."""
     def crime_facts(c: Mapping[str, Any], f: Mapping[str, Any] | None) -> dict[str, Any]:
         return {
             "crime_id": c.get("crime_id"), "station": c.get("station_id"), "category": c.get("sub_type") or
             c.get("category"), "when": c.get("occurred_from"), "where": (c.get("location") or {}).get("address"),
-            "vehicles": c.get("vehicles"), "described": c.get("offenders_described"), "weapon": c.get("weapon"),
+            "vehicles": c.get("vehicles"), "described": described(c), "weapon": c.get("weapon"),
             "mo": (f or {}).get("mo"), "visual_tags": (f or {}).get("visual_tags"),
         }
     km = F.distance_km(sp.crime_a, sp.crime_b)
