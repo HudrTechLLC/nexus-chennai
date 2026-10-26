@@ -1,5 +1,6 @@
-import { NotYet } from "@/components/Shell";
+import { redirect } from "next/navigation";
 
-export default function Tip() {
-  return <NotYet title="Send a tip" phase="P8" what="Anonymous tip and CCTV upload. Photo location data is removed before anything is stored, and you get a tip code to check for replies." />;
+/** Old link: the tip form lives at /tip/new (spec G1). */
+export default function TipIndex({ searchParams }: { searchParams: { appeal?: string } }) {
+  redirect(searchParams.appeal ? `/tip/new?appeal=${encodeURIComponent(searchParams.appeal)}` : "/tip/new");
 }
