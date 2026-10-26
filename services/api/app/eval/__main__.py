@@ -73,6 +73,38 @@ def evaluate(truth, crimes, exclude, s, run_id):
         z.close()
 
 
+def _git_commit() -> str | None:
+    import subprocess
+
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True,
+                             timeout=10)
+        return out.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def provenance(report: dict, s, exclude) -> dict:
+    """Where the numbers came from, stated in the report (chief, WS2-14): data source, features per extractor
+    version, memory, model calls, exclusions, and the code version."""
+    from datetime import datetime, timezone
+
+    return {
+        "data": ("sample bundle data/sample, DuckDB twins of the named queries (reproducible from a fresh clone)"
+                 if s.sample_mode else "live: Zetaris over the QA Supabase project"),
+        "truth_dir": report.get("truth_dir"),
+        "cases_evaluated": report.get("cases_evaluated"),
+        "synthetic": True,
+        "case_features_by_extractor": (report.get("features") or {}).get("extractor_versions"),
+        "hmem": "empty: the evaluator binds no engines, so no memory adjusts a score",
+        "model_calls": 0,
+        "console_firs_excluded": len(exclude),
+        "weights_version": report.get("weights_version"),
+        "git_commit": _git_commit(),
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Evaluate linking against planted ground truth (F3)")
     ap.add_argument("--truth", type=Path, default=None)
@@ -123,12 +155,14 @@ def main() -> int:
                                     "table": {k: stamp.get(k) for k in ("source", "docs", "extractor_versions",
                                                                         "built_at")} if stamp else "missing"}
     report["hmem"] = "off: no memory adjusts any score (reproducible; live analyst decisions excluded)"
-    report["truth_dir"] = str(truth_dir.relative_to(REPO_ROOT)) if truth_dir.is_relative_to(REPO_ROOT) else str(
-        truth_dir)
+    truth_dir = truth_dir.resolve()
+    report["truth_dir"] = (truth_dir.relative_to(REPO_ROOT).as_posix() if truth_dir.is_relative_to(REPO_ROOT)
+                           else str(truth_dir))
     report["sample_mode"] = s.sample_mode
     report["run_id"] = run_id
     report["log_file"] = f"logs/trace-{run_id}.jsonl"
     report["band_accuracy_text"] = band_precision_note(report)
+    report["provenance"] = provenance(report, s, exclude)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     a, b = report["agent"], report["baseline_rules_only"]
