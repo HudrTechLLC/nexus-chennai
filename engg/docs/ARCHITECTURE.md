@@ -63,7 +63,7 @@ Related: [SPEC](SPEC.md) · [DECISIONS](DECISIONS.md) · [SETUP](SETUP.md) · [C
 
 1. Browser → `POST /api/public/tips` (Vercel route handler).
 2. The handler enforces size, type and rate limits, strips EXIF and video metadata, and issues a tip code. It stores no IP or user agent.
-3. It inserts the tip with `screen_status='pending'` using the anon key. `anon` has INSERT only. The file goes to the private `tips` bucket.
+3. It calls the `submit_tip` RPC (`security definer`), which stores the tip with `screen_status='pending'`. `anon` has no table access at all. The file goes to the private `tips` bucket.
 4. The local worker runs Scout Intent / Tip Guard and face blur, then sets `clean` or `quarantined`.
 5. The Zetaris `v_tip_*` views select only `clean` tips, so agents never see unscreened text.
 6. `GET /tip/status?code=…` calls a `security definer` RPC that returns only the status and any police reply.

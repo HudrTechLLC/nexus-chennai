@@ -1,0 +1,27 @@
+# City pack: Chennai (engg/docs/CITY_PACKS.md). Everything city-specific lives in this folder.
+name: Chennai
+slug: chennai
+country: IN
+timezone: Asia/Kolkata
+language: en
+map:
+  center: [80.2707, 13.0827]        # lon, lat
+  bounds: [80.05, 12.85, 80.33, 13.25] # west, south, east, north (GCP + Tambaram + Avadi)
+  default_zoom: 11
+h3:
+  internal_resolution: 9            # crimes.h3_r9
+  public_resolution: 8              # public map cells (spec J1)
+  public_min_count: 3               # cells with fewer crimes are hidden
+law:
+  legacy_code: IPC
+  current_code: BNS
+  cutover_date: "2024-07-01"
+  section_map: law_sections.csv
+hosting:
+  supabase_region: ap-south-1
+  vercel_region: bom1
+police:
+  commissionerates: [Greater Chennai Police, Tambaram, Avadi]
+  stations_file: stations.geojson
+  wards_file: wards.geojson
+synthetic: true
