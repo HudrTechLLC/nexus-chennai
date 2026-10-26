@@ -210,4 +210,11 @@ describe("query privacy", () => {
     expect(src).toMatch(/"Cache-Control": "no-store"/);
     expect(src).toMatch(/dynamic = "force-dynamic"/);
   });
+
+  it("the route is POST-only, so the typed place never sits in a URL", () => {
+    const src = fs.readFileSync(path.resolve(__dirname, "../../app/api/geocode/route.ts"), "utf8");
+    expect(src).toMatch(/export async function POST\(/);
+    expect(src).not.toMatch(/export (async )?function GET\b/);
+    expect(src).not.toMatch(/searchParams/);
+  });
 });
