@@ -2,7 +2,7 @@
  * Unit tests for console search parsing (lib/search.ts).
  */
 import { describe, expect, it } from "vitest";
-import { classifyQuery, hasCriteria, parseSearch, searchWords } from "../search";
+import { aliasVariants, classifyQuery, hasCriteria, parseSearch, personFilter, searchWords } from "../search";
 
 describe("classifyQuery", () => {
   it("recognises case ids", () => {
@@ -58,5 +58,20 @@ describe("SRCH-03 facets and similar mode", () => {
     expect(parseSearch({ similar: "chn-ad-2026-001231" }).similar).toBe("CHN-AD-2026-001231");
     expect(parseSearch({ similar: "1231" }).similar).toBeNull();
     expect(hasCriteria(parseSearch({ similar: "CHN-AD-2026-001231" }))).toBe(true);
+  });
+});
+
+describe("alias search (SRCH-05)", () => {
+  it("offers the phrase and each word in lower, Title and UPPER case", () => {
+    const v = aliasVariants(["pulsar", "raju"]);
+    expect(v).toEqual(expect.arrayContaining(["pulsar raju", "Pulsar Raju", "PULSAR RAJU", "raju", "Raju", "RAJU", "Pulsar"]));
+  });
+  it("strips anything that could break the array literal", () => {
+    expect(aliasVariants(['a"}', "x"])).toEqual([]);
+    expect(aliasVariants(['sa"thish}'])).toEqual(["sathish", "Sathish", "SATHISH"]);
+  });
+  it("matches a name fragment or an exact alias", () => {
+    expect(personFilter(["sathish"])).toBe('name.ilike.%sathish%,aliases.ov.{"sathish","Sathish","SATHISH"}');
+    expect(personFilter([])).toBe("");
   });
 });

@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dayRange, plateIlike, plateMatches } from "@/lib/cases";
-import { SEARCHABLE_TIP_STATUSES, type ParsedSearch } from "@/lib/search";
+import { SEARCHABLE_TIP_STATUSES, personFilter, type ParsedSearch } from "@/lib/search";
 import type { CaseRow } from "@/lib/casesData";
 
 /**
@@ -107,7 +107,7 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
   let tips: TipHit[] = [];
   if (p.kind === "text" && p.words.length) {
     const [pr, tr] = await Promise.all([
-      sb.from("persons").select("person_id, name, aliases").or(p.words.map((w) => `name.ilike.%${w}%`).join(",")).limit(LIMIT),
+      sb.from("persons").select("person_id, name, aliases").or(personFilter(p.words)).limit(LIMIT),
       (() => {
         let tq = sb.from("tips").select("tip_id, category, text, received_week, status").in("status", [...SEARCHABLE_TIP_STATUSES]);
         for (const w of p.words) tq = tq.ilike("text", `%${w}%`);
