@@ -99,10 +99,11 @@ export default async function SystemPage() {
       </section>
 
       <section className="rounded-xl border border-line bg-surface p-5" data-testid="dropped-links">
-        <h2 className="mb-1 font-semibold">Dropped links</h2>
+        <h2 className="mb-1 font-semibold">Dropped by the Skeptic&rsquo;s critique</h2>
         <p className="mb-3 text-xs text-muted">
           Pairs the Linker proposed and the Skeptic dropped after re-checking them, with its reason. They never
-          became alerts. Newest first, once per run.
+          became alerts. Newest first, once per run. A link sent back at the revision limit is also dropped, but without
+          a drop event, so it is not listed here.
         </p>
         {drops.error && <p role="alert" className="text-sm text-red-600">Could not load dropped links: {drops.error.message}</p>}
         {!drops.error && dropped.length === 0 && <p className="text-sm text-muted">The Skeptic has not dropped any link yet.</p>}

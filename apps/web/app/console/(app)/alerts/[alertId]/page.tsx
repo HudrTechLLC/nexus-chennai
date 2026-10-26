@@ -14,7 +14,7 @@ import { describeGap, sceneGap, trailOf, type Scene, type TrailRead } from "@/li
 import { memberLonLat } from "@/lib/series";
 import { PublicTipsBlock } from "@/components/console/PublicTipsBlock";
 import { SkepticPanel } from "@/components/console/alerts/SkepticPanel";
-import { alertTimeline, SKEPTIC_ACTIONS, type SkepticEventRow } from "@/lib/skeptic";
+import { alertTimeline, SKEPTIC_ACTIONS, skepticTraceFilter, type SkepticEventRow } from "@/lib/skeptic";
 
 export const dynamic = "force-dynamic";
 
@@ -80,12 +80,15 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
     alert.crimes,
   );
   // WS3-26: the Skeptic's steps for this pair, from the run trace (RLS: analyst, supervisor, admin).
+  // Filtered to this pair in the query: a batch run has hundreds of Skeptic events.
   const traceVisible = officer.role !== "station_officer";
+  const critique = (alert.skeptic as { model_critique?: string } | null)?.model_critique;
   const { data: skepticRows } = alert.run_id && traceVisible
     ? await sb.from("trace_events").select("run_id, seq, ts, action, input_summary, output_summary, status")
-        .eq("run_id", alert.run_id).eq("agent_name", "Skeptic").in("action", [...SKEPTIC_ACTIONS]).order("seq").limit(200)
+        .eq("run_id", alert.run_id).eq("agent_name", "Skeptic").in("action", [...SKEPTIC_ACTIONS])
+        .or(skepticTraceFilter(alert.crimes, critique)).order("seq").limit(500)
     : { data: [] };
-  const skepticSteps = alertTimeline((skepticRows ?? []) as SkepticEventRow[], alert.crimes);
+  const skepticSteps = alertTimeline((skepticRows ?? []) as SkepticEventRow[], alert.crimes, critique);
   const anyStruck = rows.some((f) => f.struck_by_skeptic);
   const stationsLabel = alert.crimes.map((id) => crimes[id]?.station_name.replace(/^PS-/, "") ?? id).filter((v, i, a) => a.indexOf(v) === i).join(" and ");
 

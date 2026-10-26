@@ -2,7 +2,7 @@
  * Unit tests for the Skeptic review helpers (WS3-26). Shapes from tonight's live traces.
  */
 import { describe, expect, it } from "vitest";
-import { alertTimeline, capFlipped, droppedLinks, pairKey, parseSkepticEvent, skepticSummary, type SkepticEventRow } from "../skeptic";
+import { alertTimeline, capFlipped, droppedLinks, pairKey, parseSkepticEvent, skepticSummary, skepticTraceFilter, type SkepticEventRow } from "../skeptic";
 
 const ev = (seq: number, action: string, input: string | null, output: string | null, status = "ok", run = "run_1"): SkepticEventRow =>
   ({ run_id: run, seq, ts: `2026-10-26T20:${String(seq).padStart(2, "0")}:00+05:30`, action, input_summary: input, output_summary: output, status });
@@ -32,15 +32,27 @@ describe("parseSkepticEvent", () => {
 });
 
 describe("alertTimeline", () => {
-  it("matches the alert's crimes in any order to the sorted trace pair, keeps whole-round events", () => {
+  const rows = [
+    ev(9, "approve", "pair CHN-AD-2026-001182|CHN-VL-2026-000877 round 2", "score=0.79 struck=[] fine"),
+    ev(3, "send_back", "pair CHN-AD-2026-001182|CHN-VL-2026-000877 round 1", "score=0.72 struck=[] gap too long"),
+    ev(4, "drop", "pair CHN-CM-2025-000450|CHN-CM-2025-000461 round 1", "score=0.69 struck=[] different types"),
+    ev(2, "critique_failed", "2 pairs round 1", "code verdicts stand"),
+    ev(6, "critique_failed", "2 pairs round 2", "other pairs' call"),
+    ev(8, "critique_failed", "2 pairs round 2", "code verdicts stand"),
+  ];
+  it("matches the alert's crimes in any order to the sorted trace pair", () => {
     expect(pairKey(HERO)).toBe("CHN-AD-2026-001182|CHN-VL-2026-000877");
-    const rows = [
-      ev(9, "approve", "pair CHN-AD-2026-001182|CHN-VL-2026-000877 round 2", "score=0.79 struck=[] fine"),
-      ev(3, "send_back", "pair CHN-AD-2026-001182|CHN-VL-2026-000877 round 1", "score=0.72 struck=[] gap too long"),
-      ev(4, "drop", "pair CHN-CM-2025-000450|CHN-CM-2025-000461 round 1", "score=0.69 struck=[] different types"),
-      ev(5, "critique_failed", "2 pairs round 1", "code verdicts stand"),
-    ];
-    expect(alertTimeline(rows, HERO).map((s) => [s.seq, s.kind])).toEqual([[3, "send_back"], [5, "critique_failed"], [9, "approve"]]);
+    expect(alertTimeline(rows, HERO, "applied").map((s) => [s.seq, s.kind])).toEqual([[3, "send_back"], [9, "approve"]]);
+  });
+  it("does not show other pairs' critique failures when this alert's critique was applied", () => {
+    expect(alertTimeline(rows, HERO).some((s) => s.kind === "critique_failed")).toBe(false);
+  });
+  it("when the critique was unavailable, keeps only the last failure before each of this pair's verdicts", () => {
+    expect(alertTimeline(rows, HERO, "unavailable").map((s) => s.seq)).toEqual([2, 3, 8, 9]);
+  });
+  it("filters the trace query to this pair", () => {
+    expect(skepticTraceFilter(HERO)).toBe("input_summary.ilike.*CHN-AD-2026-001182|CHN-VL-2026-000877*");
+    expect(skepticTraceFilter(HERO, "unavailable")).toMatch(/,action\.eq\.critique_failed$/);
   });
 });
 
@@ -53,10 +65,9 @@ describe("capFlipped", () => {
 });
 
 describe("skepticSummary", () => {
-  it("never says struck when nothing was struck", () => {
-    const s = skepticSummary({ rounds: 2, struck: [], verdict: "approved", model_critique: "applied" } as never);
-    expect(s).toBe("Reviewed in 2 rounds · verdict: approved · model critique applied");
-    expect(s).not.toMatch(/struck/);
+  it("says nothing struck when no factor was struck (the hero alert's on-camera line)", () => {
+    expect(skepticSummary({ rounds: 2, struck: [], verdict: "approved", model_critique: "applied" } as never))
+      .toBe("Reviewed in 2 rounds · verdict: approved · nothing struck · model critique applied");
   });
   it("names struck factors when there are some, and an unavailable critique", () => {
     expect(skepticSummary({ rounds: 1, struck: ["vehicle"], verdict: "needs_revision", model_critique: "unavailable" } as never))

@@ -99,13 +99,31 @@ export function parseSkepticEvent(r: SkepticEventRow): SkepticStep | null {
 // Views
 // =====================
 
-/** The Skeptic's steps for one alert's pair (plus whole-round critique failures), in trace order. */
-export function alertTimeline(rows: SkepticEventRow[], crimes: string[]): SkepticStep[] {
+/**
+ * The Skeptic's steps for one alert's pair, in trace order.
+ *
+ * critique_failed is round-level and a batch run has many critique calls per round (one per few pairs),
+ * so a failure there may belong to other pairs. It is kept only when this alert's own record says the
+ * model critique was unavailable, and then only the last failure before each of this pair's verdicts.
+ */
+export function alertTimeline(rows: SkepticEventRow[], crimes: string[], modelCritique?: string): SkepticStep[] {
   const key = pairKey(crimes);
-  return rows
-    .map(parseSkepticEvent)
-    .filter((s): s is SkepticStep => s !== null && (s.pair === key || s.pair === null))
-    .sort((a, b) => a.seq - b.seq);
+  const steps = rows.map(parseSkepticEvent).filter((s): s is SkepticStep => s !== null).sort((a, b) => a.seq - b.seq);
+  const own = steps.filter((s) => s.pair === key);
+  if (modelCritique !== "unavailable") return own;
+  const failures = steps.filter((s) => s.kind === "critique_failed");
+  const picked = new Map<number, SkepticStep>();
+  for (const v of own.filter((s) => s.kind === "approve" || s.kind === "send_back" || s.kind === "drop")) {
+    const f = [...failures].reverse().find((x) => x.seq < v.seq && (x.round === null || v.round === null || x.round === v.round));
+    if (f) picked.set(f.seq, f);
+  }
+  return own.concat(Array.from(picked.values())).sort((a, b) => a.seq - b.seq);
+}
+
+/** PostgREST filter for this pair's Skeptic events (plus round-level critique failures when needed). */
+export function skepticTraceFilter(crimes: string[], modelCritique?: string): string {
+  const pair = `input_summary.ilike.*${pairKey(crimes)}*`;
+  return modelCritique === "unavailable" ? `${pair},action.eq.critique_failed` : pair;
 }
 
 /** True when the trace ends on a send-back but the alert's verdict differs: the revision cap decided it. */
@@ -114,12 +132,12 @@ export function capFlipped(steps: SkepticStep[], skeptic: Skeptic | null): boole
   return !!last && last.kind === "send_back" && !!skeptic && skeptic.verdict !== "needs_revision";
 }
 
-/** One-line summary from the alert's own Skeptic record. Says "struck" only when factors were struck. */
+/** One-line summary from the alert's own Skeptic record: the struck factors, or "nothing struck". */
 export function skepticSummary(s: (Skeptic & { model_critique?: string }) | null): string {
   if (!s) return "No Skeptic record.";
   const verdict = { approved: "approved", needs_revision: "sent back for revision", rejected: "dropped" }[s.verdict] ?? s.verdict;
   const parts = [`Reviewed in ${s.rounds} round${s.rounds === 1 ? "" : "s"}`, `verdict: ${verdict}`];
-  if (s.struck.length) parts.push(`struck ${s.struck.join(", ")}`);
+  parts.push(s.struck.length ? `struck ${s.struck.join(", ")}` : "nothing struck");
   if (s.model_critique === "applied") parts.push("model critique applied");
   else if (s.model_critique === "unavailable") parts.push("model critique unavailable (rule checks only)");
   return parts.join(" · ");
