@@ -254,6 +254,7 @@ cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample
 | Image reading is new and not yet shown in the product | Nightshift now serves image requests on `nvidia/nemotron-3.5-super-vl-120b-a12b` through a cloud vision lane (OpenRouter free route, rate-limited; the key is held only in Nightshift). Verified by a direct Nightshift test on 27 Oct (a red test image answered "Red"; D-036). A Nexus trace with a vision model call is `[PENDING]`. The judge path and sample mode still trace `vision_unavailable` and use the caption: they run offline, and the recorded fixtures hold no vision call | D-036; D-021 |
 | The worker needs Supabase | `/run` can store results locally (`NEXUS_STORE=local`, #273); the worker and the police console use Supabase only | `services/api/app/graph/local_store.py`; [PATH2](engg/docs/PATH2.md) |
 | A Zetaris query-pushdown bug is worked around, not fixed | Every named query and data-quality view orders rows before the limit; a `zetaris_result_truncated` event fires whenever rows = limit | D-031 (`engg/docs/DECISIONS.md`) |
+| Live DQ flags are not applied in scoring | The live `q_dq_flags` query takes 55–80 s (it can't push its id filter through the sorted union and duplicate self-join) against the Planner's 30 s step budget, so the Planner traces it `step_degraded` and continues. Sample mode, the DQ views and the DQ page are unaffected | #334; nexus-2, 27 Oct; fix first on [PATH2](engg/docs/PATH2.md) |
 
 Details:
 
