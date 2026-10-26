@@ -89,3 +89,19 @@ def test_new_case_pickup_can_be_limited_to_recent_filings(tmp_path):
     w.process_new_cases()
     params = next(p for op, t, p in sb.log if op == "select" and t == "crimes")
     assert params["created_at"] == "gt.2026-10-26T15:00:00+05:30"
+
+
+def test_new_fir_runs_before_dossiers_and_skips_them_that_pass(tmp_path):
+    """Video: a filed FIR must not wait behind a dossier (up to 180 s of reason-lane chunks)."""
+    from agents_fixtures import ADYAR
+    order = []
+    sb = FakeSB({"crimes": [{"crime_id": "FIR-1"}], "crime_features": [],
+                 "series": [{"series_id": "SER-1", "dossier": None, "created_at": "2026-10-26"}],
+                 "series_members": [{"series_id": "SER-1", "crime_id": ADYAR["crime_id"]}]})
+    w = worker(tmp_path, sb, run_case=lambda cid: order.append(("case", cid)))
+    w.process_dossiers = lambda: order.append(("dossier",)) or 1
+    out = w.run_once()
+    assert order == [("case", "FIR-1")] and out["cases"] == 1 and out["dossiers"] == 0
+    sb.tables["crime_features"].append({"crime_id": "FIR-1"})  # extracted now
+    out = w.run_once()
+    assert order[-1] == ("dossier",) and out["dossiers"] == 1 and out["cases"] == 0
