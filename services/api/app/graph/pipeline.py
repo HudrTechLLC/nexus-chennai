@@ -36,7 +36,7 @@ from ..agents import (
     TipGuard,
 )
 from ..agents.base import crime_from_row, features_from_row, short
-from ..adapters.zetaris_queries_n2 import search_params
+from ..adapters.zetaris_queries_n2 import cases_params, search_params
 from ..agents.planner import CLAMPS as PLAN_CLAMPS
 from ..engines.similarity import rank_rows
 
@@ -209,6 +209,11 @@ class AgentGraph:
             return []
         frows, fqid = self.deps.query("q_features", agent="Planner", ids=",".join(ids))
         feats = {r.get("crime_id"): features_from_row(r) for r in frows}
+        batch = self._read_cases(ids)
+        if batch is not None:
+            rows_by_id, cqid = batch
+            return [Candidate(crime_from_row(rows_by_id[cid]), feats.get(cid),
+                              query_ids={"q_case": cqid, "q_features": fqid}) for cid in ids if cid in rows_by_id]
         out = []
         for cid in ids:
             try:
@@ -223,6 +228,25 @@ class AgentGraph:
                 out.append(Candidate(crime_from_row(crows[0]), feats.get(cid),
                                      query_ids={"q_case": cqid, "q_features": fqid}))
         return out
+
+    def _read_cases(self, ids: list[str]) -> tuple[dict[str, dict[str, Any]], str] | None:
+        """Every candidate's q_case row in one q_cases trip per 25 ids, or None (then one q_case each)."""
+        rows_by_id: dict[str, dict[str, Any]] = {}
+        qids: list[str] = []
+        try:
+            for params in cases_params(ids):
+                rows, qid = self.deps.query("q_cases", agent="Planner", **params)
+                qids.append(qid)
+                for r in rows:
+                    rows_by_id.setdefault(r.get("crime_id"), r)
+        except DeadlineExceeded:
+            raise
+        except Exception as exc:  # e.g. q_cases not registered on this Zetaris yet: read them one by one
+            self.deps.tracer.emit("Planner", "cases_batch_failed", input_summary=f"{len(ids)} candidates",
+                                  output_summary=short(f"falling back to q_case per candidate: {exc}"),
+                                  status="degraded")
+            return None
+        return rows_by_id, ",".join(qids)
 
     def plan(self, state: RunState) -> dict[str, Any]:
         rnd = state.get("plan_round", 0) + 1
