@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T00:07:23+05:30",
+  "updated": "2026-10-27T00:49:01+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -252,8 +252,8 @@
           "id": "WS2-05",
           "phase": "P0",
           "title": "Verify Nightshift model ids and pin the three Nemotron lanes",
-          "status": "in_progress",
-          "note": "Lightning/Ultra verified; Super VL now served via a Nightshift cloud lane (OpenRouter), direct test OK 27 Oct; in-product vision call pending nexus-3 FIR re-run",
+          "status": "done",
+          "note": "All three Nemotron lanes verified: Lightning, Ultra, Super VL (Nightshift cloud lane; live Extractor vision call in run reextract_vis_1793040194, D-036). Embed: Nightshift exposes no embeddings route (D-027)",
           "owner": "nexus-chief"
         },
         {
@@ -435,6 +435,20 @@
           "title": "Sample-mode date fix (Skeptic vehicle re-check, offender support)",
           "status": "done",
           "note": "nexus-3 · #270"
+        },
+        {
+          "id": "WS2-29",
+          "phase": "P6",
+          "title": "Live DQ flags via a Supabase snapshot read through Zetaris (q_dq_flags 55–80 s → ~1 s)",
+          "status": "done",
+          "note": "nexus-2 · #348 + 0007_14; verified by nexus-1 (pushdown, 0.84–1.16 s warm)"
+        },
+        {
+          "id": "WS2-30",
+          "phase": "P6",
+          "title": "Live run robustness: negation-aware MO support, step timeout cap, vision retry, deadline partial write, 420 s single-case deadline",
+          "status": "done",
+          "note": "nexus-3 · #331 #334 #338 #344 #347 #349; judge outputs EXACT ×3"
         }
       ]
     },
@@ -639,15 +653,15 @@
           "id": "WS3-25",
           "phase": "P7",
           "title": "Alert detail: \"How this alert was made\" — agent, Nemotron model and receipt per step; vision lane status shown honestly",
-          "status": "in_progress",
-          "note": "nexus-5 · UI/read-only; cut if not green by 09:00 Tue"
+          "status": "done",
+          "note": "nexus-5 · #333 (model/receipt per step; vision status from the latest trace)"
         },
         {
           "id": "WS3-26",
           "phase": "P7",
           "title": "Skeptic review panel (critique / send back / drop with reasons) + Dropped links list",
-          "status": "in_progress",
-          "note": "nexus-1 · PR #326 · UI/read-only; cut if not green by 09:00 Tue"
+          "status": "done",
+          "note": "nexus-1 · #326"
         },
         {
           "id": "WS3-27",
@@ -667,8 +681,8 @@
           "id": "WS3-29",
           "phase": "P7",
           "title": "Console home \"Start here\" card (role-aware path to the hero case)",
-          "status": "in_progress",
-          "note": "nexus-6 (moved from nexus-5) · UI/read-only; cut if not green by 09:00 Tue"
+          "status": "done",
+          "note": "nexus-6 · #330 (+ a11y #343 on the tip form)"
         }
       ]
     },
