@@ -43,7 +43,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check the Linker's pairs, then critiques each one. It can send a pair back for a narrower search or drop it before a human sees it. On the judge path, example 3 shows a drop: different crime types, 4.1 km apart, day vs night (`output_examples/example_3.json`, #283).
-- **Judges can load the same data into their own Zetaris.** `python -m data.setup_live` generates the dataset, stages it in Zetaris's file store and registers it, so agents read with no Supabase (`ZETARIS_DATA=files`; #280, `data/README.md` §5). Its model-output fixtures are merged too (#293). `[PENDING: WS1-19]`: a clean-machine run is not yet confirmed.
+- **Judges can load the same data into their own Zetaris.** `python -m data.setup_live` generates the dataset, stages it in Zetaris's file store and registers it, so agents read with no Supabase (`ZETARIS_DATA=files`; #280, `data/README.md` §5). Its model-output fixtures are merged too (#293), and a clean-machine run passed (#325: fresh clone into a throwaway store, about 10 minutes including install).
 
 ## Meterless engines: all four, each in a feature, each with a passing test
 
