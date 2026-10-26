@@ -478,3 +478,23 @@ def test_label_still_unsupported_after_retry_is_dropped_and_traced(make_deps):
 
 def test_clean_mo_joins_a_list_given_for_a_single_value_field():
     assert clean_mo({"target_item": ["gold jewellery", "cash"]})["target_item"] == "gold_jewellery_and_cash"
+
+
+def test_rows_as_dicts_gives_sample_dates_the_live_iso_string_shape():
+    """Sample (DuckDB) rows carry datetime objects where live Zetaris rows carry ISO strings. Downstream they were
+    passed back as query parameters ("Unsupported parameter type: datetime": Skeptic vehicle re-check, Linker
+    q_offender_return) and into JSON (World Model ingest). Rows now look the same in both modes."""
+    from datetime import date, datetime, timedelta, timezone
+    from types import SimpleNamespace
+
+    from app.adapters.zetaris import render
+    from app.agents.base import rows_as_dicts
+
+    ist = timezone(timedelta(hours=5, minutes=30))
+    res = SimpleNamespace(name="q_case", columns=("crime_id", "occurred_from", "week", "n"),
+                          rows=[("C1", datetime(2026, 1, 5, 21, 10, tzinfo=ist), date(2026, 1, 5), 3)])
+    row = rows_as_dicts(res)[0]
+    assert row == {"crime_id": "C1", "occurred_from": "2026-01-05T21:10:00+05:30", "week": "2026-01-05", "n": 3}
+    assert "'2026-01-05T21:10:00+05:30'" in render("SELECT :t0", {"t0": row["occurred_from"]})
+    dicts = SimpleNamespace(dicts=lambda: [{"t": datetime(2026, 1, 5, 9, 0, tzinfo=ist)}])
+    assert rows_as_dicts(dicts) == [{"t": "2026-01-05T09:00:00+05:30"}]
