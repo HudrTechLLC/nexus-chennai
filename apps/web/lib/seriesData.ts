@@ -4,6 +4,7 @@ import type { LinkAlert } from "@/lib/alerts";
 import { crimeBriefs, type CrimeBrief } from "@/lib/alertsData";
 import { chunk, type SeriesRow, type SeriesSummary } from "@/lib/series";
 import type { MatrixPayload } from "@/lib/stationMatrix";
+import type { TfStatus } from "@/lib/taskforces";
 
 /** Server fetchers for the series and station pages. All reads run as the officer, under RLS. */
 
@@ -51,11 +52,11 @@ export async function alertsTouching(sb: SupabaseClient, ids: string[], limit = 
   return Array.from(byId.values()).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, limit);
 }
 
-export type TaskforceRow = { taskforce_id: string; name: string; status: string; created_at: string };
+export type TaskforceRow = { taskforce_id: string; name: string; status: TfStatus; created_at: string };
 
 /** Joint task forces opened on this series. */
 export async function taskforcesFor(sb: SupabaseClient, seriesId: string): Promise<TaskforceRow[]> {
-  const { data } = await sb.from("taskforces").select("taskforce_id, name, status, created_at").eq("series_id", seriesId);
+  const { data } = await sb.from("taskforces").select("taskforce_id, name, status, created_at").eq("series_id", seriesId).neq("status", "declined").order("created_at", { ascending: false });
   return (data ?? []) as TaskforceRow[];
 }
 
