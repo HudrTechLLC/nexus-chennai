@@ -6,7 +6,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  CHENNAI_BBOX,
+  CITY_BBOX,
   MAX_SUGGESTIONS,
   USER_AGENT,
   createGeocoder,
@@ -58,7 +58,7 @@ describe("photonUrl", () => {
     const u = new URL(photonUrl("Adyar"));
     expect(u.hostname).toBe("photon.komoot.io");
     expect(u.searchParams.get("q")).toBe("Adyar");
-    const [w, s, e, n] = CHENNAI_BBOX;
+    const [w, s, e, n] = CITY_BBOX;
     expect(u.searchParams.get("bbox")).toBe(`${w},${s},${e},${n}`);
   });
 });
@@ -159,6 +159,20 @@ describe("createGeocoder", () => {
     expect(await g.suggest("ccc")).toEqual({ ok: false, reason: "busy" }); // would wait 2 s
   });
 
+  it("does not cache a failure: the same query reaches upstream again after an error", async () => {
+    let fail = true;
+    const fetchFn = vi.fn(async () =>
+      fail ? new Response("down", { status: 503 }) : new Response(JSON.stringify({ features: [ADYAR] }), { status: 200 }),
+    );
+    const g = createGeocoder({ fetchFn, sleep: async () => {}, minIntervalMs: 0 });
+    expect((await g.suggest("Adyar")) as unknown).toEqual({ ok: true, suggestions: [] });
+    fail = false;
+    const r = await g.suggest("Adyar");
+    expect(r.ok && r.suggestions).toHaveLength(1);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(g.cacheSize()).toBe(1);
+  });
+
   it("returns [] on an upstream error status", async () => {
     const g = createGeocoder({ fetchFn: vi.fn(async () => new Response("down", { status: 503 })) });
     expect(await g.suggest("Adyar")).toEqual({ ok: true, suggestions: [] });
@@ -209,6 +223,18 @@ describe("query privacy", () => {
     const src = fs.readFileSync(path.resolve(__dirname, "../../app/api/geocode/route.ts"), "utf8");
     expect(src).toMatch(/"Cache-Control": "no-store"/);
     expect(src).toMatch(/dynamic = "force-dynamic"/);
+  });
+
+  it("the bounds come from the city pack, not a hard-coded box (D-004)", () => {
+    const src = fs.readFileSync(path.resolve(__dirname, "../geocode.ts"), "utf8");
+    expect(src).toMatch(/CITY\.map\.bounds/);
+    expect(src).not.toMatch(/80\.05|12\.85/);
+  });
+
+  it("the route caps the request body before parsing it", () => {
+    const src = fs.readFileSync(path.resolve(__dirname, "../../app/api/geocode/route.ts"), "utf8");
+    expect(src).toMatch(/MAX_BODY = 2048/);
+    expect(src).toMatch(/content-length/);
   });
 
   it("the route is POST-only, so the typed place never sits in a URL", () => {

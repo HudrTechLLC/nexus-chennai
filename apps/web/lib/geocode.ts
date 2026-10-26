@@ -1,5 +1,5 @@
 /**
- * Place search for the map's "go to place" box (WS4-15). The server route `app/api/geocode` is a
+ * Place search for the map's "go to place" box (WS4-15), bounded to the city pack's map bounds. The server route `app/api/geocode` is a
  * thin wrapper around `createGeocoder`; the logic lives here so vitest can test it.
  *
  * Upstream is Photon (photon.komoot.io), an OpenStreetMap geocoder built for search-as-you-type.
@@ -12,9 +12,11 @@
  * Limits, per server instance (each serverless instance has its own memory, so these are not global):
  *   - at most one upstream request per second: a call inside the window waits its turn;
  *     if the queue is already longer than the wait budget, the call is refused as `busy`;
- *   - an in-memory cache (TTL + size cap), so repeated queries never reach Photon;
+ *   - an in-memory cache (TTL + size cap) of successful answers, so repeated queries never reach Photon;
  *   - a 3 s timeout per upstream request; a timeout or upstream error gives no suggestions.
  */
+
+import { CITY } from "@/lib/city";
 
 // =====================
 // Types and constants
@@ -25,8 +27,8 @@ export type Suggestion = { label: string; lat: number; lng: number };
 /** `busy` = refused because too many requests are queued; the caller should retry shortly. */
 export type GeocodeResult = { ok: true; suggestions: Suggestion[] } | { ok: false; reason: "busy" };
 
-/** Chennai map bounds: west, south, east, north. Same as `cities/chennai/city.yaml` map.bounds. */
-export const CHENNAI_BBOX: [number, number, number, number] = [80.05, 12.85, 80.33, 13.25];
+/** The city pack's map bounds: west, south, east, north (`cities/<city>/city.yaml` map.bounds; D-004). */
+export const CITY_BBOX: [number, number, number, number] = CITY.map.bounds;
 
 export const PHOTON_URL = "https://photon.komoot.io/api/";
 export const USER_AGENT = "NexusChennai/1.0 (+https://github.com/HudrTechLLC/nexus-chennai)";
@@ -59,7 +61,7 @@ export function normaliseQuery(q: unknown): string | null {
 }
 
 /** True when the point lies inside the bounds (west, south, east, north). */
-export function inBox(lat: number, lng: number, box = CHENNAI_BBOX): boolean {
+export function inBox(lat: number, lng: number, box = CITY_BBOX): boolean {
   const [w, s, e, n] = box;
   return lng >= w && lng <= e && lat >= s && lat <= n;
 }
@@ -81,7 +83,7 @@ export function labelOf(p: Record<string, unknown>): string {
   return out.slice(0, 4).join(", ");
 }
 
-/** Photon GeoJSON → suggestions inside Chennai. Photon coordinates are [lon, lat]. */
+/** Photon GeoJSON → suggestions inside the city bounds. Photon coordinates are [lon, lat]. */
 export function parsePhoton(body: unknown): Suggestion[] {
   const features = (body as { features?: unknown[] } | null)?.features;
   if (!Array.isArray(features)) return [];
@@ -103,9 +105,9 @@ export function parsePhoton(body: unknown): Suggestion[] {
   return out;
 }
 
-/** The upstream URL for a query, bounded to Chennai. */
+/** The upstream URL for a query, bounded to the city. */
 export function photonUrl(q: string): string {
-  const [w, s, e, n] = CHENNAI_BBOX;
+  const [w, s, e, n] = CITY_BBOX;
   const u = new URL(PHOTON_URL);
   u.searchParams.set("q", q);
   u.searchParams.set("limit", String(MAX_SUGGESTIONS * 2)); // some may fall outside the box
@@ -132,7 +134,8 @@ export function createGeocoder(opts: GeocoderOptions = {}) {
   const cache = new Map<string, { at: number; value: Suggestion[] }>();
   let nextSlot = 0; // earliest time the next upstream request may start
 
-  async function upstream(q: string): Promise<Suggestion[]> {
+  /** Suggestions from Photon, or null when the request failed (failures are never cached). */
+  async function upstream(q: string): Promise<Suggestion[] | null> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
@@ -141,10 +144,10 @@ export function createGeocoder(opts: GeocoderOptions = {}) {
         signal: ctrl.signal,
         cache: "no-store",
       });
-      if (!res.ok) return [];
+      if (!res.ok) return null;
       return parsePhoton(await res.json());
     } catch {
-      return []; // timeout, network or bad JSON: no suggestions, nothing logged
+      return null; // timeout, network or bad JSON: nothing logged
     } finally {
       clearTimeout(timer);
     }
@@ -164,6 +167,7 @@ export function createGeocoder(opts: GeocoderOptions = {}) {
     if (wait > 0) await sleep(wait);
 
     const value = await upstream(q);
+    if (value === null) return { ok: true, suggestions: [] }; // a failure is not cached
     if (cache.size >= cacheMax) cache.delete(cache.keys().next().value as string);
     cache.set(key, { at: now(), value });
     return { ok: true, suggestions: value };
