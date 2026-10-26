@@ -1,0 +1,755 @@
+{
+ "lane": "reason",
+ "recorded_from": "nightshift",
+ "response": {
+  "id": "chatcmpl-72c53981-e1a0-4c43-87e0-20ec7078c267",
+  "object": "chat.completion",
+  "created": 1793029765,
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "The user wants me to act as a Skeptic and evaluate the crime link between CHN-GU-2025-001149 and CHN-ST-2025-001108. I need to decide: approve, send_back, or drop.\n\nLet me analyze the pair:\n\nCrime A (Guindy): cab_robbery, 2025-10-07 01:09, near Hilton Chennai, Guindy\n- Vehicle: white Maruti Swift Dzire, plate null\n- 3 offenders, heavy build, age 25-35\n- Weapon: knife\n- MO: posed_as_ride_hailing_cab, drove_away_in_car, hotel_nearby_or_parking, target late_night_passenger, cash_and_mobile_phone, night, knife_shown_to_threaten\n\nCrime B (St. Thomas Mount): cab_robbery, 2025-09-27 00:30, near Saint Thomas Mount, St. Thomas Mount\n- Vehicle: white Maruti Swift Dzire, plate null\n- 3 offenders, heavy build, age 25-35\n- Weapon: knife\n- MO: null\n\nDistance: 2.3 km, Days apart: 10.0\nFactors: space_time (0.27), vehicle (0.5), suspect_description (1.0), weapon_tool (1.0)\nScore: 0.6317, band: medium, coverage: 0.5\n\nKey observations:\n- Both are cab_robbery category\n- 2.3 km apart - close geographically\n- 10 days apart - reasonable for a series\n- Both night time (01:09 and 00:30)\n- Both used white Maruti Swift Dzire, but NO PLATE for either\n- Vehicle factor is only 0.5 because plates are null - the ANPR-R0285340 provides some trail evidence but no plate match\n- Suspect description IDENTICAL: 3 offenders, heavy build, age 25-35\n- Weapon: both knife\n- MO missing for Crime B - this is a significant gap\n- Coverage only 0.5 (4 of 8 factors)\n\nAs a Skeptic, I need to be strict. The identical suspect description (3 heavy-build males 25-35) is somewhat generic - could be a common description. The vehicle match is only make/model/color with no plate. The MO is missing for Crime B. The space_time score is only 0.27 (moderate).\n\nHowever, the combination of: same crime type (cab_robbery), same vehicle make/model/color, identical suspect description, same weapon, close proximity (2.3 km), close time (10 days), both night - this is quite compelling for a series. The ANPR trail (ANPR-R0285340) provides some vehicle movement evidence.\n\nBut the missing plate is a major gap. The missing MO for Crime B is also a gap. The suspect description \"3 heavy build males 25-35\" is not very distinctive.\n\nI think this is borderline. As a Skeptic, I should probably \"send_back\" to get the plate details and MO for Crime B. The prior vetted answer for this exact pair had a recommended action to \"Obtain plate details for both crimes; check ANPR-R0285340 for vehicle movements; get full MO for CHN-ST-2025-001108\".\n\nSo I'll send_back with a requery to get plate details and MO for the second crime.</think>{\n  \"pairs\": {\n    \"CHN-GU-2025-001149|CHN-ST-2025-001108\": {\n      \"verdict\": \"send_back\",\n      \"critique\": \"Identical suspect description (3 heavy-build males 25-35) and knife use are suggestive but generic; vehicle match lacks plates (both null) so the 0.5 vehicle score rests only on make/model/color plus an ANPR trail with no plate confirmation. MO is missing entirely for CHN-ST-2025-001108, leaving no behavioural signature to corroborate the posed_as_ride_hailing_cab approach. Space-time (2.3 km, 10 days, both night) is permissive but not distinctive. Coverage is only 0.5. Need plate evidence and MO for the second crime before approving.\",\n      \"requery\": {\n        \"days\": 14,\n        \"ring\": 3,\n        \"note\": \"Re-query ANPR for white Maruti Swift Dzire within 3 km of both sites 2025-09-20 to 2025-10-10 to recover plate(s); request full MO narrative for CHN-ST-2025-001108 from PS-STTHOMASMOUNT-S1.\"\n      }\n    }\n  }\n}"
+    },
+    "finish_reason": "stop"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 4558,
+   "completion_tokens": 1114,
+   "total_tokens": 5672
+  },
+  "meterless": {
+   "schema": "meterless.compute_receipt.v1",
+   "receipt_id": "rcpt_req_bzsbbknh",
+   "decision_id": "req_bzsbbknh",
+   "requested_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "provider_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "routed_model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "winning_route": {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "label": "Nemotron 3 Ultra 550B A55B",
+    "provider": "nvidia",
+    "kind": "cloud",
+    "tier": "C"
+   },
+   "requires_review": false,
+   "phases": [
+    {
+     "phase": "final_synthesis",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "ms": 17094,
+     "tokensIn": 4558,
+     "tokensOut": 1114,
+     "outputTps": 65.16906516906516,
+     "coherence": null,
+     "tier": "C",
+     "reflex_decided_in_ms": 0.2
+    }
+   ],
+   "usage": {
+    "input_tokens": 4558,
+    "output_tokens": 1114,
+    "total_tokens": 5672,
+    "output_tps": 65.16906516906516,
+    "latency_ms": 17094
+   },
+   "cost": {
+    "actual_usd": 0,
+    "naive_usd": 0,
+    "baseline": {
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "label": "Nemotron 3 Ultra 550B A55B",
+     "source": "mode-default-frontier"
+    },
+    "verifier_usd": 0,
+    "race_overhead_usd": 0
+   },
+   "savings": {
+    "amount": 0,
+    "currency": "USD",
+    "vs": "Nemotron 3 Ultra 550B A55B",
+    "baseline_source": "mode-default-frontier"
+   },
+   "cache": {
+    "status": "miss",
+    "losers_reclaimed": 0,
+    "partials_reclaimed": 0
+   },
+   "privacy": {
+    "path": "cloud-ok",
+    "redaction": {
+     "applied": false,
+     "spans": 0
+    }
+   },
+   "from_cache": false,
+   "losers_reclaimed": 0,
+   "receipt": {
+    "app": "nexus-chennai",
+    "app_policy": {
+     "app": "nexus-chennai",
+     "cross_check": "auto",
+     "has_rule": true,
+     "lanes": null,
+     "mode_coerced": false,
+     "premium_budget": null,
+     "privacy": "cloud-ok",
+     "race_width": 6,
+     "requested_mode": "auto",
+     "routed_mode": "auto"
+    },
+    "autopilot": {
+     "ctx_dropped": [],
+     "ctx_unfilterable": false,
+     "envelope": {
+      "allocatable_mb": 0,
+      "pressure": "unknown",
+      "remaining_mb": 0,
+      "used_mb": 0
+     },
+     "needs": {
+      "coding": true,
+      "tools": false,
+      "vision": false
+     },
+     "prompt_tokens": 734,
+     "scout": {
+      "candidates": [
+       {
+        "id": "MOBILE_DEVELOPER",
+        "score": 11
+       },
+       {
+        "id": "COVERAGE_ANALYZER",
+        "score": 8
+       },
+       {
+        "id": "DATA_VISUALIZER",
+        "score": 6
+       }
+      ],
+      "category": "Specialized",
+      "confident": true,
+      "mode": "MOBILE_DEVELOPER",
+      "ms": 2.64,
+      "score": 11,
+      "source": "detected",
+      "tier": "B"
+     },
+     "tier_hint": null,
+     "why": [
+      "scout read MOBILE_DEVELOPER",
+      "a coder is preferred",
+      "~734 prompt tokens \u2014 lanes whose slot cannot hold them are not asked"
+     ]
+    },
+    "bar": null,
+    "budget_degrade": null,
+    "cache": {
+     "losers_reclaimed": 0,
+     "partials_reclaimed": 0,
+     "status": "miss"
+    },
+    "consensus": {
+     "agree": 1,
+     "coherence": null,
+     "detail": "answered by a top-tier model",
+     "label": "frontier answer",
+     "level": "solo",
+     "raced": 1,
+     "tone": "blue",
+     "verified": null
+    },
+    "consensus_escalation": null,
+    "cost": {
+     "actual_usd": 0,
+     "baseline": {
+      "label": "Nemotron 3 Ultra 550B A55B",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "mode-default-frontier"
+     },
+     "naive_usd": 0,
+     "race_overhead_usd": 0,
+     "verifier_usd": 0
+    },
+    "created_at": 1793029765351,
+    "cross_check": {
+     "app": "nexus-chennai",
+     "blocking": false,
+     "checks": [
+      {
+       "message": "No destructive ops detected.",
+       "status": "passed",
+       "type": "destructive_action"
+      },
+      {
+       "message": "No PII/credential detected in response.",
+       "status": "passed",
+       "type": "pii_guard"
+      },
+      {
+       "message": "Not a tool call.",
+       "status": "skipped",
+       "type": "schema_validity"
+      }
+     ],
+     "destructive": false,
+     "raw_risk": "low",
+     "recommended_action": "allow",
+     "reflex_ms": 0.39,
+     "requires_review": false,
+     "risk_level": "low",
+     "status": "passed",
+     "verifier": "deterministic/schema+regex",
+     "verifier_error": null,
+     "verifier_model": null,
+     "verifier_ms": 0,
+     "verifier_ran": false,
+     "verifier_tokens": null,
+     "verifier_verdict": null
+    },
+    "debate": null,
+    "decision_id": "req_bzsbbknh",
+    "deliberation": null,
+    "egress": {
+     "coverage": "pattern_floor",
+     "destination": "nvidia",
+     "never_eligible": [],
+     "sent": {
+      "context_sources": [
+       "messages",
+       "hmem:3 records"
+      ],
+      "prompt_chars": 2293,
+      "redacted": []
+     },
+     "withheld": []
+    },
+    "eligible": null,
+    "error": "",
+    "fusion": null,
+    "gen_verifier": null,
+    "graded_weight": null,
+    "hmem": {
+     "ids": [
+      "mem_mvpflbvp_5f5f",
+      "mem_mvpfm7t1_tp7x",
+      "mem_mvpfjvw6_8ink"
+     ],
+     "injected": 3,
+     "reason": "retrieved 3 memories",
+     "strategy": "comprehensive",
+     "top_score": 0.893
+    },
+    "host_pressure": {
+     "battery": null,
+     "pressure": {
+      "battery": {
+       "hard": 0.5,
+       "label": "nominal",
+       "score": 0.18,
+       "sensor": "battery%, charging",
+       "soft": 0.3
+      },
+      "cpu": {
+       "hard": 0.9,
+       "label": "nominal",
+       "score": 0.34,
+       "sensor": "30s load avg",
+       "soft": 0.7
+      },
+      "gpu": {
+       "hard": 0.92,
+       "label": "nominal",
+       "score": 0.38,
+       "sensor": "GPU + VRAM",
+       "soft": 0.75
+      },
+      "memory": {
+       "hard": 0.85,
+       "label": "warm",
+       "score": 0.51,
+       "sensor": "committed/swap",
+       "soft": 0.7
+      },
+      "network": {
+       "hard": 0.85,
+       "label": "nominal",
+       "score": 0.12,
+       "sensor": "RTT to providers",
+       "soft": 0.5
+      },
+      "quota": {
+       "hard": 0.95,
+       "label": "nominal",
+       "score": 0.28,
+       "sensor": "per-key window",
+       "soft": 0.8
+      },
+      "thermal": {
+       "hard": 0.8,
+       "label": "nominal",
+       "score": 0.22,
+       "sensor": "thermal API",
+       "soft": 0.55
+      }
+     },
+     "thermal": "nominal"
+    },
+    "job": null,
+    "mcp": null,
+    "method": null,
+    "mode": "auto",
+    "optimistic": null,
+    "phases": [
+     {
+      "coherence": null,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "ms": 17094,
+      "outputTps": 65.16906516906516,
+      "phase": "final_synthesis",
+      "reflex_decided_in_ms": 0.2,
+      "tier": "C",
+      "tokensIn": 4558,
+      "tokensOut": 1114
+     }
+    ],
+    "privacy": {
+     "path": "cloud-ok",
+     "redaction": {
+      "applied": false,
+      "spans": 0
+     }
+    },
+    "prompt_preview": "{\"CHN-GU-2025-001149|CHN-ST-2025-001108\": {\"a\": {\"crime_id\": \"CHN-GU-2025-001149\", \"station\": \"PS-GUINDY-J3\", \"category\": \"cab_robbery\", \"when\": \"2025-10-07T01:09:00+05:30\", \"where",
+    "quality_race": null,
+    "reasoning_scaffold": null,
+    "receipt_id": "rcpt_req_bzsbbknh",
+    "refine": null,
+    "request_id": "chatcmpl-72c53981-e1a0-4c43-87e0-20ec7078c267",
+    "requested_mode": "meterless/auto",
+    "routing": {
+     "confidence": null,
+     "escalated": null,
+     "escalated_on_divergence": false,
+     "hedge": null,
+     "hedges_skipped": 0,
+     "of": 1,
+     "policy": "learned-router",
+     "predicted": "nvidia/nemotron-3-ultra-550b-a55b",
+     "reason": "single-candidate",
+     "width": 1,
+     "winner": "nvidia/nemotron-3-ultra-550b-a55b"
+    },
+    "savings": {
+     "amount": 0,
+     "baseline_source": "mode-default-frontier",
+     "currency": "USD",
+     "vs": "Nemotron 3 Ultra 550B A55B"
+    },
+    "schema": "meterless.compute_receipt.v1",
+    "score": null,
+    "scorecard": null,
+    "status": "ok",
+    "summary": "ok \u00b7 Nemotron 3 Ultra 550B A55B \u00b7 miss \u00b7 $0.0000 saved",
+    "synthesis": null,
+    "test_time_compute": null,
+    "tool_degraded": null,
+    "unmet": null,
+    "usage": {
+     "input_tokens": 4558,
+     "latency_ms": 17094,
+     "output_tokens": 1114,
+     "output_tps": 65.16906516906516,
+     "total_tokens": 5672
+    },
+    "verdict": null,
+    "verification": null,
+    "winning_route": {
+     "kind": "cloud",
+     "label": "Nemotron 3 Ultra 550B A55B",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "provider": "nvidia",
+     "tier": "C"
+    }
+   },
+   "receipt_envelope": {
+    "body": {
+     "llama_cpp_ref": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+     "manifest_hash": "",
+     "receipt": {
+      "app": "nexus-chennai",
+      "app_policy": {
+       "app": "nexus-chennai",
+       "cross_check": "auto",
+       "has_rule": true,
+       "lanes": null,
+       "mode_coerced": false,
+       "premium_budget": null,
+       "privacy": "cloud-ok",
+       "race_width": 6,
+       "requested_mode": "auto",
+       "routed_mode": "auto"
+      },
+      "autopilot": {
+       "ctx_dropped": [],
+       "ctx_unfilterable": false,
+       "envelope": {
+        "allocatable_mb": 0,
+        "pressure": "unknown",
+        "remaining_mb": 0,
+        "used_mb": 0
+       },
+       "needs": {
+        "coding": true,
+        "tools": false,
+        "vision": false
+       },
+       "prompt_tokens": 734,
+       "scout": {
+        "candidates": [
+         {
+          "id": "MOBILE_DEVELOPER",
+          "score": 11
+         },
+         {
+          "id": "COVERAGE_ANALYZER",
+          "score": 8
+         },
+         {
+          "id": "DATA_VISUALIZER",
+          "score": 6
+         }
+        ],
+        "category": "Specialized",
+        "confident": true,
+        "mode": "MOBILE_DEVELOPER",
+        "ms": 2.64,
+        "score": 11,
+        "source": "detected",
+        "tier": "B"
+       },
+       "tier_hint": null,
+       "why": [
+        "scout read MOBILE_DEVELOPER",
+        "a coder is preferred",
+        "~734 prompt tokens \u2014 lanes whose slot cannot hold them are not asked"
+       ]
+      },
+      "bar": null,
+      "budget_degrade": null,
+      "cache": {
+       "losers_reclaimed": 0,
+       "partials_reclaimed": 0,
+       "status": "miss"
+      },
+      "consensus": {
+       "agree": 1,
+       "coherence": null,
+       "detail": "answered by a top-tier model",
+       "label": "frontier answer",
+       "level": "solo",
+       "raced": 1,
+       "tone": "blue",
+       "verified": null
+      },
+      "consensus_escalation": null,
+      "cost": {
+       "actual_usd": 0,
+       "baseline": {
+        "label": "Nemotron 3 Ultra 550B A55B",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "source": "mode-default-frontier"
+       },
+       "naive_usd": 0,
+       "race_overhead_usd": 0,
+       "verifier_usd": 0
+      },
+      "created_at": 1793029765351,
+      "cross_check": {
+       "app": "nexus-chennai",
+       "blocking": false,
+       "checks": [
+        {
+         "message": "No destructive ops detected.",
+         "status": "passed",
+         "type": "destructive_action"
+        },
+        {
+         "message": "No PII/credential detected in response.",
+         "status": "passed",
+         "type": "pii_guard"
+        },
+        {
+         "message": "Not a tool call.",
+         "status": "skipped",
+         "type": "schema_validity"
+        }
+       ],
+       "destructive": false,
+       "raw_risk": "low",
+       "recommended_action": "allow",
+       "reflex_ms": 0.39,
+       "requires_review": false,
+       "risk_level": "low",
+       "status": "passed",
+       "verifier": "deterministic/schema+regex",
+       "verifier_error": null,
+       "verifier_model": null,
+       "verifier_ms": 0,
+       "verifier_ran": false,
+       "verifier_tokens": null,
+       "verifier_verdict": null
+      },
+      "debate": null,
+      "decision_id": "req_bzsbbknh",
+      "deliberation": null,
+      "egress": {
+       "coverage": "pattern_floor",
+       "destination": "nvidia",
+       "never_eligible": [],
+       "sent": {
+        "context_sources": [
+         "messages",
+         "hmem:3 records"
+        ],
+        "prompt_chars": 2293,
+        "redacted": []
+       },
+       "withheld": []
+      },
+      "eligible": null,
+      "error": "",
+      "fusion": null,
+      "gen_verifier": null,
+      "graded_weight": null,
+      "hmem": {
+       "ids": [
+        "mem_mvpflbvp_5f5f",
+        "mem_mvpfm7t1_tp7x",
+        "mem_mvpfjvw6_8ink"
+       ],
+       "injected": 3,
+       "reason": "retrieved 3 memories",
+       "strategy": "comprehensive",
+       "top_score": 0.893
+      },
+      "host_pressure": {
+       "battery": null,
+       "pressure": {
+        "battery": {
+         "hard": 0.5,
+         "label": "nominal",
+         "score": 0.18,
+         "sensor": "battery%, charging",
+         "soft": 0.3
+        },
+        "cpu": {
+         "hard": 0.9,
+         "label": "nominal",
+         "score": 0.34,
+         "sensor": "30s load avg",
+         "soft": 0.7
+        },
+        "gpu": {
+         "hard": 0.92,
+         "label": "nominal",
+         "score": 0.38,
+         "sensor": "GPU + VRAM",
+         "soft": 0.75
+        },
+        "memory": {
+         "hard": 0.85,
+         "label": "warm",
+         "score": 0.51,
+         "sensor": "committed/swap",
+         "soft": 0.7
+        },
+        "network": {
+         "hard": 0.85,
+         "label": "nominal",
+         "score": 0.12,
+         "sensor": "RTT to providers",
+         "soft": 0.5
+        },
+        "quota": {
+         "hard": 0.95,
+         "label": "nominal",
+         "score": 0.28,
+         "sensor": "per-key window",
+         "soft": 0.8
+        },
+        "thermal": {
+         "hard": 0.8,
+         "label": "nominal",
+         "score": 0.22,
+         "sensor": "thermal API",
+         "soft": 0.55
+        }
+       },
+       "thermal": "nominal"
+      },
+      "job": null,
+      "mcp": null,
+      "method": null,
+      "mode": "auto",
+      "optimistic": null,
+      "phases": [
+       {
+        "coherence": null,
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "ms": 17094,
+        "outputTps": 65.16906516906516,
+        "phase": "final_synthesis",
+        "reflex_decided_in_ms": 0.2,
+        "tier": "C",
+        "tokensIn": 4558,
+        "tokensOut": 1114
+       }
+      ],
+      "privacy": {
+       "path": "cloud-ok",
+       "redaction": {
+        "applied": false,
+        "spans": 0
+       }
+      },
+      "prompt_preview": "{\"CHN-GU-2025-001149|CHN-ST-2025-001108\": {\"a\": {\"crime_id\": \"CHN-GU-2025-001149\", \"station\": \"PS-GUINDY-J3\", \"category\": \"cab_robbery\", \"when\": \"2025-10-07T01:09:00+05:30\", \"where",
+      "quality_race": null,
+      "reasoning_scaffold": null,
+      "receipt_id": "rcpt_req_bzsbbknh",
+      "refine": null,
+      "request_id": "chatcmpl-72c53981-e1a0-4c43-87e0-20ec7078c267",
+      "requested_mode": "meterless/auto",
+      "routing": {
+       "confidence": null,
+       "escalated": null,
+       "escalated_on_divergence": false,
+       "hedge": null,
+       "hedges_skipped": 0,
+       "of": 1,
+       "policy": "learned-router",
+       "predicted": "nvidia/nemotron-3-ultra-550b-a55b",
+       "reason": "single-candidate",
+       "width": 1,
+       "winner": "nvidia/nemotron-3-ultra-550b-a55b"
+      },
+      "savings": {
+       "amount": 0,
+       "baseline_source": "mode-default-frontier",
+       "currency": "USD",
+       "vs": "Nemotron 3 Ultra 550B A55B"
+      },
+      "schema": "meterless.compute_receipt.v1",
+      "score": null,
+      "scorecard": null,
+      "status": "ok",
+      "summary": "ok \u00b7 Nemotron 3 Ultra 550B A55B \u00b7 miss \u00b7 $0.0000 saved",
+      "synthesis": null,
+      "test_time_compute": null,
+      "tool_degraded": null,
+      "unmet": null,
+      "usage": {
+       "input_tokens": 4558,
+       "latency_ms": 17094,
+       "output_tokens": 1114,
+       "output_tps": 65.16906516906516,
+       "total_tokens": 5672
+      },
+      "verdict": null,
+      "verification": null,
+      "winning_route": {
+       "kind": "cloud",
+       "label": "Nemotron 3 Ultra 550B A55B",
+       "model": "nvidia/nemotron-3-ultra-550b-a55b",
+       "provider": "nvidia",
+       "tier": "C"
+      }
+     },
+     "signer": "meterlessd",
+     "ts_ms": 1793029765403
+    },
+    "pubkey_b64": "4QtJ0bdprDo+qYz5/C0Ngb7B9VSyrLlFWznE/WlIliU=",
+    "sig_b64": "zF0HIrjpPXHvqBNaTJltBH5Uv/41wITKWGclymJbWWqSYviSUjKVkAkn950/0hd9tlya2/dGJidYqcwOTDyqBA=="
+   },
+   "mcp": null,
+   "job": {
+    "id": "job_mvouqerc01",
+    "kind": "app_stream",
+    "lane": "auto",
+    "turn": 916,
+    "cluster": 2
+   },
+   "egress": {
+    "destination": "nvidia",
+    "coverage": "pattern_floor",
+    "sent": {
+     "prompt_chars": 2293,
+     "context_sources": [
+      "messages",
+      "hmem:3 records"
+     ],
+     "redacted": []
+    },
+    "withheld": [],
+    "never_eligible": []
+   },
+   "consensus": {
+    "level": "solo",
+    "raced": 1,
+    "agreed": null,
+    "coherence": null,
+    "label": "frontier answer",
+    "basis": "lexical"
+   },
+   "lineage": {
+    "families": [
+     "unknown"
+    ],
+    "distinct": 1,
+    "note": "1 distinct lineages across 1 panelists"
+   },
+   "app": "nexus-chennai",
+   "mode": "auto",
+   "scope": "user"
+  },
+  "meterless_cross_check": {
+   "status": "passed",
+   "risk_level": "low",
+   "raw_risk": "low",
+   "verifier": "deterministic/schema+regex",
+   "reflex_ms": 0.39,
+   "verifier_ms": 0,
+   "verifier_ran": false,
+   "verifier_model": null,
+   "verifier_verdict": null,
+   "verifier_error": null,
+   "verifier_tokens": null,
+   "checks": [
+    {
+     "type": "destructive_action",
+     "status": "passed",
+     "message": "No destructive ops detected."
+    },
+    {
+     "type": "pii_guard",
+     "status": "passed",
+     "message": "No PII/credential detected in response."
+    },
+    {
+     "type": "schema_validity",
+     "status": "skipped",
+     "message": "Not a tool call."
+    }
+   ],
+   "recommended_action": "allow",
+   "blocking": false,
+   "app": "nexus-chennai",
+   "destructive": false,
+   "requires_review": false
+  }
+ }
+}

@@ -1,0 +1,511 @@
+{
+  "run_id": "demo-001",
+  "status": "success",
+  "output": {
+    "alerts": [
+      {
+        "alert_id": "LA-2026-D021BEEB729F",
+        "kind": "pair",
+        "crimes": [
+          "CHN-AD-2026-001182",
+          "CHN-TI-2026-001148"
+        ],
+        "stations": [
+          "PS-ADYAR-J2",
+          "PS-THIRUVANMIYUR-J6"
+        ],
+        "score": 0.819,
+        "band": "high",
+        "coverage": 0.72,
+        "factors": [
+          {
+            "factor": "mo_similarity",
+            "weight": 0.25,
+            "value": 0.9043,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-TI-2026-001148",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both crimes share identical approach (two_wheeler_from_behind), disguise (black_helmet_with_red_stripe), escape on_motorcycle, offender_count 2, target woman, target_item gold_chain, time_band evening, and violence push; place_type differs (near_bus_depot/road vs park).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.4405,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001148",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Crimes occurred 1.5 km apart (LB Road near Adyar bus depot vs near Tidel Park, Thiruvanmiyur) and 7 days apart (Oct 14 19:40 vs Oct 7 20:34), indicating close spatiotemporal proximity.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "vehicle",
+            "weight": 0.15,
+            "value": 0.85,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001148",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0585086",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0590687",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              }
+            ],
+            "reason": "Both offenders used a red Bajaj Pulsar 150; Crime A has partial plate TN09??4471, Crime B plate unknown; ANPR hits ANPR-R0585086 and ANPR-R0590687 link the vehicle across locations.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001148",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Suspect descriptions match exactly: two thin males aged 20-30 wearing black helmets with red stripes.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "target_profile",
+            "weight": 0.05,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-TI-2026-001148",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both crimes target women for gold chains in the evening.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 1,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shows near-identical MO, suspect description, and target profile, with strong vehicle linkage via ANPR and close spatiotemporal proximity, indicating a high likelihood of same offenders.",
+        "recommended_action": "Investigate as a series; coordinate between PS-ADYAR-J2 and PS-THIRUVANMIYUR-J6, share CCTV/ANPR leads for the red Pulsar (TN09??4471), and circulate suspect description to patrol teams.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-E38C6B38B865",
+        "kind": "pair",
+        "crimes": [
+          "CHN-AD-2026-001182",
+          "CHN-VL-2026-000877"
+        ],
+        "stations": [
+          "PS-ADYAR-J2",
+          "PS-VELACHERY-J7"
+        ],
+        "score": 0.7887,
+        "band": "high",
+        "coverage": 0.72,
+        "factors": [
+          {
+            "factor": "mo_similarity",
+            "weight": 0.25,
+            "value": 0.8848,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-VL-2026-000877",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both share approach (two_wheeler_from_behind), disguise (black_helmet_with_red_stripe), escape on_motorcycle, offender_count 2, target woman, target_item gold_chain, time_band evening; violence differs slightly (push vs push_and_fall), place_type differs (near_bus_depot/road vs road).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.3279,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VL-2026-000877",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Crimes 3.5 km apart (LB Road near Adyar bus depot vs Velachery Main Road near Vijaya Nagar bus stop) and 2 days apart (Oct 14 19:40 vs Oct 16 19:55), showing tight spatiotemporal clustering.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "vehicle",
+            "weight": 0.15,
+            "value": 0.85,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VL-2026-000877",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0590687",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0592410",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              }
+            ],
+            "reason": "Both used red Bajaj Pulsar 150 with similar partial plates (TN09??4471 and TN09B?4471); ANPR hits ANPR-R0590687 and ANPR-R0592410 place the vehicle near both scenes.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-VL-2026-000877",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Suspect descriptions match exactly: two thin males aged 20-30 wearing black helmets with red stripes.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "target_profile",
+            "weight": 0.05,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-VL-2026-000877",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both target women for gold chains in the evening.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 1,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair exhibits nearly identical MO, suspect description, and target profile, with strong vehicle linkage via matching partial plates and ANPR corroboration, and very tight spatiotemporal proximity, supporting a series linkage.",
+        "recommended_action": "Treat as a linked series; coordinate PS-ADYAR-J2 and PS-VELACHERY-J7, run CCTV/ANPR for the red Pulsar (TN09??4471/TN09B?4471), and assign a joint team to track the suspect duo.",
+        "status": "pending"
+      },
+      {
+        "alert_id": "LA-2026-B2094A9EF16C",
+        "kind": "pair",
+        "crimes": [
+          "CHN-AD-2026-001182",
+          "CHN-TI-2026-001134"
+        ],
+        "stations": [
+          "PS-ADYAR-J2",
+          "PS-THIRUVANMIYUR-J6"
+        ],
+        "score": 0.6924,
+        "band": "medium",
+        "coverage": 0.72,
+        "factors": [
+          {
+            "factor": "mo_similarity",
+            "weight": 0.25,
+            "value": 0.7543,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-TI-2026-001134",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both crimes share identical approach (two_wheeler_from_behind), disguise (black_helmet_with_red_stripe), escape on_motorcycle, offender_count 2, target_item gold_chain, time_band evening; violence differs (push vs push_and_fall) and place_type varies (near_bus_depot/road vs street).",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "space_time",
+            "weight": 0.15,
+            "value": 0.3162,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001134",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Crimes occurred 1.6 km apart (LB Road near Adyar bus depot vs near Jayanti, Thiruvanmiyur) and 11 days apart (2026-10-14 19:40 vs 2026-10-03 20:09), showing moderate spatiotemporal proximity.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "vehicle",
+            "weight": 0.15,
+            "value": 0.85,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001134",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0581767",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              },
+              {
+                "view": "v_vehicle_trail",
+                "row": "ANPR-R0590687",
+                "query": "q_vehicle_trail",
+                "query_id": "bfaf983b-04b0-4f7f-937b-6feb230aa4a1"
+              }
+            ],
+            "reason": "Both offenders used a red Bajaj Pulsar 150; first crime has partial plate TN09??4471, second plate unknown; ANPR hits ANPR-R0581767 and ANPR-R0590687 link the vehicle across locations.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "suspect_description",
+            "weight": 0.12,
+            "value": 1.0,
+            "evidence": [
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              },
+              {
+                "view": "v_crime_unified",
+                "row": "CHN-TI-2026-001134",
+                "query": "q_case",
+                "query_id": "b6a4d0eb-75b0-4725-8b45-0c632c6ad6af"
+              }
+            ],
+            "reason": "Suspect descriptions match exactly: two thin males aged 20-30 wearing black helmets with red stripes.",
+            "struck_by_skeptic": false
+          },
+          {
+            "factor": "target_profile",
+            "weight": 0.05,
+            "value": 0.3,
+            "evidence": [
+              {
+                "view": "v_crime_features",
+                "row": "CHN-AD-2026-001182",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              },
+              {
+                "view": "v_crime_features",
+                "row": "CHN-TI-2026-001134",
+                "query": "q_features",
+                "query_id": "83ef0e1e-7883-4b33-a332-6c464ea34f3f"
+              }
+            ],
+            "reason": "Both target gold chains, but victim profiles differ (woman vs woman_elderly), reducing target profile similarity.",
+            "struck_by_skeptic": false
+          }
+        ],
+        "memory_applied": [],
+        "skeptic": {
+          "rounds": 1,
+          "struck": [],
+          "verdict": "approved",
+          "model_critique": "applied"
+        },
+        "rationale": "The pair shows strong MO and suspect description matches with vehicle linkage, but moderate spatiotemporal proximity and differing victim profiles suggest possible same offenders with evolving targeting.",
+        "recommended_action": "Investigate as potential series; coordinate between PS-ADYAR-J2 and PS-THIRUVANMIYUR-J6, share CCTV/ANPR leads for the red Pulsar (TN09??4471), and circulate suspect description to patrol teams with focus on elderly women safety.",
+        "status": "pending"
+      }
+    ],
+    "series": [
+      {
+        "series_id": "SER-5EC31B6A9C",
+        "kind": "series",
+        "crime_ids": [
+          "CHN-AD-2026-001182",
+          "CHN-TI-2026-001134",
+          "CHN-TI-2026-001148",
+          "CHN-VL-2026-000877"
+        ],
+        "stations": [
+          "PS-ADYAR-J2",
+          "PS-THIRUVANMIYUR-J6",
+          "PS-VELACHERY-J7"
+        ],
+        "alert_ids": [
+          "LA-2026-B2094A9EF16C",
+          "LA-2026-D021BEEB729F",
+          "LA-2026-E38C6B38B865"
+        ],
+        "min_score": 0.6924,
+        "status": "candidate",
+        "name": "Red two-wheeler chain snatchings · 3 stations"
+      }
+    ],
+    "hotspots": [],
+    "errors": [],
+    "summary": "3 new links (2 high, 1 medium; 3 cross-station); 0 with factors struck by Skeptic; 0 dropped; 1/1 cases processed"
+  },
+  "agents": [
+    {
+      "name": "Scout Intent",
+      "role": "routes events and screens tips"
+    },
+    {
+      "name": "Tip Guard",
+      "role": "keeps unsafe public input away from agents"
+    },
+    {
+      "name": "Extractor",
+      "role": "reads narratives, statements and images into MO features"
+    },
+    {
+      "name": "Planner",
+      "role": "plans Zetaris queries"
+    },
+    {
+      "name": "Linker",
+      "role": "scores pairs in code and explains them"
+    },
+    {
+      "name": "Skeptic",
+      "role": "re-queries Zetaris and challenges links"
+    },
+    {
+      "name": "Alert writer",
+      "role": "writes approved link alerts"
+    },
+    {
+      "name": "Series analyst",
+      "role": "groups linked cases into series and builds dossiers"
+    }
+  ],
+  "engines": [
+    "world_model",
+    "hmem",
+    "scout_intent",
+    "markovian"
+  ],
+  "trace_id": "trace-demo-001",
+  "log_file": "logs/trace-demo-001.jsonl",
+  "execution_time_seconds": 236.25
+}
