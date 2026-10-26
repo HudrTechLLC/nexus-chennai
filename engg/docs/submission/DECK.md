@@ -82,7 +82,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 6 · How Zetaris is used (point 5)
 
 - **On slide:**
-  - **Federated today:** Supabase Postgres (17 tables + 4 views, read-only role), 12 file tables in Zetaris's file store (8 CSV + 4 Parquet: legacy CCTNS exports, ANPR, 112 calls, releases…) and REST feeds served by the Nexus API (weather, news, social). One semantic view, `v_crime_unified`, over every crime record shape.
+  - **Federated today:** Supabase Postgres (17 tables + 5 views, read-only role), 12 file tables in Zetaris's file store (8 CSV + 4 Parquet: legacy CCTNS exports, ANPR, 112 calls, releases…) and REST feeds served by the Nexus API (weather, news, social). One semantic view, `v_crime_unified`, over every crime record shape.
   - **Governed:** agents may run only named queries. **All 15 return rows live on Zetaris**, and all 15 run on DuckDB twins in sample mode.
   - **Data quality:** 8 DQ views, e.g. one incident filed by two stations.
   - **Trust boundary:** tips reach Zetaris only through a safe-column view.
