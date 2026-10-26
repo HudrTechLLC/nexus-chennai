@@ -111,16 +111,16 @@ def run_request(
             output, status = _dispatch(graph, kind, payload, options)
     except Exception as exc:
         tracer.emit("api", "run_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
+        _finish(store, run_id, "failed", kind)
         raise
     finally:
         if zetaris is None:
             z.close()
         if nightshift is None:
             n.close()
-        if isinstance(store, SupabaseStore):
-            store.finish_run(run_id, status)
     elapsed = round(time.perf_counter() - started, 2)
     tracer.emit("api", "run_finished", output_summary=f"{status} in {elapsed}s", status=status)
+    _finish(store, run_id, status, kind)
     return {
         "run_id": run_id,
         "status": status,
@@ -131,6 +131,16 @@ def run_request(
         "log_file": f"logs/trace-{run_id}.jsonl",
         "execution_time_seconds": elapsed,
     }
+
+
+def _finish(store: Store, run_id: str, status: str, kind: str) -> None:
+    """Close the run in Supabase and copy its trace; a failure here never loses the run's answer."""
+    if not isinstance(store, SupabaseStore):
+        return
+    try:
+        store.finish_run(run_id, status, kind)
+    except Exception as exc:  # the JSONL trace is still on disk
+        store.tracer.emit("api", "trace_copy_failed", output_summary=str(exc)[:300], status="error")
 
 
 def _case_output(state: Mapping[str, Any]) -> tuple[list[dict], int, int]:
