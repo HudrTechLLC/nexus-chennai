@@ -35,12 +35,12 @@ export function NotificationBell({ userId, initial }: { userId: string; initial:
   const badge = badgeText(count);
   return (
     <Link href="/console/notifications" aria-label={badge ? `Notifications, ${count} unread` : "Notifications"}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-line text-muted hover:text-ink">
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-line text-brand-muted hover:bg-brand-hover hover:text-brand-ink">
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
       </svg>
       {badge && (
-        <span className="absolute -right-1.5 -top-1.5 min-w-[1.25rem] rounded-full bg-signal px-1 text-center font-mono text-[11px] font-bold leading-5 text-bg">
+        <span className="absolute -right-1.5 -top-1.5 min-w-[1.25rem] rounded-full bg-accent-bright px-1 text-center font-mono text-[11px] font-bold leading-5 text-brand">
           {badge}
         </span>
       )}
