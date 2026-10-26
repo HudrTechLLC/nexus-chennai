@@ -199,6 +199,20 @@ def test_skeptic_strikes_factor_its_rows_do_not_support(make_deps):
     assert strikes and strikes[0]["target_agent"] == "Linker" and strikes[0]["status"] == "needs_revision"
 
 
+def test_skeptic_keeps_factor_when_its_requery_is_unavailable(make_deps):
+    """Live regression (run_85d1be81): q_vehicle_trail not registered crashed the run in the Skeptic.
+    A failed support re-query leaves the factor unverified (kept, traced), never struck."""
+    handlers = default_handlers()
+    deps = make_deps(responder=approve_all, handlers=handlers)
+    pairs = scored(deps)
+    del handlers["q_vehicle_trail"]  # FakeZetaris raises KeyError, like UnknownQuery on the live registry
+    before = pairs[0].score.score
+    res = Skeptic(deps).review(pairs)[0]
+    assert "vehicle" not in res.struck and res.pair.score.score == before
+    assert any(e["action"] == "recheck_unavailable" and "q_vehicle_trail" in e["input_summary"]
+               for e in deps.tracer.read())
+
+
 def test_skeptic_drops_when_strikes_kill_the_alert(make_deps):
     handlers = default_handlers()
     deps = make_deps(responder=approve_all, handlers=handlers)
