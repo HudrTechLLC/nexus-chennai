@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { beatsText, deltaPts, NO_REPORT, parseEvalReport, pctOrDash } from "../evalReport";
 import sample from "./fixtures/eval_report.sample.json";
+import real from "./fixtures/eval_report.limit5.json"; // nexus-2: raw `python -m app.eval --limit 5 --mo-cosine all`, sample mode
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- a deliberately loose copy to break the shape
 const clone = () => JSON.parse(JSON.stringify(sample)) as Record<string, any>;
@@ -88,5 +89,17 @@ describe("WS2-21 additions (optional)", () => {
     const r = parseEvalReport(sample)!;
     expect(r.tfidfTable).toBeNull();
     expect(r.extraProvenance).toEqual([]);
+  });
+});
+
+describe("real app.eval output (nexus-2, --limit 5, --mo-cosine all)", () => {
+  it("parses with every mode and the provenance block", () => {
+    const r = parseEvalReport(real)!;
+    expect(r).not.toBeNull();
+    expect(r.modes.map((m) => m.mode)).toEqual(["off", "on", "tfidf"]);
+    expect(r.modes.some((m) => m.mode === r.moCosine)).toBe(true); // the headline row gets its label
+    expect(r.tfidfTable).not.toBeNull();
+    expect(r.extraProvenance.length).toBeGreaterThan(0);
+    expect(r.provenance.synthetic).toBe(true);
   });
 });

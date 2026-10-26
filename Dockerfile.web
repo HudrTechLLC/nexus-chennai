@@ -8,6 +8,8 @@ COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY engg/docs /repo/engg/docs
 COPY cities /repo/cities
+# The committed linking eval report (LNK-10); sync-docs bundles it for /console/system/eval.
+COPY output_examples /repo/output_examples
 COPY apps/web ./
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""

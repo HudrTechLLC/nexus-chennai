@@ -1,0 +1,158 @@
+{
+  "synthetic": true,
+  "weights_version": "f2-default-v1",
+  "method": "blocking (q_candidates, default plan) -> F2 code scoring -> Skeptic re-query/strike; no model calls (models only explain, R7)",
+  "cases_evaluated": 5,
+  "features": {
+    "with_live_model_features": 4,
+    "without_features": [
+      "CHN-AM-2024-001346"
+    ],
+    "features_without_receipt": [],
+    "extractor_versions": {
+      "mo-v3": 4
+    }
+  },
+  "excluded_non_generated": [],
+  "truth_positive_pairs": 21,
+  "agent": {
+    "tp": 21,
+    "fp": 11,
+    "fn": 0,
+    "precision": 0.6562,
+    "recall": 1.0,
+    "f1": 0.7925,
+    "alerts": 33,
+    "by_band": {
+      "high": {
+        "alerts": 6,
+        "precision": 1.0,
+        "tp": 6,
+        "fp": 0
+      },
+      "medium": {
+        "alerts": 27,
+        "precision": 0.5769,
+        "tp": 15,
+        "fp": 11
+      }
+    },
+    "by_crime_type": {
+      "robbery": {
+        "tp": 21,
+        "fp": 11,
+        "fn": 0,
+        "precision": 0.6562,
+        "recall": 1.0,
+        "f1": 0.7925
+      },
+      "theft": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      }
+    },
+    "false_alerts_per_100_cases": 220.0,
+    "skeptic_strikes": 0,
+    "series": {
+      "predicted_series": 2,
+      "mean_purity": 0.45
+    }
+  },
+  "baseline_rules_only": {
+    "tp": 7,
+    "fp": 28,
+    "fn": 14,
+    "precision": 0.2,
+    "recall": 0.3333,
+    "f1": 0.25,
+    "alerts": 36,
+    "rule": "same category, <= 2 km, <= 14 days",
+    "false_alerts_per_100_cases": 560.0
+  },
+  "duplicates": {
+    "truth_pairs": 6,
+    "flagged_by_agent": 1,
+    "flagged_by_baseline": 1
+  },
+  "timing": {
+    "median_seconds_per_case": 0.804
+  },
+  "beats_baseline": {
+    "precision": true,
+    "recall": true
+  },
+  "mo_cosine": "off",
+  "mo_cosine_trial": {
+    "off": {
+      "precision": 0.6562,
+      "recall": 1.0,
+      "tp": 21,
+      "fp": 11,
+      "fn": 0,
+      "alerts": 33
+    },
+    "on": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "tp": 21,
+      "fp": 21,
+      "fn": 0,
+      "alerts": 43
+    }
+  },
+  "mo_tfidf_trial": {
+    "tfidf": {
+      "precision": 0.6562,
+      "recall": 1.0,
+      "tp": 21,
+      "fp": 11,
+      "fn": 0,
+      "alerts": 33
+    },
+    "off": {
+      "precision": 0.6562,
+      "recall": 1.0,
+      "tp": 21,
+      "fp": 11,
+      "fn": 0,
+      "alerts": 33
+    },
+    "table": {
+      "source": "zetaris sb.crime_features_v",
+      "docs": 421,
+      "extractor_versions": {
+        "mo-v3": 410,
+        "mo-v4": 11
+      },
+      "built_at": "2026-10-26T13:52:51+00:00"
+    }
+  },
+  "hmem": "off: no memory adjusts any score (reproducible; live analyst decisions excluded)",
+  "truth_dir": "data/sample/_truth",
+  "sample_mode": true,
+  "run_id": "eval_fb882333",
+  "log_file": "logs/trace-eval_fb882333.jsonl",
+  "band_accuracy_text": {
+    "high": "alerts in the high band were correct 100% of the time on the evaluation set (6 alerts)",
+    "medium": "alerts in the medium band were correct 58% of the time on the evaluation set (27 alerts)"
+  },
+  "provenance": {
+    "data": "sample bundle data/sample, DuckDB twins of the named queries (reproducible from a fresh clone)",
+    "truth_dir": "data/sample/_truth",
+    "cases_evaluated": 5,
+    "synthetic": true,
+    "case_features_by_extractor": {
+      "mo-v3": 4
+    },
+    "hmem": "empty: the evaluator binds no engines, so no memory adjusts a score",
+    "model_calls": 0,
+    "console_firs_excluded": 0,
+    "weights_version": "f2-default-v1",
+    "git_commit": "2049552",
+    "generated_at": "2026-10-26T14:46:38+00:00"
+  }
+}
