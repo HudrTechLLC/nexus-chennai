@@ -52,7 +52,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 6. **Open the Pulse Map at least 30 s before recording segment 1** (it took ~25 s to load in nexus-4's dry run).
 7. **Whoever records checks the Zetaris UI on `localhost:3000`** before segment 4: it opens, the `nexus` container is visible, and the rendered `q_candidates` SQL runs and returns rows.
 8. **Segment 3 needs a real `vision_unavailable` trace step.** It comes only from a live FIR filed with a CCTV still (nexus-3 / nexus-5 are producing one). Note its `run_id`. If there is no such trace when you record, cut the CCTV-still sentence from the segment 3 narration.
-9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. Rehearse on a **different** series in dry run #2, so the rehearsal doesn't create the one you film. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
+9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. There is only one series in the database (SER-B687C36CFC), so **rehearse without writing**: in dry run #2, walk up to the *Propose task force* dialog and stop (cancel; nothing is created). The first real creation happens on camera. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
 
 ## Script
 
