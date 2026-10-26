@@ -321,3 +321,16 @@ The spec's E5 list has 12 named queries. The Hotspot detector (WS2-18) adds `q_h
 - **Why:** PostgREST's 1,000-row cap and multiple round-trips; one call per page.
 - **Checked:** all four return 200 for the five demo users (200–450 ms), and anon is refused (42501).
 - **Owner:** nexus-6. The migrations use nexus-4's `0004_06_*` sub-range, by agreement.
+
+## D-029 · FIR capture, evidence and search details (nexus-5) (2026-10-26)
+- **FIR ids:** `file_fir` gives each new FIR the next number for its station and year (max+1, e.g. `CHN-AD-2026-001231`) and a random `source_row_id`. So the generator re-seed (which keys its rows by `uuid5(crime_id)`) never retires or overwrites a console-filed FIR, and a clash refuses (#87).
+- **Evidence keeps the original bytes:** no re-encoding and no EXIF stripping.
+  - A server-side sha256 is taken over the original.
+  - Each upload adds a custody entry `{at, by, action:"uploaded", sha256}`.
+  - `captured_at` is read from EXIF.
+  - Files are capped at 4 MB, the Vercel body limit.
+  - This supersedes the chief's earlier "strip EXIF" instruction, which applies only to **public tips and appeal images**. Re-encoding would break integrity and the chain of custody.
+  - Private bucket `evidence`; RLS by `can_write_crime` / `can_read_crime`; anon none.
+- **Officer MO corrections** go to `crime_feature_reviews` through `review_features()`, never into the Extractor's row, which keeps its provenance (R3). `zetaris_reader` has a SELECT grant on `crime_feature_reviews` so agents can see reviewed MO.
+- **Search provenance (deviation from SRCH-07):** Vercel cannot reach Zetaris, so console search reads Supabase under RLS. Its footer lists the **tables and row counts** it used instead of Zetaris query ids. Agent-side search (`q_search`, D-024 family) still goes through Zetaris.
+- **Standing live checks:** `apps/web/scripts/rls-check.mjs` and `apps/web/scripts/evidence-check.mjs` (stored sha256 = recorded = custody; overwrite, other station, anon and public URL all refused; 8/8 on 26 Oct).
