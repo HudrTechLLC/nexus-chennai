@@ -9,7 +9,7 @@ Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [READM
 
 > **Notes for the chief, not form text:**
 > - **NVIDIA Embed is not claimed** (D-027). Nightshift 1.2.7 exposes no embeddings route (`/v1/embeddings` returns 404 for every model), so similar-MO and text search use TF-IDF plus feature vectors in code (`services/api/app/engines/similarity.py`, tested), the spec E2 fallback.
-> - **Vision is a limitation, not a claim.** Super VL is listed as configured, and the image refusal is stated.
+> - **Vision: claim the lane, not yet the product.** Super VL is verified through a Nightshift cloud lane (D-036). Claim image extraction in Nexus only once nexus-3's trace shows a vision model call.
 > - **The form may have a length limit.** If it does, keep the first paragraph of each section and the evidence lines, and drop the rest.
 
 ---
@@ -63,7 +63,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 ## Meterless Nightshift: the primary AI provider
 
 - **Every model call in the product goes to Nightshift**, through one adapter (`services/api/app/adapters/nightshift.py`). It uses Nightshift's OpenAI-compatible `/v1/chat/completions` with the runtime token and the `meterless-app` / `meterless-scope` headers.
-- **The NVIDIA key lives only in Nightshift.** The app holds only the Nightshift URL and the runtime token, which it can read from the token file Nightshift writes itself.
+- **The NVIDIA key lives only in Nightshift.** The app holds only the Nightshift URL and the runtime token, which it can read from the token file Nightshift writes itself. Every call still goes through Nightshift. For vision, Nightshift routes Super VL through OpenRouter, and that key is also held only in Nightshift (D-036).
 - **Pinned lanes, never `meterless/auto`.** The adapter refuses an unpinned or auto model. Each agent role uses a fixed lane.
 - **Every call is traced:** the lane, the pinned model, the model Nightshift reports back, a receipt id (a Meterless receipt header if present, otherwise the response id), the latency and the status. The trace goes to `logs/trace-<run_id>.jsonl`, to stdout and to the console's trace viewer.
 - **Failures are honest.** Transport errors and 5xx responses are retried, up to 3 attempts with backoff. After that, the agent degrades to a traced code-only path. Sample mode replays output recorded from live Nightshift calls, labelled `replayed`. It never invents an answer.
@@ -75,7 +75,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 |---|---|---|
 | `fast` | `nvidia/nemotron-3.5-lightning-30b-a3b` | Extractor: modus operandi labels from FIR narratives, statements, tips and news; Sanitiser: public appeal drafts; Briefer: zone briefing prose |
 | `reason` | `nvidia/nemotron-3-ultra-550b-a55b` | Planner: picks and orders Zetaris queries; Linker: one plain reason per factor; Skeptic: the critique that can downgrade or drop a link; Series analyst: dossier notes |
-| `vision` | `nvidia/nemotron-3.5-super-vl-120b-a12b` (configured) | CCTV stills. Nightshift currently refuses image requests (`no_vision_model`). Reported to Meterless. The Extractor falls back to the officer's caption and traces it. No visual result is faked |
+| `vision` | `nvidia/nemotron-3.5-super-vl-120b-a12b`, served through a Nightshift cloud lane (OpenRouter free route) | CCTV stills and evidence photos. The lane is verified by a direct Nightshift image test (D-036); a Nexus trace with a vision call is `[PENDING]`. If the route refuses or rate-limits, the Extractor traces `vision_unavailable` and uses the officer's caption. No visual result is faked |
 
 - **No embedding model is claimed.** Nightshift 1.2.7 exposes no embeddings route, so similar-MO search and text search use TF-IDF and feature vectors computed in code (the spec's fallback), traced as `embed_fallback`. The Nemotron embed model is not claimed.
 - **Every trace line names the Nemotron model** that handled the request, and the model Nightshift reports back.
