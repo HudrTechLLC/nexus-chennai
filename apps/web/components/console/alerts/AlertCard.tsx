@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { coverageCapLine, coverageOf, decisionState, factorRows, latestDecision, pct, REASON_LABEL, type LinkAlert } from "@/lib/alerts";
 import { crimeTitle, type CrimeBrief } from "@/lib/alertsData";
+import { Brain, ShieldCheck } from "lucide-react";
+import { Badge, Card } from "@/components/ui";
 import { BandPill, FactorBars, ScoreRing, StatusPill } from "./AlertBits";
 
 function fmt(at: string) {
@@ -20,7 +22,7 @@ export function AlertCard({ alert, crimes, deciderNames }: {
   const capLine = coverageCapLine(alert);
 
   return (
-    <article className="min-w-0 rounded-xl border border-line bg-surface p-4">
+    <Card as="article" pad="sm" className="min-w-0 transition-shadow hover:shadow-raised">
       <div className="flex flex-wrap items-start gap-4">
         <ScoreRing score={alert.score} band={alert.band} />
         <div className="min-w-0 flex-1">
@@ -28,10 +30,10 @@ export function AlertCard({ alert, crimes, deciderNames }: {
             <BandPill band={alert.band} />
             <StatusPill state={state} />
             <span className="font-mono text-xs text-muted">{alert.alert_id} · {alert.kind}</span>
-            <span className="font-mono text-xs text-muted">coverage {pct(coverageOf(alert))}</span>
+            <span className="font-mono text-xs tabular-nums text-muted">coverage {pct(coverageOf(alert))}</span>
           </div>
-          <h2 className="mt-1 truncate text-lg font-bold">
-            <Link href={`/console/alerts/${encodeURIComponent(alert.alert_id)}`} className="hover:underline">{title}</Link>
+          <h2 className="mt-1 truncate text-lg font-semibold tracking-tight">
+            <Link href={`/console/alerts/${encodeURIComponent(alert.alert_id)}`} className="hover:text-signal hover:underline">{title}</Link>
           </h2>
           <p className="text-xs text-muted">
             {first?.sub_type ?? first?.category ?? "—"} · {alert.stations.length} station{alert.stations.length === 1 ? "" : "s"} · raised {fmt(alert.created_at)}
@@ -45,26 +47,26 @@ export function AlertCard({ alert, crimes, deciderNames }: {
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         {alert.skeptic && (
-          <span className="rounded-md bg-bg px-2 py-1">
+          <Badge icon={ShieldCheck}>
             Skeptic: {alert.skeptic.rounds} round{alert.skeptic.rounds === 1 ? "" : "s"}
             {alert.skeptic.struck.length ? `, struck ${alert.skeptic.struck.join(", ")}` : ""}
-          </span>
+          </Badge>
         )}
         {memDelta && (
-          <span className="rounded-md bg-accent-soft px-2 py-1" title={memDelta.text}>
+          <Badge tone="info" icon={Brain} title={memDelta.text}>
             Memory applied {memDelta.effect}
             {alert.memory_applied.length > 1 ? ` (+${alert.memory_applied.length - 1} more)` : ""}
-          </span>
+          </Badge>
         )}
       </div>
 
       {state === "rejected" && last && (
-        <p className="mt-3 rounded-md border border-line bg-bg px-3 py-2 text-sm">
+        <p className="mt-3 rounded-md border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-danger-soft px-3 py-2 text-sm">
           <strong>Rejected · {last.reason_code ? REASON_LABEL[last.reason_code] : "no reason"}</strong>
           <span className="text-muted"> ({deciderNames[last.by] ?? "analyst"}, {fmt(last.at)})</span>
           {last.note ? <>: {last.note}</> : null}
         </p>
       )}
-    </article>
+    </Card>
   );
 }

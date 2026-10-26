@@ -6,6 +6,8 @@ import { crimeBriefs, fetchInbox, officerNames } from "@/lib/alertsData";
 import { canDecideAlerts } from "@/lib/roles";
 import { AlertCard } from "@/components/console/alerts/AlertCard";
 import { AlertsLive } from "@/components/console/alerts/AlertsLive";
+import { Siren } from "lucide-react";
+import { EmptyState, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,15 +31,12 @@ export default async function AlertsInbox({ searchParams }: { searchParams: { ta
   return (
     <div className="space-y-4">
       <AlertsLive />
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Link alerts</h1>
-          <p className="text-sm text-muted">
-            {canDecideAlerts(officer.role)
-              ? "Open an alert to approve or reject it. Rejected alerts stay visible to every station."
-              : "Every police role sees every alert, including rejected ones with the reason. Analysts and supervisors decide."}
-          </p>
-        </div>
+      <PageHeader
+        title="Link alerts" icon={Siren}
+        description={canDecideAlerts(officer.role)
+          ? "Open an alert to approve or reject it. Rejected alerts stay visible to every station."
+          : "Every police role sees every alert, including rejected ones with the reason. Analysts and supervisors decide."}
+        actions={
         <div className="flex flex-wrap gap-3 text-sm">
           {canScope && (
             <div className="flex gap-1 rounded-md border border-line p-0.5" role="group" aria-label="Which alerts">
@@ -49,15 +48,17 @@ export default async function AlertsInbox({ searchParams }: { searchParams: { ta
               ))}
             </div>
           )}
-          <div className="flex gap-1">
+          <div className="flex gap-1 rounded-md border border-line bg-surface p-0.5">
           {SORTS.map((s) => (
-            <Link key={s} href={href(tab, s)} className={`rounded-md px-2 py-1 ${s === sort ? "bg-ink text-bg" : "text-muted hover:text-ink"}`}>
+            <Link key={s} href={href(tab, s)} aria-current={s === sort ? "true" : undefined}
+              className={`rounded px-2 py-1 ${s === sort ? "bg-signal-soft font-semibold text-signal" : "text-muted hover:text-ink"}`}>
               {SORT_LABEL[s]}
             </Link>
           ))}
           </div>
         </div>
-      </div>
+        }
+      />
 
       <nav className="flex gap-1 overflow-x-auto whitespace-nowrap border-b border-line" aria-label="Alert status">
         {TABS.map((t) => (
@@ -70,12 +71,12 @@ export default async function AlertsInbox({ searchParams }: { searchParams: { ta
         ))}
       </nav>
 
-      {error && <p role="alert" className="rounded-md border border-red-400 px-3 py-2 text-sm text-red-600">Could not load alerts: {error}</p>}
+      {error && <p role="alert" className="rounded-md border border-[color-mix(in_srgb,var(--danger)_40%,transparent)] bg-danger-soft px-3 py-2 text-sm text-danger">Could not load alerts: {error}</p>}
       {!error && alerts.length === 0 && (
-        <p className="rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">
+        <EmptyState icon={Siren}>
           No {TAB_LABEL[tab].toLowerCase()} alerts{scope === "station" && tab !== "mine" ? " involving your station" : ""}{tab === "mine" ? (officer.stationId ? " for your station" : " that you decided") : ""} yet.
           New alerts appear here live as the linking pipeline raises them.
-        </p>
+        </EmptyState>
       )}
       <div className="grid gap-3 lg:grid-cols-2">
         {alerts.map((a) => <AlertCard key={a.alert_id} alert={a} crimes={crimes} deciderNames={deciderNames} />)}
