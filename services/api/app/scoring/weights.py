@@ -38,5 +38,12 @@ FORENSIC_FLOOR = 0.8
 # H-MEM adjustments are bounded: max +/-0.08 in total per pair (F1 step 7).
 HMEM_CAP = 0.08
 
+# Evidence-coverage guard (DECISIONS D-016): coverage = sum of the weights of unstruck
+# factors that had data. Below MIN_COVERAGE_FOR_HIGH the band is capped at "medium";
+# with fewer than MIN_FACTORS_FOR_ALERT factors with data there is no alert
+# (a forensic match still always alerts, per F2).
+MIN_COVERAGE_FOR_HIGH = 0.50
+MIN_FACTORS_FOR_ALERT = 2
+
 # Scores are rounded before banding so 0.5499999999 and 0.55 band the same way.
 SCORE_DECIMALS = 4
