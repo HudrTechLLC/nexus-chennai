@@ -17,6 +17,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from ..adapters.nightshift import NightshiftError
 from ..tracing import Tracer
 
 
@@ -228,14 +229,26 @@ def chat_json(
     retries: int = 1,
     **params: Any,
 ) -> tuple[dict[str, Any], Any]:
-    """Call a pinned lane and parse a JSON object; one corrective retry on bad JSON."""
+    """Call a pinned lane and parse a JSON object; one corrective retry on bad or cut-off output.
+
+    Nightshift failures (down, 4xx, no replay fixture) surface as AgentError so every
+    agent's documented fallback runs instead of crashing the run.
+    """
     deps.check_deadline(agent)
     params.setdefault("max_tokens", DEFAULT_MAX_TOKENS)
     msgs = list(messages)
     last_err: Exception | None = None
     for attempt in range(retries + 1):
-        result = deps.nightshift.chat(lane, msgs, agent=agent, purpose=purpose, **params)
         try:
+            result = deps.nightshift.chat(lane, msgs, agent=agent, purpose=purpose, **params)
+        except NightshiftError as exc:
+            raise AgentError(f"{agent}: model call failed for {purpose}: {exc}") from exc
+        try:
+            finish = ((getattr(result, "raw", None) or {}).get("choices") or [{}])[0].get("finish_reason")
+            if finish == "length":
+                # Cut off mid-reasoning: the last JSON object may be a draft. Retry with more room.
+                params["max_tokens"] = int(params["max_tokens"]) * 2
+                raise AgentError("reply cut off at max_tokens (finish_reason=length)")
             return parse_model_json(result.content), result
         except AgentError as exc:
             last_err = exc

@@ -204,8 +204,11 @@ def factor_payload(sp: ScoredPair) -> dict[str, Any]:
         "b": crime_facts(sp.crime_b, sp.features_b),
         "distance_km": None if km is None else round(km, 1),
         "days_apart": None if days is None else round(days, 1),
+        # Only {view, row}: query ids are fresh uuids per call and would make every prompt unique,
+        # so recorded fixtures could never replay in sample mode (R6).
         "factors": [{"factor": f.factor, "value": None if f.value is None else round(f.value, 2),
-                     "evidence": f.evidence[:6]} for f in sp.score.factors if f.value is not None],
+                     "evidence": [{"view": e["view"], "row": e["row"]} for e in f.evidence[:6]]}
+                    for f in sp.score.factors if f.value is not None],
         "score": sp.score.score,
         "band": sp.score.band,
     }

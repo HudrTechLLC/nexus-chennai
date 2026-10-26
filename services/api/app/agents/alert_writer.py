@@ -22,9 +22,12 @@ AGENT = "Alert writer"
 
 
 def alert_id_for(crimes: Sequence[str], year: int) -> str:
-    """Stable id per crime pair: re-running the same case updates the same alert."""
-    h = int(hashlib.sha1("|".join(sorted(crimes)).encode("utf-8")).hexdigest()[:10], 16) % 1_000_000
-    return f"LA-{year}-{h:06d}"
+    """Stable id per crime pair: re-running the same case updates the same alert.
+
+    12 hex chars of SHA-1 (48 bits): collisions are negligible at city scale.
+    """
+    h = hashlib.sha1("|".join(sorted(crimes)).encode("utf-8")).hexdigest()[:12].upper()
+    return f"LA-{year}-{h}"
 
 
 def build_alert(res: SkepticResult, run_id: str, now: datetime | None = None) -> LinkAlert:
@@ -39,7 +42,7 @@ def build_alert(res: SkepticResult, run_id: str, now: datetime | None = None) ->
             "factor": f.factor,
             "weight": f.weight,
             "value": round(f.value, 4),
-            "evidence": [{"view": e["view"], "row": e["row"]} for e in f.evidence],
+            "evidence": f.evidence,  # {view, row, query, query_id} (G2)
             "reason": f.reason or fallback_reason(f),
             "struck_by_skeptic": f.struck_by_skeptic,
         })
@@ -61,6 +64,7 @@ def build_alert(res: SkepticResult, run_id: str, now: datetime | None = None) ->
         skeptic=res.review_block(),
         rationale=rationale,
         recommended_action=sp.recommended_action,
+        coverage=ps.coverage,
         status="pending",
         run_id=run_id,
         created_at=now,
@@ -78,12 +82,7 @@ class AlertWriter:
                 continue
             alert = build_alert(res, self.deps.tracer.run_id)
             row = alert.model_dump(mode="json")
-            # Full evidence refs incl. query + query_id (G2); the model validated view/row.
-            full = {f.factor: f.evidence for f in res.pair.score.factors}
-            for f in row["factors"]:
-                f["evidence"] = full.get(f["factor"], f["evidence"])
             row["synthetic"] = bool(res.pair.crime_a.get("synthetic", True) or res.pair.crime_b.get("synthetic", True))
-            row["coverage"] = res.pair.score.coverage
             stored = self.deps.store.write_alert(row)
             self.deps.store.notify([
                 {"station_id": st, "kind": "link_alert", "title": f"New {alert.band} link alert {alert.alert_id}",

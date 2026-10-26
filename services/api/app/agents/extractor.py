@@ -185,6 +185,12 @@ class Extractor:
 
         out, result = self._extract_text(text_in, f"mo {crime_id}")
         mo = clean_mo(out.get("mo"))
+        if not any(v not in (None, [], "") for v in mo.values()):
+            # Text exists but nothing was extracted: a failed extraction, never a silent success.
+            self.deps.tracer.emit(AGENT, "extract_empty", input_summary=crime_id, model=result.model,
+                                  routed_model=result.routed_model, receipt_id=result.receipt_id, status="error",
+                                  output_summary="model returned no MO labels for a non-empty narrative")
+            raise AgentError(f"Extractor returned no MO for {crime_id}")
         visual = set(_str_list(out.get("visual_tags")))
         ents = out.get("entities") or {}
         plates = set(_str_list(ents.get("plates")))

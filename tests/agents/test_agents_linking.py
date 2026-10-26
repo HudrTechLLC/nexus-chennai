@@ -63,6 +63,45 @@ def test_planner_execute_runs_named_queries(make_deps):
     assert all(agent == "Planner" for _, agent, _ in deps.zetaris.calls)
 
 
+def test_planner_drops_steps_with_empty_parameters():
+    """Live Ultra output had q_offender_return with mo_tags '' - that would search the whole ward."""
+    steps, notes = validate_steps([
+        {"name": "q_candidates", "params": {"days": 30, "ring": 1}},
+        {"name": "q_offender_return", "params": {"mo_tags": "", "ward": 173, "since": "2026-07-15T00:00:00+05:30"}},
+        {"name": "q_vehicle_trail", "params": {"plate_pattern": "TN09", "t0": "a", "t1": "b", "cells": []}},
+    ], CASE)
+    assert [s.name for s in steps] == ["q_candidates"]
+
+
+def test_agents_fall_back_when_nightshift_fails(make_deps):
+    from app.adapters.nightshift import NightshiftError
+
+    def down(lane, m, p):
+        raise NightshiftError("unreachable and no recorded fixture")
+    deps = make_deps(responder=down)
+    plan = Planner(deps).plan(CASE, CASE_F)
+    assert plan.source == "default"
+    linker = Linker(deps)
+    pairs = linker.score(CASE, CASE_F, candidates(), support(deps))
+    linker.explain(pairs)
+    assert all("computed in code" in f.reason for f in pairs[0].score.factors if f.value is not None)
+    res = Skeptic(deps).review([p for p in pairs if p.score.alert])
+    assert res[0].verdict == "approve"  # code verdict stands without the critique
+
+
+def test_model_prompts_are_replayable(make_deps):
+    """R6: prompts must not contain per-call query ids, or sample-mode fixtures never match."""
+    from app.adapters.nightshift import fixture_key
+    keys = []
+    for _ in range(2):
+        prompts = []
+        deps = make_deps(responder=lambda lane, m, p: prompts.append(m) or "{}")
+        linker = Linker(deps)
+        linker.explain(linker.score(CASE, CASE_F, candidates(), support(deps)))
+        keys.append(fixture_key("reason", prompts[-1]))
+    assert keys[0] == keys[1]
+
+
 def test_default_plan_never_includes_tip_text():
     for s in default_plan(CASE, CASE_F):
         assert "text" not in s.params
@@ -223,9 +262,7 @@ def test_alert_writer_writes_valid_d3_11_alert(make_deps):
     written = AlertWriter(deps).write(results)
     assert len(written) == 1
     row = written[0]
-    LinkAlert.model_validate({k: v for k, v in row.items() if k not in ("synthetic", "coverage")} |
-                             {"factors": [{**f, "evidence": [{"view": e["view"], "row": e["row"]}
-                                                             for e in f["evidence"]]} for f in row["factors"]]})
+    LinkAlert.model_validate({k: v for k, v in row.items() if k != "synthetic"})
     assert row["status"] == "pending" and row["kind"] == "pair"
     assert set(row["stations"]) == {ADYAR["station_id"], VELACHERY["station_id"]}
     assert row["skeptic"] == {"rounds": 1, "struck": [], "verdict": "approved"}

@@ -58,6 +58,31 @@ def test_chat_json_sets_large_max_tokens(make_deps):
 
 # ----- rows ---------------------------------------------------------------------
 
+def test_chat_json_retries_cut_off_reply_with_more_tokens(make_deps):
+    from app.adapters.nightshift import ModelResult
+    budgets = []
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            budgets.append(params["max_tokens"])
+            finish = "length" if len(budgets) == 1 else "stop"
+            return ModelResult(lane, "m", "m", '{"draft": null}' if finish == "length" else '{"a": 1}', None,
+                               False, 1, raw={"choices": [{"finish_reason": finish}]})
+
+    deps = make_deps()
+    deps.nightshift = N()
+    out, _ = chat_json(deps, "fast", [], agent="T", purpose="p")
+    assert out == {"a": 1} and budgets[1] == 2 * budgets[0]
+
+
+def test_extract_case_rejects_empty_mo(make_deps):
+    empty = {"mo": {k: None for k in MODEL_MO["mo"]}, "visual_tags": [], "entities": {}}
+    deps = make_deps(responder=lambda lane, m, p: json.dumps(empty))
+    with pytest.raises(AgentError):
+        Extractor(deps).extract_case(crime_from_row(as_row(ADYAR)))
+    assert ADYAR["crime_id"] not in deps.store.features
+
+
 def test_rows_as_dicts_requires_columns():
     class R:
         name, rows, columns = "q_x", [[1, 2]], ()

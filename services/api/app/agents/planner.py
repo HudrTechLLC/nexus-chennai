@@ -140,8 +140,8 @@ def validate_steps(raw: Sequence[Any], case: Mapping[str, Any]) -> tuple[list[Pl
                 if not lo <= v <= hi:
                     notes.append(f"clamped {name}.{key}={v}")
                     v = max(lo, min(hi, v))
-            if v is None:
-                break
+            if v is None or v == "" or (isinstance(v, (list, tuple, set)) and not v):
+                break  # an empty parameter would widen the query to everything
             params[key] = _csv(v) if isinstance(v, (list, tuple, set)) else v
         else:
             sig = (name, repr(sorted(params.items())))
