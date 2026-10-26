@@ -167,3 +167,20 @@ def test_traces_route_rejects_path_tricks(client):
 
 
 _ = FakeEngines
+
+
+def test_series_dossier_without_tip_query_and_with_summary_tips(make_deps):
+    """q_tip_corroboration is not registered live yet: the dossier must still be written. When it exists,
+    rows come from tips_v (vocabulary summary, no raw text) and the summary is what the dossier reads."""
+    handlers = default_handlers()
+    del handlers["q_tip_corroboration"]
+    deps = make_deps(responder=lambda *a: "no checkpoint", handlers=handlers, engines=engines)
+    out = SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
+    assert out["cited_ids"] and any(e["action"] == "tips_unavailable" for e in deps.tracer.read())
+
+    handlers = default_handlers()
+    handlers["q_tip_corroboration"] = lambda p: [{"tip_id": "TIP-9", "summary": "Tip mentions: red, motorcycle.",
+                                                  "received_week": "2026-W43"}]
+    deps = make_deps(responder=lambda *a: "no checkpoint", handlers=handlers, engines=engines)
+    recs = SeriesAnalyst(deps).records([ADYAR["crime_id"]])
+    assert {"id": "TIP-9", "kind": "tip", "date": "2026-W43", "text": "Tip mentions: red, motorcycle."} in recs

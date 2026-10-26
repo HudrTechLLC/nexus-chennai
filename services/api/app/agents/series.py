@@ -15,7 +15,7 @@ import hashlib
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .base import AgentDeps, AgentError, crime_from_row, features_from_row, short
+from .base import AgentDeps, AgentError, DeadlineExceeded, crime_from_row, features_from_row, short
 
 AGENT = "Series analyst"
 MIN_SERIES = 3
@@ -118,11 +118,19 @@ class SeriesAnalyst:
                 if ev.get("evidence_id") and tags:
                     recs.append({"id": ev["evidence_id"], "kind": "evidence", "date": ev.get("captured_at"),
                                  "text": ", ".join(tags)})
-            tips, _ = self.deps.query("q_tip_corroboration", agent=AGENT, crime_id=cid)
-            for t in tips:  # the view holds Tip-Guard-clean tips only (E5)
-                if t.get("tip_id") and t.get("text"):
-                    recs.append({"id": t["tip_id"], "kind": "tip", "date": t.get("received_week"),
-                                 "text": t["text"]})
+            try:
+                tips, _ = self.deps.query("q_tip_corroboration", agent=AGENT, crime_id=cid)
+            except DeadlineExceeded:
+                raise
+            except Exception as exc:  # tips enrich a dossier; without them it is still a dossier
+                self.deps.tracer.emit(AGENT, "tips_unavailable", input_summary=cid, output_summary=short(str(exc)),
+                                      status="degraded")
+                tips = []
+            for t in tips:  # Tip-Guard-clean tips only (E5); tips_v carries the vocabulary summary, never raw text
+                body = t.get("summary") or t.get("text")
+                if t.get("tip_id") and body:
+                    recs.append({"id": t["tip_id"], "kind": "tip", "date": t.get("received_week") or t.get("received_at"),
+                                 "text": body})
         seen: set[str] = set()
         unique = []
         for r in sorted(recs, key=lambda r: str(r.get("date") or "")):
