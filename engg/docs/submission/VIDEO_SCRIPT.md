@@ -31,7 +31,19 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
 2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** If the hero case gives no drop, use a run that does and narrate that pair. **Never stage or edit a trace.**
-3. **Record a real analyst decision** through the console, and let the worker pass once so H-MEM has a memory.
+3. **Set up H-MEM so the decision reaches the next run** (segment 7). How it works on main (`services/api/app/engines/hmem/`):
+   - with `ENGINES_BACKEND=sample` (the default), each process keeps its own H-MEM;
+   - H-MEM persists to `logs/hmem/` (`ledger.jsonl`, `state.json`);
+   - a process reads `state.json` **only when it opens H-MEM**, so an API that is already running does not see a decision the worker records afterwards;
+   - in `docker-compose.yml` only `api` mounts `./logs`, so the `worker` container doesn't share that directory at all.
+
+   **Recipe:**
+   1. Run the API and the worker as plain Python from the **same checkout**: `python run.py` and `python -m app.worker`. They then share `logs/hmem/`.
+   2. Approve the Adyar–Velachery alert in the console, and let the worker pass once (it calls `hmem.record_decision`).
+   3. **Restart the API**, or use `python run.py --once`, which is a fresh process, so it loads the new state.
+   4. Run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
+
+   **Confirm with nexus-2/nexus-3 before the shoot** that the step-4 alert reaches Supabase (so the console shows it) and shows a non-empty `memory_applied`. If not, use the ledger fallback in segment 7.
 4. **Hide everything that can hold a secret** before you press record:
    - Nightshift's Providers and Console tabs;
    - the Supabase dashboard;
@@ -73,7 +85,10 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 4 · Zetaris, live · 1:05–1:25 (20 s, ~44 words)
 
-- **Screen:** Zetaris UI (`localhost:3000`) running the SQL of `q_candidates` for the Adyar case (copy it from `services/api/app/adapters/zetaris_queries_n1.py`); the result grid appears with candidate cases from other stations.
+- **Screen:** Zetaris UI (`localhost:3000`) running the SQL of `q_candidates` for the Adyar case; the result grid appears with candidate cases from other stations. The registry SQL has `:crime_id` / `:days` / `:ring` placeholders and won't run raw. Print the rendered query and paste that, using the `days` / `ring` the Planner used in the recorded run's trace (14 / 5 shown here):
+  ```bash
+  PYTHONPATH=services/api python -c "from app.adapters.zetaris import NAMED_QUERIES, render; print(render(NAMED_QUERIES['q_candidates'].lightning, {'crime_id':'CHN-AD-2026-001182','days':14,'ring':5}))"
+  ```
 - **Narration:**
   > Here is the same question in Zetaris: same-category crimes within a few kilometres and days of the Adyar case, across every station. One query over the federated sources, no warehouse. The Planner chooses queries like this, and each query's id is kept as evidence.
 - **Check no secrets visible:**
@@ -102,7 +117,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 - **Screen:**
   - the alert inbox (`/console/alerts`), then the Adyar–Velachery alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
   - the analyst clicks **Approve**;
-  - cut to a second, similar alert whose "Memory applied" section shows the memory from that decision.
+  - cut to the alert for the second, similar Red Pulsar case (run after the decision; see Before recording, step 3), whose "Memory applied" section shows the memory from that decision.
   - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). The memory page itself is `[PENDING: WS3-11]`.
 - **Narration:**
   > The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.

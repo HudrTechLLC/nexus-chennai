@@ -187,7 +187,8 @@ Every run writes `logs/trace-<run_id>.jsonl` and echoes each line to stdout. Eac
 pip install -r services/api/requirements-dev.txt
 pytest -q                                   # all Python tests
 pytest tests/engines -q                     # engine feature tests (sample backend)
-node engines-ts/scripts/run-conformance.mjs # official Meterless conformance suites (after npm ci in engines-ts)
+(cd engines-ts && npm ci && npm run install:references)   # once
+node engines-ts/scripts/run-conformance.mjs  # official Meterless conformance suites
 ```
 
 CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tests against the TypeScript references), `judge-path` (docker build, start with `SAMPLE_MODE=true` and no credentials, POST each input example), `web` (typecheck, lint, vitest, build) and `secrets` (no secret files or values tracked).
