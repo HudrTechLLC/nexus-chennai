@@ -1,0 +1,22 @@
+{
+  "what": "WS2-14 live eval spot-check, mode 'off' only (on/tfidf stopped by the chief for Zetaris contention)",
+  "result": {
+    "precision": 0.6087,
+    "recall": 0.6364,
+    "f1": 0.6222,
+    "tp": 42,
+    "fp": 27,
+    "fn": 24,
+    "alerts": 71
+  },
+  "seconds": 2369,
+  "cases": 20,
+  "case_selection": "3 judge cases (CHN-AD-2026-001182, CHN-KU-2025-000078, CHN-GU-2025-000945) + first 17 sorted gen1 truth crimes",
+  "truth": "C:/Apps/Nexus-n1-gen/data/generated/_truth (gen1 generated truth, the live seed)",
+  "code": "de8e666 (C:/Apps/Nexus-n2-reg, detached; NOT main HEAD: predates #313 and later merges)",
+  "backend": "live Zetaris + live Supabase nexus-qa, SAMPLE_MODE=false, 0 model calls, no DB writes",
+  "scoring": "code only (app.eval evaluate), MO flags off",
+  "reproduces": "identical to the pre-reboot run on the same code/cases (P 0.6087 / R 0.6364 / F1 0.622)",
+  "date": "2026-10-26, finished 23:36 IST",
+  "separate_from": "the headline sample eval (output_examples/eval_report.json: P 0.5915 / R 0.8571 / F1 0.700, 60 sample cases)"
+}
