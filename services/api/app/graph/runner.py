@@ -91,6 +91,25 @@ def agent_deps(settings: Settings, run_id: str, *, zetaris: Any = None, nightshi
             n.close()
 
 
+EVIDENCE_BUCKET = "evidence"  # private Storage bucket of evidence stills (D-029)
+
+
+def media_loader_for(settings: Settings, client: SupabaseClient | None = None) -> Callable[[str], bytes] | None:
+    """How the Extractor reads an evidence still, or None.
+
+    Live runs with Supabase read the private evidence bucket, so the vision lane is actually attempted: if Nightshift
+    refuses images (no_vision_model) the trace says `vision_unavailable` and the officer caption is used; when it
+    admits them, stills are read with no code change. Sample mode never loads media, so the judge examples (whose
+    fixtures have no vision calls) stay byte-stable.
+    """
+    if settings.sample_mode:
+        return None
+    sb = client or SupabaseClient(settings)
+    if not sb.configured:
+        return None
+    return lambda path: sb.download(EVIDENCE_BUCKET, path)
+
+
 def default_store(settings: Settings, tracer: Tracer) -> Store:
     """The store `store_kind` names (WS2-22): Supabase when configured, else local files in live mode and
     memory in sample mode; `NEXUS_STORE` overrides."""
@@ -135,7 +154,7 @@ def run_request(
     try:
         with engines.use_tracer(tracer):
             deps = AgentDeps(tracer=tracer, zetaris=z, nightshift=n, engines=engines, store=store, deadline=deadline)
-            graph = AgentGraph(deps)
+            graph = AgentGraph(deps, media_loader=media_loader_for(settings))
             output, status = _dispatch(graph, kind, payload, options)
     except Exception as exc:
         tracer.emit("api", "run_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
