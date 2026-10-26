@@ -243,3 +243,40 @@ def test_unknown_crime_id_is_404_not_partial(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "run_request", boom)
     r = TestClient(main.app).post("/run", json={"input": {"kind": "case", "crime_id": "CHN-NO-2026-999999"}})
     assert r.status_code == 404 and r.json()["detail"]["status"] == "not_found"
+
+
+def _q_cases_handler(handlers):
+    def q_cases(p):
+        ids = [v for k, v in sorted(p.items()) if k.startswith("id") and v]
+        return [row for cid in ids for row in handlers["q_case"]({"crime_id": cid})]
+    return q_cases
+
+
+def test_planner_reads_all_candidates_in_one_q_cases_trip(tmp_path, monkeypatch):
+    """Live timing FIR (run_3116c908): 26 one-by-one q_case trips took 45.5 s of a 115 s run."""
+    s = Settings(_env_file=None)
+    monkeypatch.setattr(Settings, "logs_dir", property(lambda self: tmp_path / "logs"))
+    handlers = default_handlers()
+    handlers["q_cases"] = _q_cases_handler(handlers)
+    z = FakeZetaris(handlers)
+    out = run_request("case", {"crime_id": ADYAR["crime_id"]}, {}, s, zetaris=z, nightshift=FakeNightshift(responder()))
+    assert out["status"] == "success" and out["output"]["alerts"]
+    planner = [name for name, agent, _ in z.calls if agent == "Planner"]
+    assert planner.count("q_cases") == 1 and "q_case" not in planner
+
+
+def test_planner_falls_back_to_q_case_when_the_batch_read_fails(tmp_path, monkeypatch):
+    s = Settings(_env_file=None)
+    monkeypatch.setattr(Settings, "logs_dir", property(lambda self: tmp_path / "logs"))
+    handlers = default_handlers()
+
+    def broken(p):
+        raise RuntimeError("Spark job aborted")
+
+    handlers["q_cases"] = broken
+    z = FakeZetaris(handlers)
+    out = run_request("case", {"crime_id": ADYAR["crime_id"]}, {}, s, zetaris=z, nightshift=FakeNightshift(responder()))
+    assert out["status"] == "success" and out["output"]["alerts"]
+    assert [name for name, agent, _ in z.calls if agent == "Planner"].count("q_case") >= 1
+    trace = (tmp_path / "logs" / f"trace-{out['run_id']}.jsonl").read_text(encoding="utf-8")
+    assert '"cases_batch_failed"' in trace
