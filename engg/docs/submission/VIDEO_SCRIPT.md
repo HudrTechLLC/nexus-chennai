@@ -31,10 +31,10 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 1. **Run the story live once,** with Zetaris and Nightshift up and `SAMPLE_MODE` off, so the trace shows real Nightshift calls and not `replayed`. Note the `run_id`.
 2. **Make sure the run has a Skeptic `strike_factor` and a dropped pair.** If the hero case gives no drop, use a run that does and narrate that pair. **Never stage or edit a trace.**
-3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. They must still **share the `logs/hmem/` directory**: in `docker-compose.yml` only `api` mounts `./logs`, so run both as plain Python from one checkout.
+3. **Set up H-MEM so the decision reaches the next run** (segment 7). Since #82, a running API picks up a decision the worker recorded with no restart: both reopen the store when `logs/hmem/state.json` or `ledger.jsonl` changes. #83 tests the whole path, worker decision → next `/run` → alert row with `memory_applied`. The API and worker must share `logs/hmem/`. Plain Python from one checkout does this, and so does `docker compose --profile worker up`, because the worker mounts `./logs` too since #97.
 
    **Recipe:**
-   1. `python run.py` and `python -m app.worker` from the same checkout.
+   1. Start the API and the worker: `python run.py` + `python -m app.worker` from one checkout, or `docker compose --profile worker up`.
    2. Approve the Adyar–Velachery alert in the console, and let the worker pass once (it calls `hmem.record_decision`).
    3. Run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
    4. Check that alert's "Memory applied" section in the console is non-empty. If it is empty, use the ledger fallback in segment 7.

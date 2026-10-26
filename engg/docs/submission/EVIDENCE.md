@@ -69,7 +69,7 @@ Then check CI on the freeze commit (all five jobs green) and update the "Verifie
 | `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` | named by the Planner but not registered on main | `[PENDING: WS1-15]` |
 | Semantic views `v_crime_unified`, `v_vehicle_trail`, `v_offender_return`, `v_tip_corroboration` (`10_views.sql`) | file not on main | `[PENDING: WS1-13]` |
 | CSV / Parquet file sources (legacy exports, ANPR, 112 calls) in Zetaris's internal file store | not in `00_sources.sql` on main; D-022a explains the store | `[PENDING: WS1-12]` |
-| Live `SELECT count(*) FROM sb.crimes` = 14000 | `zetaris/README.md` (recorded by nexus-1) | ✅ (recorded, not CI) |
+| Live `SELECT count(*) AS n FROM sb.crimes` through Zetaris = **14,039** (14,038 generated + 1 console-filed FIR), matching the Postgres count after the additive re-seed | run by nexus-1 on Lightning REST `POST /api/v1.0/sql-editor/sqls/run`, 2026-10-26 08:59:09–08:59:22 UTC (~13 s), source `sb` via `zetaris_reader` | ✅ (recorded, not CI) |
 
 ## Meterless engines and Nightshift
 
