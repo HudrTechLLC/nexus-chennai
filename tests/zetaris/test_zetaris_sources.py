@@ -78,3 +78,33 @@ def test_client_in_files_mode_sends_the_localised_sql(tmp_path):
     c = ZetarisClient(s, transport=httpx.MockTransport(handler))
     c.named("q_candidates", agent="test", crime_id="CHN-AD-2026-001182", days=45, ring=6)
     assert "nexus_fs.crimes" in sent[0] and not re.search(r"\bsb\.", sent[0])
+
+
+def test_files_suffix_gives_a_second_copy_its_own_names(monkeypatch):
+    from app.adapters.zetaris_sources import SUFFIX_ENV
+
+    monkeypatch.delenv(SUFFIX_ENV, raising=False)
+    assert sources("files") == {"sb": "nexus_fs", "nexus": "nexusfs", "fsdir": "fs"}
+    monkeypatch.setenv(SUFFIX_ENV, "2")
+    assert sources("files") == {"sb": "nexus_fs2", "nexus": "nexusfs2", "fsdir": "fs2"}
+    assert sources("supabase")["sb"] == "sb"  # the hosted path never takes a suffix
+    assert localise("SELECT * FROM sb.crimes JOIN nexus.dq_flags", "files") == \
+        "SELECT * FROM nexus_fs2.crimes JOIN nexusfs2.dq_flags"
+    real, _, _ = register.fill('path "file:///x/nexus/{{src:fsdir}}/crimes/" FROM {{src:sb}}', CITY, "a", "b", "files")
+    assert real == 'path "file:///x/nexus/fs2/crimes/" FROM nexus_fs2'
+    monkeypatch.setenv(SUFFIX_ENV, "Bad;Name")
+    with pytest.raises(ValueError):
+        sources("files")
+
+
+def test_staging_folder_follows_the_suffix(monkeypatch):
+    import importlib
+
+    from zetaris import stage_files
+
+    monkeypatch.setenv("ZETARIS_FILES_SUFFIX", "2")
+    importlib.reload(stage_files)
+    assert stage_files.FS_LAYOUT[0] == ("fs/crimes/part-0.parquet", "fs2/crimes")
+    monkeypatch.delenv("ZETARIS_FILES_SUFFIX")
+    importlib.reload(stage_files)
+    assert stage_files.FS_LAYOUT[0] == ("fs/crimes/part-0.parquet", "fs/crimes")
