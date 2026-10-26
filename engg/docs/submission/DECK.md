@@ -97,7 +97,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - World Model: one entity per plate, person, place. **8/8** official conformance.
   - H-MEM: human decisions shift the next similar score (±0.08 max) with a trust ledger. **13/13**.
   - Markovian: bounded-chunk series dossier. **8/8**.
-  - Scout Intent: search routing + Tip Guard. Held-out **0.950**, injections **7/7**; live: **0/30 genuine tips falsely quarantined**, emergencies **2/2**. Live misses fixed by #128: injections 3/4 → 4/4, spam 1/4 → 4/4 (label it: "not independent; these misses shaped the rules"). Never show the fixture 1.000 alone.
+  - Scout Intent: search routing + Tip Guard. Held-out **0.975** (never tuned on), injections **7/7**; tuned set injections **23/23** (label it tuned); live: **0/30 genuine tips falsely quarantined**, emergencies **2/2**. Live misses fixed by #128: injections 3/4 → 4/4, spam 1/4 → 4/4 (label it: "not independent; these misses shaped the rules"). Never show the fixture 1.000 alone.
   - Official references vendored unmodified; suites re-run in CI on every PR.
 - **On slide (Nightshift):** the only model path; pinned lanes, never `meterless/auto`; model and receipt logged per call; NVIDIA key only inside Nightshift.
 - **Visual:** a terminal crop of `logs/conformance_hmem.txt` ("13/13 checks passed") next to a trace viewer crop.
