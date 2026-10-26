@@ -17,16 +17,16 @@ Related: [00-INDEX](../00-INDEX.md) · [NEMOTRON_ALONE_PREREG](NEMOTRON_ALONE_PR
 |---|---|
 | Model | `nvidia/nemotron-3-ultra-550b-a55b` (every reply routed to it), reason lane, temperature 0 |
 | When | 27 Oct 2026, 02:29 to 03:37 IST, serial, after nexus-3's planted-Skeptic test freed Nightshift |
-| Cases / pairs | **20 of 20 cases completed, 182 of 182 pairs scored**; no early stop |
+| Cases / pairs | **20 of 20 cases completed, all 182 pairs answered**; no early stop |
 | Failed calls | **0** (no timeouts, no unparsable or replayed replies) |
 | Model time | 67.9 min in total; per pair p50 16.5 s, p90 43.5 s |
 | Supabase writes | 0 (sample data, local output file) |
 
 ## Same pairs, same truth (the pre-registered metric)
 
-Both systems are scored on exactly the 182 committed pairs, duplicates excluded as in the headline.
+**182 pairs shown, 178 scored**: the 4 truth-duplicate pairs (the same incident filed twice) are excluded, as in the headline. Both systems linked all 4. Both systems are scored on exactly these 178.
 
-| On the 182 pairs (14 true links among them) | TP | FP | FN | Precision (95% CI) | Recall (95% CI) | F1 |
+| On the 178 scored pairs (14 true links among them) | TP | FP | FN | Precision (95% CI) | Recall (95% CI) | F1 |
 |---|---|---|---|---|---|---|
 | Nemotron Ultra alone | 14 | 7 | 0 | 0.667 (0.45–0.83) | 1.000 (0.78–1.00) | 0.800 |
 | Full Nexus system | 11 | 7 | 3 | 0.611 (0.39–0.80) | 0.786 (0.52–0.92) | 0.688 |
@@ -34,7 +34,7 @@ Both systems are scored on exactly the 182 committed pairs, duplicates excluded 
 **Only 14 true links, so the error bars are wide.** The intervals (Wilson, 95%) describe each system on its
 own. Because both judged the *same* pairs, the right comparison is paired (McNemar, exact two-sided):
 
-- The two agreed on 171 of 182 pairs. Nemotron alone linked 7 pairs the system did not; the system linked 4
+- The two agreed on 167 of the 178 scored pairs. Nemotron alone linked 7 pairs the system did not; the system linked 4
   the model did not. p = 0.55.
 - Among the 14 true links, the model alone found 3 the system missed, and the system alone found 0 the model
   missed. p = 0.25.
@@ -57,8 +57,9 @@ reaches them. This table is about coverage under a budget, not judgement quality
 
 ## What this says
 
-- **On the pairs it is shown, Ultra alone scores a higher F1 than the pipeline (0.80 vs 0.69), not significant
-  with 14 true links.** We don't claim the agents beat the model at judging one pair.
+- **On the pairs it is shown, Ultra alone did at least as well as the full pipeline.** Its point estimates are
+  higher (F1 0.80 vs 0.69), but the difference is not significant (paired McNemar p = 0.55). We don't claim the
+  agents beat the model at judging one pair.
 - **The pipeline's value is in cost and coverage, and in everything around the judgement:**
   - It scores every candidate with 0 model calls, about 0.83 s per case in the headline. Here the model needed
     about 3.4 min of Ultra time per case for about 9 pairs.
