@@ -22,11 +22,18 @@ from zoneinfo import ZoneInfo
 
 from .adapters.zetaris_queries_n2 import search_params
 from .agents.base import AgentDeps, AgentError, chat_json, rows_as_dicts
+from .adapters.zetaris import ZetarisTimeout
 from .agents.series import is_test_fir
 
 AGENT = "Ask"
 QUERY = "q_search"  # the only query a plan may use for now (allow-list)
 QUERY_LIMIT = 1000  # q_search has no LIMIT; a full page is reported as "at least"
+MAX_PAGES = 5  # a full page is followed by the next-older page (time window moved back), up to this many
+QUERY_TIMEOUT_S = 30  # fail fast (one attempt), well inside the worker's 3-minute stale sweep
+# What the analyst sees when something breaks: plain words only; the detail (SQL, HTTP, Zetaris) stays in the trace.
+ERR_MODEL = "The planning model did not answer. Please ask again."
+ERR_BUSY = "The crime registry did not answer in time. Please ask again in a minute."
+ERR_QUERY = "The crime registry query failed. Please ask again; if it keeps failing, tell the admin."
 MAX_ROWS = 50  # rows kept in the answer, newest first
 MAX_STATIONS = 3
 MAX_WORDS = 4
@@ -45,6 +52,16 @@ CATEGORIES: dict[str, list[str]] = {
     "kidnapping": ["kidnapping"],
 }
 SUB_TYPES = {s: c for c, subs in CATEGORIES.items() for s in subs}
+# A sub type is used only when the question names it (live, 27 Oct: "robberies" came back as street_robbery,
+# which would have hidden 100 of 115 cases). Otherwise the category alone is searched and the plan says so.
+SUB_TYPE_CUES = {
+    "chain_snatching": r"chain", "mobile_snatching": r"mobile|phone", "street_robbery": r"street|mugg",
+    "cab_robbery": r"cab|taxi|auto", "two_wheeler_theft": r"two.?wheeler|bike|motorcycle|scoot|vehicle theft",
+    "pickpocket": r"pick.?pocket|pocket", "shop_theft": r"shop|store", "car_theft": r"\bcars?\b",
+    "night_house_break": r"night", "day_house_break": r"\bday|daytime", "assault": r"assault|attack|beat",
+    "attempt_murder": r"attempt", "stalking": r"stalk", "murder": r"murder|homicide|kill", "cheating": r"cheat|fraud",
+    "kidnapping": r"kidnap|abduct",
+}
 STATUSES = {"registered": "registered", "under_investigation": "under investigation", "undetected": "undetected",
             "charge_sheeted": "charge sheet filed", "closed": "closed"}
 TIME_KINDS = ("today", "yesterday", "this_week", "this_month", "last_month", "last_days", "since", "between")
@@ -136,6 +153,7 @@ class Plan:
     time_label: str = ""
     hours: tuple[int, int] | None = None
     words: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)  # model choices code did not use, and why
 
 
 def _month_start(d: date) -> date:
@@ -193,7 +211,7 @@ def _hour_label(h: int) -> str:
     return "midnight" if h == 0 else "noon" if h == 12 else f"{h % 12} {'am' if h < 12 else 'pm'}"
 
 
-def resolve_plan(raw: dict[str, Any], today: date) -> Plan:
+def resolve_plan(raw: dict[str, Any], today: date, question: str | None = None) -> Plan:
     """Check every field of the model's plan; raise Unmappable with the specific reason."""
     if raw.get("answerable") is False:
         raise Unmappable(UNMAPPABLE_HELP)
@@ -205,6 +223,9 @@ def resolve_plan(raw: dict[str, Any], today: date) -> Plan:
         # The sub type names exactly one category, so a mismatched category is a slip, not a second filter:
         # the category is read from the sub type (fixed vocabulary, nothing guessed).
         cat = SUB_TYPES[sub]
+        if question is not None and not re.search(SUB_TYPE_CUES[sub], question.lower()):
+            p.notes.append(f"searched all {plural(cat)}: the question does not name {plural(sub)}")
+            sub = ""
     if cat and cat not in CATEGORIES:
         raise Unmappable(f"I don't know the crime type \"{cat.replace('_', ' ')}\".")
     if status and status not in STATUSES:
@@ -296,8 +317,10 @@ def in_hours(h: int | None, hours: tuple[int, int]) -> bool:
 
 
 def has_words(row: dict[str, Any], words: list[str]) -> bool:
-    text = f"{row.get('text') or ''} {row.get('address') or ''}".lower()
-    return all(re.search(rf"(^|[^a-z0-9]){re.escape(w)}", text) for w in words)
+    """Every word, as a whole word (a plural "s" allowed), in the FIR narrative only. Not the address: "red" must not
+    match "Red Hills"; not a prefix: "red" must not match "reddish" (nexus-3 review)."""
+    text = str(row.get("text") or "").lower()
+    return all(re.search(rf"(^|[^a-z0-9]){re.escape(w)}s?([^a-z0-9]|$)", text) for w in words)
 
 
 def filter_list(p: Plan) -> list[dict[str, Any]]:
@@ -373,13 +396,13 @@ def answer_question(question: str, deps: AgentDeps, today: date | None = None,
                                 thinking=False, expect="answerable", temperature=0, max_tokens=500)
     except AgentError as exc:
         deps.tracer.emit(AGENT, "ask_failed", output_summary=str(exc)[:300], status="error")
-        return Outcome("failed", None, None, error=f"The planning model did not answer: {str(exc)[:200]}")
+        return Outcome("failed", None, None, error=ERR_MODEL)
     model = dict(model=getattr(result, "model", None), routed_model=getattr(result, "routed_model", None),
                  receipt_id=getattr(result, "receipt_id", None))
     deps.tracer.emit(AGENT, "plan", input_summary=question[:120], output_summary=str(raw)[:300],
                      model=model["model"], status="ok")
     try:
-        p = resolve_plan(raw, today)
+        p = resolve_plan(raw, today, question)
     except Unmappable as exc:
         deps.tracer.emit(AGENT, "ask_unmappable", output_summary=str(exc), status="ok")
         return Outcome("unmappable", {"steps": [], "filters": [], "understood": None, "model_plan": raw},
@@ -388,21 +411,36 @@ def answer_question(question: str, deps: AgentDeps, today: date | None = None,
     if on_running:
         on_running()
     steps, rows, truncated = [], [], False
+    what = plural(p.sub_type or p.category) if (p.sub_type or p.category) else "crimes"
     for sid, name in (p.stations or [("", "")]):
-        params = search_params(" ".join(p.words), {"category": p.category, "station_id": sid, "status": p.status,
-                                                   "since": p.since.isoformat(), "until": p.until.isoformat()})
-        try:
-            res = deps.zetaris.named(QUERY, agent=AGENT, limit=QUERY_LIMIT, **params)
-        except Exception as exc:  # noqa: BLE001 - one failed query fails the question, with the reason
-            deps.tracer.emit(AGENT, "ask_failed", input_summary=QUERY, output_summary=str(exc)[:300], status="error")
-            return Outcome("failed", {"steps": steps, "filters": filter_list(p), "understood": understood(p)}, None,
-                           error=f"The registry query failed: {str(exc)[:200]}", **model)
-        got = rows_as_dicts(res)
-        truncated = truncated or len(got) >= QUERY_LIMIT
-        what = plural(p.sub_type or p.category) if (p.sub_type or p.category) else "crimes"
-        steps.append({"query": QUERY, "params": params, "query_id": res.query_id, "rows": len(got),
-                      "purpose": f"Find {what}" + (f" at {name}" if name else "") + f", {p.time_label}"})
-        rows += got
+        until = p.until
+        for page in range(1, MAX_PAGES + 1):
+            params = search_params(" ".join(p.words), {"category": p.category, "station_id": sid, "status": p.status,
+                                                       "since": p.since.isoformat(), "until": until.isoformat()})
+            try:
+                res = deps.zetaris.named(QUERY, agent=AGENT, limit=QUERY_LIMIT, timeout_s=QUERY_TIMEOUT_S, **params)
+            except Exception as exc:  # noqa: BLE001 - one failed query fails the question; detail goes to the trace
+                deps.tracer.emit(AGENT, "ask_failed", input_summary=QUERY, output_summary=str(exc)[:300],
+                                 status="error")
+                return Outcome("failed", {"steps": steps, "filters": filter_list(p), "understood": understood(p)},
+                               None, error=ERR_BUSY if isinstance(exc, ZetarisTimeout) else ERR_QUERY, **model)
+            got = rows_as_dicts(res)
+            rows += got
+            steps.append({"query": QUERY, "params": params, "query_id": res.query_id, "rows": len(got),
+                          "purpose": f"Find {what}" + (f" at {name}" if name else "") + f", {p.time_label}"
+                                     + (f" (page {page}, before {until:%d %b %Y})" if page > 1 else "")})
+            if len(got) < QUERY_LIMIT:
+                break
+            # A full page (newest first, D-031 ORDER BY): ask again for the older part. The oldest day is asked
+            # again (its rows dedupe), so nothing on the boundary is lost.
+            oldest = min(date.fromisoformat(str(r["occurred_from"])[:10]) for r in got)
+            nxt = oldest + timedelta(days=1)
+            if nxt >= until or nxt <= p.since:
+                truncated = True
+                break
+            until = nxt
+        else:
+            truncated = True
 
     seen, kept, excluded = set(), [], 0
     for r in rows:
@@ -428,5 +466,6 @@ def answer_question(question: str, deps: AgentDeps, today: date | None = None,
     deps.tracer.emit(AGENT, "ask_answered", input_summary=understood(p)[:200],
                      output_summary=f"{len(kept)} rows{' (truncated)' if truncated else ''}; {excluded} test excluded",
                      zetaris_query_ids=[s["query_id"] for s in steps], status="ok")
-    plan = {"steps": steps, "filters": filter_list(p), "understood": understood(p), "model_plan": raw}
+    plan = {"steps": steps, "filters": filter_list(p), "understood": understood(p), "model_plan": raw,
+            "notes": p.notes}
     return Outcome("answered", plan, answer, **model)

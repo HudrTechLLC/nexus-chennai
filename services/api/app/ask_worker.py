@@ -76,7 +76,9 @@ class AskWorker:
             out = answer_question(row["question"], deps, on_running=running)
         except Exception as exc:  # noqa: BLE001 - a bad question is marked failed; the queue keeps moving
             tracer.emit(AGENT, "ask_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
-            out = Outcome("failed", None, None, error=f"Something went wrong: {type(exc).__name__}")
+            out = Outcome("failed", None, None, error="Something went wrong. Please ask again.")
+        # Deliberate: a late answer overwrites a row the stale sweep already marked failed, so the analyst gets the
+        # answer when they reopen the question instead of a "timed out" that is no longer true.
         self.sb.update("ask_questions", match, {
             "status": out.status, "plan": out.plan, "answer": out.answer, "model": out.model,
             "routed_model": out.routed_model, "receipt_id": out.receipt_id, "error": out.error,

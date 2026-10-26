@@ -48,6 +48,13 @@ class TestResolvePlan:
         p = resolve_plan(plan(category="robbery", stations=["Adyar", "anna nagar"]), TODAY)
         assert [sid for sid, _ in p.stations] == ["PS-ADYAR-J2", "PS-ANNANAGAR-K4"]
 
+    def test_a_sub_type_the_question_does_not_name_is_not_used(self):
+        # live, 27 Oct: "Robberies mentioning a red Pulsar" came back with sub_type street_robbery
+        p = resolve_plan(plan(category="robbery", sub_type="street_robbery"), TODAY, "Robberies with a red Pulsar")
+        assert (p.category, p.sub_type) == ("robbery", "") and "does not name street robberies" in p.notes[0]
+        p = resolve_plan(plan(sub_type="chain_snatching"), TODAY, "chain snatchings in Adyar")
+        assert p.sub_type == "chain_snatching" and p.notes == []
+
     def test_place_aliases_resolve_to_their_station(self):
         assert STATIONS["adayar"][0] == "PS-ADYAR-J2"
         assert resolve_plan(plan(category="robbery", stations=["LB Road"]), TODAY).stations[0][0] == "PS-ADYAR-J2"
@@ -163,12 +170,27 @@ class TestAnswerQuestion:
         assert out.status == "unmappable" and "Gotham" in out.answer["summary"]
         assert out.answer["rows"] == [] and deps.zetaris.calls == []
 
-    def test_a_full_page_is_reported_as_at_least(self, make_deps):
+    def test_a_full_page_that_cannot_page_further_is_reported_as_at_least(self, make_deps):
         many = [crime(f"CHN-AD-2026-{i:06d}", text="red pulsar") for i in range(QUERY_LIMIT)]
         deps = make_deps(responder(plan(category="robbery", words=["pulsar"])), handlers={"q_search": lambda p: many})
         out = answer_question("pulsar robberies", deps, today=TODAY)
         assert out.answer["truncated"] and out.answer["summary"].startswith(f"At least {QUERY_LIMIT}")
         assert len(out.answer["rows"]) == 50 and "Showing the newest 50" in out.answer["summary"]
+
+    def test_a_full_page_pages_back_in_time_until_complete(self, make_deps):
+        def page(p):
+            if p["until"] == "2026-10-28":  # newest page: full, its oldest row on 20 Oct
+                return [crime(f"CHN-AD-2026-{i:06d}", text="red pulsar",
+                              when="2026-10-20T20:00:00+05:30" if i == 0 else "2026-10-25T20:00:00+05:30")
+                        for i in range(QUERY_LIMIT)]
+            assert p["until"] == "2026-10-21"  # asked again from the oldest day
+            return [crime("CHN-AD-2026-000000", when="2026-10-20T20:00:00+05:30", text="red pulsar"),
+                    crime("CHN-AD-2026-999999", when="2026-10-02T20:00:00+05:30", text="red pulsar")]
+        deps = make_deps(responder(plan(category="robbery", words=["pulsar"], time={"kind": "this_month"})),
+                         handlers={"q_search": page})
+        out = answer_question("pulsar robberies this month", deps, today=TODAY)
+        assert len(deps.zetaris.calls) == 2 and not out.answer["truncated"]
+        assert out.answer["total"] == QUERY_LIMIT + 1 and "page 2" in out.plan["steps"][1]["purpose"]
 
     def test_no_match_says_so(self, make_deps):
         deps = make_deps(responder(plan(category="homicide")), handlers={"q_search": lambda p: []})
@@ -185,7 +207,26 @@ class TestAnswerQuestion:
             raise RuntimeError("Zetaris down")
         deps = make_deps(responder(plan(category="robbery")), handlers={"q_search": boom})
         out = answer_question("robberies", deps, today=TODAY)
-        assert out.status == "failed" and "Zetaris down" in out.error
+        assert out.status == "failed" and "Zetaris down" not in out.error  # officer-safe text; detail in trace
+        assert any("Zetaris down" in (e.get("output_summary") or "") for e in deps.tracer.read())
+
+    def test_a_timeout_says_busy_and_queries_fail_fast(self, make_deps):
+        from app.adapters.zetaris import ZetarisTimeout
+
+        def slow(p):
+            raise ZetarisTimeout("timed out: read timeout")
+        deps = make_deps(responder(plan(category="robbery")), handlers={"q_search": slow})
+        out = answer_question("robberies", deps, today=TODAY)
+        assert out.status == "failed" and "did not answer in time" in out.error
+
+    def test_words_are_whole_words_in_the_narrative_only(self, make_deps):
+        rows = [crime("CHN-RH-2026-000001", text="Two men on a black Pulsar"),  # address is "LB Road"; see below
+                crime("CHN-RH-2026-000002", text="A reddish Pulsar was seen"),
+                crime("CHN-RH-2026-000003", text="two men on red Pulsars")]
+        rows[0]["address"] = "Red Hills main road"
+        deps = make_deps(responder(plan(category="robbery", words=["red", "pulsar"])), handlers={"q_search": lambda p: rows})
+        out = answer_question("red pulsar robberies", deps, today=TODAY)
+        assert [r["crime_id"] for r in out.answer["rows"]] == ["CHN-RH-2026-000003"]
 
 
 def test_understood_reads_plainly():
