@@ -1,0 +1,37 @@
+[
+ {
+  "crime_ids": [
+   "CHN-MI-2025-000932",
+   "CHN-PL-2025-000927"
+  ],
+  "dup_id": "DUP-01"
+ },
+ {
+  "crime_ids": [
+   "CHN-AV-2026-000609",
+   "CHN-PT-2026-000608"
+  ],
+  "dup_id": "DUP-02"
+ },
+ {
+  "crime_ids": [
+   "CHN-KO-2026-000043",
+   "CHN-NO-2026-000043"
+  ],
+  "dup_id": "DUP-03"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2024-001346",
+   "CHN-VL-2024-001346"
+  ],
+  "dup_id": "DUP-04"
+ },
+ {
+  "crime_ids": [
+   "CHN-KU-2025-001216",
+   "CHN-SA-2025-001209"
+  ],
+  "dup_id": "DUP-09"
+ }
+]

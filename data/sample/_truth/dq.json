@@ -1,0 +1,22 @@
+[
+ {
+  "row_id": "CHN-NU-2024-001301",
+  "rule": "dq_bad_geo",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-PL-2025-000418",
+  "rule": "dq_bad_geo",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-SM-2026-000097",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ },
+ {
+  "row_id": "CHN-SR-2025-000023",
+  "rule": "dq_time_inconsistent",
+  "source": "sb.crimes"
+ }
+]
