@@ -11,8 +11,8 @@ type Detail = {
 };
 
 /** Side drawer for a clicked dot (spec G3): summary, MO chips, linked cases, open case, show trail. */
-export function CrimeDrawer({ crime, links, byId, onClose }: {
-  crime: MapCrime; links: Links; byId: Map<string, MapCrime>; onClose: () => void;
+export function CrimeDrawer({ crime, links, byId, onClose, onShowTrail }: {
+  crime: MapCrime; links: Links; byId: Map<string, MapCrime>; onClose: () => void; onShowTrail: () => void;
 }) {
   const [detail, setDetail] = useState<Detail | null>(null);
 
@@ -94,7 +94,7 @@ export function CrimeDrawer({ crime, links, byId, onClose }: {
 
       <div className="mt-5 flex gap-2">
         <Link href={`/console/cases/${encodeURIComponent(crime.id)}`} className="rounded-md bg-signal px-3 py-1.5 text-white">Open case</Link>
-        <button disabled title="Vehicle trail needs the ANPR layer (next data slice)" className="rounded-md border border-line px-3 py-1.5 text-muted">Show trail</button>
+        <button onClick={onShowTrail} title="ANPR reads of the offender vehicle plate within 6 hours" className="rounded-md border border-line px-3 py-1.5">Show trail</button>
       </div>
     </aside>
   );

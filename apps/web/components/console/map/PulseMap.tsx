@@ -9,16 +9,22 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  padRing, passes, pulsePhase, pulseTier, tzOffsetMinutes, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  cone, isoWeek, padRing, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
 import { TimeScrubber } from "./TimeScrubber";
 import { CrimeDrawer } from "./CrimeDrawer";
 import { usePulseData, type LinkPoint } from "./usePulseData";
+import { consoleBrowserClient } from "@/lib/supabase/browser";
+
+type TrailRead = { read_id: string; camera_id: string; read_at: string; plate: string; conf: number | null; lon: number; lat: number };
+type Trail = { crime_id: string; plates: string[]; reads: TrailRead[] };
+type AnprRow = [string, number, number];
 
 type Toggles = {
   arcs: boolean; hulls: boolean; hex: boolean; stations: boolean; wards: boolean; rejected: boolean; glyphs: boolean;
+  cctv: boolean; anpr: boolean; tips: boolean; calls: boolean; release: boolean;
 };
 
 const SPEED_MS_PER_DAY = 100; // G3: 1 day per 100 ms
@@ -47,7 +53,22 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   const [minScore, setMinScore] = useState(0.55);
   const [constellation, setConstellation] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [toggles, setToggles] = useState<Toggles>({ arcs: true, hulls: true, hex: false, stations: false, wards: false, rejected: false, glyphs: false });
+  const [toggles, setToggles] = useState<Toggles>({ arcs: true, hulls: true, hex: false, stations: false, wards: false, rejected: false, glyphs: false, cctv: false, anpr: false, tips: false, calls: false, release: false });
+  const [trail, setTrail] = useState<Trail | null>(null);
+  const [trailMsg, setTrailMsg] = useState<string | null>(null);
+
+  // "Show trail" (G3): ANPR reads of the case's offender plate pattern within 6 h (0004_08 map_trail).
+  const showTrail = async (crimeId: string) => {
+    setTrailMsg("Loading ANPR reads…");
+    const { data: t, error } = await consoleBrowserClient().rpc("map_trail", { p_crime_id: crimeId });
+    if (error) { setTrail(null); setTrailMsg("Trail unavailable: " + error.message); return; }
+    const tr = t as Trail;
+    setTrail(tr);
+    const plates = tr.plates.join(", ");
+    setTrailMsg(tr.reads.length
+      ? tr.reads.length + " ANPR reads of " + (plates || "the vehicle") + " within 6 h"
+      : tr.plates.length ? "No ANPR reads of " + plates + " within 6 h" : "No offender vehicle plate recorded for this case");
+  };
   const [selected, setSelected] = useState<MapCrime | null>(null);
   const [now, setNow] = useState(0);
   const playRef = useRef<number | null>(null);
@@ -172,6 +193,25 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   }, [data.hexes, cats]);
   const hexMax = Math.max(1, ...hexCells.map((h) => h.n));
 
+  // ---------- data-source layers (0004_08), filtered by the scrubber window ----------
+  const wkFrom = win ? isoWeek(win[0], OFFSET) : "";
+  const wkTo = win ? isoWeek(win[1], OFFSET) : "";
+  const cones = useMemo(() => data.layers.cctv
+    .filter((c) => c[3] != null && c[4] != null && c[5] != null)
+    .map((c) => ({ id: c[0], owner: c[6], poly: cone(c[1], c[2], c[3] as number, c[4] as number, c[5] as number) })), [data.layers.cctv]);
+  const callCells = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const [cell, wk, n] of data.layers.calls) if (weekInRange(wk, wkFrom, wkTo)) m.set(cell, (m.get(cell) ?? 0) + n);
+    return Array.from(m, ([cell, n]) => { const [lat, lon] = cellToLatLng(cell); return { pos: [lon, lat] as LonLat, n }; });
+  }, [data.layers.calls, wkFrom, wkTo]);
+  const tipCells = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const [cell, wk, n] of data.layers.tips) if (weekInRange(wk, wkFrom, wkTo)) m.set(cell, (m.get(cell) ?? 0) + n);
+    return Array.from(m, ([cell, n]) => { const [lat, lon] = cellToLatLng(cell); return { pos: [lon, lat] as LonLat, n }; });
+  }, [data.layers.tips, wkFrom, wkTo]);
+  const releaseByWard = useMemo(() => new Map(data.layers.release.map((r) => [r[0], r[1]] as [number, number])), [data.layers.release]);
+  const releaseMax = Math.max(1, ...Array.from(releaseByWard.values()));
+
   const dim = constellation ? 0.25 : 1;
   const loopT = (now % 2400) / 2400; // travelling dash: one pass every 2.4 s
 
@@ -190,6 +230,30 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       id: "hex", data: hexCells, getHexagon: (d) => d.cell, extruded: false, stroked: false, opacity: 0.55 * dim,
       getFillColor: (d) => { const k = d.n / hexMax; return [255, Math.round(200 - 150 * k), 60, Math.round(40 + 180 * k)]; },
       updateTriggers: { getFillColor: [hexMax] },
+    }),
+    toggles.release && data.boundaries && new GeoJsonLayer({
+      id: "release", data: data.boundaries.wards as never, stroked: false, filled: true,
+      getFillColor: (f: { properties: { ward_no?: number } }) => {
+        const n = releaseByWard.get(f.properties.ward_no ?? -1) ?? 0;
+        return [190, 120, 255, n ? Math.round(30 + 150 * (n / releaseMax)) : 0];
+      },
+      updateTriggers: { getFillColor: [releaseByWard, releaseMax] },
+    }),
+    toggles.cctv && new PolygonLayer<(typeof cones)[number]>({
+      id: "cctv-cones", data: cones, getPolygon: (c) => c.poly, filled: true, stroked: true,
+      getFillColor: [120, 220, 255, 45], getLineColor: [120, 220, 255, 140], lineWidthMinPixels: 0.5,
+    }),
+    toggles.anpr && new ScatterplotLayer<AnprRow>({
+      id: "anpr", data: data.layers.anpr, getPosition: (a) => [a[1], a[2]], getRadius: 4, radiusUnits: "pixels",
+      getFillColor: [0, 0, 0, 0], stroked: true, getLineColor: [0, 230, 255, 230], lineWidthUnits: "pixels", getLineWidth: 2,
+    }),
+    toggles.calls && new ScatterplotLayer<{ pos: LonLat; n: number }>({
+      id: "calls", data: callCells, getPosition: (c) => c.pos, radiusUnits: "pixels",
+      getRadius: (c) => 1.5 + Math.min(6, Math.sqrt(c.n)), getFillColor: [255, 255, 255, 150],
+    }),
+    toggles.tips && new TextLayer<{ pos: LonLat; n: number }>({
+      id: "tips", data: tipCells, getPosition: (t) => t.pos, getText: () => "◆", getSize: (t) => 12 + Math.min(10, t.n * 2),
+      getColor: [80, 255, 160, 230], characterSet: ["◆"],
     }),
     toggles.hulls && new PolygonLayer<(typeof series)[number]>({
       id: "hull-glow", data: series.filter((s) => s.hull.length), getPolygon: (s) => s.hull, filled: true, stroked: true,
@@ -221,6 +285,19 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
       id: "arcs-dash", data: arcs.filter((a) => a.status !== "rejected"), getPath: (a) => a.path, getTimestamps: (a) => a.ts,
       getColor: [255, 255, 255, 240], getWidth: (a) => 1.5 + a.score * 3, widthUnits: "pixels", trailLength: 0.25,
       currentTime: loopT * 1.25, capRounded: true, jointRounded: true,
+    }),
+    trail && trail.reads.length > 1 && new PathLayer<{ path: LonLat[] }>({
+      id: "trail-path", data: [{ path: trail.reads.map((r) => [r.lon, r.lat] as LonLat) }], getPath: (d) => d.path,
+      getColor: [0, 230, 255, 220], getWidth: 3, widthUnits: "pixels", capRounded: true, jointRounded: true,
+    }),
+    trail && new ScatterplotLayer<TrailRead>({
+      id: "trail-reads", data: trail.reads, getPosition: (r) => [r.lon, r.lat], getRadius: 5, radiusUnits: "pixels",
+      getFillColor: [0, 230, 255, 255], stroked: true, getLineColor: [255, 255, 255, 255], lineWidthUnits: "pixels", getLineWidth: 1.5,
+    }),
+    trail && new TextLayer<TrailRead>({
+      id: "trail-labels", data: trail.reads, getPosition: (r) => [r.lon, r.lat], getPixelOffset: [0, -14], getSize: 11,
+      getText: (r) => r.camera_id + " " + new Date(r.read_at).toLocaleTimeString("en-IN", { timeZone: CITY.timezone, hour: "2-digit", minute: "2-digit" }),
+      getColor: [255, 255, 255, 240], outlineWidth: 2, outlineColor: [0, 0, 0, 220], fontSettings: { sdf: true }, characterSet: "auto",
     }),
     new ScatterplotLayer<MapCrime>({
       id: "crimes", data: visible, pickable: true, getPosition: (c) => c.pos,
@@ -281,12 +358,16 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
           {([
             ["arcs", "Link arcs"], ["hulls", "Series hulls"], ["hex", "Hex heat (city-wide)"], ["stations", "Station boundaries"],
             ["wards", "Wards"], ["rejected", "Show rejected links"], ["glyphs", "Shape glyphs"],
+            ["cctv", "CCTV cones (" + cones.length + ")"], ["anpr", "ANPR cameras (" + data.layers.anpr.length + ")"],
+            ["tips", "Tips (diamonds)"], ["calls", "112 calls"], ["release", "Released-offender density (per ward)"],
           ] as [keyof Toggles, string][]).map(([k, label]) => (
             <label key={k} className="flex cursor-pointer items-center gap-2 py-0.5">
               <input type="checkbox" checked={toggles[k]} onChange={() => flip(k)} /> {label}
             </label>
           ))}
-          <p className="mt-1 text-[11px] leading-snug text-muted">CCTV cones, ANPR, tips, 112 calls and release density arrive with the next data slice.</p>
+          {data.layers.cctv.length + data.layers.anpr.length + data.layers.calls.length + data.layers.release.length === 0 && (
+            <p className="mt-1 text-[11px] leading-snug text-muted">CCTV, ANPR, 112 and release layers have no rows yet.</p>
+          )}
         </div>
         <div>
           <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Filters</p>
@@ -333,7 +414,12 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
         </div>
       )}
 
-      {selected && <CrimeDrawer crime={selected} links={data.links} byId={byId} onClose={() => setSelected(null)} />}
+      {trailMsg && (
+        <div className="absolute bottom-28 left-3 z-10 max-w-sm rounded-md bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-3 py-2 text-xs shadow">
+          {trailMsg} <button className="ml-2 underline" onClick={() => { setTrail(null); setTrailMsg(null); }}>clear</button>
+        </div>
+      )}
+      {selected && <CrimeDrawer crime={selected} links={data.links} byId={byId} onClose={() => setSelected(null)} onShowTrail={() => void showTrail(selected.id)} />}
     </div>
   );
 }

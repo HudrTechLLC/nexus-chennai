@@ -133,3 +133,22 @@ describe("misc", () => {
     expect(hhmm(1440 + 5)).toBe("00:05");
   });
 });
+
+import { isoWeek, weekInRange } from "../pulse";
+
+describe("isoWeek", () => {
+  it("matches ISO-8601 including year boundaries", () => {
+    expect(isoWeek(Date.UTC(2026, 9, 26, 6), 330)).toBe("2026-W44"); // Mon 26 Oct 2026
+    expect(isoWeek(Date.UTC(2021, 0, 1, 6), 0)).toBe("2020-W53"); // Fri 1 Jan 2021
+    expect(isoWeek(Date.UTC(2024, 11, 30, 6), 0)).toBe("2025-W01"); // Mon 30 Dec 2024
+  });
+  it("uses the city offset near midnight", () => {
+    // Sunday 25 Oct 2026 20:00 UTC is Monday 01:30 IST
+    expect(isoWeek(Date.UTC(2026, 9, 25, 20), 330)).toBe("2026-W44");
+    expect(isoWeek(Date.UTC(2026, 9, 25, 20), 0)).toBe("2026-W43");
+  });
+  it("compares week labels", () => {
+    expect(weekInRange("2026-W43", "2026-W40", "2026-W44")).toBe(true);
+    expect(weekInRange("2026-W39", "2026-W40", "2026-W44")).toBe(false);
+  });
+});
