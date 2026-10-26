@@ -2,9 +2,9 @@
   "project": "Nexus Chennai",
   "track": "Solving Fragmented Intelligence",
   "team": "Heisenbugs",
-  "status": "in development; claims are updated only when tests and traces prove them (ledger: engg/docs/submission/EVIDENCE.md)",
+  "status": "submission candidate; every claim is backed by a test, trace or CI job (ledger: engg/docs/submission/EVIDENCE.md)",
   "sponsor_technology": {
-    "zetaris": "Data layer: Supabase Postgres federated as source `sb` (read-only role), REST news/social feeds, data-quality views; agents read only through named queries. File sources (CSV/Parquet) in Zetaris's internal store: in progress",
+    "zetaris": "Data layer: Supabase Postgres federated as source `sb` (read-only role), 12 CSV/Parquet file tables in Zetaris's internal store, the semantic view v_crime_unified and data-quality views; REST feeds served by the Nexus API: weather live, news/social in progress. Agents read only through the app's named-query registry (13 queries, each with Lightning SQL and a DuckDB twin)",
     "meterless_engines": [
       "world_model",
       "hmem",

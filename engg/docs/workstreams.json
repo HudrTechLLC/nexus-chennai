@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T15:52:05+05:30",
+  "updated": "2026-10-26T16:05:01+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -155,9 +155,10 @@
           "id": "WS1-16",
           "phase": "P9",
           "title": "News and social REST feeds in Zetaris",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-2",
-          "ref": "#54"
+          "ref": "#54",
+          "note": "40_feeds.sql merged (#54). Live in Zetaris: nexus_feeds db + rest_weather/weather_hourly (744 rows). NOT yet registered: rest_news, rest_social, news_items, social_posts, v_news_mentions (statements #3-#7), so live q_news returns no rows (nexus-2, 26 Oct)"
         },
         {
           "id": "WS1-17",
@@ -577,16 +578,18 @@
           "id": "WS5-03",
           "phase": "P6",
           "title": "README with all required sections",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-chief",
-          "ref": "#66"
+          "ref": "#152, #155",
+          "note": "Root README folded from submission/README_DRAFT (nexus-7); PENDING only: video link, WS2-16 examples, WS2-14 eval; demo accounts via the form only"
         },
         {
           "id": "WS5-04",
           "phase": "P10",
           "title": "Sponsor technology text (evidence-backed)",
-          "status": "todo",
-          "owner": "nexus-chief"
+          "status": "in_progress",
+          "owner": "nexus-chief",
+          "note": "Paste-ready text: engg/docs/submission/SPONSOR_TECH_FINAL.md (nexus-7); evidence in submission/EVIDENCE.md"
         },
         {
           "id": "WS5-05",
