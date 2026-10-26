@@ -56,7 +56,7 @@ A LangGraph graph routes each input down one of three paths:
 - **tip:** `tip_guard → tip_extract` (clean tips only).
 - **search:** Scout Intent picks the route, then the query runs.
 
-Caps: the Planner runs at most 3 rounds, the Skeptic sends back at most 2 times, and a run has a 300-second deadline. With under 45 seconds left, model calls are skipped and the code results stand.
+Caps: the Planner runs at most 3 rounds and the Skeptic sends back at most 2 times. A `/run` or batch run has a 300-second deadline; a worker run for one console-filed FIR has 420 seconds. With under 45 seconds left, model calls are skipped, no more send-backs happen, and the code results stand. The deadline is checked between steps, so a run can overrun by one in-flight model call (a filing run finished at 436 s against 420). Past the deadline, approved pairs are written, and pairs still sent back are written as `needs_revision` (never approved). Optional Planner queries get 30 s and one attempt, then are skipped for the rest of the run.
 
 | Agent | Runs on | Code decides | Model decides | Can block a link? |
 |---|---|---|---|---|
