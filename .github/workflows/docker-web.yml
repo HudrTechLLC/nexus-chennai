@@ -11,6 +11,7 @@ on:
       - Dockerfile.web
       - Dockerfile.web.dockerignore
       - docker-compose.yml
+      - output_examples/**
       - .github/workflows/docker-web.yml
 
 jobs:
