@@ -173,22 +173,23 @@ Fixtures replay only when Nightshift can't be reached, and they are never keyed 
 
 ## Examples
 
-`[PENDING: WS2-16]`: `input_examples/` and the matching real `output_examples/` are being recorded. Until then, any of the three judge cases in the sample bundle can be posted directly:
+`input_examples/` holds three judge inputs, and `output_examples/` holds the real output of each, recorded with the pinned Nightshift models. In sample mode the same calls are replayed from `data/sample/model_fixtures/`, so a fresh clone with no credentials gives the same result:
 
 ```bash
-echo '{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}' > case.json
-SAMPLE_MODE=true .venv/bin/python run.py --once case.json
+SAMPLE_MODE=true .venv/bin/python run.py --once input_examples/example_1.json
 ```
 
 ```powershell
-'{"input":{"kind":"case","crime_id":"CHN-AD-2026-001182"}}' | Set-Content case.json; $env:SAMPLE_MODE = "true"; .venv\Scripts\python run.py --once case.json
+$env:SAMPLE_MODE = "true"; .venv\Scripts\python run.py --once input_examples\example_1.json
 ```
 
-| Judge case | Series | Result on a fresh clone (sample mode, no credentials) |
+| Input | What it is | Result (fresh clone, sample mode, no credentials) |
 |---|---|---|
-| CHN-AD-2026-001182 | Red Pulsar Duo (chain snatching) | 3 links, all cross-station; the top one is Adyar ↔ Velachery (CHN-VL-2026-000877), **high, 0.787** |
-| CHN-KU-2025-000078 | Grille Cutters (night house breaks) | 7 links (6 cross-station), all **medium**: only 3 of 9 factors have data, so the coverage cap applies |
-| CHN-GU-2025-000945 | Night Cab | 2 cross-station links, medium |
+| `example_1.json`: case CHN-AD-2026-001182 | Chain snatching on LB Road, Adyar (the Red Pulsar hero case) | 3 links, all cross-station: Adyar ↔ Thiruvanmiyur (CHN-TI-2026-001148) **high, 0.819**; Adyar ↔ Velachery (CHN-VL-2026-000877) **high, 0.789**; Adyar ↔ Thiruvanmiyur (CHN-TI-2026-001134) medium, 0.692. Series "Red two-wheeler chain snatchings · 3 stations" (4 cases) |
+| `example_2.json`: case CHN-KU-2025-000078 | Night house break with a grille cutter, Pongal week 2025 | 7 links (6 cross-station), all **medium**: only 3–4 of the 9 factors have data, so the coverage cap holds the band at medium even for high scores (up to 0.963). Series "Night house breaks · 6 stations" (8 cases) |
+| `example_3.json`: batch of 3 night robberies | Fake cab, knife, white Swift Dzire | 2 cross-station links, medium (0.732, 0.632). **The Skeptic drops one pair** (CHN-GU-2025-000945 ↔ CHN-VL-2025-000926: different crime types, 4.1 km apart, day vs night), so no alert is written for it |
+
+Each run also writes `logs/trace-<run_id>.jsonl`. In sample mode every model step shows `replayed`, with the recorded model id.
 
 ## Traces and logs
 
