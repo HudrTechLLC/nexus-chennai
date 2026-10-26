@@ -78,6 +78,11 @@ from .zetaris_queries_n2 import N2_QUERIES  # noqa: E402  (needs NamedQuery defi
 
 NAMED_QUERIES.update(N2_QUERIES)
 
+# Data-lane queries (q_case, q_features, ...): owned by nexus-1.
+from .zetaris_queries_n1 import specs as _n1_specs  # noqa: E402
+
+NAMED_QUERIES.update({n: NamedQuery(**s) for n, s in _n1_specs().items()})
+
 _PARAM = re.compile(r":([a-z_][a-z0-9_]*)")
 
 
