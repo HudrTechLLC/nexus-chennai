@@ -25,9 +25,9 @@ A **hard contradiction** is a stated difference between crime A and crime B on a
 | Kind | Fields | Contradiction when |
 |---|---|---|
 | `offender_count` | `offenders_described[].count` | both stated (> 0) and different |
-| `offender_age` | `offenders_described[].age_band` | both stated and the bands **do not overlap** (touching bands overlap) |
+| `offender_age` | `offenders_described[].age_band` | both stated and the ranges **do not overlap** (touching ranges overlap). Wordings: "20-30"/"20 to 30"; "20s" = 20-29; "30+"/"above 30" = 30-99; "under 18" = 0-18; a single age = ±5 |
 | `helmet` | `offenders_described[].helmet` | both stated and incompatible |
-| `vehicle_identity` | the offender vehicle's `colour`, `make_model`, `plate` | colour or make stated on both and incompatible; or the partial plates disagree on at least one of ≥ 2 positions read on both (right-aligned, `?` = unread) |
+| `vehicle_identity` | the offender vehicle's `colour`, `make_model`, `plate` | colour or make stated on both and incompatible; or the partial plates disagree on at least one of ≥ 2 positions read on both (right-aligned, `?` = unread). Plates are compared only when **both end in the plate number** (a trailing run of ≥ 4 digits or `?`), so a prefix-only plate such as "TN09B" is never compared |
 
 **Compatible, so never a contradiction:**
 - missing or unknown values ("unknown", "not seen", …);
@@ -36,7 +36,7 @@ A **hard contradiction** is a stated difference between crime A and crime B on a
   with red stripe";
 - colour aliases (grey/gray, …).
 
-"No helmet" is its own value: it contradicts any described helmet. When a crime describes several offenders, a
+"No helmet" is its own value: it contradicts any described helmet. Only **absence** phrases count ("no helmet", "without a helmet", "not wearing helmet", "bare head", "none"). "No visor" or "no sticker" describes a helmet. When a crime describes several offenders, a
 field contradicts only if **no** pair of entries is compatible.
 
 **The decision:**
@@ -67,9 +67,9 @@ with the Nemotron-alone baseline.
 
 | What | Value |
 |---|---|
-| Rule commit | `4de55f38fe34edb7e7f4b217bcff74de027d855c` on branch `feat/skeptic-contradiction-drop` (**not merged**: it merges only if the test passes) |
-| `services/api` tree at that commit | `fe7d929f54ae63b453190ad3a1c54deda14035c2`. The run must report this tree with `code_dirty = false`; **no rule edit after this note merges** |
-| `agents/contradiction.py` sha256 | `ef3b5bdfc206d3338e4db19ff5a4addebfd8d4e5854aceaf4f7a3ac15869816d` |
+| Rule commit | `fa6445e9d96ebfd25f8a7c8d3774d8ae711b31e5` on branch `feat/skeptic-contradiction-drop` (**not merged**: it merges only if the test passes) |
+| `services/api` tree at that commit | `faae63b867de44d386c1c3c50937b32ea22e9840`. The run must report this tree with `code_dirty = false`; **no rule edit after this note merges** |
+| `agents/contradiction.py` sha256 | `9e088b135744b383861c7726317dbb283c2082fe645bfd0a89423764912930ac` |
 | `agents/skeptic.py` sha256 | `b4ba5ded77295a3316c1235de36d7f4b6db597d2577360a8491701d16128ba9e` |
 | `eval/planted_skeptic.py` sha256 | `0403f39b5420b5aca1b3c7199ceed3b6ae2d884d8c73f2e9cc3b586821f5a095` |
 | Skeptic prompt sha256 (unchanged from #370) | `ae5cc6e2528372964eda33089c762dd2ffe5468638aa516bfae5bbf672ff46a2` |
@@ -121,9 +121,10 @@ These checks used no model and did not touch the fresh set. I ran them while des
    `decoy` pairs do, on offender count, which is how the generator builds decoys. So the twin guard will probably
    hold on generator data. Real FIRs have messier witness descriptions, and **this test cannot measure that.**
 2. **Live C802 (AD-001182 ↔ AD-001231):** a first draft flagged "Bajaj Pulsar 150" vs "Bajaj Pulsar". That led to
-   the less-detail rule. On the final rule, **the hero pair and C802 have no contradiction**, on sample and on live
+   the less-detail rule. nexus-5's review then fixed three wordings real FIRs use: age ranges like "20s"/"30+", prefix-only
+   plates, and "no visor". On the final rule, **the hero pair and C802 have no contradiction**, on sample and on live
    data (read-only `q_case`).
-3. **Judge examples 1–3:** no pair among their crimes contradicts. The gate on the rule commit gave 420 tests
+3. **Judge examples 1–3:** no pair among their crimes contradicts. The gate on the final rule commit gave 443 tests
    passing, ruff clean, verify_replay, and **ex1–3 EXACT**.
 4. **OR-04, the one `offender_return` truth pair, DOES contradict** (count 1 vs 3, age 18-20 vs 40-50). It does not
    alert today (score 0.07), so the rule cannot change it. The reconcile clause is unit-tested, but not exercised
@@ -140,9 +141,14 @@ These checks used no model and did not touch the fresh set. I ran them while des
 
 ## Limits, stated before the result
 
-- **It passes largely by construction.** The rule targets exactly the recipe's four plant kinds, and I designed
-  it knowing them. A high planted drop rate therefore mostly shows that the code does what it says. It does **not**
-  show that the Skeptic now generalises to other false links. **The twin guard is the informative number.**
+- **Both numbers are weak evidence on generator data** (nexus-5's correction, adopted).
+  - **The primary passes largely by construction.** The rule targets exactly the recipe's four plant kinds, and I
+    designed it knowing them. A high planted drop rate mostly shows that the code does what it says, not that the
+    Skeptic generalises to other false links.
+  - **The guard is also close to guaranteed.** Item 1 found 0/97 generator series pairs contradict, and the fresh
+    twins come from the same generator. So the guard shows only that the rule doesn't drop generator-clean twins.
+  - **The real risk is not measured here:** messy witness descriptions in real FIRs.
+  - **The linking what-if (item 5) is the only evidence on non-planted pairs.**
 - **Deck wording (chief):** "a deterministic contradiction check drops planted false links". **Not** "the Skeptic
   now catches false links".
 - Generator data is cleaner than real witness descriptions. A real series with one witness saying "two men" and
