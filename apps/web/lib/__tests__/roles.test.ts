@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessForPath, allows, canDecideAlerts, isRole, NAV, navFor } from "../roles";
+import { accessForPath, allows, canDecideAlerts, desktopNav, isRole, NAV, navFor } from "../roles";
 
 const ALL = ["station_officer", "analyst", "supervisor", "admin"] as const;
 
@@ -83,5 +83,25 @@ describe("nav never links to a 404", () => {
       .map((n) => n.href.replace(/^\/console\/?/, ""))
       .filter((rel) => !existsSync(join(root, rel, "page.tsx")));
     expect(missing).toEqual([]);
+  });
+});
+
+describe("desktopNav", () => {
+  const split = (r: Parameters<typeof navFor>[0]) => {
+    const d = desktopNav(navFor(r));
+    return { inline: d.inline.map((n) => n.label), manage: d.manage.map((n) => n.label) };
+  };
+  it("groups Stations, System and Admin under Manage and leaves Notifications to the bell", () => {
+    expect(split("admin").manage).toEqual(["Stations", "System", "Admin"]);
+    expect(split("admin").inline).not.toContain("Notifications");
+    expect(split("supervisor").manage).toEqual(["Stations"]);
+  });
+  it("keeps the analyst and officer bars flat, with no Manage menu", () => {
+    expect(split("analyst").manage).toEqual([]);
+    expect(split("station_officer").manage).toEqual([]);
+    expect(split("analyst").inline).toContain("Memory");
+  });
+  it("keeps at most 12 inline links for every role so the bar fits one line at 1080p", () => {
+    for (const r of ["station_officer", "analyst", "supervisor", "admin"] as const) expect(split(r).inline.length).toBeLessThanOrEqual(12);
   });
 });

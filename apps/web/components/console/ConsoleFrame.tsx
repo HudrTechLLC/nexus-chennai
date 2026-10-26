@@ -1,16 +1,19 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { navFor, ROLE_LABEL } from "@/lib/roles";
+import { desktopNav, navFor, ROLE_LABEL, type NavItem } from "@/lib/roles";
 import type { Officer } from "@/lib/auth";
 import { NotificationBell } from "./notifications/NotificationBell";
 
 /** Police console frame: role-gated nav, who is signed in, sign out. */
 export function ConsoleFrame({ officer, unread = 0, children }: { officer: Officer; unread?: number; children: ReactNode }) {
-  const links = navFor(officer.role).map((n) => (
+  const items = navFor(officer.role);
+  const link = (n: NavItem) => (
     <Link key={n.href} href={n.href} className="hover:text-ink">
       {n.label}
     </Link>
-  ));
+  );
+  const links = items.map(link);
+  const wide = desktopNav(items);
   const who = (
     <div className="flex flex-wrap items-center gap-3 text-sm">
       {/* the role pill already says who is signed in; the name only shows on wide screens so the nav stays on one line at 1080p + zoom */}
@@ -32,8 +35,16 @@ export function ConsoleFrame({ officer, unread = 0, children }: { officer: Offic
             Nexus <span className="text-muted">· Console</span>
           </Link>
           {/* md and up: inline nav + who is signed in */}
-          <nav className="hidden flex-1 flex-wrap gap-x-3 gap-y-1 text-sm text-muted md:flex xl:gap-x-4">
-            {links}
+          <nav className="hidden flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted md:flex">
+            {wide.inline.map(link)}
+            {wide.manage.length > 0 && (
+              <details className="relative">
+                <summary className="cursor-pointer list-none hover:text-ink [&::-webkit-details-marker]:hidden">Manage ▾</summary>
+                <div className="absolute right-0 z-30 mt-2 flex min-w-[9rem] flex-col gap-2 rounded-md border border-line bg-surface p-3 shadow-lg">
+                  {wide.manage.map(link)}
+                </div>
+              </details>
+            )}
           </nav>
           <div className="hidden md:flex">{who}</div>
           {/* the bell is mounted once (one Realtime channel), outside both copies of the nav */}
