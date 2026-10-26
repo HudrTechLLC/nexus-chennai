@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import re
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -29,6 +29,11 @@ class DeadlineExceeded(AgentError):
     """The run passed its hard deadline (spec C4: 5 minutes)."""
 
 
+# Given stored members of the series being rewritten that this run did not place in it, return
+# {crime_id: reason} for those that must leave it (D-033). Members not returned are kept.
+ExcludeFn = Callable[[list[str]], Mapping[str, str]]
+
+
 class Store(Protocol):
     """Where agents write results (Supabase in live mode, memory in tests and sample runs)."""
 
@@ -38,7 +43,7 @@ class Store(Protocol):
 
     def notify(self, notifications: list[dict[str, Any]]) -> None: ...
 
-    def write_series(self, series: dict[str, Any], run_id: str) -> str: ...
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str: ...
 
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool: ...
 
@@ -72,6 +77,7 @@ class MemoryStore:
     alerts: dict[str, dict[str, Any]] = field(default_factory=dict)
     notifications: list[dict[str, Any]] = field(default_factory=list)
     series: dict[str, dict[str, Any]] = field(default_factory=dict)
+    removed: list[dict[str, Any]] = field(default_factory=list)  # series_member_removed rows (D-033)
 
     def upsert_features(self, features: dict[str, Any]) -> None:
         self.features[features["crime_id"]] = features
@@ -83,12 +89,18 @@ class MemoryStore:
     def notify(self, notifications: list[dict[str, Any]]) -> None:
         self.notifications.extend(notifications)
 
-    def write_series(self, series: dict[str, Any], run_id: str) -> str:
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str:
         existing = {cid: sid for sid, s in self.series.items() for cid in s["crime_ids"]}
         sid = choose_series_id(series, existing)
         row = self.series.setdefault(sid, {"series_id": sid, "crime_ids": [], "dossier": None, "status": "candidate"})
+        ids = set(series.get("crime_ids") or [])
+        others = sorted(set(row["crime_ids"]) - ids)
+        gone = dict(exclude(others)) if exclude and others else {}
+        for cid in others:
+            if cid in gone:
+                self.removed.append({"series_id": sid, "crime_id": cid, "reason": gone[cid]})
         row.update(name=series_name(series), run_id=run_id, synthetic=True,
-                   crime_ids=sorted(set(row["crime_ids"]) | set(series.get("crime_ids") or [])))
+                   crime_ids=sorted((set(row["crime_ids"]) - set(gone)) | ids))
         return sid
 
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool:

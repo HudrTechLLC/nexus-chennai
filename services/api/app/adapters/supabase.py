@@ -97,5 +97,16 @@ class SupabaseClient:
             raise SupabaseError(f"update of {table} failed: HTTP {resp.status_code} {resp.text[:300]}")
         return resp.json()
 
+    def delete(self, table: str, match: dict[str, str]) -> list[dict[str, Any]]:
+        """DELETE rows matching PostgREST filters. A filter is required (never deletes a whole table)."""
+        self._require()
+        if not match:
+            raise SupabaseError("delete needs at least one filter; refusing to delete every row")
+        resp = self._client.delete(f"/rest/v1/{table}", params=match,
+                                   headers={**self._headers(), "Prefer": "return=representation"})
+        if resp.status_code >= 400:
+            raise SupabaseError(f"delete from {table} failed: HTTP {resp.status_code} {resp.text[:300]}")
+        return resp.json()
+
     def close(self) -> None:
         self._client.close()
