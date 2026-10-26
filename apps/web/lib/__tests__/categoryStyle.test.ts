@@ -23,6 +23,14 @@ describe("category style", () => {
     }
   });
 
+  it("keeps the card stripe (a non-text mark in the fg colour) at 3:1 or more against the card surface", () => {
+    const surface = { light: "#ffffff", dark: "#111b26" }; // --surface in globals.css, light and dark
+    for (const s of [...Object.values(CATEGORY_STYLE), FALLBACK_STYLE]) {
+      expect(contrast(s.light.fg, surface.light)).toBeGreaterThanOrEqual(3);
+      expect(contrast(s.dark.fg, surface.dark)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("gives each category its own colour, none of them a density-ramp colour", () => {
     const fgs = Object.values(CATEGORY_STYLE).map((s) => s.light.fg);
     expect(new Set(fgs).size).toBe(fgs.length);
