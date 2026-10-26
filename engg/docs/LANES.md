@@ -95,7 +95,7 @@ The chief announces the live base URL and token file when ready.
    - every claimed engine has a feature + a passing test;
    - ask (via the chief) before Zetaris CREATE, deletes, weight changes or spend.
 7. **Machine limits.**
-   - Only **nexus-4** runs `next build`. Others type-check only.
+   - Only **nexus-4** runs `next build`. All other lanes (incl. nexus-5, nexus-6) run typecheck, lint and vitest only. nexus-4 owns shared web layout, components and `package.json`.
    - Don't start or stop Docker containers. Zetaris is running; the slot is owned by nexus-chief.
 8. **Every PR:** tests for what it adds, `pytest -q` / `npm run typecheck && npm run lint` green, one logical change, conventional commit, and this trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Use the advisor tool before committing to an approach and before declaring done, if it's available.
 
