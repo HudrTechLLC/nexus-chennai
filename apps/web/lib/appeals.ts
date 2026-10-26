@@ -33,6 +33,8 @@ export type Appeal = {
   time_window: string;
   summary: string;
   looking_for: string[];
+  /** Blurred public stills (nexus-6, 0004_06_05); parsed by lib/appealStills. */
+  images: unknown;
   approved_by: string | null;
   sanitiser_model: string | null;
   status: AppealStatus;

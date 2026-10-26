@@ -5,6 +5,7 @@ import { allows } from "@/lib/roles";
 import { caseTerms, isCrimeId, parseLookingFor, validateAppeal, type CaseTerm } from "@/lib/appeals";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/alertsData";
+import { removeAllStills } from "@/app/console/(app)/appeals/[id]/stills-actions";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -61,6 +62,11 @@ export async function saveAppeal(
     crime_id: data[0].crime_id, status: data[0].status,
     ...(input.action === "withdraw" ? {} : { title: edit.title, looking_for: edit.looking_for.length }),
   });
+  // Chief, 26 Oct: withdrawing an appeal also deletes its public blurred stills (nexus-6, #197).
+  if (input.action === "withdraw") {
+    const stills = await removeAllStills(id);
+    if (!stills.ok) return { ok: false, error: `Withdrawn, but its public stills could not be removed: ${stills.error}` };
+  }
   revalidatePath(`/console/appeals/${encodeURIComponent(id)}`);
   revalidatePath("/console/appeals");
   return { ok: true };
