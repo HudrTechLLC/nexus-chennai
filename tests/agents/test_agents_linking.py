@@ -361,3 +361,11 @@ def test_default_plan_finds_hero_pair_in_sample_bundle(tmp_path):
     finally:
         z.close()
     assert "CHN-VL-2026-000877" in ids
+
+
+def test_rationale_prompt_never_carries_protected_attributes():
+    """LNK-13: an FIR's offenders_described may carry gender/complexion; only allow-listed keys reach the model."""
+    from app.agents.linker import described
+    c = {"offenders_described": [{"age_band": "20-30", "gender": "male", "complexion": "dark", "build": "thin",
+                                  "helmet": "black"}]}
+    assert described(c) == [{"age_band": "20-30", "build": "thin", "helmet": "black"}]
