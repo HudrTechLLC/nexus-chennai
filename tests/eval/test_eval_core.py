@@ -94,3 +94,16 @@ def test_non_generated_ids_uses_generator_namespace(monkeypatch):
     assert cli.non_generated_ids(None) == ["CHN-AD-2026-001231"]
     seed = (Path(__file__).resolve().parents[2] / "data" / "seed.py").read_text(encoding="utf-8")
     assert str(cli.GEN_NS) in seed  # one namespace: the generator's (data/seed.py GEN_NS)
+
+
+def test_candidates_are_prefetched_in_batches_not_one_by_one(tmp_path):
+    """Live each q_case + q_features costs ~2.4 s; candidates come in one q_cases + one q_features call."""
+    a, b, h = ADYAR["crime_id"], VELACHERY["crime_id"], HOUSEBREAK["crime_id"]
+    truth = Truth({key(a, b): "series"}, [{"series_id": "S1", "crime_ids": [a, b]}])
+    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(default_handlers()),
+                     nightshift=FakeNightshift(lambda *x: "{}"))
+    Evaluator(deps, truth).run([a])
+    evals = [c for c in deps.zetaris.calls if c[1] == "Eval"]
+    assert [c[0] for c in evals].count("q_case") == 1  # the case itself
+    assert [c[0] for c in evals].count("q_cases") == 1  # both candidates in one call
+    assert {b, h} <= set(next(c[2] for c in evals if c[0] == "q_cases").values())
