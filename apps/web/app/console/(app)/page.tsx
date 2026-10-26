@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { ROLE_LABEL, canDecideAlerts } from "@/lib/roles";
+import { StartHereCard } from "@/components/console/StartHereCard";
 import {
   OPEN_STATUSES, alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, seriesCount, topSeries, weekKpis,
   type AlertRow, type SeriesRow,
@@ -77,6 +78,8 @@ export default async function Overview({ searchParams }: { searchParams: { denie
         </p>
       </div>
       {errors.length > 0 && <p role="alert" className="text-sm text-red-600">Some figures could not load: {errors.join("; ")}</p>}
+
+      <StartHereCard sb={sb} officer={officer} alerts={alertRows} />
 
       <section aria-label="Key figures" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Tile label={`Open cases · ${scopeLabel}`} value={n(open.count)} sub={`registered or under investigation · ${n(undetected.count)} closed as undetected`} />
