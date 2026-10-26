@@ -227,6 +227,7 @@ def chat_json(
     agent: str,
     purpose: str,
     retries: int = 1,
+    thinking: bool = True,
     **params: Any,
 ) -> tuple[dict[str, Any], Any]:
     """Call a pinned lane and parse a JSON object; one corrective retry on bad or cut-off output.
@@ -236,6 +237,11 @@ def chat_json(
     """
     deps.check_deadline(agent)
     params.setdefault("max_tokens", DEFAULT_MAX_TOKENS)
+    if not thinking:
+        # Nemotron reasoning off (chat template switch, passed through by Nightshift). Measured live on
+        # Lightning for one MO extraction: 4,088 completion tokens / 56 s with thinking, 110 / 12 s without;
+        # with thinking on and max_tokens=2048 the provider returns an empty response (502).
+        params.setdefault("chat_template_kwargs", {"enable_thinking": False})
     msgs = list(messages)
     last_err: Exception | None = None
     for attempt in range(retries + 1):

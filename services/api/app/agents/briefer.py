@@ -95,7 +95,7 @@ class Briefer:
         model, source = None, "model"
         try:
             out, result = chat_json(self.deps, lane, messages, agent=AGENT, purpose=f"briefing {zone} {day}",
-                                    temperature=0.3)
+                                    temperature=0.3, thinking=False)
             text = str(out.get("briefing") or "").strip()
             extra = _numbers(text) - _numbers(facts)
             if not text or extra:

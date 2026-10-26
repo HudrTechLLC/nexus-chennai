@@ -109,7 +109,7 @@ class Extractor:
             {"role": "system", "content": MO_SYSTEM_PROMPT},
             {"role": "user", "content": text},
         ]
-        return chat_json(self.deps, "fast", messages, agent=AGENT, purpose=purpose, temperature=0)
+        return chat_json(self.deps, "fast", messages, agent=AGENT, purpose=purpose, temperature=0, thinking=False)
 
     # ----- vision ------------------------------------------------------
 

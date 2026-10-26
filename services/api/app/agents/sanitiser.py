@@ -140,7 +140,8 @@ class Sanitiser:
                     {"role": "user", "content": short(facts, 4000)}]
         model, source = None, "model"
         try:
-            out, result = chat_json(self.deps, "fast", messages, agent=AGENT, purpose="public appeal", temperature=0.3)
+            out, result = chat_json(self.deps, "fast", messages, agent=AGENT, purpose="public appeal", temperature=0.3,
+                                    thinking=False)
             model = result.model
             text = {"title": str(out.get("title") or "")[:70], "summary": str(out.get("summary") or "")[:400],
                     "looking_for": [str(x)[:120] for x in (out.get("looking_for") or [])][:4]}
