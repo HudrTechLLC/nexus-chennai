@@ -1,0 +1,29 @@
+Nexus Chennai · engines-ts
+==========================
+
+This directory contains third-party code from the Meterless project.
+
+  Source:   https://github.com/Meterless/Meterless
+  Commit:   1742dec56a66e58eef9dda2d2b865823758ca8cd
+  Licence:  Apache License 2.0 (see LICENSE in this directory, copied from that commit)
+
+Copied unmodified, with `git archive` at that commit:
+
+  engines/world-model/reference/   -> engines-ts/world-model/reference/
+  engines/world-model/conformance/ -> engines-ts/world-model/conformance/
+  engines/hmem/reference/          -> engines-ts/hmem/reference/
+  engines/hmem/conformance/        -> engines-ts/hmem/conformance/
+  engines/markovian/reference/     -> engines-ts/markovian/reference/
+  engines/markovian/conformance/   -> engines-ts/markovian/conformance/
+  LICENSE                          -> engines-ts/LICENSE
+
+No vendored file has been changed. The official conformance suites run unchanged against the
+vendored references (engines-ts/scripts/run-conformance.mjs -> logs/conformance_<engine>.txt).
+
+Written by the Nexus team (not part of Meterless): engines-ts/sidecar/, engines-ts/scripts/,
+engines-ts/package.json, engines-ts/package-lock.json, this NOTICE, and the Python ports in
+services/api/app/engines/*/core.py, which follow the reference algorithms and name the
+reference files they follow in their headers.
+
+Scout Intent has no runnable reference at this commit; Nexus implements it from the Meterless
+Scout spec (engines/scout-intent/docs) in services/api/app/engines/scout_intent/.

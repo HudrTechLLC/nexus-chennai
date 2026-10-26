@@ -37,22 +37,71 @@ POLARITY = {"approve": 1, "approved": 1, "confirm": 1, "reject": -1, "rejected":
 _IGNORED_KEY_PARTS = ("id", "_at", "date", "time_utc", "lat", "lon", "lng", "h3", "text", "narrative",
                       "summary", "note", "url", "synthetic", "score")
 
-_instance: HMEM | None = None
+class _Local:
+    """Sample backend: the Python port in core.py."""
+
+    def __init__(self, persist_dir, clock):
+        self.mem = HMEM(persist_dir=persist_dir, clock=clock, actor="analyst")
+
+    def query(self, text: str) -> list[tuple[str, list[str], float]]:
+        return [(m["id"], list(m["tags"]), s) for m, s in self.mem.query(text)]
+
+    def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
+        return self.mem.add(content, source=source, tags=tags, confidence=confidence, provenance=provenance)["id"]
+
+    def feedback(self, memory_id: str, kind: str) -> None:
+        self.mem.feedback(memory_id, kind)
+
+    def ledger_entries(self) -> list[dict]:
+        return list(self.mem.ledger.entries)
 
 
-def configure(persist_dir: str | Path | None = None, clock: Callable[[], int] | None = None) -> HMEM:
+class _Sidecar:
+    """Sidecar backend: the vendored TypeScript HMEM (engines-ts/hmem/reference)."""
+
+    def __init__(self, persist_dir, clock):
+        from app.engines import _sidecar
+
+        self.call = _sidecar.call
+        self.call("hmem/open", {"dir": str(persist_dir) if persist_dir else None,
+                                "now_ms": clock() if clock else None})
+
+    def query(self, text: str) -> list[tuple[str, list[str], float]]:
+        return [(h["id"], h["tags"], float(h["relevance"])) for h in self.call("hmem/query", {"text": text})["hits"]]
+
+    def add(self, content: str, source: str, tags: list[str], confidence: float, provenance: dict) -> str:
+        return self.call("hmem/add", {"content": content, "source": source, "tags": tags,
+                                      "confidence": confidence, "provenance": provenance})["id"]
+
+    def feedback(self, memory_id: str, kind: str) -> None:
+        self.call("hmem/feedback", {"id": memory_id, "kind": kind})
+
+    def ledger_entries(self) -> list[dict]:
+        return self.call("hmem/ledger", {})["entries"]
+
+
+_instance: _Local | _Sidecar | None = None
+
+
+def configure(persist_dir: str | Path | None = None, clock: Callable[[], int] | None = None) -> _Local | _Sidecar:
     """(Re)open the memory over `persist_dir` (default logs/hmem). A new call = a new session."""
     global _instance
     if persist_dir is None:
         from app.config import get_settings
 
         persist_dir = get_settings().logs_dir / "hmem"
-    _instance = HMEM(persist_dir=persist_dir, clock=clock, actor="analyst")
+    cls = _Sidecar if _runtime.backend() == "sidecar" else _Local
+    _instance = cls(persist_dir, clock)
     return _instance
 
 
-def instance() -> HMEM:
-    return _instance or configure()
+def instance() -> _Local | _Sidecar:
+    want = _Sidecar if _runtime.backend() == "sidecar" else _Local
+    return _instance if isinstance(_instance, want) else configure()
+
+
+def _tag(tags: list[str], prefix: str, default: str = "") -> str:
+    return next((t.split(":", 1)[1] for t in tags if t.startswith(prefix + ":")), default)
 
 
 def _sides(pair: dict[str, Any]) -> tuple[dict, dict]:
@@ -100,31 +149,21 @@ def _clamp(x: float) -> float:
 
 def adjust(pair: dict) -> dict:
     """Bounded score adjustment from memories similar to this pair."""
-    if _runtime.backend() == "sidecar":
-        from app.engines import _sidecar
-
-        out = _sidecar.call("hmem/adjust", {"pair": pair, "query": pair_text(pair)})
-        out["delta"] = round(_clamp(float(out["delta"])), 3)
-    else:
-        mem = instance()
-        query = pair_text(pair)
-        hits = mem.query(query, where=lambda m: any(t.startswith("decision:") for t in m["tags"]))
-        raw, used, reasons = 0.0, [], []
-        for m, relevance in hits:
-            polarity = int(next((t.split(":", 1)[1] for t in m["tags"] if t.startswith("polarity:")), "0"))
-            if polarity == 0:
-                continue
-            raw += polarity * relevance * STEP
-            used.append(m["id"])
-            reason = next((t.split(":", 1)[1] for t in m["tags"] if t.startswith("reason:")), "")
-            reasons.append(f"{m['id']} {'approved' if polarity > 0 else 'rejected'}"
-                           f"{' (' + reason + ')' if reason else ''} relevance {relevance:.2f}")
-        delta = round(_clamp(raw), 3)
-        out = {"delta": delta, "memory_ids": used,
-               "reason": "; ".join(reasons) if reasons else "no similar analyst decisions in memory",
-               "raw_delta": round(raw, 4)}
-    _runtime.emit(ENGINE, "adjust", pair_text(pair)[:200],
-                  f"delta {out['delta']:+.3f} from {len(out['memory_ids'])} memories")
+    query = pair_text(pair)
+    raw, used, reasons = 0.0, [], []
+    for mem_id, tags, relevance in instance().query(query):
+        polarity = int(_tag(tags, "polarity", "0"))
+        if polarity == 0:
+            continue
+        raw += polarity * relevance * STEP
+        used.append(mem_id)
+        reason = _tag(tags, "reason")
+        reasons.append(f"{mem_id} {'approved' if polarity > 0 else 'rejected'}"
+                       f"{' (' + reason + ')' if reason else ''} relevance {relevance:.2f}")
+    out = {"delta": round(_clamp(raw), 3), "memory_ids": used,
+           "reason": "; ".join(reasons) if reasons else "no similar analyst decisions in memory",
+           "raw_delta": round(raw, 4)}
+    _runtime.emit(ENGINE, "adjust", query[:200], f"delta {out['delta']:+.3f} from {len(used)} memories")
     return out
 
 
@@ -132,31 +171,22 @@ def record_decision(alert_id: str, decision: str, reason_code: str | None, note:
     """Store an analyst decision as a memory, reinforce similar ones, write the ledger."""
     decision = decision.lower().strip()
     polarity = POLARITY.get(decision, 0)
-    text = pair_text(pair)
     # The memory content is the pattern itself, so later pairs match on MO, not on the
     # decision wording. Decision, reason and note travel in tags and provenance.
-    content = text
+    content = pair_text(pair)
     tags = [f"decision:{decision}", f"polarity:{polarity}", f"alert:{alert_id}"]
     if reason_code:
         tags.append(f"reason:{reason_code}")
-    if _runtime.backend() == "sidecar":
-        from app.engines import _sidecar
-
-        res = _sidecar.call("hmem/record", {"content": content, "tags": tags, "query": text, "polarity": polarity,
-                                                "confidence": DECISION_CONFIDENCE})
-        mem_id, reinforced = res["memory_id"], res["reinforced"]
-    else:
-        mem = instance()
-        reinforced = []
-        if polarity:
-            for m, _ in mem.query(text, where=lambda m: any(t.startswith("polarity:") for t in m["tags"])):
-                prior = int(next(t.split(":", 1)[1] for t in m["tags"] if t.startswith("polarity:")))
-                if prior:
-                    mem.feedback(m["id"], "helpful" if prior == polarity else "not_helpful")
-                    reinforced.append(m["id"])
-        rec = mem.add(content, source=f"analyst-decision:{alert_id}", tags=tags, confidence=DECISION_CONFIDENCE,
-                      provenance={"origin": "analyst_decision", "alert_id": alert_id, "decision": decision,
-                                  "reason_code": reason_code, "note": note})
-        mem_id = rec["id"]
+    mem = instance()
+    reinforced = []
+    if polarity:
+        for mem_id, prior_tags, _ in mem.query(content):
+            prior = int(_tag(prior_tags, "polarity", "0"))
+            if prior:
+                mem.feedback(mem_id, "helpful" if prior == polarity else "not_helpful")
+                reinforced.append(mem_id)
+    mem_id = mem.add(content, source=f"analyst-decision:{alert_id}", tags=tags, confidence=DECISION_CONFIDENCE,
+                     provenance={"origin": "analyst_decision", "alert_id": alert_id, "decision": decision,
+                                 "reason_code": reason_code, "note": note})
     _runtime.emit(ENGINE, "record_decision", f"{alert_id} {decision} {reason_code or ''}".strip(),
                   f"memory {mem_id}; reinforced {len(reinforced)}")

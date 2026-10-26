@@ -25,7 +25,7 @@ def test_two_agents_writing_the_same_plate_converge_on_one_entity():
     (a,) = world_model.ingest([{"type": "vehicle", "key": "TN 09 AB 1234", "attrs": {"colour": "red"}}], "Extractor")
     (b,) = world_model.ingest([{"type": "vehicle", "key": "tn09-ab-1234", "attrs": {"make": "Pulsar"}}], "Linker")
     assert a == b == "vehicle:plate:TN09AB1234"
-    vehicles = [e for e in world_model.store().entities.values() if e.type == "vehicle"]
+    vehicles = [e for e in world_model.store().entities.values() if e.type == "vehicle"]  # one store read
     assert len(vehicles) == 1
     assert vehicles[0].attrs == {"colour": "red", "make": "Pulsar"}
 

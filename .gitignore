@@ -17,6 +17,8 @@ out/
 .vercel/
 # data / runtime
 logs/*
+!logs/conformance_*.txt
+!logs/feature_*.txt
 !logs/.gitkeep
 data/out/
 data/_truth/

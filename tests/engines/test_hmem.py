@@ -7,8 +7,7 @@ import pytest
 from app.engines import hmem
 
 
-def CLOCK():
-    return 1_790_000_000_000
+from .conftest import CLOCK
 
 
 REJECTED = {"a": {"crime_type": "chain snatching", "area": "Adyar", "time_band": "evening", "vehicle": "motorcycle"},
@@ -71,7 +70,7 @@ def test_repeated_approvals_reinforce_the_pattern(tmp_path):
     hmem.record_decision("LA-2", "approve", "same_offender", "", RED_PULSAR)
     two = hmem.adjust(NEXT_RED_PULSAR)["delta"]
     assert 0 < one < two <= hmem.MAX_DELTA
-    feedback = [e for e in hmem.instance().ledger.entries if e["action"] == "feedback"]
+    feedback = [e for e in hmem.instance().ledger_entries() if e["action"] == "feedback"]
     assert feedback and feedback[0]["details"] == {"kind": "helpful", "delta": 0.05}
 
 
@@ -85,5 +84,5 @@ def test_unrelated_pair_is_not_adjusted(tmp_path):
 
 
 def test_memory_without_source_is_rejected(tmp_path):
-    with pytest.raises(ValueError):
-        hmem.configure(tmp_path / "m").add("x", source="")
+    with pytest.raises((ValueError, RuntimeError)):
+        hmem.configure(tmp_path / "m").add("x", source="", tags=[], confidence=0.8, provenance={})

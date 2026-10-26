@@ -28,15 +28,25 @@ DEFAULT_CONTEXT_BUDGET = 40
 _store = WorldStore()
 
 
+def _sidecar_call(path: str, payload: dict) -> dict:
+    from app.engines import _sidecar
+
+    return _sidecar.call(path, payload)
+
+
 def store() -> WorldStore:
-    """The in-process store (sample backend)."""
+    """The current store: in-process (sample), or a snapshot view of the TypeScript engine (sidecar)."""
+    if _runtime.backend() == "sidecar":
+        return WorldStore.from_snapshot(_sidecar_call("world_model/snapshot", {}))
     return _store
 
 
 def reset() -> None:
-    """Drop all in-process state (tests and sample runs start clean)."""
+    """Drop all state (tests and sample runs start clean)."""
     global _store
     _store = WorldStore()
+    if _runtime.backend() == "sidecar":
+        _sidecar_call("world_model/reset", {})
 
 
 def _key_of(ent: dict[str, Any]) -> str:
@@ -54,14 +64,20 @@ def _endpoint(ref: Any, source: str) -> str:
     raise ValueError(f"edge endpoint must be an entity id or a {{type, key}} dict, got {ref!r}")
 
 
+def _counts(s: WorldStore) -> tuple[int, int, int]:
+    return len(s.entities), len(s.edges), sum(len(e.provenance) for e in s.entities.values())
+
+
 def ingest(entities: list[dict], source: str) -> list[str]:
     """Upsert entities (and their edges). Idempotent; returns stable ids in input order."""
+    if not source or not str(source).strip():
+        raise ValueError("World Model: every write carries provenance. No provenance, no write.")
+    for e in entities:
+        _key_of(e)
+    before = _counts(store())
     if _runtime.backend() == "sidecar":
-        from app.engines import _sidecar
-
-        ids = _sidecar.call("world_model/ingest", {"entities": entities, "source": source})["ids"]
+        ids = _sidecar_call("world_model/ingest", {"entities": entities, "source": source})["ids"]
     else:
-        before = (len(_store.entities), len(_store.edges), len(_store.observations))
         ids = [_store.upsert(e["type"], _key_of(e), e.get("attrs") or {}, source) for e in entities]
         for eid, ent in zip(ids, entities):
             for edge in ent.get("edges") or []:
@@ -71,22 +87,16 @@ def ingest(entities: list[dict], source: str) -> list[str]:
                     _store.relate(_endpoint(edge["from"], source), edge["type"], eid, source)
                 else:
                     raise ValueError(f"edge needs 'to' or 'from': {edge!r}")
-        after = (len(_store.entities), len(_store.edges), len(_store.observations))
-    summary = f"{len(ids)} ids" if _runtime.backend() == "sidecar" else (
-        f"{len(set(ids))} entities; +{after[0] - before[0]} new entities, +{after[1] - before[1]} edges, "
-        f"+{after[2] - before[2]} observations")
-    _runtime.emit(ENGINE, "ingest", f"{len(entities)} entities from {source}", summary)
+    after = _counts(store())
+    _runtime.emit(ENGINE, "ingest", f"{len(entities)} entities from {source}",
+                  f"{len(set(ids))} entities; +{after[0] - before[0]} new entities, +{after[1] - before[1]} edges, "
+                  f"+{after[2] - before[2]} observations")
     return ids
 
 
 def context(crime_ids: list[str], budget: int = DEFAULT_CONTEXT_BUDGET) -> dict:
     """Entities, relations and provenance around the given crimes, at most `budget` entities, with reasons."""
-    if _runtime.backend() == "sidecar":
-        from app.engines import _sidecar
-
-        out = _sidecar.call("world_model/context", {"crime_ids": crime_ids, "budget": budget})
-    else:
-        out = _store.context(list(crime_ids), budget)
+    out = store().context(list(crime_ids), budget)
     _runtime.emit(
         ENGINE, "context", f"crimes {', '.join(crime_ids)[:200]}",
         f"{len(out['entities'])} entities, {len(out['relations'])} relations; missing {len(out['missing'])}",

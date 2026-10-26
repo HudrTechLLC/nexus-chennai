@@ -182,6 +182,19 @@ class WorldStore:
         self.aliases: dict[str, str] = {}
         self.merge_queue: list[dict[str, Any]] = []
 
+    @classmethod
+    def from_snapshot(cls, snap: dict[str, Any]) -> "WorldStore":
+        """Rebuild a read-only view from the sidecar's /world_model/snapshot payload."""
+        s = cls()
+        for e in snap["entities"]:
+            s.entities[e["id"]] = Entity(e["id"], e["type"], e["key"], dict(e["attrs"]), list(e["aliases"]),
+                                         [dict(p) for p in e["provenance"]])
+        for e in snap["edges"]:
+            s.edges[e["id"]] = Edge(e["id"], e["from"], e["type"], e["to"], [dict(p) for p in e["provenance"]])
+        s.aliases = dict(snap.get("aliases", {}))
+        s.merge_queue = list(snap.get("merge_queue", []))
+        return s
+
     # -- helpers
     def resolve(self, id_: str) -> str:
         seen = set()

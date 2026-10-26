@@ -1,0 +1,16 @@
+{
+  "name": "@nexus/engines-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nexus engines sidecar: runs the vendored Meterless TypeScript references (world-model, hmem, markovian) over local HTTP for services/api app.engines.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "sidecar": "tsx sidecar/server.ts",
+    "conformance": "node scripts/run-conformance.mjs",
+    "install:references": "cd world-model/reference && npm ci && cd ../../hmem/reference && npm ci && cd ../../markovian/reference && npm ci"
+  },
+  "devDependencies": {
+    "tsx": "4.20.6"
+  }
+}
