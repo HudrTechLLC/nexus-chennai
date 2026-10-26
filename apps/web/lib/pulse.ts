@@ -259,3 +259,23 @@ export function hhmm(m: number): string {
   const x = ((Math.round(m) % 1440) + 1440) % 1440;
   return `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
 }
+
+// =====================
+// ISO weeks (layers bucketed by week: 112 calls, tips)
+// =====================
+
+/** ISO-8601 week label ("2026-W43") of an instant in the city's timezone. */
+export function isoWeek(ms: number, offsetMinutes: number): string {
+  const local = new Date(ms + offsetMinutes * 60_000);
+  const d = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()));
+  const day = d.getUTCDay() || 7; // Mon=1..Sun=7
+  d.setUTCDate(d.getUTCDate() + 4 - day); // Thursday of this week decides the year
+  const year = d.getUTCFullYear();
+  const week = Math.ceil(((d.getTime() - Date.UTC(year, 0, 1)) / DAY_MS + 1) / 7);
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+/** True when an ISO week label falls inside [from, to] (labels compare as strings). */
+export function weekInRange(week: string, from: string, to: string): boolean {
+  return week >= from && week <= to;
+}
