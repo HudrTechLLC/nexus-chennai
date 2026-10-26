@@ -14,12 +14,14 @@ from .adapters.nightshift import NightshiftClient, NightshiftError
 from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient, ZetarisError
 from .config import REPO_ROOT, get_settings, load_city
+from .feeds import router as feeds_router
 from .agents import AgentError, Briefer, Sanitiser, SeriesAnalyst
 from .agents.base import crime_from_row, features_from_row
 from .graph.runner import agent_deps, run_request
 from .tracing import new_run_id
 
 app = FastAPI(title="Nexus Chennai API", version="0.1.0")
+app.include_router(feeds_router)  # GET /mock-feeds/news|social (WS1-16, nexus-2)
 
 
 class RunInput(BaseModel):
