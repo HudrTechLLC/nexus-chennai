@@ -199,3 +199,11 @@ def test_batch_survives_one_case_failure_and_candidate_read_errors(tmp_path, mon
     assert len(out["output"]["alerts"]) == 1  # the hero link still comes out
     assert any(e.startswith("CHN-XX-2026-000001") for e in out["output"]["errors"])
     assert calls["n"] >= 1
+
+
+def test_record_fixtures_is_an_env_switch_only(monkeypatch):
+    from app.graph.runner import record_fixtures
+    monkeypatch.delenv("NEXUS_RECORD_FIXTURES", raising=False)
+    assert record_fixtures() is False
+    monkeypatch.setenv("NEXUS_RECORD_FIXTURES", "1")
+    assert record_fixtures() is True
