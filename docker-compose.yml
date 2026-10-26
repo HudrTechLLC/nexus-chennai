@@ -1,4 +1,5 @@
 # Local stack. Zetaris and Nightshift run outside compose (their own installers).
+# `docker compose up` starts the API (:8000) and the web app (:3001); add `--profile worker` for the worker.
 services:
   api:
     build: { context: ., dockerfile: Dockerfile }
@@ -20,3 +21,16 @@ services:
     volumes: ["./logs:/repo/logs"]
     extra_hosts: ["host.docker.internal:host-gateway"]
     profiles: ["worker"]
+  web:
+    # Same Next.js app as the Vercel deployment (D-003). Public values are baked in at build time
+    # from the root .env; the anon key is public by design (RLS guards the data).
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_MAPTILER_KEY: ${NEXT_PUBLIC_MAPTILER_KEY:-}
+        CITY: ${CITY:-chennai}
+    env_file: [{ path: .env, required: false }]
+    ports: ["3001:3001"]
