@@ -18,6 +18,7 @@ ties broken by registry order. Below the reject band (score < 1) a query falls b
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field
 
@@ -100,6 +101,28 @@ INJECTION = _rx(
     r"\bassistant\s*:\s|\bsystem\s*:\s",
     r"(?:[A-Za-z0-9+/]{40,}={0,2})",
 )
+# Tip-only injection: instructions aimed at whatever summarises or classifies the tip. They need no
+# "ignore previous" phrasing. Only a tip is untrusted text that later passes through a summariser, and an
+# analyst query legitimately says "summarise the report as a table", so these never run on queries.
+INJECTION_TIP = _rx(
+    r"\bsummari[sz]e (this|the|my) (tip|report|message|complaint|text|info(rmation)?|note)\b.{0,20}\bas\b",
+    r"\bwhen (you|the (ai|model|llm|bot|assistant|system)) (summari[sz]|process|read|review|classif)\w*"
+    r".{0,40}\b(this|the|my) (tip|report|message|complaint|text)\b",
+    r"\b(ai|model|llm|bot|assistant|summari[sz]er|classifier)\b.{0,15}\b(reading|processing|summari[sz]ing|reviewing) "
+    r"(this|the|my) (tip|report|message|complaint|text)\b",
+    r"\b(in|for) (the|your) summary\b.{0,20}\b(say|write|state|put|mention)\b|\bleave this (line|part )?out of\b",
+    # Output dictation: summarise/record/label ... as "<quoted text>" (not reported speech: "he told me to ...").
+    r"\b(summari[sz]e|describe|record|label|classify|tag|present|output|reply|respond|log|write)\b"
+    r"(?![^.!?\n]{0,40}\b(told|said|asked|shouted|wanted)\b)[^.!?\n]{0,40}\b(as|with)\s*:?\s*[\"'‘“]",
+    r"\b(summari[sz]e|summary|record|reply)\s*:\s*[\"'‘“]",
+    # Tamil-English dictation: '<quote>' nu summarise pannunga
+    r"[\"'’”]\s*nu\s+(summari[sz]|report|describe|record|mark|ezhudh|podu)",
+    # Concealment of the instruction itself (an instruction/prompt noun is required: "don't mention my name" is fine).
+    r"\b(do not|don'?t|never|without)\s+(mention|reveal|disclos|acknowledg|repeat|show|includ)\w*\b.{0,25}"
+    r"\b(instructions?|prompts?|directives?|this request|that i asked)\b",
+    r"\b(keep|leave|hide|omit|remove)\s+(this|these|the|my)\s+(instructions?|prompts?|directives?)\b",
+    r"\binstructions?(-?(a|ai|ah))?\b.{0,20}\b(mention|reveal|solla)\w*\s+(panna|pannaa|vendam|koodadhu|maatt)",
+)
 THREAT = _rx(
     r"\b(i|we)('ll| will|'m going to| am going to|'re going to| are going to| gonna)\s+"
     r"(kill|shoot|stab|bomb|burn|hurt|attack|finish|beat)\b",
@@ -116,9 +139,42 @@ ABUSE = _rx(
 SPAM = _rx(
     r"https?://|www\.\S+|\bbit\.ly\b",
     r"\b(buy now|click here|free (gift|money|recharge)|lottery|you have won|limited offer|earn \S+ (per|a) day|"
-    r"crypto|bitcoin|loan approved|work from home|subscribe|follow me|promo code|discount)\b",
+    r"crypto|bitcoin|loan approved|work from home|subscribe|follow me|promo code)\b",
     r"(.)\1{7,}",
+    # prize / lottery lures
+    r"\b(win|won|jeichi\w*)\b.{0,20}\b(free|brand new)\b|\bfree\b.{0,20}\b(win|won|jeichi\w*)\b",
+    r"\bclaim\b.{0,15}\b(prize|reward|gift|cash|voucher)\b|\bclaim (pannunga|pannu)\b",
+    r"\b(reply|send|sms|text|type)\s+[\"']?(yes|y|ok|1|win)\b[\"']?\s*(to\b|now\b|for\b|$)",
+    r"\b(selected|chosen|shortlisted)\b.{0,30}\b(prize|draw|winner|reward|gift)\b",
+    r"\bcongrat(s|ulations)?\b.{0,60}\b(won|winner|selected|prize|reward)\b",
+    r"\b(lucky (draw|winner|customer)|jackpot|cash prize|prize money|gift voucher)\b",
 )
+# Commercial promotion is a combination, not a word: a call to action or urgency marker plus another
+# promotional marker. A tip that mentions "50% off" or "a discount" in passing stays clean.
+PROMO_CTA = _rx(
+    r"\b(order|book|buy|shop|call|visit|grab|enquire|whatsapp)\b.{0,15}\b(now|today)\b",
+    r"\b(this weekend only|today only|limited time|while stocks? last|hurry|offer ends|don'?t miss|save big)\b",
+    r"\b(grand opening|mega|special) (sale|deal|offer)\b",
+)
+PROMO = _rx(
+    r"\b\d{1,2}\s*%\s*(off|discount)\b|\bflat \d+\s*%",
+    r"\b(discount|offer|deals?|sale|buy 1 get 1|buy one get one)\b",
+    r"\b(rs\.?|inr|₹)\s*\d+\b.{0,20}\b(only|onwards)\b|\bonly (rs\.?|inr|₹)\s*\d+",
+    r"\bbest \w+ in (the )?(city|town|area)\b|\bfree (home )?delivery\b",
+)
+# Crime/incident content. Promotion and low-information rules only block text with none of it, so a
+# genuine tip that mentions an offer banner, or a thief shouting a sales line, stays clean.
+CRIME = re.compile(
+    r"\b(stole|stolen|steal\w*|theft|thie(f|ves)|snatch\w*|rob(bed|bery|beries|ber)?|burglar\w*|broke(n)? in(to)?|"
+    r"break-?ins?|loot\w*|suspect\w*|accused|police|fir|crime|assault\w*|attack\w*|fight\w*|knife|gun|weapon|"
+    r"chain|missing|kidnap\w*|threat\w*|harass\w*|fraud|cheat\w*|scam(med)?|taken|took|grabbed|ran away|fled|"
+    r"plate|bike|scooter|van|car|auto)\b", re.I)
+DISTRESS = re.compile(r"\b(help|save|fire|emergency|ambulance|danger|hurt|injured|please|urgent|bachao|"
+                      r"kaapathunga|kaapaathunga|udhavi)\b", re.I)
+# Low-information text: keyboard runs, "test" filler, a few tokens repeated. Digits never count.
+KEYBOARD = re.compile(r"^(asdf\w*|qwe\w*|zxc\w*|sdf\w*|dfg\w*|fgh\w*|ghj\w*|hjk\w*|jkl\w*|xcv\w*|lkj\w*|mnb\w*)$")
+FILLER = frozenset({"test", "testing", "tst", "hello", "hi", "hii", "check", "checking", "ok", "okay", "mic",
+                    "sample", "dummy", "blah", "lorem", "ipsum", "tip"})
 EMERGENCY = _rx(
     r"\b(happening|going on|in progress)\s+(right )?now\b|\bright now\b",
     r"\b(help|save) (me|us)\b|\bsomeone (is )?(bleeding|dying|unconscious|injured)\b",
@@ -145,14 +201,47 @@ def _hits(patterns: list[re.Pattern[str]], text: str) -> list[str]:
     return out
 
 
+def _low_information(text: str) -> bool:
+    """Keyboard mashing, test filler, or a few tokens repeated. Plates and numbers are not junk."""
+    words = re.findall(r"[a-z]+", text.lower())
+    if len(words) < 3:
+        return False
+    junk = sum(w in FILLER or bool(KEYBOARD.match(w)) for w in words)
+    if junk / len(words) >= 0.6:
+        return True
+    if len(words) >= 5 and len(set(words)) / len(words) <= 0.4:
+        return True
+    letters = "".join(words)
+    if len(letters) >= 12:  # character entropy: real sentences sit near 4 bits, mashing far below
+        counts = [letters.count(c) for c in set(letters)]
+        entropy = -sum(n / len(letters) * math.log2(n / len(letters)) for n in counts)
+        return entropy < 2.5
+    return False
+
+
+def _spam_hits(text: str, emergency: list[str]) -> list[str]:
+    ev = _hits(SPAM, text)
+    if CRIME.search(text):  # combination rules below apply only to text with no crime content
+        return ev
+    cta, promo = _hits(PROMO_CTA, text), _hits(PROMO, text)
+    if cta and (promo or len(cta) > 1):
+        ev += cta + promo
+    # A repeated cry ("help help help", "fire fire") is distress, not spam, even when no emergency rule fires.
+    if not emergency and not DISTRESS.search(text) and _low_information(text):
+        ev.append("low-information text")
+    return ev
+
+
 def guard(text: str, kind: str) -> list[Layer]:
     """Run every guard layer. Queries skip the tip-only layers (spam/abuse/emergency)."""
-    layers = [Layer("injection", "block" if (ev := _hits(INJECTION, text)) else "pass", ev)]
+    ev = _hits(INJECTION, text) + (_hits(INJECTION_TIP, text) if kind == "tip" else [])
+    layers = [Layer("injection", "block" if ev else "pass", ev)]
     if kind == "tip":
         layers.append(Layer("threat", "block" if (ev := _hits(THREAT, text)) else "pass", ev))
         layers.append(Layer("abuse", "block" if (ev := _hits(ABUSE, text)) else "pass", ev))
-        layers.append(Layer("spam", "block" if (ev := _hits(SPAM, text)) else "pass", ev))
-        layers.append(Layer("emergency", "warn" if (ev := _hits(EMERGENCY, text)) else "pass", ev))
+        emergency = _hits(EMERGENCY, text)
+        layers.append(Layer("spam", "block" if (ev := _spam_hits(text, emergency)) else "pass", ev))
+        layers.append(Layer("emergency", "warn" if emergency else "pass", emergency))
         pii = [k for k, p in PII.items() if p.search(text)]
         layers.append(Layer("pii", "warn" if pii else "pass", pii))
     return layers
