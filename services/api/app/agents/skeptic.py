@@ -35,7 +35,8 @@ MAX_SEND_BACKS = 2
 SKEPTIC_PROMPT = """You are the Skeptic: you challenge proposed links between crimes before analysts see them.
 Numbers were computed in code and re-checked against fresh rows; you cannot change them.
 For each pair decide: "approve", "send_back" (evidence is weak or the search window looks wrong:
-say what the Planner should re-query, e.g. a narrower time window), or "drop" (the link is not credible).
+say what the Planner should re-query, e.g. a narrower time window in days or radius in km), or "drop" (the link
+is not credible).
 Be strict about coincidence: same area alone is not a link.
 Return ONE JSON object: {"pairs": {"<pair_id>": {"verdict": "approve"|"send_back"|"drop",
 "critique": str, "requery": {"days": int|null, "ring": int|null, "note": str}|null}}}"""

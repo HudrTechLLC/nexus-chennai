@@ -76,7 +76,7 @@ def test_send_back_loop_respects_caps(tmp_path):
     assert len(sends) == MAX_SEND_BACKS and all(e["target_agent"] == "Planner" for e in sends)
     # The Skeptic's narrower window reached the Planner's q_candidates call.
     cand_calls = [c[2] for c in deps.zetaris.calls if c[0] == "q_candidates"]
-    assert cand_calls[-1]["days"] == 10 and cand_calls[-1]["ring"] == 0
+    assert cand_calls[-1]["days"] == 10 and cand_calls[-1]["ring"] == 1  # Skeptic asked 0 km: clamped to 1
     assert state["status"] == "success" and len(state["alerts"]) == 1  # cap reached -> stands
 
 
@@ -207,3 +207,16 @@ def test_record_fixtures_is_an_env_switch_only(monkeypatch):
     assert record_fixtures() is False
     monkeypatch.setenv("NEXUS_RECORD_FIXTURES", "1")
     assert record_fixtures() is True
+
+
+def test_search_runs_q_search_with_every_parameter(tmp_path, monkeypatch):
+    """Chief's bug: 'red pulsar chain snatching Adyar' gave 0 results. search_node passed route/q but q_search
+    needs every parameter (pattern, category, station_id, status, since, until), so render() raised."""
+    s = Settings(_env_file=None, sample_mode=True, zetaris_api_key="")
+    monkeypatch.setattr(Settings, "logs_dir", property(lambda self: tmp_path / "logs"))
+    out = run_request("search", {"q": "red pulsar chain snatching Adyar"}, {"persist": False}, s,
+                      nightshift=FakeNightshift(responder()))
+    res = out["output"]["search"]
+    assert out["status"] == "success" and res["results"], out["output"]
+    assert "CHN-AD-2026-001182" in {r["crime_id"] for r in res["results"]}
+    assert all("score" in r for r in res["results"]) and res["query_id"]

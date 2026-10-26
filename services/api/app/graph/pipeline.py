@@ -36,6 +36,9 @@ from ..agents import (
     TipGuard,
 )
 from ..agents.base import crime_from_row, features_from_row, short
+from ..adapters.zetaris_queries_n2 import search_params
+from ..agents.planner import CLAMPS as PLAN_CLAMPS
+from ..engines.similarity import rank_rows
 
 MAX_PLAN_ROUNDS = 3
 MAX_SEND_BACKS = 2
@@ -143,13 +146,14 @@ class AgentGraph:
                     "status": "success"}
         filters = dict(state["payload"].get("filters") or {})
         try:
-            rows, qid = self.deps.query("q_search", agent="Search tools", route=cls["route"], q=q,
-                                        **{k: v for k, v in filters.items() if isinstance(v, (str, int, float))})
+            # q_search needs every parameter (nexus-2 contract, #84): search_params fills them ("" = no filter).
+            rows, qid = self.deps.query("q_search", agent="Search tools", **search_params(q, filters))
+            results = rank_rows(q, rows)  # adds "score", best first; filters-only keeps order, score None
         except Exception as exc:
             return {"search": {"route": cls["route"], "intent": cls.get("intent"), "results": []},
                     "status": "partial", "errors": [str(exc)]}
-        return {"search": {"route": cls["route"], "intent": cls.get("intent"), "results": rows, "query_id": qid},
-                "status": "success"}
+        return {"search": {"route": cls["route"], "intent": cls.get("intent"), "results": results,
+                           "query_id": qid}, "status": "success"}
 
     # ----- case path ----------------------------------------------------------------
 
@@ -233,7 +237,8 @@ class AgentGraph:
                 if step.name == "q_candidates":
                     for k in ("days", "ring"):
                         if rq.get(k) is not None:
-                            step.params[k] = int(rq[k])
+                            lo, hi = PLAN_CLAMPS[k]
+                            step.params[k] = max(lo, min(hi, int(rq[k])))
             support = self.planner.execute(plan)
             cands = self._fetch_candidates(support.get("q_candidates", {}).get("rows", []), case["crime_id"])
         except DeadlineExceeded:
