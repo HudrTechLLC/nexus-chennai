@@ -63,6 +63,21 @@ describe("mappingIssues (mirrors onboarding_decide)", () => {
   });
 });
 
+describe("mappingIssues: combined lat/long column", () => {
+  it("counts a lat row with latlong_lat as lon too", () => {
+    const rows = [M("a", "fir_no"), M("b", "occurred_from"), M("c", "category"), M("Lat/Long", "lat", { transform: "latlong_lat" })];
+    expect(mappingIssues(rows, FIELDS)).toEqual({ missing: [], duplicated: [] });
+  });
+  it("still flags lon twice if a separate lon column is also mapped", () => {
+    const rows = [M("a", "fir_no"), M("b", "occurred_from"), M("c", "category"), M("Lat/Long", "lat", { transform: "latlong_lat" }), M("Lon", "lon")];
+    expect(mappingIssues(rows, FIELDS).duplicated).toEqual(["lon"]);
+  });
+  it("needs lon when lat is a plain column", () => {
+    const rows = [M("a", "fir_no"), M("b", "occurred_from"), M("c", "category"), M("Lat", "lat")];
+    expect(mappingIssues(rows, FIELDS).missing).toEqual(["lon"]);
+  });
+});
+
 describe("mappingEdits", () => {
   it("sends only the rows that changed (the RPC marks every row it is sent as edited)", () => {
     const saved = [M("a", "fir_no"), M("b", "lat"), M("c", null)];

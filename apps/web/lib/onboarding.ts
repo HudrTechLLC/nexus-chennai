@@ -147,10 +147,18 @@ export function uploadPath(uuid: string): string {
 
 export type MappingIssues = { missing: string[]; duplicated: string[] };
 
-/** The same two checks onboarding_decide makes: every required field mapped exactly once. */
-export function mappingIssues(rows: Pick<OnboardingMapping, "unified_field">[], fields: OnboardingField[]): MappingIssues {
+/**
+ * The same two checks onboarding_decide makes: every required field mapped exactly once. A combined "lat,lon"
+ * column maps to lat with transform latlong_lat and the view derives lon from it, so that row also counts as lon.
+ */
+export function mappingIssues(rows: Pick<OnboardingMapping, "unified_field" | "transform">[], fields: OnboardingField[]): MappingIssues {
   const counts = new Map<string, number>();
-  for (const r of rows) if (r.unified_field) counts.set(r.unified_field, (counts.get(r.unified_field) ?? 0) + 1);
+  const add = (f: string) => counts.set(f, (counts.get(f) ?? 0) + 1);
+  for (const r of rows) {
+    if (!r.unified_field) continue;
+    add(r.unified_field);
+    if (r.unified_field === "lat" && r.transform === "latlong_lat") add("lon");
+  }
   const bySort = [...fields].sort((a, b) => a.sort - b.sort);
   return {
     missing: bySort.filter((f) => f.required && !counts.has(f.field)).map((f) => f.field),
