@@ -59,7 +59,12 @@ export type TipInput = {
   code: string | null;
   passphrase: string | null;
   appeal: string | null;
+  /** Public crime-card id (WS4-12 ?about=, 0007_11); optional so older callers stay valid. */
+  about?: string | null;
 };
+
+/** Public crime-card id: "PC-" + 12 hex digits (0007_11 crime_public_id). */
+export const PUBLIC_CRIME_ID_RE = /^PC-[0-9A-F]{12}$/;
 
 export function validateTip(t: TipInput): string | null {
   if (!(TIP_CATEGORIES as readonly string[]).includes(t.category)) return "Choose what you saw.";
@@ -68,6 +73,7 @@ export function validateTip(t: TipInput): string | null {
   if (t.text.length > 4000) return "Keep it under 4000 characters.";
   if (t.cell !== null && !/^88[0-9a-f]{13}$/.test(t.cell)) return "Pick the area again.";
   if (t.appeal !== null && !/^[A-Za-z0-9-]{1,40}$/.test(t.appeal)) return "Unknown appeal.";
+  if (t.about != null && !PUBLIC_CRIME_ID_RE.test(t.about)) return "Unknown crime.";
   if (t.followUp) {
     if (!t.code || !/^[A-HJ-NP-Z2-9]{8}$/.test(t.code)) return "Tip code missing.";
     if (!t.passphrase || t.passphrase.length < 8) return "Choose a passphrase of at least 8 characters.";

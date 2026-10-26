@@ -1,17 +1,19 @@
 import { TipForm } from "@/components/public/TipForm";
-import { getAppeal } from "@/lib/publicData";
-import { appealSubject } from "@/lib/tipPrefill";
+import { getAppeal, getCrimeCard } from "@/lib/publicData";
+import { appealSubject, crimeSubject } from "@/lib/tipPrefill";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Share information anonymously · Nexus Chennai" };
 
 /**
- * ?appeal=<public_incident_id> prefills the form from the published appeal (WS4-12); an unknown or
- * unpublished id simply gives an empty form. ?kind=cctv picks "I have CCTV" over the derived category.
+ * ?appeal=<public_incident_id> or ?about=<public crime-card id> prefills the form from public fields
+ * (WS4-12); an unknown, unpublished or no-longer-public id simply gives an empty form. If both are given
+ * the appeal wins. ?kind=cctv picks "I have CCTV" over the derived category.
  */
-export default async function NewTip({ searchParams }: { searchParams: { appeal?: string; kind?: string } }) {
+export default async function NewTip({ searchParams }: { searchParams: { appeal?: string; about?: string; kind?: string } }) {
   const appeal = searchParams.appeal ? await getAppeal(searchParams.appeal) : null;
-  const subject = appeal ? appealSubject(appeal) : null;
+  const card = !appeal && searchParams.about ? await getCrimeCard(searchParams.about) : null;
+  const subject = appeal ? appealSubject(appeal) : card ? crimeSubject(card) : null;
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold">Share information anonymously</h1>

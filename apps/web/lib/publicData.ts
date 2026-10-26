@@ -2,6 +2,8 @@ import "server-only";
 import { publicClient } from "@/lib/publicApi";
 import type { AppealImage } from "@/lib/appealImages";
 import { isPublicId, type CrimeCard, type HexCrimes } from "@/lib/publicCards";
+import { PUBLIC_CRIME_ID_RE } from "@/lib/tip";
+import type { CrimeCardFields } from "@/lib/tipPrefill";
 
 /** A published appeal as the public sees it (spec D3.13; 0004_03 public_appeals). */
 export type Appeal = {
@@ -27,6 +29,20 @@ export async function getAppeal(id: string): Promise<Appeal | null> {
   try {
     const { data } = await publicClient().rpc("public_appeal", { p_id: id });
     return (data as Appeal | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * One public crime card for the /tip/new ?about= prefill (0007_11 public_crime). Null for a malformed or
+ * unknown id, a crime that is not public, or any error (the form then simply starts empty).
+ */
+export async function getCrimeCard(publicId: string): Promise<CrimeCardFields | null> {
+  if (!PUBLIC_CRIME_ID_RE.test(publicId)) return null;
+  try {
+    const { data, error } = await publicClient().rpc("public_crime", { p_public_id: publicId });
+    return error ? null : ((data as CrimeCardFields | null) ?? null);
   } catch {
     return null;
   }
