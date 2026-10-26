@@ -128,10 +128,50 @@ WHERE list_contains(string_split(:ids, ','), crime_id)
 ORDER BY crime_id
 """.strip()
 
+CANDIDATES_COLUMNS = ("crime_id", "station_id", "category", "sub_type", "occurred_from", "lat", "lon", "h3_r9",
+                      "geohash7", "days_apart", "km_apart", "same_station")
+
+
+def _candidates_sample() -> str:
+    """Same category, |calendar days| <= :days (UTC dates, as Spark datediff in a UTC session), haversine
+    km <= :ring (R = 6371) after a bounding-box prefilter; ordered by km_apart, crime_id. occurred_from is
+    returned as an ISO string in city time (timezone from the city pack, D-004)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from ..config import get_settings, load_city
+
+    tz = load_city(get_settings().city)["timezone"]
+    off = datetime(2026, 1, 1, tzinfo=ZoneInfo(tz)).strftime("%z")
+    offset = f"{off[:3]}:{off[3:]}"  # "+05:30" (render() only binds ":<letter>...", so this is safe)
+    utc_day = "CAST(CAST({x} AS TIMESTAMPTZ) AT TIME ZONE 'UTC' AS DATE)"
+    return f"""
+WITH c AS (SELECT * FROM 'sb/crimes.parquet'),
+a AS (SELECT * FROM c WHERE crime_id = :crime_id),
+p AS (
+  SELECT b.*,
+         date_diff('day', {utc_day.format(x='a.occurred_from')}, {utc_day.format(x='b.occurred_from')}) AS signed_days,
+         2 * 6371 * asin(sqrt(pow(sin(radians(b.lat - a.lat) / 2), 2)
+             + cos(radians(a.lat)) * cos(radians(b.lat)) * pow(sin(radians(b.lon - a.lon) / 2), 2))) AS km,
+         b.station_id = a.station_id AS same_st
+  FROM a JOIN c b ON b.category = a.category AND b.crime_id <> a.crime_id
+  WHERE abs(b.lat - a.lat) <= :ring / 111.0
+    AND abs(b.lon - a.lon) <= :ring / (111.0 * cos(radians(a.lat))))
+SELECT crime_id, station_id, category, sub_type,
+       strftime(CAST(occurred_from AS TIMESTAMPTZ) AT TIME ZONE '{tz}', '%Y-%m-%dT%H:%M:%S')
+         || '{offset}' AS occurred_from,
+       lat, lon, h3_r9, geohash7, CAST(abs(signed_days) AS INTEGER) AS days_apart, round(km, 3) AS km_apart,
+       same_st AS same_station
+FROM p WHERE abs(signed_days) <= :days AND km <= :ring
+ORDER BY km_apart, crime_id
+""".strip()
+
+
 # name -> (DuckDB sample SQL, output columns)
 TWINS: dict[str, tuple[str, tuple[str, ...]]] = {
     "q_case": (_CASE_SAMPLE, CASE_COLUMNS),
     "q_features": (_FEATURES_SAMPLE, FEATURES_COLUMNS),
+    "q_candidates": (_candidates_sample(), CANDIDATES_COLUMNS),
 }
 
 

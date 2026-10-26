@@ -114,3 +114,43 @@ def test_twins_on_the_generated_city(tmp_path):
                       "WHERE plate_pattern IS NOT NULL LIMIT 1").fetchone()[0]
     (row,) = c.named("q_case", agent="Planner", crime_id=cid).dicts()
     assert row["crime_id"] == cid and json.loads(row["vehicles"]) and row["evidence"] == "[]"
+
+
+CAND = """SELECT * FROM (VALUES
+ ('A', 'PS-1', 'robbery', NULL, '2026-10-14T19:40:00+05:30', 13.0000, 80.2500, 'h', 'g'),
+ ('B', 'PS-1', 'robbery', NULL, '2026-09-20T10:00:00+05:30', 13.0010, 80.2500, 'h', 'g'),  -- 0.111 km, 24 d
+ ('C', 'PS-2', 'robbery', NULL, '2026-10-15T01:00:00+05:30', 13.0100, 80.2500, 'h', 'g'),  -- 1.112 km, 1 UTC day
+ ('D', 'PS-2', 'robbery', NULL, '2026-08-01T10:00:00+05:30', 13.0010, 80.2500, 'h', 'g'),  -- 74 d: too old
+ ('E', 'PS-2', 'theft',   NULL, '2026-10-14T19:00:00+05:30', 13.0010, 80.2500, 'h', 'g'),  -- other category
+ ('F', 'PS-3', 'robbery', NULL, '2026-10-10T10:00:00+05:30', 13.1000, 80.2500, 'h', 'g')   -- 11.1 km: too far
+) t(crime_id, station_id, category, sub_type, occurred_from, lat, lon, h3_r9, geohash7)"""
+
+
+def test_q_candidates_filters_orders_and_formats(tmp_path):
+    d = tmp_path / "sample"
+    (d / "sb").mkdir(parents=True)
+    duckdb.connect().execute(f"COPY ({CAND}) TO '{(d / 'sb' / 'crimes.parquet').as_posix()}' (FORMAT PARQUET)")
+    rows = _client(d, tmp_path).named("q_candidates", agent="Linker", crime_id="A", days=45, ring=6).dicts()
+    assert [r["crime_id"] for r in rows] == ["B", "C"]
+    b, c = rows
+    assert b["km_apart"] == 0.111 and b["days_apart"] == 24 and b["same_station"] is True
+    assert c["km_apart"] == 1.112 and c["same_station"] is False
+    # A is 14:10 UTC on the 14th, C is 19:30 UTC on the 14th: same UTC date, so 0 whole days (Spark datediff).
+    assert c["days_apart"] == 0
+    assert b["occurred_from"] == "2026-09-20T10:00:00+05:30"   # ISO string in city time
+    assert _client(d, tmp_path).named("q_candidates", agent="Linker", crime_id="A", days=45, ring=0.5).dicts()[0][
+        "crime_id"] == "B"
+
+
+@pytest.mark.skipif(not (GENERATED / "supabase" / "crimes.jsonl").exists(), reason="nexus-1 generated data not local")
+def test_q_candidates_hero_on_the_generated_city(tmp_path):
+    d = tmp_path / "sample"
+    (d / "sb").mkdir(parents=True)
+    src = (GENERATED / "supabase" / "crimes.jsonl").as_posix()
+    duckdb.connect().execute(f"COPY (SELECT * FROM read_json_auto('{src}')) TO "
+                             f"'{(d / 'sb' / 'crimes.parquet').as_posix()}' (FORMAT PARQUET)")
+    rows = _client(d, tmp_path).named("q_candidates", agent="Linker", crime_id="CHN-AD-2026-001182",
+                                      days=45, ring=6, limit=5000).dicts()
+    first = rows[0]
+    assert (first["crime_id"], first["km_apart"], first["days_apart"]) == ("CHN-AD-2026-001078", 0.162, 24)
+    assert all(r["km_apart"] <= 6 and r["days_apart"] <= 45 for r in rows)
