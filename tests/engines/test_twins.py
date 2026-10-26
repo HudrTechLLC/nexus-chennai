@@ -155,3 +155,22 @@ def test_q_candidates_hero_on_the_generated_city(tmp_path):
     first = rows[0]
     assert (first["crime_id"], first["km_apart"], first["days_apart"]) == ("CHN-AD-2026-001078", 0.162, 24)
     assert all(r["km_apart"] <= 6 and r["days_apart"] <= 45 for r in rows)
+
+
+def test_city_time_needs_no_python_tzdata(monkeypatch):
+    """Importing the queries must not depend on the tzdata package (Windows has no system zoneinfo)."""
+    import builtins
+
+    from app.adapters import zetaris_queries_n2 as n2
+
+    real_import = builtins.__import__
+
+    def no_zoneinfo(name, *a, **k):
+        if name in ("zoneinfo", "tzdata"):
+            raise ModuleNotFoundError(name)
+        return real_import(name, *a, **k)
+
+    n2.city_time.cache_clear()
+    monkeypatch.setattr(builtins, "__import__", no_zoneinfo)
+    assert n2.city_time() == ("Asia/Kolkata", "+05:30")
+    n2.city_time.cache_clear()
