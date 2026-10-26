@@ -30,12 +30,12 @@ The plan meets every hard requirement. No spec change is needed. There are **fiv
 | ≥ 1 Meterless Engine in a working feature, with a passing test | All four engines. World Model, H-MEM and Markovian pass the official conformance suites (8/8, 13/13, 8/8; PR #19). Scout Intent: 120 fixtures (WS2-08) | ✅ / 🟡 |
 | Nightshift is the primary AI provider | Every model call goes through `NightshiftClient` with pinned lanes (R2, D-017) | ✅ |
 | Demo video 1–4 min, slide deck, public repo + README, sponsor-tech text | WS5-03…07, WS5-09 | ⏳ |
-| Pre-existing work declared | The repo started 26 Oct, inside the build window. Declare: Meterless engines vendored from upstream (Apache-2.0), and the spec drafted before the build (see below) | ⏳ WS5-09 |
+| Pre-existing work declared | The repo started 26 Oct, inside the build window. Declare: Meterless engines vendored from upstream (Apache-2.0). The spec was written inside the window (23–26 Oct), so it is not pre-existing | ⏳ WS5-09 |
 | One primary track | Track 1, Solving Fragmented Intelligence | ⏳ set on HackOS |
 
 **Declarations for the submission form (draft):**
 1. Meterless reference engines and conformance suites, vendored unmodified from github.com/Meterless/Meterless @ `1742dec5` (Apache-2.0), in `engines-ts/`.
-2. The product spec (the Nexus Chennai spec artifact). Confirm its date with the team. If it predates 22 Oct 00:00 UTC, declare it.
+2. ~~The product spec~~ **Not pre-existing.** The team confirmed the spec was first written on 23 Oct and completed on 26 Oct, both inside the build window, so it needs no declaration.
 3. Standard open-source libraries (FastAPI, LangGraph, Next.js and others). They're listed in the README.
 4. No real crime data. All data is synthetic, generated during the build window and labelled `synthetic: true`.
 
