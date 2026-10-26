@@ -52,6 +52,13 @@ def summarise(alerts: list[dict[str, Any]], struck_pairs: int, dropped: int, ext
     return s + (f"; {extra}" if extra else "")
 
 
+class CaseNotFound(KeyError):
+    """The crime_id(s) of a case run are not in the system (main.py maps this to HTTP 404)."""
+
+    def __str__(self) -> str:
+        return f"crime_id not found: {self.args[0]}"
+
+
 RECORD_FLAG = "NEXUS_RECORD_FIXTURES"
 
 
@@ -212,6 +219,7 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
         struck = dropped = 0
         errors: list[str] = []
         statuses = []
+        not_found: list[str] = []
         case_dates: list[str] = []
         for cid in ids:
             try:
@@ -227,6 +235,11 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
                 errors.append(f"{cid}: {type(exc).__name__}: {str(exc)[:200]}")
                 statuses.append("failed")
                 continue
+            if state.get("status") == "not_found":
+                if kind == "case":
+                    raise CaseNotFound(cid)
+                not_found.append(cid)  # batch: listed, never counted as processed
+                continue
             if (state.get("case") or {}).get("occurred_from"):
                 case_dates.append(str(state["case"]["occurred_from"])[:10])
             a, s, d = _case_output(state)
@@ -237,6 +250,11 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
             statuses.append(state.get("status"))
             if state.get("status") == "deadline":
                 break
+        if not_found and len(not_found) == len(ids):
+            raise CaseNotFound(", ".join(not_found))
+        if not_found:
+            errors.append(f"not found: {', '.join(not_found)}")
+        processed = sum(1 for st in statuses if st != "failed")
         status = "success" if all(s == "success" for s in statuses) and len(statuses) == len(ids) else (
             "deadline" if "deadline" in statuses else "partial")
         hotspots, herr = _hotspots(graph, case_dates, set(ids), options)
@@ -244,7 +262,7 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
         series = detect_series(alerts)  # 3+ connected cases among this run's links (LNK-05)
         errors += _save_series(graph, series)
         return ({"alerts": alerts, "series": series, "hotspots": hotspots, "errors": errors,
-                 "summary": summarise(alerts, struck, dropped, f"{len(statuses)}/{len(ids)} cases processed")},
+                 "summary": summarise(alerts, struck, dropped, f"{processed}/{len(ids)} cases processed")},
                 status)
     if kind == "tip":
         state = graph.run("tip", payload, options)

@@ -266,7 +266,13 @@ def main() -> None:
     since = _now() if args.new_cases_since == "now" else args.new_cases_since
     w = Worker(s, sb, new_cases_since=since)
     while True:
-        print(w.run_once(), flush=True)
+        try:
+            print(w.run_once(), flush=True)
+        except Exception as exc:  # a network blip (DNS, TLS) must not stop the queue; the next pass retries
+            if args.once:
+                raise
+            w.tracer.emit("Worker", "pass_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
+            print(f"pass failed: {type(exc).__name__}: {str(exc)[:200]}", flush=True)
         if args.once:
             return
         time.sleep(args.interval)
