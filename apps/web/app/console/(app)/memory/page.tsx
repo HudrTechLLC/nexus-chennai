@@ -174,7 +174,10 @@ export default async function MemoryPage({ searchParams }: { searchParams: { led
           </nav>
         </div>
         {ledger.rows.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">No ledger entries{filter === "decisions" || filter === "all" ? "" : ` of type “${actionLabel(filter)}”`} yet.</p>
+          <p className="mt-3 text-sm text-muted">
+            No ledger entries{filter === "decisions" || filter === "all" ? "" : ` of type “${actionLabel(filter)}”`} yet. Every memory the engine
+            creates, retrieves or reinforces writes one line here, and lines are never edited or deleted.
+          </p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">

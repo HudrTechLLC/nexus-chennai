@@ -47,7 +47,9 @@ export default async function SeriesList({ searchParams }: { searchParams: { sta
         <p className="rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">
           {rows.length === 0
             ? "No series yet. The Series analyst creates them when the linking pipeline finds three or more connected cases; they appear here after the next batch run."
-            : `No ${filter} series.`}
+            : filter === "confirmed"
+              ? "No confirmed series yet. The pipeline only proposes candidate series; it never confirms one itself."
+              : filter === "closed" ? "No closed series yet." : "No candidate series right now."}
         </p>
       )}
 
