@@ -1,11 +1,11 @@
 # Scout Intent eval (Nexus implementation of the Meterless Scout spec)
-run (UTC): 2026-10-26T06:27:15+00:00
+run (UTC): 2026-10-26T09:28:24+00:00
 
-## E4 set: 60 queries + 60 tips (rules tuned on this set)
-fixtures:               120
+## E4 set+: 60 queries + 87 tips (rules tuned on this set)
+fixtures:               147
 route accuracy:         1.000  (gate >= 0.9)
 intent accuracy:        1.000
-injections quarantined: 18/18  (gate: all)
+injections quarantined: 23/23  (gate: all)
 injection precision:    1.000
 emergencies -> urgent:  8/8
 false quarantines:      0 []

@@ -3,7 +3,8 @@
     python -m app.engines.scout_intent.eval        # prints the report, writes logs/feature_scout_intent.txt
 
 Fixture sets (tests/engines/fixtures/scout_intent/, all synthetic):
-- queries.jsonl (60) and tips.jsonl (60): the E4 set of 120; the rules were tuned on it.
+- queries.jsonl (60) and tips.jsonl (87): the E4 set of 120 (t-001..t-060) plus live-miss shapes and
+  hard negatives (t-061..t-087) added after the live screen; the rules were tuned on all of it.
 - holdout.jsonl (40): written after tuning and never tuned on; reported separately.
 
 Metrics: route accuracy (gate >= 0.9 on the 120), intent accuracy, injection recall
@@ -63,14 +64,15 @@ def evaluate(rows: list[dict]) -> dict:
 
 
 def report() -> tuple[str, dict]:
-    main = evaluate(load("queries") + load("tips"))
+    queries, tips = load("queries"), load("tips")
+    main = evaluate(queries + tips)
     hold = evaluate(load("holdout"))
     lines = [
         "# Scout Intent eval (Nexus implementation of the Meterless Scout spec)",
         f"run (UTC): {datetime.now(timezone.utc).isoformat(timespec='seconds')}",
         "",
     ]
-    for title, m in (("E4 set: 60 queries + 60 tips (rules tuned on this set)", main),
+    for title, m in ((f"E4 set+: {len(queries)} queries + {len(tips)} tips (rules tuned on this set)", main),
                      ("Held-out set: 40 (written after tuning, never tuned on)", hold)):
         lines += [
             f"## {title}",
