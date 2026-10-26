@@ -11,6 +11,10 @@ on:
       - requirements.txt
       - services/api/requirements*.txt
       - run.py
+      - input_examples/**
+      - output_examples/**
+      - data/sample/**
+      - scripts/judge_compare.py
       - .github/workflows/docker.yml
 
 jobs:
@@ -45,3 +49,44 @@ jobs:
       - name: logs
         if: always()
         run: docker logs nexus 2>&1 | tail -40 || true
+
+  # WS5-12 / WS5-08 §3b: the judge path with NO network at all. With --network none Docker ignores -p,
+  # so the examples are copied in and posted from inside the container. Outputs must match
+  # output_examples on the stable fields (scripts/judge_compare.py); execution_time_seconds may differ.
+  judge-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build (from the repo root, as judges do)
+        run: docker build -t oah-submission .
+      - name: "3.8 start with --network none, SAMPLE_MODE=true, empty env"
+        run: |
+          docker run -d --name nexus-off --network none -e SAMPLE_MODE=true oah-submission
+          mode=$(docker inspect -f '{{.HostConfig.NetworkMode}}' nexus-off)
+          echo "network mode: $mode"; [ "$mode" = none ]
+      - name: "3.9 copy the examples in"
+        run: for n in 1 2 3; do docker cp input_examples/example_$n.json nexus-off:/tmp/ex$n.json; done
+      - name: "3.10 wait for the API, then POST each example from inside"
+        run: |
+          for i in $(seq 1 30); do
+            docker exec nexus-off python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health')" 2>/dev/null && break
+            sleep 2
+          done
+          mkdir -p got
+          for n in 1 2 3; do
+            docker exec nexus-off python -c "import json,urllib.request as u; r=u.urlopen(u.Request('http://127.0.0.1:8000/run', data=open('/tmp/ex$n.json','rb').read(), headers={'Content-Type':'application/json'}), timeout=600); b=r.read(); open('/tmp/got_$n.json','wb').write(b); d=json.loads(b); print($n, r.status, d['status'], d['output']['summary'][:100])"
+            docker cp nexus-off:/tmp/got_$n.json got/got_$n.json
+          done
+      - name: compare with output_examples (stable fields)
+        run: python3 scripts/judge_compare.py . got
+      - name: "3.11 no attempt to reach the network"
+        run: |
+          n=$(docker logs nexus-off 2>&1 | grep -ciE 'connection refused|name resolution|getaddrinfo|timed out' || true)
+          echo "network-attempt lines: $n"; [ "$n" = 0 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: judge-offline-outputs, path: got/ }
+      - name: logs
+        if: always()
+        run: docker logs nexus-off 2>&1 | tail -40 || true
