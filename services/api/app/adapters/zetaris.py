@@ -242,6 +242,12 @@ class ZetarisClient:
             self._trace(agent, name, query_id, len(rows), ms, "error", msg)
             raise ZetarisError(msg)
         self._trace(agent, name, query_id, len(rows), ms, "ok", source)
+        if limit and len(rows) >= limit and self.tracer is not None:
+            # D-031: Zetaris pushes the REST limit into the JDBC scan before filters it cannot push
+            # down, so a full page may be a truncated scan rather than a complete answer. Never silent.
+            self.tracer.emit(agent, "zetaris_result_truncated", input_summary=name,
+                             output_summary=f"rows={len(rows)} limit={limit} via={source}",
+                             zetaris_query_ids=[query_id], status="error")
         return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source, columns=q.columns)
 
     def _trace(self, agent, name, query_id, rows, ms, status, note) -> None:

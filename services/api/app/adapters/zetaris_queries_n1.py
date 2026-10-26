@@ -88,7 +88,7 @@ def _q_case(tz: str, off: str) -> str:
 Q_FEATURES = (
     "SELECT crime_id, extractor_version, model, receipt_id, mo, visual_tags, entities, confidence, "
     "reviewed_by_officer FROM sb.crime_features_v "
-    "WHERE array_contains(split(:ids, ','), crime_id)"
+    "WHERE array_contains(split(:ids, ','), crime_id) ORDER BY crime_id"  # ORDER BY: D-031, see zetaris.py
 )
 
 
