@@ -19,7 +19,7 @@ query (`adapters/zetaris.py`). Every row carries `synthetic: true`.
 
 **Which crimes.** The judge cases (CHN-AD-2026-001182, CHN-KU-2025-000078, CHN-GU-2025-000945), their
 series (Red Pulsar, Grille Cutters, Night Cab) and decoys, and every crime `q_candidates` would return for
-any of them (same category, at most 45 days, 6 km). The judge path therefore sees the same candidates as
+any of them (same category, at most 45 days, 10 km: the widest Planner ring). The judge path therefore sees the same candidates as
 live. Duplicate pairs and DQ defects are added so every DQ rule has work. There are also 40 public tips,
 unscreened.
 
