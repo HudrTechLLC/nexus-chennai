@@ -51,9 +51,9 @@ def test_chat_json_thinking_off_sets_template_kwargs(make_deps):
     assert "chat_template_kwargs" not in seen[1]
 
 
-def _backfill(deps, path):
+def _backfill(deps, path, engines=None):
     return Backfill(None, path, store=deps.store, zetaris=deps.zetaris, nightshift=deps.nightshift,  # type: ignore[arg-type]
-                    tracer=deps.tracer)
+                    tracer=deps.tracer, engines=engines)
 
 
 def test_backfill_writes_store_and_jsonl_then_resumes(make_deps, tmp_path):
@@ -97,3 +97,32 @@ def test_backfill_skips_ids_already_stored(make_deps, tmp_path):
     out = _backfill(deps, tmp_path / "f.jsonl").run([ADYAR["crime_id"], VELACHERY["crime_id"]],
                                                      skip_also={ADYAR["crime_id"]})
     assert out["skipped"] == 1 and out["ok"] == 1 and set(deps.store.features) == {VELACHERY["crime_id"]}
+
+
+class _WM:
+    def __init__(self):
+        self.crimes = []
+
+    def ingest(self, entities, source):
+        self.crimes += [e["key"] for e in entities if e["type"] == "crime"]
+        return ["id"]
+
+
+class _Engines:
+    def __init__(self):
+        self.world_model = _WM()
+        self.hmem = None
+        self.scout_intent = None
+
+
+def test_backfill_ingests_world_model_and_replays_without_model(make_deps, tmp_path):
+    """wm_* stayed empty because the backfill had no engines; extraction and replay both ingest now."""
+    deps = make_deps(lambda lane, m, p: json.dumps(MODEL_MO))
+    eng = _Engines()
+    bf = _backfill(deps, tmp_path / "f.jsonl", engines=eng)
+    bf.run([ADYAR["crime_id"]], concurrency=1)
+    assert eng.world_model.crimes == [ADYAR["crime_id"]]
+    calls = len(deps.nightshift.calls)
+    out = bf.replay([VELACHERY["crime_id"]], concurrency=1)  # stored features come from q_features
+    assert out["ok"] == 1 and eng.world_model.crimes[-1] == VELACHERY["crime_id"]
+    assert len(deps.nightshift.calls) == calls  # replay never calls a model

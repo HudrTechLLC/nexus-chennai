@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import threading
 import time
@@ -25,12 +26,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+from .. import engines as default_engines
 from ..adapters.nightshift import NightshiftClient
 from ..adapters.supabase import SupabaseClient
 from ..adapters.zetaris import ZetarisClient
 from ..config import REPO_ROOT, Settings, get_settings
 from ..tracing import Tracer, new_run_id
-from ..agents.base import AgentDeps, AgentError, MemoryStore, crime_from_row
+from ..agents.base import AgentDeps, AgentError, MemoryStore, crime_from_row, features_from_row
 from ..agents.extractor import EXTRACTOR_VERSION, Extractor
 
 DEFAULT_JSONL = REPO_ROOT / "data" / "sample" / "crime_features.jsonl"
@@ -106,26 +108,56 @@ def export_jsonl(sb: SupabaseClient, path: Path) -> int:
 
 class Backfill:
     def __init__(self, settings: Settings, jsonl: Path, store: Any = None, zetaris: Any = None,
-                 nightshift: Any = None, tracer: Tracer | None = None) -> None:
+                 nightshift: Any = None, tracer: Tracer | None = None, engines: Any = default_engines) -> None:
         self.tracer = tracer or Tracer(new_run_id("backfill"), settings.logs_dir, echo=False)
         self.zetaris = zetaris or ZetarisClient(settings, self.tracer)
         self.nightshift = nightshift or NightshiftClient(settings, self.tracer)
         self.store = store or MemoryStore()
         self.jsonl = jsonl
         self._lock = threading.Lock()
-        self.deps = AgentDeps(tracer=self.tracer, zetaris=self.zetaris, nightshift=self.nightshift, store=self.store)
+        # engines: the Extractor's World Model ingest (and _persist.world with ENGINES_PERSIST=supabase)
+        # is skipped when deps.engines is None; that is how wm_* stayed empty (nexus-6 / nexus-2, 26 Oct).
+        self.engines = engines
+        self.deps = AgentDeps(tracer=self.tracer, zetaris=self.zetaris, nightshift=self.nightshift, store=self.store,
+                              engines=engines)
+
+    def _traced(self):
+        use = getattr(self.engines, "use_tracer", None)
+        return use(self.tracer) if use else contextlib.nullcontext()
 
     def one(self, crime_id: str) -> dict[str, Any]:
         rows, _ = self.deps.query("q_case", agent="Extractor", crime_id=crime_id)
         if not rows:
             raise AgentError(f"case {crime_id} not found")
-        feats = Extractor(self.deps).extract_case(crime_from_row(rows[0]), write=False)
+        with self._traced():
+            feats = Extractor(self.deps).extract_case(crime_from_row(rows[0]), write=False)
         self.store.upsert_features(feats)
         with self._lock:
             self.jsonl.parent.mkdir(parents=True, exist_ok=True)
             with self.jsonl.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps({k: feats.get(k) for k in JSONL_FIELDS}, ensure_ascii=False) + "\n")
         return feats
+
+    def replay_world(self, crime_id: str) -> None:
+        """World Model ingest from STORED features (no model call): for crimes extracted before the fix."""
+        rows, _ = self.deps.query("q_case", agent="Extractor", crime_id=crime_id)
+        frows, _ = self.deps.query("q_features", agent="Extractor", ids=crime_id)
+        if not rows or not frows:
+            raise AgentError(f"case or features missing for {crime_id}")
+        with self._traced():
+            Extractor(self.deps)._ingest_world_model(crime_from_row(rows[0]), features_from_row(frows[0]))
+
+    def replay(self, ids: list[str], concurrency: int = 4) -> dict[str, Any]:
+        ok, failed = 0, []
+        with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+            futures = {pool.submit(self.replay_world, cid): cid for cid in dict.fromkeys(ids)}
+            for fut in as_completed(futures):
+                try:
+                    fut.result()
+                    ok += 1
+                except Exception as exc:
+                    failed.append((futures[fut], str(exc)[:200]))
+        return {"requested": len(ids), "ok": ok, "failed": failed, "run_id": self.tracer.run_id}
 
     def run(self, ids: list[str], concurrency: int = 4, skip_also: set[str] | None = None) -> dict[str, Any]:
         skip = done_ids(self.jsonl) | (skip_also or set())
@@ -160,6 +192,8 @@ def main() -> int:
     ap.add_argument("--jsonl", type=Path, default=DEFAULT_JSONL)
     ap.add_argument("--no-supabase", action="store_true", help="write only the JSONL")
     ap.add_argument("--export-jsonl", action="store_true", help="rebuild the JSONL from Supabase, then exit")
+    ap.add_argument("--wm-replay", action="store_true",
+                    help="World Model ingest for already-extracted crimes (stored features, no model calls), then exit")
     args = ap.parse_args()
 
     s = get_settings()
@@ -167,6 +201,14 @@ def main() -> int:
     if args.export_jsonl:
         print(json.dumps({"exported": export_jsonl(sb, args.jsonl), "jsonl": str(args.jsonl)}), flush=True)
         return 0
+    if args.wm_replay:
+        tracer = Tracer(new_run_id("wmreplay"), s.logs_dir, echo=False)
+        ids = [i.strip() for i in args.ids.split(",") if i.strip()] or sorted(stored_ids(sb))
+        out = Backfill(s, args.jsonl, tracer=tracer).replay(ids, args.concurrency)
+        print(json.dumps({k: v for k, v in out.items() if k != "failed"}), flush=True)
+        for cid, err in out["failed"][:20]:
+            print(f"FAILED {cid}: {err}", flush=True)
+        return 0 if not out["failed"] else 1
     ids = [i.strip() for i in args.ids.split(",") if i.strip()]
     if args.priority_file:
         ids += [line.strip() for line in args.priority_file.read_text(encoding="utf-8").splitlines() if line.strip()]
