@@ -134,9 +134,12 @@ class AgentDeps:
             self.tracer.emit(where, "deadline_exceeded", status="error", output_summary="run deadline passed")
             raise DeadlineExceeded(f"Run deadline passed in {where}")
 
-    def query(self, name: str, *, agent: str, **params: Any) -> tuple[list[dict[str, Any]], str]:
-        """Run a named query and return (rows as dicts, query id)."""
+    def query(self, name: str, *, agent: str, timeout_s: float | None = None,
+              **params: Any) -> tuple[list[dict[str, Any]], str]:
+        """Run a named query and return (rows as dicts, query id). `timeout_s`: fail fast (see ZetarisClient.named)."""
         self.check_deadline(agent)
+        if timeout_s is not None:
+            params["timeout_s"] = timeout_s
         res = self.zetaris.named(name, agent=agent, **params)
         return rows_as_dicts(res), res.query_id
 

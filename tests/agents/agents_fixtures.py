@@ -94,7 +94,8 @@ class FakeZetaris:
     handlers: dict[str, Callable[[dict[str, Any]], list[dict[str, Any]]]] = field(default_factory=dict)
     calls: list[tuple[str, str, dict[str, Any]]] = field(default_factory=list)
 
-    def named(self, name: str, *, agent: str, limit: int = 1000, **params: Any) -> FakeResult:
+    def named(self, name: str, *, agent: str, limit: int = 1000, timeout_s: float | None = None,
+              **params: Any) -> FakeResult:
         self.calls.append((name, agent, params))
         if name not in self.handlers:
             raise KeyError(f"'{name}' is not a registered named query")

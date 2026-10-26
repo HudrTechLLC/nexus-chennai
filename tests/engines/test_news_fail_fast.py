@@ -89,7 +89,9 @@ def test_planner_degrades_to_no_news(live):
     out = Planner(deps).execute(Plan(steps=[PlanStep("q_news", {"crime_id": "A"}),
                                             PlanStep("q_ping", {})], round=1, source="default"))
     assert "q_news" not in out and out["q_ping"]["rows"] == [{"one": 1}]
-    assert any(e["action"] == "step_failed" and e["input_summary"] == "q_news" for e in tracer.read())
+    # A timed-out optional step is a degraded step, not a failure (Planner STEP_TIMEOUT_S, run_e97a1684).
+    assert any(e["action"] == "step_degraded" and e["input_summary"] == "q_news" and e["status"] == "degraded"
+               for e in tracer.read())
 
 
 def test_linker_support_degrades_to_no_news_and_stops_asking(live):

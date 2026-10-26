@@ -15,9 +15,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..adapters.zetaris import ZetarisTimeout
 from .base import AgentDeps, AgentError, chat_json, short
 
 AGENT = "Planner"
+# One attempt, at most this long, for an optional step: a slow DQ or context query must not eat the 300 s run
+# deadline (run_e97a1684: q_dq_flags took ~3 min under load and the case got no alert).
+STEP_TIMEOUT_S = 30.0
 
 # Named queries the Planner may schedule, with their parameters (spec E5).
 PLANNABLE: Mapping[str, tuple[str, ...]] = {
@@ -219,15 +223,23 @@ class Planner:
     def execute(self, plan: Plan) -> dict[str, dict[str, Any]]:
         """Run each step through Zetaris. Returns {query_name: {"rows": [...], "query_id": ..., "params": ...}}.
 
-        A failing optional step is recorded and skipped; a failing q_candidates is fatal.
+        A failing optional step is recorded and skipped; a failing q_candidates is fatal. An optional step gets one
+        attempt capped at STEP_TIMEOUT_S: a slow one is traced `step_degraded` and the run goes on to scoring.
         """
         out: dict[str, dict[str, Any]] = {}
         for step in plan.steps:
+            optional = step.name != "q_candidates"
             try:
-                rows, qid = self.deps.query(step.name, agent=AGENT, **step.params)
+                cap = {"timeout_s": STEP_TIMEOUT_S} if optional else {}
+                rows, qid = self.deps.query(step.name, agent=AGENT, **cap, **step.params)
             except Exception as exc:
-                if step.name == "q_candidates":
+                if not optional:
                     raise
+                if isinstance(exc, ZetarisTimeout):
+                    self.deps.tracer.emit(AGENT, "step_degraded", input_summary=step.name, status="degraded",
+                                          output_summary=short(f"gave up after {int(STEP_TIMEOUT_S)} s; run continues "
+                                                               f"without it ({exc})"))
+                    continue
                 self.deps.tracer.emit(AGENT, "step_failed", input_summary=step.name, output_summary=short(str(exc)),
                                       status="error")
                 continue
