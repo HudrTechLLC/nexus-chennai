@@ -157,6 +157,21 @@ def seed(src: Path, dry_run: bool, retire: bool = False) -> None:
                             "from (select jsonb_populate_record(null::public.person_links, doc) r from _stage) s "
                             "on conflict do nothing")
                 print(f"person_links: {n} rows")
+            # tips (D3.6): insert-only, so Tip Guard verdicts, statuses and replies are never undone.
+            # A follow-up tip gets a bcrypt of a random value made here and never seen by anyone,
+            # so no one can sign in as its tipster.
+            if (sb / "tips.jsonl").is_file():
+                n = _load(cur, sb / "tips.jsonl")
+                cur.execute(
+                    "insert into public.tips (tip_id, public_incident_id, channel, category, text, follow_up_enabled, "
+                    "tip_code_hash, guard, approx_cell, received_week, status, source, source_row_id, synthetic) "
+                    "select (r).tip_id, (r).public_incident_id, (r).channel, (r).category, (r).text, "
+                    "(r).follow_up_enabled, case when (r).follow_up_enabled then "
+                    "extensions.crypt(encode(extensions.gen_random_bytes(32), 'hex'), extensions.gen_salt('bf', 12)) end, "
+                    "null, (r).approx_cell, (r).received_week, 'new', (r).source, (r).source_row_id, true "
+                    "from (select jsonb_populate_record(null::public.tips, doc) r from _stage) s "
+                    "on conflict (tip_id) do nothing")
+                print(f"tips: {cur.rowcount} inserted of {n} generated (existing tips untouched)")
             # Pulse Map projection cache (D-019): refreshed whole, never an agent source.
             for table in MAP_TABLES:
                 f = sb / f"{table}.jsonl"

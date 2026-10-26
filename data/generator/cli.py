@@ -19,7 +19,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from . import crimes as C
-from . import plant, plant2, slice2
+from . import plant, plant2, slice2, tips
 from .context import ROOT, Ctx, load
 
 NS = uuid.UUID("6f1c2a52-6a71-4c51-9e57-2c7b1b0a0e42")  # fixed namespace for source_row_id
@@ -225,14 +225,15 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
 
     # ---- ground truth ----
     truth = out / "_truth"
-    write_json(truth / "series.json", [{
+    series_truth = [{
         "series_id": spec["series_id"], "name": spec["name"], "kind": "series", "category": members[0]["category"],
         "crime_type": spec["crime_type"], "crime_ids": sorted(m["crime_id"] for m in members),
         "stations": sorted({m["station"].station_id for m in members}),
         "true_mo": {"mo": members[0]["mo"] | {"time_band": None}, "offenders": members[0]["offenders"][0],
                     "vehicle": (spec.get("vehicle") or (spec.get("true_mo") or {}).get("vehicle")),
                     "signature": members[0].get("signature"), "weapon": members[0].get("weapon")},
-    } for spec, members in series])
+    } for spec, members in series]
+    write_json(truth / "series.json", series_truth)
     pairs = []
     for spec, members in series:
         for a, b in itertools.combinations(sorted(m["crime_id"] for m in members), 2):
@@ -266,6 +267,11 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
     for name, obj in s2["truth"].items():
         write_json(truth / f"{name}.json", obj)
 
+    # Public tips (D3.6): own stream, after every crime is final; unscreened for the live Tip Guard.
+    tip_rows, tip_truth = tips.make(ctx, series_truth, {c["crime_id"]: c for c in crimes})
+    write_jsonl(sb / "tips.jsonl", tip_rows)
+    write_json(truth / "tips.json", tip_truth)
+
     # ---- manifest (hash of logical content, so it is stable across platforms) ----
     files = sorted(p for p in out.rglob("*") if p.is_file() and p.name != "MANIFEST.json")
     manifest = {
@@ -277,7 +283,7 @@ def generate(seed: int, out: Path, months: int | None = None, scale: float = 1.0
                    "decoy_crimes": sum(len(c) for _, c in decoys), "duplicates": len(dups),
                    "pairs": {lab: sum(1 for p in pairs if p[2] == lab)
                              for lab in ("series", "decoy", "duplicate", "vehicle_chain", "offender_return")},
-                   **s2["counts"]},
+                   "tips": len(tip_rows), **s2["counts"]},
         "sha256": {p.relative_to(out).as_posix(): s2["hashes"].get(p.relative_to(out).as_posix())
                    or hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
     }
