@@ -200,7 +200,8 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
         <p className="mt-2 font-mono text-xs text-muted">Zetaris query ids: {qids.length ? qids.join(", ") : "none recorded"}</p>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2">
+      {/* items-start: Memory applied keeps its own height beside a taller Skeptic timeline */}
+      <section className="grid gap-3 md:grid-cols-2 md:items-start">
         <SkepticPanel skeptic={alert.skeptic} steps={skepticSteps} traceVisible={traceVisible} />
         <div className="rounded-xl border border-line bg-surface p-5">
           <h2 className="text-lg font-bold">Memory applied</h2>
