@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..scoring import PairScore, strike
-from .base import AgentDeps, AgentError, chat_json, crime_from_row, features_from_row, short
+from .base import AgentDeps, AgentError, DeadlineExceeded, chat_json, crime_from_row, features_from_row, short
 from .linker import CORROBORATION_QUERIES, ScoredPair, compute_factors, corroboration_items, factor_payload
 
 AGENT = "Skeptic"
@@ -82,10 +82,24 @@ class Skeptic:
         used = {f.factor for f in sp.score.factors if f.value is not None and not f.struck_by_skeptic}
         qids: list[str] = []
 
+        unverified: set[str] = set()
+
         def q(name: str, **params: Any) -> list[dict[str, Any]]:
             rows, qid = self.deps.query(name, agent=AGENT, **params)
             qids.append(qid)
             return rows
+
+        def q_support(factor: str, name: str, **params: Any) -> list[dict[str, Any]]:
+            """A support re-query; if it fails, the factor is unverified (kept, traced), never struck."""
+            try:
+                return q(name, **params)
+            except DeadlineExceeded:
+                raise
+            except Exception as exc:
+                unverified.add(factor)
+                self.deps.tracer.emit(AGENT, "recheck_unavailable", input_summary=f"{sp.pair_id} {factor} {name}",
+                                      output_summary=short(str(exc)), status="degraded")
+                return []
 
         case_a = q("q_case", crime_id=ida)
         case_b = q("q_case", crime_id=idb)
@@ -100,13 +114,13 @@ class Skeptic:
             plates = sorted({*((fa or {}).get("entities") or {}).get("plates", []),
                              *(v.get("plate") for v in a.get("vehicles") or [] if v.get("plate"))})
             for plate in plates[:2]:
-                anpr += q("q_vehicle_trail", plate_pattern=plate, t0=a.get("occurred_from"),
+                anpr += q_support("vehicle", "q_vehicle_trail", plate_pattern=plate, t0=a.get("occurred_from"),
                           t1=b.get("occurred_from"), cells=(a.get("location") or {}).get("h3_r9") or "")
 
         items = None
         if "corroboration" in used:
-            rows_a = {name: q(name, crime_id=ida) for name in CORROBORATION_QUERIES}
-            rows_b = {name: q(name, crime_id=idb) for name in CORROBORATION_QUERIES}
+            rows_a = {name: q_support("corroboration", name, crime_id=ida) for name in CORROBORATION_QUERIES}
+            rows_b = {name: q_support("corroboration", name, crime_id=idb) for name in CORROBORATION_QUERIES}
             items = corroboration_items(rows_a, rows_b, ida, idb)
 
         persons_a = persons_b = None
@@ -117,12 +131,17 @@ class Skeptic:
                 ward = (c.get("location") or {}).get("ward")
                 if not tags or ward is None:
                     return []
-                return q("q_offender_return", mo_tags=",".join(tags), ward=ward, since=c.get("occurred_from"))
+                return q_support("offender_return", "q_offender_return", mo_tags=",".join(tags), ward=ward,
+                                 since=c.get("occurred_from"))
             persons_a, persons_b = persons(a, fa), persons(b, fb)
 
         fresh = compute_factors(a, b, fa, fb, anpr_rows=anpr, corroboration_items=items,
                                 persons_a=persons_a, persons_b=persons_b)
-        return {f.factor: f.value for f in fresh}, qids
+        out = {f.factor: f.value for f in fresh}
+        for f in sp.score.factors:  # could not re-check: keep the Linker's value rather than strike on no data
+            if f.factor in unverified:
+                out[f.factor] = f.value
+        return out, qids
 
     # ----- review ---------------------------------------------------------
 

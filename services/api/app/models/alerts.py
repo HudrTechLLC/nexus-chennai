@@ -62,6 +62,7 @@ class LinkFactor(NexusModel):
 
 class MemoryApplied(NexusModel):
     memory_id: str
+    memory_ids: list[str] = []  # every memory behind this adjustment (memory_id is the first); /console/memory
     effect: str  # signed delta as shown on the card, e.g. "+0.03"
     text: str
 

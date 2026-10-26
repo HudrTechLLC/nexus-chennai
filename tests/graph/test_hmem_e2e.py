@@ -45,5 +45,6 @@ def test_worker_decision_reaches_next_run_alert(tmp_path, monkeypatch):
     assert after["run_id"] == "run-after"
     mem = after["memory_applied"]
     assert mem and all(m["memory_id"] and m["memory_id"] != "HM-unknown" and float(m["effect"]) < 0 for m in mem), mem
+    assert all(m["memory_id"] in m["memory_ids"] for m in mem), mem  # every contributing memory is credited
     assert after["score"] < first["output"]["alerts"][0]["score"]
     assert after["status"] == "rejected"  # the re-run never overwrites the analyst's decision
