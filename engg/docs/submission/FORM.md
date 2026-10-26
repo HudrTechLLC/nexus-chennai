@@ -5,7 +5,7 @@ tags: [nexus, deliverables]
 # HackOS submission form answers
 
 Paste-ready answers for the HackOS submission form. Every claim comes from [EVIDENCE](EVIDENCE.md). Before pasting, replace each `<…>` placeholder and resolve each `[PENDING: id]`, or delete that sentence.
-Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [README_DRAFT](README_DRAFT.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md)
+Related: [COMPLIANCE](COMPLIANCE.md) · [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [README_DRAFT](README_DRAFT.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md)
 
 > **Notes for the chief, not form text:**
 > - The field list follows the Submission Requirements as summarised in [DIGEST](../hackathon/DIGEST.md). The locally saved `submission-requirements.pdf` printed blank (title only), so **check the field names and any length limits against the live form** when you create the draft.
@@ -28,11 +28,11 @@ Heisenbugs · members: `<names as on HackOS>`
 
 ## One-line description
 
-Agents that link crimes across police stations by querying fragmented records through Zetaris, reasoning with NVIDIA Nemotron through Meterless Nightshift, and letting a Skeptic agent and a human analyst decide every link.
+Agents that link crimes across police stations by querying fragmented records through Zetaris, reasoning with NVIDIA Nemotron through Meterless Nightshift, with a Skeptic agent's second opinion and a human analyst deciding every link.
 
 ## Short description (≈ 50 words)
 
-Each police station sees only its own cases, so a gang working across a city looks like unrelated crimes. Nexus reads case files, legacy exports and ANPR records through Zetaris, scores likely links in code, and explains each one with Nemotron. A Skeptic re-checks every link against the data, and analysts decide. Their decisions teach the system.
+Each police station sees only its own cases, so a gang working across a city looks like unrelated crimes. Nexus reads case files, legacy exports and ANPR records through Zetaris, scores likely links in code, and explains each one with Nemotron. A Skeptic gives a second opinion on every link, and analysts decide. Their decisions teach the system.
 
 ## Long description
 
@@ -40,13 +40,15 @@ Each police station sees only its own cases, so a gang working across a city loo
 
 **What Nexus does.** For each new case, a LangGraph team of agents finds candidate cases city-wide, scores each pair on nine factors in code (modus operandi, place and time, vehicle, suspect description, weapon, target, forensics, corroboration, offender return), and writes a link alert. Each alert carries a plain reason for every factor and the Zetaris query and row behind it. The models write labels, plans and reasons; they never set a number.
 
-**It checks its own work.** Before any human sees an alert, a Skeptic agent runs its own Zetaris queries, critiques each pair, and can send it back for a narrower search or drop it. Only what survives reaches an analyst, who approves or rejects. That decision goes to the Meterless H-MEM engine, so the next similar pair is scored with it, within a hard ±0.08 bound, and the alert says "memory applied".
+**A second opinion, and a human decides.** A Skeptic agent runs its own Zetaris queries, critiques each pair, and can send it back for a narrower search or drop it. It is not a guarantee: in a pre-registered test it dropped none of 24 planted look-alike false links, and we publish that. An analyst approves or rejects every alert. That decision goes to the Meterless H-MEM engine, so the next similar pair is scored with it, within a hard ±0.08 bound, and the alert says "memory applied".
+
+**New sources and plain questions.** Fragmented data keeps arriving in new shapes. An admin uploads an unseen station export; Zetaris profiles and checks it in place, Nemotron Lightning proposes the column mapping, a person approves it, and it becomes a Zetaris view. In a live run on 150 synthetic rows, the data-quality checks found every planted fault (for example 4 of 4 likely duplicates of existing cases). Analysts can also ask **Ask Nexus** a question in plain words ("chain snatchings on a red Pulsar in the last 90 days"): Nemotron writes only a plan, code checks it, and an allow-listed Zetaris query answers. Its counts matched independent SQL counts every time we checked, and it refuses questions it can't answer from the data.
 
 **The public can help safely.** Anyone can send an anonymous tip through the public portal. Photos are stripped of metadata, and the tipster gets a tip code. The Meterless Scout Intent engine (Tip Guard) screens every tip for injection, threats and spam before any agent reads it, and fails closed.
 
 **Sponsor technology is load-bearing:**
 - **Zetaris** is the only way agents read crime data (registered named queries over federated sources).
-- **Meterless Nightshift** is the only model path, on pinned NVIDIA Nemotron lanes, with the model logged on every call.
+- **Meterless Nightshift** is the only model path, on pinned NVIDIA Nemotron lanes (Ultra 550B, Lightning 30B and Super VL for evidence stills), with the model logged on every call. 190 of 193 traced model calls carry a Nightshift receipt, and all 190 signatures verify.
 - **All four Meterless engines** run in features. World Model, H-MEM and Markovian pass their official conformance suites unchanged (8/8, 13/13, 8/8). Scout Intent scores 0.975 route accuracy and catches 7/7 injections on a held-out set it was never tuned on (23/23 on the set its rules were tuned on), and on 40 live seeded tips it falsely quarantined none of the 30 genuine tips. It first missed 1 of 4 injections and 3 of 4 spam tips. We fixed the rules for those shapes, and they now catch all 8, but that figure isn't independent, because those misses shaped the fix.
 
 **Built to be checked.** Judges can run it with Docker or a Python virtual environment, post an input to `POST /run`, and read a JSONL trace of every agent step, Zetaris query, engine call and model. `SAMPLE_MODE=true` runs the same agent logic without credentials, on the committed synthetic sample in `data/sample/`, and the container answers all three examples with no network at all (CI job `judge-offline`). All crime, person, case and tip data is synthetic.
@@ -62,7 +64,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 
 ## Demo police accounts (judges only)
 
-**Form only, never in the README or any repo file**, because the repo is public and these accounts can decide alerts. nexus-chief fills these in with the user at submit time.
+**Form only, never in the README or any repo file**, because the repo is public and these accounts can decide alerts. nexus-chief fills these in with Ravee at submit time. Officer, analyst and supervisor only: **the admin account is never shared** (Ravee, 27 Oct).
 
 | Role | Login | Password |
 |---|---|---|
@@ -88,7 +90,7 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 ## AI usage
 
-- **In the product:** every model call goes through Meterless Nightshift to pinned NVIDIA Nemotron models: Nemotron 3.5 Lightning 30B for extraction and drafting, and Nemotron 3 Ultra 550B for planning, reasons and the Skeptic. The model and a receipt id are logged on every call. No embedding model is claimed (see the sponsor text).
+- **In the product:** every model call goes through Meterless Nightshift to pinned NVIDIA Nemotron models: Nemotron 3.5 Lightning 30B for extraction, drafting, Ask Nexus plans and onboarding column mapping; Nemotron 3 Ultra 550B for planning, reasons and the Skeptic; and Nemotron 3.5 Super VL for reading CCTV and evidence stills (verified in one live run, `reextract_vis_1793040194`; a rate-limited free route, so a run can fall back to the officer's caption). The model and a receipt id are logged on every call. No embedding model is claimed (see the sponsor text).
 - **In development:** Claude Code (Anthropic) wrote and reviewed code; it is not part of the running product.
 - **In the demo:** the narration voice was generated with ElevenLabs, which is not part of the running product.
 

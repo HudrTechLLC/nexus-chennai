@@ -13,7 +13,7 @@ Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.a
 **What's new compared with established crime linkage.** Established linkage systems rely on structured case forms and analysts comparing cases by hand. Nexus instead:
 - reads every source where it already lives (case files, legacy station exports, ANPR, 112 calls, tips, feeds) through Zetaris, with no central copy;
 - has agents cite the Zetaris query and row behind every factor in an alert;
-- has a Skeptic that re-queries the data itself and sends a pair back or drops it before a person sees it;
+- has a Skeptic that re-queries the data itself and gives a second opinion on each pair (send back or drop); the officer decides;
 - feeds screened public tips back in as corroborating evidence on a link (the corroboration factor);
 - learns from each analyst decision within a capped ±0.08 (H-MEM).
 
@@ -23,7 +23,7 @@ Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.a
 ## What it does
 
 - **Links cases across stations.** For a new case, agents find candidate cases city-wide, score each pair on nine factors in code, and write an alert with per-factor evidence.
-- **Checks its own work.** The Skeptic re-queries Zetaris itself, critiques each pair against its own rows, and can send a pair back for a narrower search or drop it.
+- **Gives a second opinion.** The Skeptic re-queries Zetaris itself, critiques each pair against its own rows, and can send a pair back for a narrower search or drop it. It is not a guarantee: on a planted test it dropped none of 24 look-alike false links (Known limitations), so the officer decides.
 - **Keeps a human in charge.** Every alert waits for an analyst. Approvals and rejections go to H-MEM, so a similar pair scores differently next time.
 - **Lets the public help safely.** Anyone can send an anonymous tip. Tip Guard (Meterless Scout Intent) screens it for injection, threats and spam before any agent reads it.
 - **Groups links into series** and builds a dossier with the Meterless Markovian engine.
@@ -253,6 +253,7 @@ cd services/api && SAMPLE_MODE=true python -m app.eval --truth ../../data/sample
 | Limitation | Number | Source |
 |---|---|---|
 | Synthetic data, no trial with real officers | about 14,000 synthetic crimes (14,040 in the QA database on 26 Oct); 0 real cases; no field trial | `data/README.md`; [Evaluation](#evaluation) is on planted truth |
+| The Skeptic does not catch look-alike false links | Planted false-link test (pre-registered, #370/#392): the Skeptic dropped **0 of 24** planted near-miss false links (8 twin pairs × 3 plants, so not 24 independent trials). It sent 10 back and approved 14. In an exploratory hand reading (not pre-registered; two readers agree), its critique named the planted fact in 19 of 24 but still dropped none. **Inferred, not run:** under the revision cap (#358), a sent-back pair that re-scores the same ends approved, so in production these would likely become approved alerts. The Skeptic is a second opinion; the officer decides | `output_examples/planted_skeptic.json` (run `planted_a329010d`); `engg/docs/eval/PLANTED_SKEPTIC_PREREG.md` (Results) |
 | Medium alerts are leads, not answers | MEDIUM band correct **56%** (74 of 132 scored pairs); HIGH 10 of 10 | `output_examples/eval_report.json` |
 | Live runs are slow on the reasoning model | A single filed FIR reaches its alert in **~4.6 min** live (about 278 s: 12 s worker pickup, 37 s extraction including the live vision call, 229 s case run `run_caea00c0` on main `71fac4c`, no deadline hit). Before the send-back fix (#358) the same FIR took about 8 min and ended `needs_revision`. The live recordings on 26 Oct took 4–17 min per example (236 / 1,046 / 315 s), before the fix; a 4-case live batch took ~59 min. The judge path replays in seconds | nexus-3's `run_caea00c0` (27 Oct); `output_examples/example_1.json`; nexus-3's `run_866f913f` |
 | Image reading is verified in one live run so far | Nightshift serves image requests on `nvidia/nemotron-3.5-super-vl-120b-a12b` through a cloud vision lane (OpenRouter free route, rate-limited; the key is held only in Nightshift; D-036). Verified in a live Nexus run: run `reextract_vis_1793040194` (27 Oct): an Extractor `model_call` on lane `vision`, model `nvidia/nemotron-3.5-super-vl-120b-a12b`, receipt `chatcmpl-5dfe68c6-80f5-4c50-8962-d45f726a7cb4`, status ok, 24 s; the extracted features had no `degraded` entries and carried `visual_tags` read from the still. The free route can refuse or rate-limit, so a given run may still fall back to the caption. The judge path and sample mode still trace `vision_unavailable` and use the caption: they run offline, and the recorded fixtures hold no vision call | D-036; D-021 |
@@ -271,7 +272,7 @@ Details:
 - **Reasoning model.** The spec planned Nemotron Super 120B, but our key isn't served it, so the `reason` lane runs Nemotron Ultra 550B. It is slower, so the run deadline keeps a 45-second reserve.
 - **Zetaris and Supabase Storage (S3) TLS.** Zetaris's S3 client can't complete a TLS handshake with Supabase Storage's S3 endpoint. CSV and Parquet files therefore go into Zetaris's own internal file store instead, still registered as file sources. The fix is documented in `zetaris/README.md`. We didn't apply it because it means restarting Zetaris mid-build.
 - **Tip passphrases use bcrypt, not Argon2id.** The spec said Argon2id. We hash with pgcrypto bcrypt inside Postgres so the hash never leaves the database. Tip codes are random and attempts are limited.
-- **Explanations are model-written** and can be imperfect. Numbers can't be, because code computes them, and the Skeptic re-checks factors against fresh rows.
+- **Explanations are model-written** and can be imperfect. Numbers can't be, because code computes them. The Skeptic re-checks pairs against fresh rows, but it does not reliably catch look-alike false links (Known limitations).
 - **Hotspots** use a Poisson test against each cell's own recent history. They flag concentrations, not causes.
 - **News corroboration can lower a score.** A single corroborating news item can lower a strong pair's renormalised score (on the sample, the hero pair would fall from 0.787 to 0.752). Corroborating news roundups are therefore off (`ROUNDUPS = False` in `services/api/app/feeds_gen.py`) until a positive-only rule is adopted. That rule was evaluated on the full sample and is not merged; scoring is unchanged for the freeze (D-032).
 - **Live news is a small synthetic slice.** Live news uses the committed synthetic slice (47 articles), placed to match one crime each in the 1,275-crime sample. Against the full live crime set, 5 articles also match two or more same-category crimes, so they can add corroboration to those pairs (none on the judge path) until the post-freeze full feed generator guards against every live crime.
