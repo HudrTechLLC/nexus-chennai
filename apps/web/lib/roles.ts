@@ -37,7 +37,8 @@ export function canDecideAlerts(role: Role | null | undefined): boolean {
   return allows(role, ["analyst", "supervisor", "admin"]);
 }
 
-export type NavItem = { href: string; label: string; access: Access };
+/** `hidden`: the screen is not built yet, so the link is not shown (main must never link to a 404). */
+export type NavItem = { href: string; label: string; access: Access; hidden?: boolean };
 
 /** Console navigation in G2 order. Items the role cannot open are hidden. */
 export const NAV: NavItem[] = [
@@ -53,13 +54,13 @@ export const NAV: NavItem[] = [
   { href: "/console/stations", label: "Stations", access: "supervisor+" },
   { href: "/console/taskforces", label: "Task forces", access: "all" },
   { href: "/console/memory", label: "Memory", access: "analyst+" },
-  { href: "/console/notifications", label: "Notifications", access: "all" },
+  { href: "/console/notifications", label: "Notifications", access: "all", hidden: true }, // WS3-12, nexus-4
   { href: "/console/system", label: "System", access: "admin" },
-  { href: "/console/admin", label: "Admin", access: "admin" },
+  { href: "/console/admin", label: "Admin", access: "admin", hidden: true }, // not built yet
 ];
 
 export function navFor(role: Role | null | undefined): NavItem[] {
-  return NAV.filter((n) => allows(role, n.access));
+  return NAV.filter((n) => !n.hidden && allows(role, n.access));
 }
 
 /** Access rule for a console path (longest matching prefix in NAV); unknown paths need any police role. */
