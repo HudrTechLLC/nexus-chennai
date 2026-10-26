@@ -1,7 +1,7 @@
 # Local stack. Zetaris and Nightshift run outside compose (their own installers).
 services:
   api:
-    build: { context: ., dockerfile: services/api/Dockerfile }
+    build: { context: ., dockerfile: Dockerfile }
     env_file: [{ path: .env, required: false }]
     environment:
       METERLESS_BASE_URL: ${METERLESS_BASE_URL:-http://host.docker.internal:8088/v1}
@@ -10,7 +10,7 @@ services:
     volumes: ["./logs:/repo/logs"]
     extra_hosts: ["host.docker.internal:host-gateway"]
   worker:
-    build: { context: ., dockerfile: services/api/Dockerfile }
+    build: { context: ., dockerfile: Dockerfile }
     env_file: [{ path: .env, required: false }]
     command: ["python", "-m", "app.worker"]
     profiles: ["worker"]
