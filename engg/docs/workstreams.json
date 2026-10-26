@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T21:55:23+05:30",
+  "updated": "2026-10-26T22:14:50+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -186,7 +186,7 @@
           "phase": "P2",
           "title": "Self-contained live data: one command generates the 14k dataset and loads it into the judge's own Zetaris (no Supabase)",
           "status": "in_progress",
-          "note": "nexus-1 + nexus-2 · rules: data setup automated, no credentials beyond env vars"
+          "note": "nexus-1 · #264, #280 merged (setup_live, full parity); fixtures PR + clean-machine run pending"
         },
         {
           "id": "WS1-20",
@@ -632,8 +632,8 @@
           "id": "WS3-24",
           "phase": "P7",
           "title": "Tip detail: \"View on map\" (approximate area) and \"See crime on map\" for linked crimes",
-          "status": "todo",
-          "note": "nexus-4 · user request; tips keep only an H3 r8 cell by design (J1)"
+          "status": "in_progress",
+          "note": "nexus-1 (moved from nexus-4) · console map only"
         }
       ]
     },
@@ -754,8 +754,8 @@
           "id": "WS4-15",
           "phase": "P8",
           "title": "Tip form: smaller area choice (r8/r9/r10) + address search that places the area",
-          "status": "todo",
-          "note": "nexus-2 · user request; area not point (J1); geocode via our server, query never stored"
+          "status": "in_progress",
+          "note": "nexus-2 UI · nexus-7 geocode #291 (Photon, POST) · nexus-6 back-end r8 normalisation"
         }
       ]
     },
@@ -852,8 +852,8 @@
           "id": "WS5-12",
           "phase": "P10",
           "title": "Offline proof: judge image runs with --network none",
-          "status": "in_progress",
-          "note": "nexus-6 (moved from nexus-7)"
+          "status": "done",
+          "note": "nexus-6 · #285 judge-offline CI (--network none, 3/3 exact) + nexus-3 #290 timezone fix"
         },
         {
           "id": "WS5-13",
