@@ -68,11 +68,13 @@ const own = await as("officer.adyar@nexus.demo");
 const up = await own.sb.storage.from("evidence").upload(path, bytes, { contentType: "image/png", upsert: false });
 report(!up.error, "own-station officer uploads", up.error?.message ?? "");
 const evidenceId = `EV-${id}`;
-const ins = await own.sb.from("evidence_media").insert({
-  evidence_id: evidenceId, crime_id: crimeId, kind: "photo", storage_path: path, sha256: sha, uploaded_by: own.user.id,
-  custody: [{ at: new Date().toISOString(), by: own.user.id, action: "uploaded", sha256: sha, bytes: bytes.length, mime: "image/png" }], synthetic: true,
+// 0007_06: rows are recorded only through record_evidence, which checks this officer owns the object.
+const direct = await own.sb.from("evidence_media").insert({
+  evidence_id: `EV-${randomUUID()}`, crime_id: crimeId, kind: "photo", storage_path: path, sha256: sha, uploaded_by: own.user.id, synthetic: true,
 });
-report(!ins.error, "evidence_media row recorded", ins.error?.message ?? "");
+report(!!direct.error, "direct evidence_media insert refused (0007_06)", direct.error?.message ?? "INSERTED");
+const ins = await own.sb.rpc("record_evidence", { p: { crime_id: crimeId, path, sha256: sha, kind: "photo", bytes: bytes.length } });
+report(!ins.error && ins.data === evidenceId, "evidence_media row recorded via record_evidence", ins.error?.message ?? "");
 
 const dl = await own.sb.storage.from("evidence").download(path);
 const stored = dl.data ? createHash("sha256").update(Buffer.from(await dl.data.arrayBuffer())).digest("hex") : null;
