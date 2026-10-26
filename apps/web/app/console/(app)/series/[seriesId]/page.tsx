@@ -130,7 +130,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
           <section className="rounded-xl border border-line bg-surface p-5" aria-labelledby="tf">
             <h2 id="tf" className="text-lg font-semibold">Joint task force</h2>
             {taskforces.length === 0
-              ? <p className="mt-2 text-sm text-muted">No joint task force on this series yet.</p>
+              ? <p className="mt-2 text-sm text-muted">No joint task force has been opened on this series.</p>
               : (
                 <ul className="mt-2 space-y-1 text-sm">
                   {taskforces.map((t) => (
@@ -178,7 +178,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
       <section className="rounded-xl border border-line bg-surface p-5" aria-labelledby="links">
         <h2 id="links" className="text-lg font-semibold">Link alerts on these cases</h2>
         {alerts.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No link alerts touch these cases yet.</p>
+          <p className="mt-2 text-sm text-muted">No link alerts touch these cases yet. The Linker&apos;s pair alerts on member cases are listed here as they are raised.</p>
         ) : (
           <ul className="mt-2 divide-y divide-line">
             {alerts.map((a) => (

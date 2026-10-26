@@ -91,7 +91,7 @@ export default async function GraphPage({ searchParams }: { searchParams: { seed
         <p className="rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">
           {graph.totals.entities === 0
             ? "The World Model is empty. Agents add entities as they extract and link cases; they appear here after the next pipeline run."
-            : "No entities of the chosen types."}
+            : "No entities of the chosen types in this view. Clear the type filter or raise the depth."}
         </p>
       ) : (
         <GraphExplorer nodes={graph.nodes} edges={graph.edges} provenance={graph.provenance} seedIds={seedIds} qs={keep.toString()} />
