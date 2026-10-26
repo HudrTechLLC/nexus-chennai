@@ -1,0 +1,19 @@
+{
+  "_note": "Shared leak fixture for public appeal text. Checked by app/agents/sanitiser.py (pytest), public.appeal_text_leaks (SQL, 0006_02) and apps/web/lib/appeals.ts (vitest). Keep the three in step.",
+  "leaky": [
+    {"text": "Bike TN 09 BX 4471 seen near the stop", "kind": "plate"},
+    {"text": "Partial plate TN09??4471", "kind": "plate"},
+    {"text": "Call 9840012345 with information", "kind": "phone or long number"},
+    {"text": "Reported under FIR 1182/2026", "kind": "FIR number"},
+    {"text": "Linked to CHN-AD-2026-001182", "kind": "internal id"},
+    {"text": "Contact PS-ADYAR-J2 directly", "kind": "internal id"}
+  ],
+  "clean": [
+    "Chain snatching by two riders on a red motorcycle",
+    "Two men on a red motorcycle snatched a gold chain from a woman near a bus stop.",
+    "Red motorcycle with two riders, black helmet with a red stripe",
+    "Shop CCTV on LB Road between 7:30 and 8:00 pm",
+    "Adyar (LB Road area), week 2026-W42, evening",
+    "A white Swift Dzire used as a fake cab on the airport road"
+  ]
+}

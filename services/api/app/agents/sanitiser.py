@@ -32,13 +32,25 @@ case numbers, police station names, victim details, or religion/caste/community.
 Return ONE JSON object: {"title": str (<= 70 chars), "summary": str (1-2 sentences),
 "looking_for": [str] (2-4 short items the public could help with)}. Output it once, then stop."""
 
+# Same list as public.appeal_text_leaks (0006_02) and apps/web/lib/appeals.ts; shared fixture
+# tests/agents/appeal_leaks.json. Clock times are allowed: D3.13's own example asks for CCTV
+# "between 7:30 and 8:00 pm".
 _LEAKS = (
-    re.compile(r"\b[A-Z]{2}\s?\d{1,2}\s?[A-Z?]{0,3}\s?\d{3,4}\b"),  # plates, full or partial
-    re.compile(r"\d{6,}"),  # phones, ids
-    re.compile(r"\b\d{1,2}[:.]\d{2}\s*(?:am|pm)?\b", re.I),  # clock times
-    re.compile(r"\b\d{1,5}/\d{4}\b"),  # FIR numbers
-    re.compile(r"\b(?:CHN|PS)-[A-Z0-9-]+\b"),  # internal ids
+    re.compile(r"(^|[^A-Za-z0-9])[A-Z]{2} ?[0-9]{1,2} ?[A-Z?]{0,3} ?[0-9]{3,4}([^0-9]|$)"),  # plates
+    re.compile(r"(^|[^A-Za-z])(CHN|PS)-[A-Z0-9-]+"),  # internal ids
+    re.compile(r"(^|[^0-9])[0-9]{1,5}/[0-9]{4}([^0-9]|$)"),  # FIR numbers
+    re.compile(r"[0-9]{6,}"),  # phones, long numbers
 )
+LEAK_KINDS = ("plate", "internal id", "FIR number", "phone or long number")
+
+
+def leak_kind(text: str) -> str | None:
+    """The first leak kind in `text`, or None (mirrors public.appeal_text_leaks)."""
+    for kind, p in zip(LEAK_KINDS, _LEAKS):
+        if p.search(text or ""):
+            return kind
+    return None
+
 
 
 def area_label(case: Mapping[str, Any]) -> str:
