@@ -11,7 +11,7 @@ Related: [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVER
 
 ## Re-verify at freeze (about 2 minutes)
 
-Main keeps moving until 12:00 IST. Run this from a fresh checkout of `origin/main`. For each item that now exists, flip its row below, then the matching `[PENDING]` in the four drafts.
+Main keeps moving until the 14:00 IST freeze (in-flight cut-off 11:00 IST; moved from 12:00 on 27 Oct). Run this from a fresh checkout of `origin/main`. For each item that now exists, flip its row below, then the matching `[PENDING]` in the four drafts.
 
 ```bash
 ls input_examples output_examples data/sample data/sample/model_fixtures 2>&1   # WS2-16, WS1-11
