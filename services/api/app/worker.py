@@ -51,8 +51,11 @@ def _now() -> str:
 
 class Worker:
     def __init__(self, settings: Settings, sb: Any, zetaris: Any = None, nightshift: Any = None,
-                 tracer: Tracer | None = None, run_case=None) -> None:
+                 tracer: Tracer | None = None, run_case=None, new_cases_since: str | None = None) -> None:
         self.settings = settings
+        # When set, only crimes created after this instant (console-filed FIRs) are processed; the
+        # priority backfill owns the seeded backlog until it finishes (chief, 26 Oct).
+        self.new_cases_since = new_cases_since
         self.sb = sb
         self.tracer = tracer or Tracer(new_run_id("worker"), settings.logs_dir)
         self.zetaris = zetaris or ZetarisClient(settings, self.tracer)
@@ -185,8 +188,11 @@ class Worker:
 
     def process_new_cases(self) -> int:
         # reported_at <= now: seed rows dated in the future must not crowd a just-filed FIR out of the batch.
-        recent = self.sb.select("crimes", {"select": "crime_id", "reported_at": f"lte.{_now()}",
-                                           "order": "reported_at.desc", "limit": str(BATCH)})
+        params = {"select": "crime_id", "reported_at": f"lte.{_now()}", "order": "reported_at.desc",
+                  "limit": str(BATCH)}
+        if self.new_cases_since:
+            params["created_at"] = f"gt.{self.new_cases_since}"
+        recent = self.sb.select("crimes", params)
         ids = [r["crime_id"] for r in recent]
         if not ids:
             return 0
@@ -250,12 +256,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Nexus background worker")
     ap.add_argument("--once", action="store_true", help="one pass, then exit")
     ap.add_argument("--interval", type=float, default=15.0, help="seconds between passes")
+    ap.add_argument("--new-cases-since", default=None,
+                    help="only process crimes created after this ISO time ('now' = worker start): console FIRs only")
     args = ap.parse_args()
     s = get_settings()
     sb = SupabaseClient(s)
     if not sb.configured:
         raise SystemExit("Supabase is not configured; the worker has no queue to read.")
-    w = Worker(s, sb)
+    since = _now() if args.new_cases_since == "now" else args.new_cases_since
+    w = Worker(s, sb, new_cases_since=since)
     while True:
         print(w.run_once(), flush=True)
         if args.once:
