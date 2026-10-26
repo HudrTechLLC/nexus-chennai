@@ -13,7 +13,7 @@ Related: [00-INDEX](00-INDEX.md) · [DECISIONS](DECISIONS.md) · [workstreams.js
 
 - **Local Supabase:** Postgres, Auth, REST (PostgREST), Storage and Realtime, with every migration in `supabase/migrations/` applied.
 - **Data:** on first start, the deterministic generator (seed 42) writes the full dataset (about 14,000 crimes, see [data/README](../../data/README.md)) into a volume, and the seed loads it.
-- **Zetaris:** the sponsor's own compose, with sources, file tables, views and named-query objects registered by one command (`python -m data.setup_live`, being built in WS1-19).
+- **Zetaris:** the sponsor's own compose, with sources, file tables, views and named-query objects registered by one command (`python -m data.setup_live`, on main since #280; see [data/README](../../data/README.md) §5).
 - **Nexus:** the API, the worker and the web console.
 - **Nightshift** stays on the host, as today, because it serves the models.
 
@@ -22,7 +22,8 @@ The hosted setup (cloud Supabase + Vercel, [D-003](DECISIONS.md)) becomes one de
 ## 2. Today (26 Oct 2026)
 
 - **The judge path needs nothing external.** The Docker image runs in sample mode with no credentials and no Supabase; models replay recorded fixtures. A fully offline check (`--network none`) is on the Tuesday checklist ([WS5-08](validation/WS5-08-checklist.md), section 3b).
-- **Live mode is being made Zetaris-only:** WS1-19 (generate the dataset and load it into the judge's own Zetaris, no Supabase) and WS2-22 (a local result store for `/run` and the worker) are in progress.
+- **Live agent reads can run on your own Zetaris, no Supabase:** WS1-19 is done (`python -m data.setup_live`, #280). WS2-22 (a local result store for `/run` and the worker) is still in progress.
+- **The judge path is proven offline:** the sample-mode container answers all three examples with `--network none` in CI (`judge-offline`, #285).
 - **The console still needs the cloud.** The police console, Auth, Storage and RLS run on our hosted Supabase; that is what Path 2 replaces.
 
 ## 3. Backlog (WS6, from the tracker)
@@ -48,7 +49,7 @@ All are marked `cut` for the hackathon and parked here.
 
 ## 5. Phases (rough order)
 
-1. **Finish WS1-19 and WS2-22.** Live mode with only Zetaris and Nightshift. Everything later builds on this.
+1. **Finish WS2-22** (WS1-19 is done). Live mode with only Zetaris and Nightshift. Everything later builds on this.
 2. **Local Supabase in compose (WS6-01).** Migrations on start, seed into a volume, Auth with the demo roles, Storage buckets. Same env names as the cloud, so switching target is a `.env` change.
 3. **Full dataset everywhere (WS6-02).** Rebuild fixtures and re-run the eval on 14k crimes; publish both slices' numbers.
 4. **Safety items (WS6-05, WS6-06, WS6-08).** Close the known limits the README lists.

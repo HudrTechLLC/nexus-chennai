@@ -53,6 +53,8 @@ Related: [README](README.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [D
 
 ### 3b · Fully offline run (Tuesday morning, not the night before: RAM)
 
+**Already passing in CI** as job `judge-offline` (#285, `b407bd8`; runs on every push to main, outputs uploaded as artifact `judge-offline-outputs`). On Tuesday, confirm the job is green on the commit being submitted; the manual steps below are the fallback.
+
 Proves the judge path has **zero** dependency on Supabase, Zetaris or Nightshift: the container has no network at all. With `--network none` Docker ignores `-p`, so the host can't reach the API. Post the examples from **inside** the container with `docker exec`.
 
 | # | Command | PASS when |

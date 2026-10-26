@@ -134,6 +134,7 @@ Copy `.env.example` to `.env` and set these:
 - **Zetaris:** `ZETARIS_REST_URL` (default `http://localhost:8888/api/v1.0`) and `ZETARIS_ORG_ID`. For the API key, set either `ZETARIS_API_KEY` or `ZETARIS_API_KEY_FILE` (a path to a file holding it; preferred).
 - **Nightshift:** `METERLESS_BASE_URL` (default `http://127.0.0.1:8088/v1`). For the runtime token, **either** export `METERLESS_RUNTIME_TOKEN` in your shell (a `.env` file doesn't export it for other tools) **or** set `METERLESS_RUNTIME_TOKEN_FILE` to the token file Nightshift writes itself (on Windows, `%LOCALAPPDATA%/ai.meterless.runtime/proxy-token`). Lanes: `LANE_FAST`, `LANE_REASON` (and `LANE_VISION`, see [Limitations](#limitations)). Pin exact `nvidia/*` ids; `meterless/auto` is refused.
 - **Supabase:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY_FILE` for the worker.
+- **Your own Zetaris, no Supabase:** `python -m data.setup_live` generates the dataset and loads it into your local Zetaris, then run the API with `ZETARIS_DATA=files`. Steps and options: [data/README.md §5](data/README.md#5-live-mode-on-your-own-zetaris-no-supabase). Agent reads then need only Zetaris and Nightshift; the police console and the worker still use Supabase (WS2-22 is in progress).
 - **REST feeds:** Zetaris fetches its REST feeds (`/mock-feeds/*`: weather, news, social) from the Nexus API, so start the API (`python run.py`) before a live run. If the API is down, runs still complete, just without feed evidence.
 - **Engines:** `ENGINES_BACKEND=sample` (default, in-process) or `sidecar` (the TypeScript references: `cd engines-ts && npm ci && npm run install:references && npm run sidecar`).
 
@@ -170,6 +171,8 @@ Other routes: `POST /api/cases/{id}/process`, `POST /api/batch/link`, `POST /api
 | Engines | in-process | in-process or the TypeScript sidecar; state written to Supabase with `ENGINES_PERSIST=supabase` |
 
 Fixtures replay only when Nightshift can't be reached, and they are never keyed to an example id, so different inputs give different outputs. The committed sample bundle (`data/sample/`, see its `MANIFEST.json`) holds 759 synthetic crimes around the three judge series, 172 extracted feature rows, 1,108 statements, 373 vehicles and 40 tips. A fresh clone with no `.env` and Zetaris and Nightshift unreachable runs all three judge cases end to end. Until recorded model replies are committed, alerts carry code-written reasons ("model rationale unavailable") instead of model text.
+
+**The judge path runs fully offline:** the sample-mode container answers all three examples with `--network none` (no network at all) and matches `output_examples/` (CI job `judge-offline`, on every push to main; validated at `b407bd8`).
 
 ## Examples
 
