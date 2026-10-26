@@ -2,28 +2,37 @@
 
 from __future__ import annotations
 
-import time
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .adapters.nightshift import NightshiftClient, NightshiftError
 from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient, ZetarisError
 from .config import get_settings, load_city
-from .tracing import Tracer, new_run_id
+from .graph.runner import run_request
+from .tracing import new_run_id
 
 app = FastAPI(title="Nexus Chennai API", version="0.1.0")
 
 
 class RunInput(BaseModel):
+    """Part H: `{kind, ...}`. Fields may sit in `payload` or directly beside `kind`."""
+
+    model_config = ConfigDict(extra="allow")
+
     kind: Literal["case", "batch", "tip", "search"]
     payload: dict[str, Any] = Field(default_factory=dict)
+
+    def merged_payload(self) -> dict[str, Any]:
+        return {**(self.model_extra or {}), **self.payload}
 
 
 class RunOptions(BaseModel):
     sample_mode: bool | None = None
+    force_extract: bool = False
+    persist: bool = True
 
 
 class RunRequest(BaseModel):
@@ -69,23 +78,16 @@ def health() -> dict[str, Any]:
 
 @app.post("/run")
 def run(req: RunRequest) -> dict[str, Any]:
-    """Judge entry point. The agent graph lands in P3/P4; until then this says so plainly."""
+    """Judge entry point: runs the C4 agent graph and returns alerts, trace id, log file and timing."""
     s = get_settings()
     run_id = req.run_id or new_run_id()
-    tracer = Tracer(run_id, s.logs_dir)
-    started = time.perf_counter()
-    tracer.emit("api", "run_received", input_summary=f"kind={req.input.kind}", status="ok")
-    tracer.emit("api", "run_rejected", output_summary="agent graph not built yet (phase P4)", status="not_implemented")
-    raise HTTPException(
-        status_code=501,
-        detail={
-            "run_id": run_id,
-            "status": "not_implemented",
-            "message": "The agent graph is built in phase P4. No output is faked.",
-            "log_file": str(tracer.path.relative_to(s.logs_dir.parent)),
-            "execution_time_seconds": round(time.perf_counter() - started, 3),
-        },
-    )
+    try:
+        return run_request(req.input.kind, req.input.merged_payload(), req.options.model_dump(), s, run_id=run_id)
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail={"run_id": run_id, "status": "bad_input", "message": str(exc)})
+    except (ZetarisError, NightshiftError) as exc:
+        raise HTTPException(status_code=503, detail={"run_id": run_id, "status": "dependency_down",
+                                                     "message": str(exc), "log_file": f"logs/trace-{run_id}.jsonl"})
 
 
 __all__ = ["app", "NightshiftError"]

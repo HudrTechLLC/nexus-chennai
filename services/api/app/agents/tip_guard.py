@@ -37,6 +37,9 @@ class TipGuard:
                 "injection": "prompt_injection" in risk or res.get("intent") == "prompt_injection",
                 "threat": "threat" in risk or res.get("intent") == "threat",
                 "engine": "scout_intent",
+                "emergency": bool(res.get("emergency")),
+                # PII-redacted text from the engine; the Extractor reads this, never the raw tip.
+                "redacted_text": res.get("redacted_text"),
             }
             status = "ok" if action == "clean" else action
         except Exception as exc:  # fail closed

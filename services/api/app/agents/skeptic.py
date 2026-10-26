@@ -142,10 +142,11 @@ class Skeptic:
         verdict = "approve" if sp.score.alert else "drop"
         return SkepticResult(sp, verdict, struck=to_strike, rechecked=rechecked, query_ids=qids, round=round_no)
 
-    def review(self, pairs: Sequence[ScoredPair], round_no: int = 1) -> list[SkepticResult]:
+    def review(self, pairs: Sequence[ScoredPair], round_no: int = 1, critique: bool = True) -> list[SkepticResult]:
+        """Check every pair; `critique=False` (deadline reserve) keeps the code verdicts only."""
         results = [self.check(sp, round_no) for sp in pairs]
         live = [r for r in results if r.verdict == "approve"]
-        if live:
+        if live and critique:
             self._critique(live, round_no)
         for r in results:
             self.deps.tracer.emit(AGENT, r.verdict if r.verdict != "approve" else "approve",

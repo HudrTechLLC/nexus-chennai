@@ -66,13 +66,28 @@ def test_chat_json_retries_cut_off_reply_with_more_tokens(make_deps):
         def chat(self, lane, messages, *, agent, purpose="", **params):
             budgets.append(params["max_tokens"])
             finish = "length" if len(budgets) == 1 else "stop"
-            return ModelResult(lane, "m", "m", '{"draft": null}' if finish == "length" else '{"a": 1}', None,
+            return ModelResult(lane, "m", "m", '{"draft": ' if finish == "length" else '{"a": 1}', None,
                                False, 1, raw={"choices": [{"finish_reason": finish}]})
 
     deps = make_deps()
     deps.nightshift = N()
     out, _ = chat_json(deps, "fast", [], agent="T", purpose="p")
     assert out == {"a": 1} and budgets[1] == 2 * budgets[0]
+
+
+def test_chat_json_salvages_complete_object_from_cut_off_repeat(make_deps):
+    from app.adapters.nightshift import ModelResult
+
+    class N:
+        def chat(self, lane, messages, *, agent, purpose="", **params):
+            return ModelResult(lane, "m", "m", '{"a": 1} {"a": 1} {"a"', None, False, 1,
+                               raw={"choices": [{"finish_reason": "length"}]})
+
+    deps = make_deps()
+    deps.nightshift = N()
+    out, _ = chat_json(deps, "fast", [], agent="T", purpose="p")
+    assert out == {"a": 1}
+    assert any(e["action"] == "model_output_truncated" for e in deps.tracer.read())
 
 
 def test_extract_case_rejects_empty_mo(make_deps):
