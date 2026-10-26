@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T21:09:14+05:30",
+  "updated": "2026-10-26T21:13:46+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -398,8 +398,8 @@
           "id": "WS2-22",
           "phase": "P6",
           "title": "Live mode without Supabase: local result store for /run and the worker",
-          "status": "in_progress",
-          "note": "nexus-3 · judges run live mode with their own Zetaris + Nightshift only"
+          "status": "done",
+          "note": "nexus-6 · #273 (NEXUS_STORE=supabase|local|memory; worker stays Supabase-only)"
         },
         {
           "id": "WS2-23",
@@ -866,8 +866,8 @@
           "id": "WS5-16",
           "phase": "P10",
           "title": "Path 2 plan: engg/docs/PATH2.md",
-          "status": "in_progress",
-          "note": "nexus-7"
+          "status": "done",
+          "note": "nexus-7 · #274"
         }
       ]
     },
