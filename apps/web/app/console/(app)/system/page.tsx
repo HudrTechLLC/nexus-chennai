@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { runTone, stateTone, type RunRow, type StatusRow } from "@/lib/trace";
+import { droppedLinks, type SkepticEventRow } from "@/lib/skeptic";
 import { evalReport } from "@/lib/evalReport.data";
 import { EvalSummary } from "@/components/console/system/EvalSummary";
 
@@ -21,10 +22,14 @@ const when = (iso: string | null) =>
 export default async function SystemPage() {
   await requireOfficer("admin");
   const sb = consoleServerClient();
-  const [status, runs] = await Promise.all([
+  const [status, runs, drops] = await Promise.all([
     sb.from("system_status").select("component, state, detail, checked_at").order("component"),
     sb.from("runs").select("run_id, kind, started, finished, status, log_path").order("started", { ascending: false }).limit(25),
+    // WS3-26: links the Skeptic dropped. They never become alerts, so the trace is their only record.
+    sb.from("trace_events").select("run_id, seq, ts, action, input_summary, output_summary, status")
+      .eq("agent_name", "Skeptic").eq("action", "drop").order("ts", { ascending: false }).limit(100),
   ]);
+  const dropped = droppedLinks((drops.data ?? []) as SkepticEventRow[]).slice(0, 30);
   const components = (status.data ?? []) as StatusRow[];
   const recent = (runs.data ?? []) as RunRow[];
 
@@ -90,6 +95,37 @@ export default async function SystemPage() {
               ))}
             </tbody>
           </table>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-line bg-surface p-5" data-testid="dropped-links">
+        <h2 className="mb-1 font-semibold">Dropped links</h2>
+        <p className="mb-3 text-xs text-muted">
+          Pairs the Linker proposed and the Skeptic dropped after re-checking them, with its reason. They never
+          became alerts. Newest first, once per run.
+        </p>
+        {drops.error && <p role="alert" className="text-sm text-red-600">Could not load dropped links: {drops.error.message}</p>}
+        {!drops.error && dropped.length === 0 && <p className="text-sm text-muted">The Skeptic has not dropped any link yet.</p>}
+        {dropped.length > 0 && (
+          <ul className="space-y-3 text-sm">
+            {dropped.map((d) => (
+              <li key={`${d.runId}:${d.pair.join("|")}`} className="border-t border-line pt-2 first:border-t-0 first:pt-0">
+                <div className="flex flex-wrap items-baseline gap-x-2 text-xs">
+                  {d.pair.map((id, i) => (
+                    <span key={id}>
+                      {i === 1 && <span className="text-muted">↔ </span>}
+                      <Link href={`/console/cases/${encodeURIComponent(id)}`} className="font-mono text-signal hover:underline">{id}</Link>
+                    </span>
+                  ))}
+                  {d.score !== null && <span className="text-muted">score {d.score.toFixed(2)}</span>}
+                  {d.round !== null && <span className="text-muted">round {d.round}</span>}
+                  <Link href={`/console/system/trace/${encodeURIComponent(d.runId)}`} className="font-mono text-muted hover:underline">{d.runId}</Link>
+                  <span className="text-muted">{when(d.ts)}</span>
+                </div>
+                <p className="mt-0.5 whitespace-pre-wrap break-words">{d.reason}</p>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </div>
