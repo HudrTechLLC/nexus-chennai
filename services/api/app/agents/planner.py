@@ -229,6 +229,10 @@ class Planner:
         out: dict[str, dict[str, Any]] = {}
         for step in plan.steps:
             optional = step.name != "q_candidates"
+            if optional and step.name in self.deps.timed_out_steps:
+                self.deps.tracer.emit(AGENT, "step_degraded", input_summary=step.name, status="degraded",
+                                      output_summary="skipped: it timed out earlier in this run")
+                continue
             try:
                 cap = {"timeout_s": STEP_TIMEOUT_S} if optional else {}
                 rows, qid = self.deps.query(step.name, agent=AGENT, **cap, **step.params)
@@ -236,6 +240,7 @@ class Planner:
                 if not optional:
                     raise
                 if isinstance(exc, ZetarisTimeout):
+                    self.deps.timed_out_steps.add(step.name)
                     self.deps.tracer.emit(AGENT, "step_degraded", input_summary=step.name, status="degraded",
                                           output_summary=short(f"gave up after {int(STEP_TIMEOUT_S)} s; run continues "
                                                                f"without it ({exc})"))
