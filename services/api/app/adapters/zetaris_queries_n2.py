@@ -134,7 +134,7 @@ CANDIDATES_COLUMNS = ("crime_id", "station_id", "category", "sub_type", "occurre
 
 def _candidates_sample() -> str:
     """Same category, |calendar days| <= :days (UTC dates, as Spark datediff in a UTC session), haversine
-    km <= :ring (R = 6371) after a bounding-box prefilter; ordered by km_apart, crime_id. occurred_from is
+    round(km, 3) <= :ring (R = 6371) after a bounding-box prefilter; ordered by km_apart, crime_id. occurred_from is
     returned as an ISO string in city time (timezone from the city pack, D-004)."""
     from datetime import datetime
     from zoneinfo import ZoneInfo
@@ -162,7 +162,7 @@ SELECT crime_id, station_id, category, sub_type,
          || '{offset}' AS occurred_from,
        lat, lon, h3_r9, geohash7, CAST(abs(signed_days) AS INTEGER) AS days_apart, round(km, 3) AS km_apart,
        same_st AS same_station
-FROM p WHERE abs(signed_days) <= :days AND km <= :ring
+FROM p WHERE abs(signed_days) <= :days AND round(km, 3) <= :ring  -- the Lightning form filters on the rounded km_apart
 ORDER BY km_apart, crime_id
 """.strip()
 
