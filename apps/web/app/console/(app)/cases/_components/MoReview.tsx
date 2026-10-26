@@ -1,11 +1,14 @@
 "use client";
 import { useState, useTransition } from "react";
-import { humanise, MO_FIELDS, moToText, type MoField } from "@/lib/cases";
+import { humanise, MO_FIELDS, moToText, reviewFormValues, type MoField } from "@/lib/cases";
 import { reviewMo } from "../[crimeId]/actions";
 
 const input = "w-full rounded-md border border-line bg-bg px-2 py-1 text-sm";
 
-/** Lets the case's station correct or confirm the Extractor's MO. Corrections are stored separately. */
+/**
+ * Lets the case's station correct or confirm the Extractor's MO. Corrections are stored separately.
+ * `mo` is the Extractor's MO overlaid with the latest correction; the whole form is submitted.
+ */
 export function MoReview({ crimeId, mo }: { crimeId: string; mo: Record<string, unknown> }) {
   const [open, setOpen] = useState(false);
   const [edited, setEdited] = useState<Partial<Record<MoField, string>>>({});
@@ -29,7 +32,7 @@ export function MoReview({ crimeId, mo }: { crimeId: string; mo: Record<string, 
       onSubmit={(e) => {
         e.preventDefault();
         start(async () => {
-          const r = await reviewMo(crimeId, edited, note);
+          const r = await reviewMo(crimeId, reviewFormValues(mo, edited), note);
           if (r.ok) {
             setMsg({ ok: true, text: r.changed ? `Saved ${r.changed} correction${r.changed === 1 ? "" : "s"}.` : "Marked as reviewed: no changes." });
             setOpen(false);

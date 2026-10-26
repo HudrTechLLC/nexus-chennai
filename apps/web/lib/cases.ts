@@ -221,6 +221,15 @@ export function moCorrections(mo: Record<string, unknown>, edited: Partial<Recor
   return { corrections: out };
 }
 
+/**
+ * Every MO field as the review form currently shows it: the officer's edit, else the prefilled value
+ * (Extractor MO overlaid with the latest correction). Submitting all fields keeps each review row
+ * complete, so "latest review wins" never drops an earlier correction.
+ */
+export function reviewFormValues(prefill: Record<string, unknown>, edited: Partial<Record<MoField, string>>): Record<MoField, string> {
+  return Object.fromEntries(MO_FIELDS.map((f) => [f, edited[f] ?? moToText(prefill[f])])) as Record<MoField, string>;
+}
+
 /** Merges dated events into one newest-first timeline; undated items are skipped. */
 export function buildTimeline(items: (TimelineItem | null | undefined)[]): TimelineItem[] {
   return items
