@@ -109,8 +109,17 @@ def load_sample_views(con: duckdb.DuckDBPyConnection, sample_dir) -> None:
             con.execute(stmt)
 
 
+class ZetarisTransient(ZetarisError):
+    """A Zetaris HTTP 400 that is really a connection failure between Zetaris and its JDBC source."""
+
+
+# Zetaris reports Spark/JDBC failures as HTTP 400. These texts mean the source connection failed
+# (seen live: intermittent DNS for the Supabase pooler inside the container), not bad SQL.
+TRANSIENT_400 = ("UnknownHostException", "The connection attempt failed")
+
+
 def _is_retryable(exc: BaseException) -> bool:
-    if isinstance(exc, httpx.TransportError):
+    if isinstance(exc, (httpx.TransportError, ZetarisTransient)):
         return True
     return isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code >= 500
 
@@ -156,6 +165,7 @@ class ZetarisClient:
         )
         self._duck: duckdb.DuckDBPyConnection | None = None
         self._tripped: dict[str, float] = {}  # fail-fast query name -> monotonic time it may run again
+        self._retries: dict[str, int] = {}  # query id -> retries taken (traced as retry_count)
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -167,8 +177,9 @@ class ZetarisClient:
 
     @retry(
         retry=retry_if_exception(_is_retryable),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(3),  # at most 2 retries
         wait=wait_exponential(multiplier=0.5, max=4),
+        before_sleep=lambda s: s.args[0]._retries.__setitem__(s.args[2], s.attempt_number),
         reraise=True,
     )
     def _run_rest(self, sql: str, query_id: str, limit: int) -> list[list[Any]]:
@@ -180,6 +191,8 @@ class ZetarisClient:
         resp = self._client.post("/sql-editor/sqls/run", json=body, headers=self._headers(), **kw)
         if resp.status_code == 401:
             raise ZetarisError("Zetaris rejected the API key (HTTP 401)")
+        if resp.status_code == 400 and any(t in resp.text for t in TRANSIENT_400):
+            raise ZetarisTransient(f"Zetaris source connection failed (transient): {resp.text[:300]}")
         if resp.status_code == 400:
             raise ZetarisError(f"Zetaris bad request (check X-Org-ID / SQL): {resp.text[:300]}")
         resp.raise_for_status()
@@ -232,15 +245,17 @@ class ZetarisClient:
         return QueryResult(name=name, query_id=query_id, rows=rows, ms=ms, source=source, columns=q.columns)
 
     def _trace(self, agent, name, query_id, rows, ms, status, note) -> None:
+        retries = self._retries.pop(query_id, 0)
         if self.tracer is None:
             return
         self.tracer.emit(
             agent,
             "zetaris_query",
             input_summary=name,
-            output_summary=f"rows={rows} ms={ms} via={note}",
+            output_summary=f"rows={rows} ms={ms} via={note}" + (f" retries={retries}" if retries else ""),
             zetaris_query_ids=[query_id],
             status=status,
+            retry_count=retries,
         )
 
     def close(self) -> None:
