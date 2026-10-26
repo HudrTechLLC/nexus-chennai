@@ -67,7 +67,8 @@ class NamedQuery:
     # lightning_files: the Lightning SQL to use instead when ZETARIS_DATA=files (still localised).
     lightning_files: str | None = None
     # as_of_column: `lightning` returns one extra last column (a freshness time) that is not part of `columns`;
-    # it is stripped from the rows and its latest value goes into the trace as as_of=...
+    # it is stripped from the rows and its latest value goes into the trace as as_of=... A row whose first column is
+    # NULL is a freshness marker only (so an empty answer still has a time) and is dropped.
     as_of_column: bool = False
 
 
@@ -272,7 +273,8 @@ class ZetarisClient:
                 rows = rows[:limit] if limit else rows
             if q.as_of_column and not files_sql:
                 stamps = [str(r[-1]) for r in rows if r and r[-1] is not None]
-                rows = [r[:-1] for r in rows]
+                # A row whose first column is NULL is the query's freshness marker, not data: drop it.
+                rows = [r[:-1] for r in rows if r and r[0] is not None]
                 source = f"zetaris as_of={max(stamps)}" if stamps else "zetaris as_of=none"
         except (httpx.TransportError, httpx.HTTPStatusError, ZetarisError) as exc:
             if fast is not None and isinstance(exc, httpx.TimeoutException):
