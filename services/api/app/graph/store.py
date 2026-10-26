@@ -5,6 +5,9 @@
 - `link_alerts` + `link_factors`: upsert. `status` is never written by the agents, so a
   re-run cannot undo an analyst's decision; new rows default to 'pending'.
 - `notifications`: one per police user of each station involved, plus analysts.
+- `series` + `series_members`: from `detect_series` (never from _truth). The id stays stable as a
+  series grows (reuse of the stored series sharing most members). `status` is never written, so an
+  analyst's confirm/close survives re-runs; `dossier` is written only by `write_dossier`.
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from datetime import datetime
 from typing import Any
 
 from ..adapters.supabase import SupabaseClient
+from ..agents.base import choose_series_id, series_name
 from ..tracing import IST, Tracer
 from .redact import redact_event
 
@@ -41,9 +45,17 @@ class SupabaseStore:
 
     # ----- runs ----------------------------------------------------------------
 
-    def start_run(self, run_id: str, kind: str, log_path: str) -> None:
-        self.client.upsert("runs", {"run_id": run_id, "kind": kind, "status": "running", "log_path": log_path},
-                           on_conflict="run_id")
+    def start_run(self, run_id: str, kind: str, log_path: str, subject: str | None = None) -> None:
+        """`subject` (0006_03): the crime a case run is about, so the console can find its trace."""
+        row = {"run_id": run_id, "kind": kind, "status": "running", "log_path": log_path}
+        if subject:
+            try:
+                self.client.upsert("runs", {**row, "subject": subject}, on_conflict="run_id")
+                return
+            except Exception as exc:  # 0006_03 not applied yet: the run still starts, without a subject
+                if "subject" not in str(exc):
+                    raise
+        self.client.upsert("runs", row, on_conflict="run_id")
 
     def finish_run(self, run_id: str, status: str, kind: str = "case") -> None:
         """Close the run row, then copy its (redacted) trace lines for the console trace viewer.
@@ -91,3 +103,24 @@ class SupabaseStore:
             self.client.insert("notifications", rows)
         self.tracer.emit("Alert writer", "notify", input_summary=first.get("link"),
                          output_summary=f"{len(rows)} users across {len(stations)} stations", status="ok")
+
+    # ----- series (WS2-21) ----------------------------------------------------------------
+
+    def write_series(self, series: dict[str, Any], run_id: str) -> str:
+        ids = list(series.get("crime_ids") or [])
+        stored = self.client.select("series_members", {"select": "series_id,crime_id",
+                                                       "crime_id": f"in.({','.join(ids)})"}) if ids else []
+        sid = choose_series_id(series, {r["crime_id"]: r["series_id"] for r in stored})
+        self.client.upsert("series", {"series_id": sid, "name": series_name(series), "run_id": run_id,
+                                      "synthetic": True}, on_conflict="series_id")
+        self.client.upsert("series_members", [{"series_id": sid, "crime_id": cid} for cid in ids],
+                           on_conflict="series_id,crime_id")
+        self.tracer.emit("Series analyst", "series_saved", input_summary=sid,
+                         output_summary=f"{len(ids)} members" + ("" if sid == series["series_id"] else
+                                                                 f" (grew stored series, was {series['series_id']})"),
+                         status="ok")
+        return sid
+
+    def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool:
+        """True when a stored series row took the dossier (an unknown id updates nothing)."""
+        return bool(self.client.update("series", {"series_id": f"eq.{series_id}"}, {"dossier": dossier}))
