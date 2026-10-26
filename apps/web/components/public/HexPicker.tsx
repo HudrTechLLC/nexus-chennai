@@ -1,20 +1,34 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
-import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
 import { cellToBoundary, cellToLatLng, latLngToCell } from "h3-js";
 import { CITY } from "@/lib/city";
+import { fetchPlaces, GEOCODE_DEBOUNCE_MS, GEOCODE_MIN_CHARS, type PlaceSuggestion } from "@/lib/geocodeClient";
+import { AREA_SIZES, autoRes, cellRes, DEFAULT_AREA_RES, resizeCell, zoomFor, type AreaRes, type Point } from "@/lib/tipArea";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 /**
- * "Roughly where?" picker (spec G1): tap the map and the whole H3 resolution-8 hexagon
- * (about 0.7 km²) is chosen. Only the cell id is sent; the tapped point never leaves the browser.
+ * "Roughly where?" picker (spec G1, J1; WS4-15). Tap the map, or search a place, and the whole H3 hexagon
+ * around it is chosen at the size picked below the map (Large r8 / Medium r9 / Small r10). Only the cell id
+ * is sent; the tapped or searched point never leaves the browser. Place search goes through our own
+ * /api/geocode route, never straight to a third party.
  */
 export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (cell: string | null) => void }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const cb = useRef(onChange);
   cb.current = onChange;
+  const [res, setResState] = useState<AreaRes>(() => (cell ? cellRes(cell) : DEFAULT_AREA_RES));
+  const resRef = useRef(res);
+  const cellRef = useRef(cell);
+  cellRef.current = cell;
+  const point = useRef<Point | null>(null); // browser only, never sent
+
+  const setRes = (r: AreaRes) => {
+    resRef.current = r;
+    setResState(r);
+    if (cellRef.current) cb.current(resizeCell(cellRef.current, r, point.current));
+  };
 
   const geo = (c: string | null) => ({
     type: "FeatureCollection" as const,
@@ -28,18 +42,26 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     if (!el.current) return;
     // A prefilled area (WS4-12) opens centred on its hexagon, close enough to see it.
     const [lat, lng] = cell ? cellToLatLng(cell) : [0, 0];
-    const theme = currentMapTheme();
     const m = new maplibregl.Map({
-      container: el.current, style: mapStyleUrl(theme),
-      center: cell ? [lng, lat] : CITY.map.center, zoom: cell ? Math.max(CITY.map.zoom, 13) : CITY.map.zoom,
+      container: el.current, style: "/map/light.json",
+      center: cell ? [lng, lat] : CITY.map.center,
+      zoom: cell ? Math.max(CITY.map.zoom, zoomFor(cellRes(cell))) : CITY.map.zoom,
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.on("load", () => {
-      m.addSource("pick", { type: "geojson", data: geo(cell) });
-      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": MAP_INK[theme].signal, "fill-opacity": 0.3 } });
-      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": MAP_INK[theme].signal, "line-width": 2 } });
+      m.addSource("pick", { type: "geojson", data: geo(cellRef.current) });
+      m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": "#0e7c86", "fill-opacity": 0.3 } });
+      m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": "#0e7c86", "line-width": 2 } });
     });
-    m.on("click", (e) => cb.current(latLngToCell(e.lngLat.lat, e.lngLat.lng, CITY.h3.public)));
+    m.on("click", (e) => {
+      point.current = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      cb.current(latLngToCell(e.lngLat.lat, e.lngLat.lng, resRef.current));
+    });
+    // Zooming in close steps the size down to the finer one (never back up).
+    m.on("zoomend", () => {
+      const next = autoRes(m.getZoom(), resRef.current);
+      if (next !== resRef.current) setRes(next);
+    });
     map.current = m;
     return () => m.remove();
     // created once
@@ -51,13 +73,97 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     src?.setData(geo(cell));
   }, [cell]);
 
+  function pickPlace(s: PlaceSuggestion) {
+    point.current = { lat: s.lat, lng: s.lng };
+    cb.current(latLngToCell(s.lat, s.lng, resRef.current));
+    map.current?.flyTo({ center: [s.lng, s.lat], zoom: zoomFor(resRef.current) });
+  }
+
   return (
-    <div>
+    <div className="space-y-2">
+      <PlaceSearch onPick={pickPlace} />
       <div ref={el} className="h-64 w-full overflow-hidden rounded-lg border border-line" />
-      <p className="mt-1 text-xs text-muted">
-        {cell ? "Area chosen. We keep only this hexagon, not a point." : "Tap the map near where it happened. Optional."}
-        {cell && <button type="button" className="ml-2 underline" onClick={() => onChange(null)}>clear</button>}
+      <div role="radiogroup" aria-label="Area size" className="flex flex-wrap gap-2">
+        {AREA_SIZES.map((s) => (
+          <button key={s.res} type="button" role="radio" aria-checked={res === s.res} onClick={() => setRes(s.res)}
+            className={`rounded-full border px-3 py-1 text-xs ${res === s.res ? "border-signal bg-signal-soft" : "border-line"}`}>
+            {s.label} <span className="text-muted">{s.km2}</span>
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-muted">
+        {cell ? "Area chosen. We keep only this small area, not an exact point." : "Search a place or tap the map near where it happened. Optional."}
+        {cell && <button type="button" className="ml-2 underline" onClick={() => { point.current = null; onChange(null); }}>clear</button>}
       </p>
+    </div>
+  );
+}
+
+/** Type-ahead place search (WS4-15): debounced, through POST /api/geocode; the text is never stored. */
+function PlaceSearch({ onPick }: { onPick: (s: PlaceSuggestion) => void }) {
+  const [q, setQ] = useState("");
+  const [items, setItems] = useState<PlaceSuggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [searching, setSearching] = useState(false);
+  const picked = useRef(false);
+  const listId = useId();
+
+  useEffect(() => {
+    if (picked.current) { picked.current = false; return; }
+    if (q.trim().length < GEOCODE_MIN_CHARS) { setItems([]); setOpen(false); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      setSearching(true);
+      const found = await fetchPlaces(q, { signal: ctrl.signal });
+      if (ctrl.signal.aborted) return;
+      setSearching(false);
+      setItems(found);
+      setActive(-1);
+      setOpen(true);
+    }, GEOCODE_DEBOUNCE_MS);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [q]);
+
+  const choose = (s: PlaceSuggestion) => {
+    picked.current = true;
+    setQ(s.label);
+    setOpen(false);
+    onPick(s);
+  };
+
+  return (
+    <div className="relative">
+      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a street, landmark or area"
+        role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list" autoComplete="off" maxLength={100}
+        aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+        onKeyDown={(e) => {
+          if (!open || !items.length) return;
+          if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => (a + 1) % items.length); }
+          else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => (a <= 0 ? items.length - 1 : a - 1)); }
+          else if (e.key === "Enter" && active >= 0) { e.preventDefault(); choose(items[active]); }
+          else if (e.key === "Escape") setOpen(false);
+        }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        className="w-full rounded-md border border-line bg-bg px-3 py-2 text-sm" />
+      {searching && <span className="absolute right-3 top-2 text-xs text-muted">…</span>}
+      {open && (
+        <div className="absolute z-10 mt-1 w-full rounded-md border border-line bg-surface shadow-lg">
+          {items.length ? (
+            <ul id={listId} role="listbox">
+              {items.map((s, i) => (
+                <li key={`${s.label}-${i}`} id={`${listId}-${i}`} role="option" aria-selected={i === active}>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => choose(s)}
+                    className={`block w-full px-3 py-2 text-left text-sm ${i === active ? "bg-signal-soft" : ""}`}>{s.label}</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p id={listId} className="px-3 py-2 text-sm text-muted">No matching place. Try another name, or tap the map.</p>
+          )}
+          <p className="border-t border-line px-3 py-1 text-[10px] text-muted">© OpenStreetMap contributors</p>
+        </div>
+      )}
     </div>
   );
 }

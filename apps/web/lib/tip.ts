@@ -2,6 +2,7 @@
  * Tip intake helpers shared by the browser form and the route handler (spec G1, J1, D3.6).
  * Pure functions plus WebCrypto (available in browsers and Node 20), so they are unit-tested.
  */
+import { isTipCell } from "@/lib/tipArea";
 
 // =====================
 // Categories
@@ -71,7 +72,7 @@ export function validateTip(t: TipInput): string | null {
   const len = t.text.trim().length;
   if (len < 3) return "Tell us a little more (at least a few words).";
   if (t.text.length > 4000) return "Keep it under 4000 characters.";
-  if (t.cell !== null && !/^88[0-9a-f]{13}$/.test(t.cell)) return "Pick the area again.";
+  if (t.cell !== null && !isTipCell(t.cell)) return "Pick the area again.";
   if (t.appeal !== null && !/^[A-Za-z0-9-]{1,40}$/.test(t.appeal)) return "Unknown appeal.";
   if (t.about != null && !PUBLIC_CRIME_ID_RE.test(t.about)) return "Unknown crime.";
   if (t.followUp) {

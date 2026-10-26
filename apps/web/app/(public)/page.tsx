@@ -6,7 +6,7 @@ export const revalidate = 60;
 
 const STEPS = [
   { t: "Your browser cleans it", b: "Photos lose their location and camera details before they leave your phone. Faces can be blurred." },
-  { t: "We keep almost nothing", b: "No IP address, device, phone number, email or exact time: only the week and, if you choose, an area of about 0.7 km²." },
+  { t: "We keep almost nothing", b: "No IP address, device, phone number, email or exact time: only the week and, if you choose, a small area (never an exact point)." },
   { t: "You choose about replies", b: "Stay fully anonymous, or keep a tip code and passphrase to read police replies. Nobody can recover them." },
 ];
 

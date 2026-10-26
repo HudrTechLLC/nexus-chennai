@@ -227,7 +227,7 @@ export function TipForm({ subject, defaultCategory }: { subject: TipSubject | nu
             </div>
           )}
           <p className="text-xs text-muted">
-            We never store your IP address, device, phone number, email or exact time. Your tip is kept with the week it arrived and, if you chose one, an area of about 0.7 km².
+            We never store your IP address, device, phone number, email or exact time. Your tip is kept with the week it arrived and, if you chose one, the area you picked (between about 0.015 and 0.7 km²), never an exact point.
           </p>
           <div className="rounded-lg border border-line p-3 text-sm">
             <p className="font-semibold">Review</p>
