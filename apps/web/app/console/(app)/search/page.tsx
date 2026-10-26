@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/alertsData";
-import { CASE_STATUSES, CATEGORIES, humanise } from "@/lib/cases";
+import { CASE_STATUSES, CATEGORIES, humanise, listPlace } from "@/lib/cases";
 import { stationOptions } from "@/lib/casesData";
 import { hasCriteria, kindLabel, parseSearch, TIME_BANDS } from "@/lib/search";
 import { runSearch } from "@/lib/searchData";
@@ -116,7 +116,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
                     <Link href={`/console/cases/${encodeURIComponent(c.crime_id)}`} className="font-semibold text-signal hover:underline">
                       {(names[c.station_id] ?? c.station_id).replace(/^PS-/, "")} {c.fir_no}
                     </Link>
-                    <span className="text-muted"> · {humanise(c.category)}{c.sub_type ? ` · ${humanise(c.sub_type)}` : ""}{c.address ? ` · ${c.address}` : ""}</span>
+                    <span className="text-muted"> · {humanise(c.category)}{c.sub_type ? ` · ${humanise(c.sub_type)}` : ""}{c.ward_no ? ` · ${listPlace(c.ward_no)}` : ""}</span>
                   </span>
                   <span className="text-xs text-muted">{fmt(c.occurred_from)} · <span className="font-mono">{c.crime_id}</span></span>
                 </li>

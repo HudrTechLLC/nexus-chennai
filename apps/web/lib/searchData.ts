@@ -29,7 +29,7 @@ const LIMIT = 50;
 const ID_CAP = 500;
 
 const intersect = (a: string[] | null, b: string[]) => (a === null ? b : a.filter((x) => b.includes(x)));
-const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, severity, status";
+const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, ward_no, severity, status";
 
 export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<SearchResult> {
   const sources: SourceUsed[] = [];

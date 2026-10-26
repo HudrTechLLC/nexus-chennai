@@ -21,7 +21,8 @@ export type CaseRow = {
   sub_type: string | null;
   occurred_from: string;
   reported_at: string;
-  address: string | null;
+  address: string | null; // full case file only; lists show the ward (J5)
+  ward_no: number | null;
   severity: number;
   status: string;
 };
@@ -94,7 +95,7 @@ export type CaseFile = {
   tips: TipLink[];
 };
 
-const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, severity, status";
+const CASE_COLS = "crime_id, station_id, fir_no, category, sub_type, occurred_from, reported_at, address, ward_no, severity, status";
 
 // =====================
 // Case list

@@ -158,6 +158,11 @@ export function maskPii(text: string): string {
     .replace(/(?:\+91[ -]?)?\b[6-9]\d{4}[ -]?\d{5}\b/g, "XXXXX XXXXX");
 }
 
+/** Place as a list shows it: the ward, never the address (J5 masks addresses in UI lists). */
+export function listPlace(wardNo: number | null | undefined): string {
+  return wardNo ? `ward ${wardNo}` : "—";
+}
+
 /** "crimes_against_women" -> "crimes against women". */
 export function humanise(v: string | null | undefined): string {
   return v ? v.replace(/_/g, " ") : "—";
