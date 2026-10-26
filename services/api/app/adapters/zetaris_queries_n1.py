@@ -281,6 +281,41 @@ def _twin(name: str, columns: tuple[str, ...]) -> str:
     return sample
 
 
+# Data-quality counts for /console/system (D-029: Vercel cannot reach Zetaris, so app.dq_status writes them to
+# system_status). One row per rule view in zetaris/20_dq.sql (dq_flags is the union of the first four).
+DQ_SUMMARY_COLUMNS = ("rule", "rows")
+DQ_RULE_VIEWS = (
+    ("bad_geo", "dq_bad_geo"), ("duplicate_fir", "dq_duplicate_firs"), ("orphan_evidence", "dq_orphan_evidence"),
+    ("stale_camera", "dq_stale_cameras"), ("time_inconsistent", "dq_time_inconsistent"),
+    ("tip_without_incident", "dq_tip_without_incident"), ("unmapped_section", "dq_unmapped_sections"),
+)
+
+
+def _q_dq_summary(sample: bool) -> str:
+    if not sample:
+        parts = " UNION ALL ".join(f"SELECT '{rule}' AS rule, count(*) AS rows FROM nexus.{view}"
+                                   for rule, view in DQ_RULE_VIEWS)
+        return f"SELECT rule, rows FROM ({parts}) s ORDER BY rule"  # ORDER BY: D-031
+    # Twin over the sample bundle: the crime rules use nexus-2's rule text (dq_rules.py), the evidence and tip
+    # rules mirror 20_dq.sql over the bundle's tables. The bundle has no camera registry, so stale_camera is
+    # NULL (not measured), never a 0 nobody counted.
+    from . import dq_rules
+
+    flags = dq_rules.flags_sql(dq_rules.DUCK, dq_rules.city_bounds(load_city(get_settings().city)))
+    crime_rules = ", ".join(f"('{r}')" for r in dq_rules.RULES)
+    return (
+        "SELECT rule, rows FROM ("
+        f"SELECT r.rule, count(f.rule) AS rows FROM (VALUES {crime_rules}) r(rule) "
+        f"LEFT JOIN ({flags}) f ON f.rule = r.rule GROUP BY r.rule "
+        "UNION ALL SELECT 'orphan_evidence', count(*) FROM 'sb/evidence_media.parquet' e "
+        "WHERE e.crime_id NOT IN (SELECT crime_id FROM v_crime_unified) "
+        "UNION ALL SELECT 'tip_without_incident', count(*) FROM 'sb/tips.parquet' t "
+        "WHERE t.public_incident_id IS NULL AND t.status NOT IN ('quarantined', 'closed') "
+        "UNION ALL SELECT 'stale_camera', CAST(NULL AS BIGINT)"
+        ") s ORDER BY rule"
+    )
+
+
 def specs() -> dict[str, dict[str, Any]]:
     tz, off = _city_time()
     return {
@@ -313,4 +348,10 @@ def specs() -> dict[str, dict[str, Any]]:
                          "sample": _q_calls_near(tz, off, sample=True), "defaults": {"km": 1.0, "minutes": 120},
                          "description": "112 calls within :km of a crime and :minutes of its time window",
                          "columns": CALLS_COLUMNS},
+        # The 7 views do a 19,540-row self-join among other things: about 80 s live (26 Oct). Fail fast at
+        # 180 s, one attempt; app.dq_status keeps the last good counts.
+        "q_dq_summary": {"name": "q_dq_summary", "lightning": _q_dq_summary(sample=False),
+                         "sample": _q_dq_summary(sample=True), "timeout_s": 180.0,
+                         "description": "Row count of each data-quality rule view (System page, via app.dq_status)",
+                         "columns": DQ_SUMMARY_COLUMNS},
     }
