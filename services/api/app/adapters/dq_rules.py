@@ -30,11 +30,9 @@ STALE_CAMERA_DAYS = 180
 RULES = ("duplicate_fir", "bad_geo", "time_inconsistent", "unmapped_section")
 COLUMNS = ("crime_id", "rule", "other_id", "detail")
 
-# Live source for the crime-level rules. Until nexus.v_crime_unified (10_views.sql) is registered these views
-# read sb.crimes directly, so they register without 10_views. sb.crimes has no legacy rows, so cross-source
-# duplicates and unmapped_section cannot fire live yet; set SPARK_VIEW to "nexus.v_crime_unified" when it lands.
-SPARK_VIEW = ("(SELECT crime_id, source, station_id, category, occurred_from, occurred_to, reported_at, lat, lon, "
-              "CAST(NULL AS STRING) AS sections_raw FROM sb.crimes)")
+# Live source for the crime-level rules: the unified crime view (nexus-1's 10_views.sql, live), so legacy rows
+# take part in cross-source duplicates and unmapped_section.
+SPARK_VIEW = "nexus.v_crime_unified"
 SPARK = {"epoch": "unix_timestamp({x})", "str": "STRING", "view": SPARK_VIEW}
 DUCK = {"epoch": "epoch({x})", "str": "VARCHAR", "view": "v_crime_unified"}
 
@@ -102,7 +100,7 @@ _HEADER = """-- zetaris/20_dq.sql · Data-quality views (spec E5, WS1-14). Owner
 -- One statement per call; register.py strips the trailing semicolons and fills {{city:...}} from
 -- cities/<city>/city.yaml. Views live in schema-store container `nexus` (queried as nexus.<view>), created
 -- first here; there is no IF NOT EXISTS, and register.py skips "already exists", so other files may repeat it.
--- Crime-level rules read sb.crimes until nexus.v_crime_unified is registered (SPARK_VIEW in dq_rules.py).
+-- Crime-level rules read nexus.v_crime_unified (SPARK_VIEW in dq_rules.py).
 """
 CONTAINER = "CREATE SCHEMASTORE CONTAINER nexus;\n"
 
@@ -115,7 +113,7 @@ def dq_file() -> str:
     views.append(("dq_flags", flags_sql(SPARK, b)))
     views.append(("dq_orphan_evidence",
                   "SELECT e.evidence_id, e.crime_id, 'evidence for a crime that does not exist' AS detail "
-                  "FROM sb.evidence_media e LEFT JOIN sb.crimes c ON c.crime_id = e.crime_id "
+                  "FROM sb.evidence_media e LEFT JOIN nexus.v_crime_unified c ON c.crime_id = e.crime_id "
                   "WHERE c.crime_id IS NULL"))
     views.append(("dq_tip_without_incident",
                   "SELECT t.tip_id, t.category, t.received_week, 'tip not tied to a public incident' AS detail "

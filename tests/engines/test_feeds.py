@@ -99,7 +99,7 @@ def test_feeds_sql_shape():
                       r"(\w+)", s).group(1) for s in statements]
     assert heads == ["nexus", "nexus_feeds", "rest_news", "rest_social", "news_items", "social_posts",
                      "v_news_mentions", "rest_weather", "weather_hourly"]
-    assert "nexus.v_crime_unified" not in code  # registers without 10_views
+    assert "FROM nexus.v_crime_unified c" in code
     views = [s for s in statements if "SCHEMASTORE VIEW" in s]
     assert len(views) == 4 and all("WITH CONTAINER nexus AS" in s for s in views)
     assert "{{since}}" in sql and "{{until}}" in sql and "mock-feeds/news" in sql and "mock-feeds/social" in sql
