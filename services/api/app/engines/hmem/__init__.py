@@ -55,6 +55,9 @@ class _Local:
     def ledger_entries(self) -> list[dict]:
         return list(self.mem.ledger.entries)
 
+    def records(self) -> list[dict]:
+        return [{k: v for k, v in r.items() if k != "embedding"} for r in self.mem.records.values()]
+
 
 class _Sidecar:
     """Sidecar backend: the vendored TypeScript HMEM (engines-ts/hmem/reference)."""
@@ -78,6 +81,9 @@ class _Sidecar:
 
     def ledger_entries(self) -> list[dict]:
         return self.call("hmem/ledger", {})["entries"]
+
+    def records(self) -> list[dict]:
+        return self.call("hmem/records", {})["records"]
 
 
 _instance: _Local | _Sidecar | None = None
@@ -190,3 +196,6 @@ def record_decision(alert_id: str, decision: str, reason_code: str | None, note:
                                  "reason_code": reason_code, "note": note})
     _runtime.emit(ENGINE, "record_decision", f"{alert_id} {decision} {reason_code or ''}".strip(),
                   f"memory {mem_id}; reinforced {len(reinforced)}")
+    from app.engines import _persist
+
+    _persist.hmem()

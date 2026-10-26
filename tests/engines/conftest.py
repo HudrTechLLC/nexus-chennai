@@ -44,6 +44,7 @@ def engine_backend(request, tmp_path, monkeypatch):
             pytest.fail(f"ENGINES_BACKEND=sidecar but no sidecar at {sidecar_url()}")
         pytest.skip("engines sidecar not running (cd engines-ts && npm run sidecar)")
     monkeypatch.setenv("ENGINES_BACKEND", request.param)
+    monkeypatch.delenv("ENGINES_PERSIST", raising=False)  # tests never write to the real Supabase project
     tracer = Tracer("test", tmp_path / "logs", echo=False)
     set_tracer(tracer)
     world_model.reset()

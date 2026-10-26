@@ -91,6 +91,9 @@ def ingest(entities: list[dict], source: str) -> list[str]:
     _runtime.emit(ENGINE, "ingest", f"{len(entities)} entities from {source}",
                   f"{len(set(ids))} entities; +{after[0] - before[0]} new entities, +{after[1] - before[1]} edges, "
                   f"+{after[2] - before[2]} observations")
+    from app.engines import _persist
+
+    _persist.world(ids)
     return ids
 
 

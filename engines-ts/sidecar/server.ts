@@ -215,6 +215,9 @@ const routes: Record<string, Handler> = {
   },
   "/hmem/feedback": ({ id, kind }) => { hmem.feedback(id, kind); return { ok: true }; },
   "/hmem/ledger": () => ({ entries: hmem.ledger.all() }),
+  "/hmem/records": () => ({
+    records: hmem.store.all().map(({ embedding: _e, ...rest }) => rest),
+  }),
   "/markovian/run": (body) => markovianRun(body),
 };
 
