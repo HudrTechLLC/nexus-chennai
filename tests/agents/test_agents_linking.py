@@ -432,3 +432,52 @@ def test_alert_writer_records_weights_version(make_deps):
     deps = make_deps(responder=approve_all)
     row = AlertWriter(deps).write(Skeptic(deps).review(scored(deps)))[0]
     assert row["weights_version"] == WEIGHTS_VERSION
+
+
+# ----- reason-lane batching (live: Ultra needed > 4,096 tokens to think through 4 pairs) -----------
+
+def _recording(deps, reply):
+    """Wrap the fake Nightshift: record (pairs in the request, max_tokens) per reason call."""
+    inner = deps.nightshift.chat
+    seen = []
+
+    def chat(lane, messages, *, agent, purpose="", **params):
+        if lane == "reason" and ("critique" in purpose or "rationale" in purpose):
+            payload = json.loads(messages[-1]["content"])
+            seen.append((sorted(payload), params.get("max_tokens")))
+            deps.nightshift.responder = lambda la, m, p: reply(payload)
+        return inner(lane, messages, agent=agent, purpose=purpose, **params)
+
+    deps.nightshift.chat = chat
+    return seen
+
+
+def _replicas(deps, n):
+    from dataclasses import replace
+    base = scored(deps)[0]
+    return [replace(base, pair_id=f"P{i}") for i in range(n)]
+
+
+def test_skeptic_critique_goes_in_chunks_with_a_budget_sized_to_the_chunk(make_deps):
+    from app.agents.base import REASON_PAIRS_PER_CALL, reason_budget
+    from app.agents.skeptic import SkepticResult
+    deps = make_deps(responder=approve_all)
+    results = [SkepticResult(p, "approve") for p in _replicas(deps, 7)]
+    seen = _recording(deps, lambda payload: json.dumps(
+        {"pairs": {k: {"verdict": "approve", "critique": "ok"} for k in payload}}))
+    Skeptic(deps)._critique(results, 1)
+    assert [len(ids) for ids, _ in seen] == [2, 2, 2, 1] and REASON_PAIRS_PER_CALL == 2
+    assert [b for _, b in seen] == [reason_budget(2)] * 3 + [reason_budget(1)]
+    assert reason_budget(1) >= 2048 and reason_budget(2) > 4096  # 4,096 overflowed live
+    assert all(r.model_critique == "applied" for r in results)
+
+
+def test_linker_rationale_goes_in_chunks_with_a_budget_sized_to_the_chunk(make_deps):
+    from app.agents.base import reason_budget
+    deps = make_deps(responder=approve_all)
+    pairs = _replicas(deps, 5)
+    seen = _recording(deps, lambda payload: json.dumps({"pairs": {k: {"rationale": f"why {k}"} for k in payload}}))
+    Linker(deps).explain(pairs)
+    assert [len(ids) for ids, _ in seen] == [2, 2, 1]
+    assert [b for _, b in seen] == [reason_budget(2), reason_budget(2), reason_budget(1)]
+    assert [p.rationale for p in pairs] == [f"why P{i}" for i in range(5)]

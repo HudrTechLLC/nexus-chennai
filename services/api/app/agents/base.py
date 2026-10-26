@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import re
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -255,6 +255,19 @@ def parse_model_json(text: str) -> dict[str, Any]:
 
 # Reasoning lanes spend hundreds of tokens thinking; small budgets return empty replies (D-017).
 DEFAULT_MAX_TOKENS = 2048
+# Batched reason-lane calls (Linker rationale, Skeptic critique). Live Ultra spends ~800-1,500 thinking tokens
+# per pair: 4 pairs overflowed 4,096 even after the retry (run_284d5caf). Chunks of 2 with a budget sized to
+# the chunk (5,120; doubled once to 10,240 if cut) keep every reply whole and each call short.
+REASON_PAIRS_PER_CALL = 2
+
+
+def reason_budget(n_pairs: int) -> int:
+    """max_tokens for one batched reason-lane call over `n_pairs` pairs (chat_json doubles it once if cut)."""
+    return min(2048 + 1536 * max(1, n_pairs), 8192)
+
+
+def chunked(items: Sequence[Any], n: int = REASON_PAIRS_PER_CALL) -> list[list[Any]]:
+    return [list(items[i:i + n]) for i in range(0, len(items), n)]
 
 
 def chat_json(

@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..scoring import PairScore, strike
-from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, DeadlineExceeded, chat_json, crime_from_row, features_from_row, short
+from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, DeadlineExceeded, chat_json, chunked, reason_budget, crime_from_row, features_from_row, short
 from .linker import CORROBORATION_QUERIES, ScoredPair, compute_factors, corroboration_items, factor_payload
 
 AGENT = "Skeptic"
@@ -190,6 +190,10 @@ class Skeptic:
         return results
 
     def _critique(self, results: Sequence[SkepticResult], round_no: int) -> None:
+        for chunk in chunked(results):
+            self._critique_chunk(chunk, round_no)
+
+    def _critique_chunk(self, results: Sequence[SkepticResult], round_no: int) -> None:
         payload = {r.pair.pair_id: {**factor_payload(r.pair), "struck_by_skeptic": r.struck,
                                     "coverage": r.pair.score.coverage, "rationale": r.pair.rationale}
                    for r in results}
@@ -198,7 +202,7 @@ class Skeptic:
         try:
             out, result = chat_json(self.deps, "reason", messages, agent=AGENT,
                                     purpose=f"critique {len(results)} pairs round {round_no}", temperature=0,
-                                    expect="pairs")
+                                    expect="pairs", max_tokens=reason_budget(len(results)))
             answers = out.get("pairs") or {}
         except AgentError as exc:
             # No model critique: code verdicts stand (approve only what still alerts after strikes).

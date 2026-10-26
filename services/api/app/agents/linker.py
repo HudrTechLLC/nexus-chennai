@@ -23,7 +23,7 @@ from typing import Any
 
 from ..scoring import FactorResult, PairScore, score_pair
 from ..scoring import factors as F
-from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, chat_json, short
+from .base import REASON_SUMMARY_CHARS, AgentDeps, AgentError, chat_json, chunked, reason_budget, short
 
 AGENT = "Linker"
 
@@ -348,17 +348,21 @@ class Linker:
     # ----- explanation ----------------------------------------------------
 
     def explain(self, pairs: Sequence[ScoredPair]) -> None:
-        """Ask the reason lane for factor reasons + rationale for alerting pairs (one batched call)."""
+        """Ask the reason lane for factor reasons + rationale for alerting pairs (batched, REASON_PAIRS_PER_CALL
+        pairs per call with a budget sized to the chunk)."""
         todo = [p for p in pairs if p.score.alert][:MAX_RATIONALE_PAIRS]
-        if not todo:
-            return
+        for chunk in chunked(todo):
+            self._explain_chunk(chunk)
+
+    def _explain_chunk(self, todo: Sequence[ScoredPair]) -> None:
         payload = {p.pair_id: factor_payload(p) for p in todo}
         messages = [{"role": "system", "content": RATIONALE_PROMPT},
                     {"role": "user", "content": short(payload, 24000)}]
         model = None
         try:
             out, result = chat_json(self.deps, "reason", messages, agent=AGENT,
-                                    purpose=f"rationale {len(todo)} pairs", temperature=0.2, expect="pairs")
+                                    purpose=f"rationale {len(todo)} pairs", temperature=0.2, expect="pairs",
+                                    max_tokens=reason_budget(len(todo)))
             model = result.model
             answers = out.get("pairs") or {}
         except AgentError as exc:
