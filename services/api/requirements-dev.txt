@@ -4,3 +4,4 @@ ruff==0.8.4
 psycopg[binary]==3.2.3
 shapely==2.2.0
 pillow==10.4.0
+cryptography==45.0.7

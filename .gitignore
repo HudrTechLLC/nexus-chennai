@@ -25,6 +25,7 @@ logs/*
 !logs/conformance_*.txt
 !logs/feature_*.txt
 !logs/.gitkeep
+!logs/receipts_verification.json
 data/out/
 data/local/
 data/_truth/
