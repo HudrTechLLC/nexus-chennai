@@ -224,7 +224,7 @@ Each lane was tested with a real chat request:
 **Agent call rules (for all agents):**
 - `max_tokens` ≥ 1024;
 - ask for JSON only and parse the last JSON object in the content;
-- retry a 502 `provider_error` once, then degrade;
+- retry transport errors and 5xx (incl. a 502 `provider_error`) up to 3 attempts in total, as the adapter does, then degrade;
 - never use `meterless/auto` (R2).
 
 The sponsor text names Ultra 550B as the reasoning model, because it is what actually runs.

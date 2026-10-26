@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T13:36:00+05:30",
+  "updated": "2026-10-26T13:41:57+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -348,6 +348,13 @@
           "status": "done",
           "owner": "nexus-3",
           "ref": "#31"
+        },
+        {
+          "id": "WS2-21",
+          "phase": "P4",
+          "title": "Embed lane (E2): similar-MO + text search vectors via Nightshift embed, TF-IDF fallback",
+          "status": "in_progress",
+          "owner": "nexus-2"
         }
       ]
     },
@@ -545,8 +552,9 @@
           "id": "WS5-03",
           "phase": "P6",
           "title": "README with all required sections",
-          "status": "todo",
-          "owner": "nexus-chief"
+          "status": "in_progress",
+          "owner": "nexus-chief",
+          "ref": "#66"
         },
         {
           "id": "WS5-04",
@@ -559,8 +567,9 @@
           "id": "WS5-05",
           "phase": "P10",
           "title": "metadata.json final (claims only what passes)",
-          "status": "todo",
-          "owner": "nexus-chief"
+          "status": "in_progress",
+          "owner": "nexus-chief",
+          "note": "metadata.json corrected to what passes on main (4 engines; Lightning + Ultra)"
         },
         {
           "id": "WS5-06",
