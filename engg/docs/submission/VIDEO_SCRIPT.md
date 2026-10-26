@@ -54,6 +54,11 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 8. **Segment 3 needs a real vision step in the trace.** File the live FIR with a CCTV still, and check the trace. A vision `model_call` (lane `vision`, Super VL, a receipt) means narrate **variant A**; `vision_unavailable` means **variant B**. The free route is rate-limited and can refuse during recording, so check the trace of the take you use. Variant A is planned: live run `reextract_vis_1793040194` shows the vision `model_call` (seq 3, receipt `chatcmpl-5dfe68c6-…`).
 9. **Task force (segment 8):** no task force may exist on the Red Pulsar series when recording starts. There is only one series in the database (SER-B687C36CFC), so **rehearse without writing**: in dry run #2, walk up to the *Propose task force* dialog and stop (cancel; nothing is created). The first real creation happens on camera. Have the supervisor login ready for an off-camera cut. After recording, add the task force to the cleanup list as KEEP-LABELLED.
 10. **Refresh the live DQ flags first:** `python -m app.dq_status --only snapshot` (about 90 s; reads Zetaris only and replaces the live DQ flags snapshot, so FIRs filed since the last pass get their flags; nexus-2). Run it before the live FIR of segment 3, so the trace's `as_of` is fresh.
+11. **Ask Nexus (only if the beat is used):**
+   - **Clear the demo accounts' test questions** in `ask_questions` first, but **only after Ravee approves** (they are on the cleanup list). The page shows each user's last 5 questions on camera ("Your recent questions"), and each unanswered question counts toward a cap of 3 per user.
+   - **The ask worker must be running** (nexus-5). Without it, a question stays at "Waiting for the worker…".
+   - **Re-sign-in the supervisor demo browser.** A probe signed supervisor out once around 01:50 IST on 27 Oct.
+   - nexus-4's dry run: the chip "Chain snatchings by two men on a red Pulsar in the last 90 days" answered "16 cases match … (1 test filing excluded.)" in about 20 s. Read the number off the screen when recording; don't script it.
 
 ## Script
 
@@ -149,11 +154,11 @@ Each replaces part of an existing segment's screen; the narration and timing sta
 | Segment | Swap-in shot | Feature | Status |
 |---|---|---|---|
 | 4 · Zetaris | the console's *Data sources* page (`/console/system/sources`, admin): 23 sources in 8 types, with counts | WS3-27 (#327) | merged; check on the deployed console before filming (admin view) |
-| 5 · Nightshift | the alert's *How this alert was made* card (lane, pinned model, receipt per step) | WS3-25 (#333) | merged; check on the deployed console before filming |
+| 5 · Nightshift | the alert's *How this alert was made* card. On the hero alert it starts collapsed and reads **"How this alert was made · Show steps · 9 steps · 4 model calls · 31 Zetaris queries · Nemotron 3 Ultra 550B · Skeptic's final verdict: approved"**; click *Show steps* to open the per-step lane, pinned model and receipt | WS3-25 (#333) | ✅ usable: live, read by nexus-4 as analyst on 27 Oct |
 | 6 · Skeptic | the alert page's Skeptic panel. On the hero alert it reads **"Reviewed in 1 round · verdict: approved · nothing struck · model critique applied"**, with a one-step timeline below (Approved · round 1 · score 0.79 · the critique). Show the summary line and the badge; **don't zoom on the critique text**, which the trace stores cut off with "…". The drop itself is still shown in the trace viewer (`run_da0092da`) | WS3-26 (#326) | ✅ usable: live, read by nexus-4 as analyst on 27 Oct |
 | 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320) | merged; needs a screened tip on screen (beat 7a) |
 | 4 · Zetaris (new) | *New source onboarding*: a new source registered through Zetaris and showing up in the agents' reads | WS1-23 (nexus-1, nexus-6) | `[PENDING: WS1-23]` (cut-off 13:30) |
-| 9 · Close, or after 8 (new) | *Ask Nexus*: a question in plain words answered from Zetaris with its query cited | WS3-30 (nexus-5, nexus-4) | `[PENDING: WS3-30]` (cut-off 13:30) |
+| 9 · Close, or after 8 (new) | *Ask Nexus*: a question in plain words answered from Zetaris with its query cited | WS3-30 (nexus-5, nexus-4) | `[PENDING: WS3-30]`: the screen is merged (#375, `/console/ask`); the ask worker is not on `main` yet. Pre-flight step 11 |
 
 ### Optional beat 7a · A tip from the public reaches the analyst (WS3-28 merged in #320; film only with a screened tip on screen)
 
