@@ -52,7 +52,7 @@ def _dq_query() -> dict:
         name="q_dq_flags",
         lightning=(
             "SELECT crime_id, rule, other_id, detail FROM nexus.dq_flags "
-            "WHERE array_contains(split(:ids, ','), crime_id)"
+            "WHERE array_contains(split(:ids, ','), crime_id) ORDER BY crime_id, rule"  # ORDER BY: D-031
         ),
         sample=(
             f"SELECT crime_id, rule, other_id, detail FROM ({dq_rules.flags_sql(dq_rules.DUCK, bounds)}) f "

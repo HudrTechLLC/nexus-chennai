@@ -96,6 +96,18 @@ def test_zetaris_file_is_generated_from_the_same_rules():
     assert "FROM nexus.v_crime_unified" in sql_only
 
 
+def test_live_views_are_sorted_and_dq_flags_reads_the_rule_views():
+    # D-031: without a sort Zetaris applies the REST limit / count(*) before filters it cannot push down.
+    views = [s for s in dq_rules.dq_file().split(";\n") if "SCHEMASTORE VIEW" in s]
+    assert len(views) == 8 and all("\nORDER BY " in v for v in views)
+    flags = next(v for v in views if "VIEW dq_flags " in v)
+    # Zetaris rejects a query that references one schema-store view twice; the rule views are four different views.
+    assert "v_crime_unified" not in flags
+    for name in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections"):
+        assert f"FROM nexus.{name}" in flags
+    assert NAMED_QUERIES["q_dq_flags"].lightning.endswith("ORDER BY crime_id, rule")
+
+
 @pytest.mark.parametrize("name", ["20_dq.sql", "40_feeds.sql"])
 def test_register_py_fills_every_placeholder_from_the_city_pack(name):
     """The files must render through register.py itself (its dry-run path), with no placeholder left over."""

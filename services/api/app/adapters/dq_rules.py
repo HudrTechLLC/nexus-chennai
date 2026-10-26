@@ -118,7 +118,8 @@ def dq_file() -> str:
     views = [(f"dq_{name}", rule_sql(rule, SPARK, b)) for name, rule in (
         ("duplicate_firs", "duplicate_fir"), ("bad_geo", "bad_geo"), ("time_inconsistent", "time_inconsistent"),
         ("unmapped_sections", "unmapped_section"))]
-    views.append(("dq_flags", flags_sql(SPARK, b)))
+    # Live, dq_flags unions the per-rule views: one query may not reference v_crime_unified more than once.
+    views.append(("dq_flags", " UNION ALL ".join(f"SELECT {', '.join(COLUMNS)} FROM nexus.{name}" for name, _ in views)))
     views.append(("dq_orphan_evidence",
                   "SELECT e.evidence_id, e.crime_id, 'evidence for a crime that does not exist' AS detail "
                   "FROM sb.evidence_media e LEFT JOIN nexus.v_crime_unified c ON c.crime_id = e.crime_id "
@@ -132,7 +133,13 @@ def dq_file() -> str:
                   "concat('camera registry not updated for ', "
                   "CAST(datediff(current_date(), CAST(last_updated AS DATE)) AS STRING), ' days') AS detail "
                   f"FROM s3csv.cctv_cameras WHERE {stale}"))
-    body = "\n".join(f"CREATE OR REPLACE SCHEMASTORE VIEW {name} WITH CONTAINER nexus AS\n{sql};\n" for name, sql in views)
+    # ORDER BY on every view (D-031): Zetaris pushes the REST row limit, and count(*), into the JDBC scan ahead
+    # of any filter it cannot push to Postgres, so an unsorted view returns the first N rows filtered, or the
+    # unfiltered count. A sort above the filter blocks that pushdown.
+    order = {"dq_flags": "crime_id, rule", "dq_orphan_evidence": "evidence_id", "dq_tip_without_incident": "tip_id",
+             "dq_stale_cameras": "camera_id"}
+    body = "\n".join(f"CREATE OR REPLACE SCHEMASTORE VIEW {name} WITH CONTAINER nexus AS\n{sql}\n"
+                     f"ORDER BY {order.get(name, 'crime_id')};\n" for name, sql in views)
     return _HEADER + "\n" + CONTAINER + "\n" + body
 
 
