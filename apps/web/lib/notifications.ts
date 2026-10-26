@@ -75,3 +75,16 @@ export function badgeText(n: number): string | null {
   if (n <= 0) return null;
   return n > 99 ? "99+" : String(n);
 }
+
+/**
+ * Target for opening a notification. A joint-case proposal goes straight to "propose a task force"
+ * for roles that may propose one (LNK-09; nexus-6's /console/taskforces/new), otherwise to its link.
+ */
+export function notificationTarget(n: Pick<AppNotification, "kind" | "link">, canPropose: boolean): string | null {
+  const link = safeLink(n.link);
+  if (n.kind === "joint_case_proposal" && canPropose && link) {
+    const m = /^\/console\/alerts\/(LA-[A-Za-z0-9-]{1,40})$/.exec(link);
+    if (m) return `/console/taskforces/new?alert_id=${encodeURIComponent(m[1])}`;
+  }
+  return link;
+}

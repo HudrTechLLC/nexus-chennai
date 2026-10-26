@@ -2,7 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getOfficer } from "@/lib/auth";
-import { safeLink } from "@/lib/notifications";
+import { notificationTarget } from "@/lib/notifications";
+import { canPropose } from "@/lib/taskforces";
 import { consoleServerClient } from "@/lib/supabase/server";
 
 /**
@@ -15,12 +16,12 @@ export async function openNotification(formData: FormData): Promise<void> {
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) redirect("/console/notifications");
   const sb = consoleServerClient();
-  const { data } = await sb.from("notifications").select("link, read_at").eq("notification_id", id).maybeSingle();
+  const { data } = await sb.from("notifications").select("kind, link, read_at").eq("notification_id", id).maybeSingle();
   if (data && !data.read_at) {
     await sb.from("notifications").update({ read_at: new Date().toISOString() }).eq("notification_id", id);
   }
   revalidatePath("/console", "layout");
-  redirect(safeLink(data?.link) ?? "/console/notifications");
+  redirect((data && notificationTarget(data, canPropose(officer.role))) ?? "/console/notifications");
 }
 
 /** Mark every unread notification of the signed-in officer as read. */

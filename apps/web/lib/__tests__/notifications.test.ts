@@ -2,7 +2,7 @@
  * Unit tests for notification helpers (WS3-12).
  */
 import { describe, expect, it } from "vitest";
-import { badgeText, kindLabel, parseShow, safeLink, unreadCount } from "../notifications";
+import { badgeText, kindLabel, notificationTarget, parseShow, safeLink, unreadCount } from "../notifications";
 
 describe("kindLabel", () => {
   it("labels known kinds and humanises unknown ones", () => {
@@ -42,5 +42,19 @@ describe("unreadCount and badgeText", () => {
     expect(badgeText(0)).toBeNull();
     expect(badgeText(7)).toBe("7");
     expect(badgeText(150)).toBe("99+");
+  });
+});
+
+describe("notificationTarget", () => {
+  const jc = { kind: "joint_case_proposal", link: "/console/alerts/LA-2026-E38C6B38B865" };
+  it("sends analysts/supervisors/admins straight to propose a task force", () => {
+    expect(notificationTarget(jc, true)).toBe("/console/taskforces/new?alert_id=LA-2026-E38C6B38B865");
+  });
+  it("keeps the alert link for officers and for other kinds", () => {
+    expect(notificationTarget(jc, false)).toBe("/console/alerts/LA-2026-E38C6B38B865");
+    expect(notificationTarget({ kind: "link_alert", link: jc.link }, true)).toBe(jc.link);
+  });
+  it("never follows an unsafe link", () => {
+    expect(notificationTarget({ kind: "joint_case_proposal", link: "https://evil.example/console/alerts/LA-1" }, true)).toBeNull();
   });
 });
