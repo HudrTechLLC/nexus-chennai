@@ -37,7 +37,7 @@ The plan meets every hard requirement. No spec change is needed. There are **fiv
 1. Meterless reference engines and conformance suites, vendored unmodified from github.com/Meterless/Meterless @ `1742dec5` (Apache-2.0), in `engines-ts/`.
 2. ~~The product spec~~ **Not pre-existing.** The team confirmed the spec was first written on 23 Oct and completed on 26 Oct, both inside the build window, so it needs no declaration.
 3. Standard open-source libraries (FastAPI, LangGraph, Next.js and others). They're listed in the README.
-4. No real crime data. All data is synthetic, generated during the build window and labelled `synthetic: true`.
+4. No real crime data. All crime, person, case and tip data is synthetic, generated during the build window and labelled `synthetic: true`. Public reference data is used with attribution: OpenStreetMap places (ODbL), DataMeet ward boundaries, the public police-station list and live Open-Meteo weather. Sources and licences are in `data/README.md`.
 
 ## What judges check, and our status
 
