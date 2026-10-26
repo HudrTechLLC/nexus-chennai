@@ -56,7 +56,8 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 10. **Refresh the live DQ flags first:** `python -m app.dq_status --only snapshot` (about 90 s; reads Zetaris only and replaces the live DQ flags snapshot, so FIRs filed since the last pass get their flags; nexus-2). Run it before the live FIR of segment 3, so the trace's `as_of` is fresh.
 11. **Ask Nexus (only if the beat is used):**
    - **Clear the demo accounts' test questions** in `ask_questions` first, but **only after Ravee approves** (they are on the cleanup list). The page shows each user's last 5 questions on camera ("Your recent questions"), and each unanswered question counts toward a cap of 3 per user.
-   - **The ask worker must be running** (nexus-5). Without it, a question stays at "Waiting for the worker…".
+   - **Ask worker running (nexus-3):** `python -m app.ask_worker`. Without it, a question stays at "Waiting for the worker…".
+   - **Allow for the wait:** answers usually take 10–20 s, and one took 28 s (the planning model varies). Cut the wait in editing, or pre-ask the chip once so it already shows in "Your recent questions".
    - **Re-sign-in the supervisor demo browser.** A probe signed supervisor out once around 01:50 IST on 27 Oct.
    - **Final chips** (nexus-5; each checked 5× live, same count each time, 4–12 s). Read the count off the screen when recording; don't script it:
      - a. "Chain snatchings on a red Pulsar in the last 90 days" → 16 cases (1 test filing excluded). It lists the hero pair as read-only rows; nothing is decided there.
@@ -163,7 +164,7 @@ Each replaces part of an existing segment's screen; the narration and timing sta
 | 6 · Skeptic | the alert page's Skeptic panel. On the hero alert it reads **"Reviewed in 1 round · verdict: approved · nothing struck · model critique applied"**, with a one-step timeline below (Approved · round 1 · score 0.79 · the critique). Show the summary line and the badge; **don't zoom on the critique text**, which the trace stores cut off with "…". The drop itself is still shown in the trace viewer (`run_da0092da`) | WS3-26 (#326) | ✅ usable: live, read by nexus-4 as analyst on 27 Oct |
 | 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320) | merged; needs a screened tip on screen (beat 7a) |
 | 4 · Zetaris (new) | *New source onboarding*: a new source registered through Zetaris and showing up in the agents' reads | WS1-23 (nexus-1, nexus-6) | `[PENDING: WS1-23]` (cut-off 13:30) |
-| 9 · Close, or after 8 (new) | *Ask Nexus*: a question in plain words answered from Zetaris with its query cited | WS3-30 (nexus-5, nexus-4) | `[PENDING: WS3-30]`: the screen is merged (#375, `/console/ask`); the ask worker is not on `main` yet. Pre-flight step 11 |
+| 9 · Close, or after 8 (new) | *Ask Nexus*: a question in plain words answered from Zetaris with its query cited | WS3-30 (#374 worker, #375 screen, #379) | ✅ usable: live on production; chips a/b/c checked by nexus-5 (16 / 4 / 3 cases). Pre-flight step 11 |
 
 ### Optional beat 7a · A tip from the public reaches the analyst (WS3-28 merged in #320; film only with a screened tip on screen)
 
