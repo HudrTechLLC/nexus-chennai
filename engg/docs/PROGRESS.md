@@ -38,6 +38,22 @@ Related: [DECISIONS](DECISIONS.md) · [DELIVERABLES](DELIVERABLES.md) · [00-IND
 
 ## Log
 
+> Live progress chart and full task list: `/docs/progress` in the web app (source `workstreams.json`).
+
+### 2026-10-26 · Engg Docs + tracker in the web app (branch `feat/engg-docs`)
+- PR #1 merged.
+- **Vercel:** project `nexus-chennai` created in the HUDR team.
+  - Framework set to Next.js.
+  - Build allowed to read `engg/docs`.
+  - Vercel login now applies to previews only, so the production URL is public.
+- **Engg Docs in the app:**
+  - `/docs` menu with Progress plus the 16 spec tabs;
+  - project notes;
+  - `/docs/progress`: overall %, countdown to the target and the deadline, stacked bars by workstream and by phase, blockers, and the full task list.
+- **Diagrams:** re-exported as strict XML so they render as images.
+- **Zetaris:** registry sign-in done and preflight passes; images are downloading. Start is waiting for ≥ 2 GB free RAM.
+- **Supabase:** still blocked. The CLI token is invalid and the Supabase MCP is read-only and scoped to another project.
+
 ### 2026-10-26 · P0 scaffold (branch `feat/p0-scaffold`)
 - **API:** FastAPI app with `/health` (shows each connector as live, sample or down) and an honest `/run`. `/run` returns 501 "not_implemented" until the agent graph exists in P4, so no output is faked.
 - **Nightshift connector:**

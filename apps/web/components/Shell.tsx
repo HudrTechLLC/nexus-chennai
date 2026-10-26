@@ -13,6 +13,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link href="/map" className="hover:text-ink">Crime map</Link>
             <Link href="/tip" className="hover:text-ink">Send a tip</Link>
             <Link href="/console" className="hover:text-ink">Police login</Link>
+            <Link href="/docs/progress" className="hover:text-ink">Engg Docs</Link>
           </nav>
         </div>
       </header>
