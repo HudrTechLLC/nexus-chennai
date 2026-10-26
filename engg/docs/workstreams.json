@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T16:46:00+05:30",
+  "updated": "2026-10-26T17:01:29+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -98,8 +98,9 @@
           "id": "WS1-09",
           "phase": "P1",
           "title": "Synthetic CCTV stills and tips",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "nexus-1 · synthetic CCTV stills for hero/series/judge cases; tips seeded (40)"
         },
         {
           "id": "WS1-10",
@@ -132,16 +133,18 @@
           "id": "WS1-13",
           "phase": "P2",
           "title": "Semantic views: v_crime_unified, v_vehicle_trail, v_offender_return, v_tip_corroboration",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-1",
-          "note": "v_crime_unified live (slice 1, Supabase); legacy CSV union later"
+          "note": "nexus-1 · v_crime_unified = sb + CCTNS + archive (19,540 live, ids unique); vehicle/offender/tip views live (#121/#149)",
+          "ref": "#192"
         },
         {
           "id": "WS1-14",
           "phase": "P2",
           "title": "Data-quality views: duplicate FIRs, bad geo, unmapped sections",
           "status": "in_progress",
-          "owner": "nexus-2"
+          "owner": "nexus-2",
+          "note": "nexus-2 · 8 dq views live, re-verifying on legacy-union v_crime_unified (#170)"
         },
         {
           "id": "WS1-15",
@@ -149,7 +152,7 @@
           "title": "12 named queries + DuckDB sample equivalents",
           "status": "in_progress",
           "owner": "nexus-1",
-          "note": "8/13 live (q_case, q_candidates, q_features, q_dq_flags, q_news, q_hex_counts, q_search, q_station_matrix); q_case perf -> nexus-2"
+          "note": "13/14 live on Zetaris (all but q_news, waits WS1-16); 14/14 sample twins; D-031 ORDER BY + parity test (#174)"
         },
         {
           "id": "WS1-16",
