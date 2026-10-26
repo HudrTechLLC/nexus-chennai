@@ -149,7 +149,7 @@ Each replaces part of an existing segment's screen; the narration and timing sta
 |---|---|---|---|
 | 4 · Zetaris | the console's *Data sources* page: every federated source and table | WS3-27 | `[PENDING: WS3-27]` |
 | 5 · Nightshift | the per-step model line on the trace (lane, pinned model, receipt) | WS3-25 | `[PENDING: WS3-25]` |
-| 6 · Skeptic | the alert page's Skeptic panel showing the drop | WS3-26 | `[PENDING: WS3-26]` |
+| 6 · Skeptic | the alert page's Skeptic panel. On the hero alert it reads **"Reviewed in 1 round · verdict: approved · nothing struck · model critique applied"**, with a one-step timeline below (Approved · round 1 · score 0.79 · the critique). Show the summary line and the badge; **don't zoom on the critique text**, which the trace stores cut off with "…". The drop itself is still shown in the trace viewer (`run_da0092da`) | WS3-26 (#326) | ✅ usable: live, read by nexus-4 as analyst on 27 Oct |
 | 7 · Analyst | the *From the public* panel with a real tip: see **Optional beat 7a** below | WS3-28 (#320, open) | `[PENDING: WS3-28]` |
 
 ### Optional beat 7a · A tip from the public reaches the analyst `[PENDING: WS3-28, #320]`
