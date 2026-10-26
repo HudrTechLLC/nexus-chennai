@@ -1,0 +1,47 @@
+name: docker-judge-path
+
+# Builds the image exactly the way the judge checklist does, then starts it with
+# SAMPLE_MODE=true, an empty environment and no Zetaris or Nightshift.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - Dockerfile
+      - requirements.txt
+      - services/api/requirements*.txt
+      - run.py
+      - .github/workflows/docker.yml
+
+jobs:
+  judge-path:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build (from the repo root, as judges do)
+        run: docker build -t oah-submission .
+      - name: start with SAMPLE_MODE=true and no credentials
+        run: |
+          docker run -d --name nexus -p 8000:8000 -e SAMPLE_MODE=true oah-submission
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8000/health && exit 0
+            sleep 2
+          done
+          docker logs nexus
+          exit 1
+      - name: POST /run with each input example (when present)
+        run: |
+          shopt -s nullglob
+          files=(input_examples/example_*.json)
+          if [ ${#files[@]} -eq 0 ]; then echo "no input_examples yet - skipping"; exit 0; fi
+          for f in "${files[@]}"; do
+            echo "== $f"
+            code=$(curl -s -o out.json -w '%{http_code}' -X POST http://localhost:8000/run \
+              -H 'Content-Type: application/json' -d @"$f")
+            head -c 600 out.json; echo
+            [ "$code" = 200 ] || { echo "HTTP $code"; docker logs nexus | tail -50; exit 1; }
+          done
+      - name: logs
+        if: always()
+        run: docker logs nexus 2>&1 | tail -40 || true

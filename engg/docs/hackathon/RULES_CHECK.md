@@ -43,7 +43,7 @@ The plan meets every hard requirement. No spec change is needed. There are **fiv
 
 | Check (Disqualification Checklist) | Our status | Gap → owner |
 |---|---|---|
-| Judge can run it from a fresh clone; `docker build` + `docker run -p 8000:8000` | Dockerfile is at `services/api/Dockerfile`, not the repo root | **Gap 1:** add a root `Dockerfile` (or a documented `-f`) and test it with `host.docker.internal` → chief, WS5-11 |
+| Judge can run it from a fresh clone; `docker build` + `docker run -p 8000:8000` | ✅ The root `Dockerfile` and `requirements.txt` exist. CI job `docker-judge-path` builds from the root, starts with `SAMPLE_MODE=true` and no credentials, and POSTs every `input_examples/example_*.json` | Gap 1 closed. Still to do by hand: a live run through `host.docker.internal` on the dry run (WS5-11) |
 | `curl -X POST :8000/run -d @input_examples/example_1.json` | `/run` is real since PR #20 / graph PR; `input_examples/` doesn't exist yet | **Gap 2:** 3 inputs + 3 outputs → nexus-3, WS2-16 |
 | `SAMPLE_MODE=true` with an empty `.env` and Zetaris + Nightshift **stopped** runs real logic | Sample mode exists (DuckDB twins, recorded fixtures, engine sample backends) | **Gap 3:** test it exactly as step 10 (`rm .env`, services stopped) → chief, WS5-11 + WS5-08 |
 | Traces: ≥ 2 named agents, handoffs, critique/retry, Zetaris queries, engine activity, **model per request**, stdout + `logs/` | D3.12 tracer writes all of these; the Skeptic loop gives critique/retry | ✅ verify on the dry run |
