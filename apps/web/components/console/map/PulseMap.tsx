@@ -199,11 +199,21 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
   const cones = useMemo(() => data.layers.cctv
     .filter((c) => c[3] != null && c[4] != null && c[5] != null)
     .map((c) => ({ id: c[0], owner: c[6], poly: cone(c[1], c[2], c[3] as number, c[4] as number, c[5] as number) })), [data.layers.cctv]);
-  const callCells = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const [cell, wk, n] of data.layers.calls) if (weekInRange(wk, wkFrom, wkTo)) m.set(cell, (m.get(cell) ?? 0) + n);
-    return Array.from(m, ([cell, n]) => { const [lat, lon] = cellToLatLng(cell); return { pos: [lon, lat] as LonLat, n }; });
-  }, [data.layers.calls, wkFrom, wkTo]);
+  // 112 calls are aggregated per window on the server (0004_09 map_calls), fetched only while the layer is on.
+  const [callRows, setCallRows] = useState<[string, number][]>([]);
+  useEffect(() => {
+    if (!toggles.calls || !wkFrom) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { data: rows } = await consoleBrowserClient().rpc("map_calls", { p_week_from: wkFrom, p_week_to: wkTo });
+      if (!cancelled) setCallRows((rows as [string, number][]) ?? []);
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [toggles.calls, wkFrom, wkTo]);
+  const callCells = useMemo(() => callRows.map(([cell, n]) => {
+    const [lat, lon] = cellToLatLng(cell);
+    return { pos: [lon, lat] as LonLat, n };
+  }), [callRows]);
   const tipCells = useMemo(() => {
     const m = new Map<string, number>();
     for (const [cell, wk, n] of data.layers.tips) if (weekInRange(wk, wkFrom, wkTo)) m.set(cell, (m.get(cell) ?? 0) + n);
@@ -365,7 +375,7 @@ export default function PulseMap({ stationId, role }: { stationId: string | null
               <input type="checkbox" checked={toggles[k]} onChange={() => flip(k)} /> {label}
             </label>
           ))}
-          {data.layers.cctv.length + data.layers.anpr.length + data.layers.calls.length + data.layers.release.length === 0 && (
+          {data.layers.cctv.length + data.layers.anpr.length + data.layers.release.length === 0 && (
             <p className="mt-1 text-[11px] leading-snug text-muted">CCTV, ANPR, 112 and release layers have no rows yet.</p>
           )}
         </div>

@@ -15,7 +15,7 @@ export type FeatureCollection = { type: "FeatureCollection"; features: { type: "
 export type MapLayers = {
   cctv: [string, number, number, number | null, number | null, number | null, string][]; // id, lon, lat, heading, fov, range, owner
   anpr: [string, number, number][];                                                        // id, lon, lat
-  calls: [string, string, number][];                                                       // h3_r9, ISO week, n
+  calls: [string, string, number][];                                                       // unused since 0004_09 (see map_calls)
   tips: [string, string, number][];                                                        // h3_r8, ISO week, n
   release: [number, number, string | null][];                                             // ward_no, n, last release week
 };
