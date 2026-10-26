@@ -196,7 +196,15 @@ class Planner:
             steps, notes = validate_steps(out.get("steps") or [], case)
             if not steps or steps[0].name != "q_candidates":
                 raise AgentError("plan has no q_candidates step")
-            notes += recall_floor(steps[0])
+            asked = {k: steps[0].params.get(k) for k in ("days", "ring")}
+            floor_notes = recall_floor(steps[0])
+            if floor_notes:  # chief: the model's choice and the code's override are both visible, never silent
+                self.deps.tracer.emit(AGENT, "plan_adjusted", input_summary=f"{case.get('crime_id')} q_candidates",
+                                      output_summary=short({"model": asked,
+                                                            "applied": {k: steps[0].params[k] for k in asked},
+                                                            "reason": "recall_floor"}),
+                                      status="ok")
+            notes += floor_notes
             model = result.model
         except AgentError as exc:
             if self.deps.deadline is not None:

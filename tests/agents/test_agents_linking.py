@@ -47,6 +47,9 @@ def test_planner_uses_model_plan(make_deps):
     # recall floor: the model asked 20 days / 1 km; blocking keeps at least 45 days / 6 km (hero pair is 3.5 km)
     assert p.source == "model" and p.steps[0].params["days"] == 45 and p.steps[0].params["ring"] == 6
     assert any("recall floor" in n for n in p.notes)
+    adj = [e for e in deps.tracer.read() if e["action"] == "plan_adjusted"]
+    assert adj and json.loads(adj[0]["output_summary"]) == {"model": {"days": 20, "ring": 1},
+                                                            "applied": {"days": 45, "ring": 6}, "reason": "recall_floor"}
     assert p.steps[1].params["cells"] == "x,y"
 
 
