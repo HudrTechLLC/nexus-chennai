@@ -91,3 +91,31 @@ def test_hero_cross_station_pair_is_a_candidate(client):
 def test_q_tip_corroboration_in_sample_mode(client):
     rows = client.named("q_tip_corroboration", agent="test", crime_id="CHN-AD-2026-001182").dicts()
     assert all(r["status"] in ("screened", "reviewed", "urgent") for r in rows)
+
+
+def test_vehicle_trail_ties_the_hero_plate_to_both_scenes(client):
+    """Red Pulsar: the partial FIR plate finds TN09BX4471 read near Adyar-001182 and Velachery-000877."""
+    rows = client.named("q_vehicle_trail", agent="test", plate_pattern="TN 09 ?? 4471",
+                        t0="2026-10-14T19:40:00+05:30", t1="2026-10-14T19:50:00+05:30", cells="").dicts()
+    scenes = {r["crime_id"] for r in rows if r["plate_text"] == "TN09BX4471"}
+    assert {"CHN-AD-2026-001182", "CHN-VL-2026-000877"} <= scenes
+    assert all(r["read_at"].endswith("+05:30") for r in rows)
+
+
+def test_vehicle_trail_feeds_the_vehicle_factor(client):
+    from app.scoring.factors import ANPR_BOTH_SCENES, vehicle
+
+    rows = client.named("q_vehicle_trail", agent="test", plate_pattern="TN09??4471",
+                        t0="2026-10-14T19:40:00+05:30", t1="2026-10-16T19:55:00+05:30", cells="").dicts()
+    a, b = {"crime_id": "CHN-AD-2026-001182"}, {"crime_id": "CHN-VL-2026-000877"}
+    assert vehicle(a, b, rows) == ANPR_BOTH_SCENES
+
+
+def test_offender_return_ranks_the_planted_offender_first(client):
+    truth = json.loads((SAMPLE.parent / "sample" / "_truth" / "series.json").read_text(encoding="utf-8"))
+    assert truth  # bundle truth present
+    rows = client.named("q_offender_return", agent="test", mo_tags="night_house_break,back_door_pried", ward=5,
+                        since="2025-08-19T02:00:00+05:30").dicts()
+    top = rows[0]
+    assert top["person_ref"] == "P-90001" and top["near_home"] is True and top["mo_overlap"] == 1.0
+    assert 0 <= top["days_since_release"] <= 60

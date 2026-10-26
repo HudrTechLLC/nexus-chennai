@@ -7,7 +7,8 @@ query (`adapters/zetaris.py`). Every row carries `synthetic: true`.
 | Path | What | Owner |
 |---|---|---|
 | `sb/*.parquet` | crimes, crime_vehicles, statements, stations, tips, evidence_media, forensics, crime_features, crime_feature_reviews, with the Supabase column types | nexus-1 |
-| `ref/` | place_aliases.csv, calendar.csv, osm_pois.parquet | nexus-1 |
+| `ref/` | place_aliases.csv, calendar.csv, osm_pois.parquet, releases.csv, history_sheets.csv | nexus-1 |
+| `anpr/reads.parquet` | ANPR reads near bundle scenes, every read of a planted plate, and 3,000 background reads | nexus-1 |
 | `_truth/` | series, decoys, duplicates, dq, pairs, tips: restricted to this subset | nexus-1 |
 | `views.sql` | `v_crime_unified` (same columns as `zetaris/10_views.sql`) | nexus-1 |
 | `model_fixtures/` | recorded **live** Nightshift calls | nexus-3 |
