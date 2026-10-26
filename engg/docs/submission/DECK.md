@@ -32,7 +32,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - the Supabase dashboard (API keys page, connection strings);
   - Zetaris settings pages (API token);
   - browser address bars with tokens in the URL.
-- Use synthetic data only (all data is). Use browser zoom 110–125%.
+- Use synthetic case data only (all crime, person and tip data is). Where a map or weather shows, carry the attribution: Map data © OpenStreetMap contributors (ODbL). Ward boundaries © DataMeet / Transparent Chennai (CC BY-SA 2.5 IN). Weather data by Open-Meteo.com (CC BY 4.0). Use browser zoom 110–125%.
 - Crop out bookmarks, other tabs and OS notifications.
 
 ---
@@ -149,7 +149,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - **Numbers from code, not models:** a model can't set a score; any number it returns is ignored.
   - **Tips screened:** Tip Guard fails closed; agents read only the redacted text of clean tips.
   - **Public privacy:** the public map is fuzzed (coarse H3 cells, no points, a minimum-count cutoff, and rare crime types hidden per cell); tip photos have EXIF stripped; passphrases are hashed inside the database.
-  - **Synthetic data only;** protected attributes (religion, caste, community) are never used or written.
+  - **Synthetic crime, person and tip data only** (map, ward, station and weather reference data is real public open data); protected attributes (religion, caste, community) are never used or written.
 - **Visual:** public map (`/map`) showing coarse cells, next to a quarantined tip in `/console/tips`.
 - **Check no secrets visible:** the quarantined tip may contain a synthetic injection string. That's fine, but make sure it isn't a key-shaped string.
 
