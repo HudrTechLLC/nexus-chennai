@@ -4,7 +4,7 @@
  */
 import { normaliseFir, normalisePlate, parseCaseFilters, type CaseFilters } from "@/lib/cases";
 
-export type QueryKind = "empty" | "crime_id" | "fir" | "plate" | "text";
+export type QueryKind = "empty" | "crime_id" | "fir" | "plate" | "phone" | "text";
 
 export type ParsedSearch = {
   q: string;
@@ -43,9 +43,28 @@ export function classifyQuery(raw: string): { kind: QueryKind; value: string } {
   if (CRIME_ID_RE.test(up)) return { kind: "crime_id", value: up };
   const fir = normaliseFir(q.replace(/^fir\s*(no\.?)?\s*/i, ""));
   if (fir && (fir.includes("/") || /^fir/i.test(q))) return { kind: "fir", value: fir };
+  const phone = phoneDigits(q);
+  if (phone) return { kind: "phone", value: phone };
   const plate = normalisePlate(q);
   if (plate && (q.includes("?") || q.includes("*") || PLATE_HINT_RE.test(up) || /^\d{4}$/.test(q))) return { kind: "plate", value: plate };
   return { kind: "text", value: q };
+}
+
+/**
+ * A phone fragment (SRCH-05): only digits, spaces, dashes and a leading "+", with 5 to 12 digits.
+ * A leading +91 country code is dropped. Four digits or fewer stay a plate or FIR fragment.
+ */
+export function phoneDigits(raw: string): string | null {
+  const s = raw.trim();
+  if (!/^\+?[\d\s-]+$/.test(s)) return null;
+  let d = s.replace(/\D/g, "");
+  if (s.startsWith("+91") && d.length > 10) d = d.slice(2);
+  return d.length >= 5 && d.length <= 12 ? d : null;
+}
+
+/** POSIX regex for a phone fragment written with or without spaces or dashes between digits. */
+export function phoneRegex(digits: string): string {
+  return digits.replace(/\D/g, "").split("").join("[ -]?");
 }
 
 /** Words for ILIKE: 2+ characters, LIKE wildcards stripped, at most 6. */
@@ -118,5 +137,5 @@ export function hasCriteria(p: ParsedSearch): boolean {
 
 /** Human label for the footer: what the query was read as. */
 export function kindLabel(k: QueryKind): string {
-  return { empty: "filters only", crime_id: "case id", fir: "FIR number", plate: "vehicle plate", text: "words" }[k];
+  return { empty: "filters only", crime_id: "case id", fir: "FIR number", plate: "vehicle plate", phone: "phone fragment", text: "words" }[k];
 }

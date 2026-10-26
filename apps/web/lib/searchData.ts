@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dayRange, plateIlike, plateMatches } from "@/lib/cases";
-import { SEARCHABLE_TIP_STATUSES, evidenceFilter, personFilter, type ParsedSearch } from "@/lib/search";
+import { SEARCHABLE_TIP_STATUSES, evidenceFilter, personFilter, phoneRegex, type ParsedSearch } from "@/lib/search";
 import type { CaseRow } from "@/lib/casesData";
 
 /**
@@ -89,6 +89,19 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
   if (f.weapon) cq = cq.eq("weapon", f.weapon);
   if (zoneStations) cq = cq.in("station_id", zoneStations.length ? zoneStations : ["-"]);
   if (f.linked === "unlinked" && alertIds && alertIds.length) cq = cq.not("crime_id", "in", `(${alertIds.slice(0, ID_CAP).map((x) => `"${x}"`).join(",")})`);
+  // A phone fragment: cases whose narrative or statements contain it, with or without spaces or dashes.
+  if (p.kind === "phone") {
+    const re = phoneRegex(p.value);
+    const [byNarrative, byStatement] = await Promise.all([
+      sb.from("crimes").select("crime_id").filter("narrative", "imatch", re).limit(ID_CAP),
+      sb.from("statements").select("crime_id").filter("text", "imatch", re).limit(ID_CAP),
+    ]);
+    const ids = Array.from(new Set([...(byNarrative.data ?? []), ...(byStatement.data ?? [])].map((r) => r.crime_id as string)));
+    capped = capped || ids.length >= ID_CAP;
+    onlyIds = intersect(onlyIds, ids);
+    note("Phone in narratives", "crimes.narrative", byNarrative.data?.length ?? 0, byNarrative.error?.message ?? null);
+    note("Phone in statements", "statements.text", byStatement.data?.length ?? 0, byStatement.error?.message ?? null);
+  }
   let skipCases = onlyIds !== null && onlyIds.length === 0;
   if (onlyIds && onlyIds.length) cq = cq.in("crime_id", onlyIds);
   if (p.kind === "crime_id") cq = cq.eq("crime_id", p.value);
@@ -143,6 +156,13 @@ export async function runSearch(sb: SupabaseClient, p: ParsedSearch): Promise<Se
     const { data, error } = await eq.order("created_at", { ascending: false }).limit(LIMIT);
     evidence = (data ?? []) as EvidenceHit[];
     note("Evidence", "evidence_media", evidence.length, error?.message ?? null);
+  }
+
+  if (p.kind === "phone") {
+    const { data, error } = await sb.from("tips").select("tip_id, category, text, received_week, status")
+      .in("status", [...SEARCHABLE_TIP_STATUSES]).filter("text", "imatch", phoneRegex(p.value)).limit(LIMIT);
+    tips = (data ?? []) as TipHit[];
+    note("Tips", "tips (screened by Tip Guard only)", tips.length, error?.message ?? null);
   }
 
   return { capped, cases, vehicles, persons, tips, anpr, evidence, sources };
