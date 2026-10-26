@@ -7,6 +7,7 @@ import {
   formatTipCode, generateTipCode, MAX_FILE_BYTES, MAX_FILES, solvePow, TIP_CATEGORIES, TIP_CATEGORY_LABEL,
   validateTip, type TipCategory,
 } from "@/lib/tip";
+import { TIP_WHEN as WHEN, tipFields, type TipSubject, type TipWhen } from "@/lib/tipPrefill";
 
 const HexPicker = dynamic(() => import("./HexPicker").then((m) => m.HexPicker), {
   ssr: false, loading: () => <div className="h-64 rounded-lg border border-line bg-bg" />,
@@ -14,16 +15,20 @@ const HexPicker = dynamic(() => import("./HexPicker").then((m) => m.HexPicker), 
 
 type Item = { name: string; kind: "image" | "audio"; blob: Blob; preview: string | null; facesBlurred: boolean; note: string };
 
-const WHEN = ["", "Morning", "Afternoon", "Evening", "Night"] as const;
-
-/** Anonymous tip in 3 steps (spec G1 /tip/new; exhibit "Anonymous tip"). */
-export function TipForm({ appeal, appealTitle, defaultCategory }: { appeal: string | null; appealTitle: string | null; defaultCategory?: TipCategory }) {
+/**
+ * Anonymous tip in 3 steps (spec G1 /tip/new; exhibit "Anonymous tip").
+ * A `subject` (WS4-12, from ?appeal=) prefills category, area and time band; all stay editable, and
+ * removing the "About" line also stops the tip being linked to the appeal.
+ */
+export function TipForm({ subject, defaultCategory }: { subject: TipSubject | null; defaultCategory?: TipCategory }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [category, setCategory] = useState<TipCategory | "">(defaultCategory ?? "");
+  const [linked, setLinked] = useState<TipSubject | null>(subject);
+  const appeal = linked?.id ?? null;
+  const [category, setCategory] = useState<TipCategory | "">(defaultCategory ?? subject?.category ?? "");
   const [text, setText] = useState("");
-  const [when, setWhen] = useState<(typeof WHEN)[number]>("");
-  const [cell, setCell] = useState<string | null>(null);
+  const [when, setWhen] = useState<TipWhen>(subject?.when ?? "");
+  const [cell, setCell] = useState<string | null>(subject?.cell ?? null);
   const [items, setItems] = useState<Item[]>([]);
   const [blurFaces, setBlurFaces] = useState(true);
   const [mode, setMode] = useState<"anonymous" | "code">("anonymous");
@@ -82,12 +87,7 @@ export function TipForm({ appeal, appealTitle, defaultCategory }: { appeal: stri
     const pow = await solvePow(Date.now(), salt);
     setBusy("Sending…");
     const fd = new FormData();
-    fd.set("pow", pow);
-    fd.set("category", category);
-    fd.set("text", fullText);
-    if (cell) fd.set("cell", cell);
-    if (appeal) fd.set("appeal", appeal);
-    if (mode === "code") { fd.set("follow_up", "1"); fd.set("code", code); fd.set("passphrase", pass); }
+    for (const [k, v] of tipFields({ ...input, pow })) fd.set(k, v);
     for (const it of items) {
       fd.append("files", it.blob, it.kind === "image" ? "photo.jpg" : "audio");
       fd.append("blurred", it.facesBlurred ? "1" : "0");
@@ -114,7 +114,13 @@ export function TipForm({ appeal, appealTitle, defaultCategory }: { appeal: stri
         In an emergency, call <strong>112</strong>. This form is not monitored around the clock.
       </p>
       <div className="flex flex-wrap gap-2"><StepTab n={1} label="What you saw" /><StepTab n={2} label="Files" /><StepTab n={3} label="Stay anonymous" /></div>
-      {appealTitle && <p className="text-sm">About: <strong>{appealTitle}</strong></p>}
+      {linked && (
+        <p className="text-sm">
+          About: <strong>{linked.label}</strong>
+          <button type="button" className="ml-2 text-muted underline" aria-label="Remove the link to this appeal"
+            onClick={() => setLinked(null)}>✕ remove</button>
+        </p>
+      )}
 
       {step === 1 && (
         <section className="space-y-4 rounded-xl border border-line bg-surface p-5">
@@ -131,13 +137,13 @@ export function TipForm({ appeal, appealTitle, defaultCategory }: { appeal: stri
           </fieldset>
           <label className="block text-sm">
             <span className="font-semibold">What did you see?</span>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} maxLength={3900}
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} maxLength={3900} autoFocus={!!subject}
               className="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2"
               placeholder="Describe what you saw. Please don't include your own name, phone number or address." />
           </label>
           <label className="block text-sm">
             <span className="font-semibold">Roughly when?</span> <span className="text-muted">(optional)</span>
-            <select value={when} onChange={(e) => setWhen(e.target.value as (typeof WHEN)[number])} className="mt-1 block rounded-md border border-line bg-bg px-3 py-2">
+            <select value={when} onChange={(e) => setWhen(e.target.value as TipWhen)} className="mt-1 block rounded-md border border-line bg-bg px-3 py-2">
               {WHEN.map((w) => <option key={w} value={w}>{w || "Not sure"}</option>)}
             </select>
           </label>
