@@ -8,7 +8,7 @@ This is the text for the HackOS form's sponsor-technology field. Paste everythin
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
-> - **NVIDIA Embed is not claimed** (D-027). Nightshift 1.2.7 exposes no embeddings route (`/v1/embeddings` returns 404 for every model), so similar-MO and text search use TF-IDF plus feature vectors in code, the spec E2 fallback. The code (`services/api/app/engines/similarity.py`) is `[PENDING: WS2-21]`. Until it is on main, drop the sentence about it below.
+> - **NVIDIA Embed is not claimed** (D-027). Nightshift 1.2.7 exposes no embeddings route (`/v1/embeddings` returns 404 for every model), so similar-MO and text search use TF-IDF plus feature vectors in code (`services/api/app/engines/similarity.py`, tested), the spec E2 fallback.
 > - **Vision is a limitation, not a claim.** Super VL is listed as configured, and the image refusal is stated.
 > - **The form may have a length limit.** If it does, keep the first paragraph of each section and the evidence lines, and drop the rest.
 
@@ -28,8 +28,9 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
   - `q_features`: extracted MO features;
   - `q_dq_flags`: data-quality flags;
   - `q_news`: news that mentions a case's place;
-  - `q_hex_counts`: counts per H3 cell, for the hotspot test.
-  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context`, `q_search` and `q_station_matrix` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
+  - `q_hex_counts`: counts per H3 cell, for the hotspot test;
+  - `q_search`: text and filter search over crimes and statements, for the console search box.
+  - Still to come: `q_vehicle_trail`, `q_offender_return`, `q_calls_near`, `q_tip_corroboration`, `q_context` and `q_station_matrix` `[PENDING: WS1-15]`, and the semantic views (`v_crime_unified` and others) `[PENDING: WS1-13]`.
 - **Data quality is part of the evidence.** Eight data-quality views: duplicate FIRs filed by two stations, bad geo, inconsistent times, unmapped IPC/BNS sections, orphan evidence, tips without an incident, stale cameras, and a combined flag view.
 - **Untrusted input stays out.** Public tips reach Zetaris only through `tips_v`, a view of safe columns. The passphrase hash and raw tip text are never exposed to the data layer.
 - **The Skeptic uses Zetaris too.** It runs its own named queries to re-check every factor the Linker scored. A factor its own rows don't support is struck before a human sees the alert.
@@ -65,7 +66,7 @@ Nexus never builds a central warehouse. Every crime fact an agent reads comes th
 | `reason` | `nvidia/nemotron-3-ultra-550b-a55b` | Planner: picks and orders Zetaris queries; Linker: one plain reason per factor; Skeptic: the critique that can downgrade or drop a link; Series analyst: dossier notes |
 | `vision` | `nvidia/nemotron-3.5-super-vl-120b-a12b` (configured) | CCTV stills. Nightshift currently refuses image requests (`no_vision_model`). Reported to Meterless. The Extractor falls back to the officer's caption and traces it. No visual result is faked |
 
-- **No embedding model is claimed.** Nightshift 1.2.7 exposes no embeddings route, so similar-MO search and text search use TF-IDF and feature vectors computed in code (the spec's fallback), traced as `embed_fallback` `[PENDING: WS2-21]`. The Nemotron embed model is not claimed.
+- **No embedding model is claimed.** Nightshift 1.2.7 exposes no embeddings route, so similar-MO search and text search use TF-IDF and feature vectors computed in code (the spec's fallback), traced as `embed_fallback`. The Nemotron embed model is not claimed.
 - **Every trace line names the Nemotron model** that handled the request, and the model Nightshift reports back.
 - **Why Ultra:** the spec planned Nemotron Super 120B for reasoning, but it isn't served to our key, so the reasoning lane runs Ultra 550B.
 - **Numbers come from code.** Models write labels, plans and reasons; any number a model returns is ignored.
