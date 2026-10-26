@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T11:39:56+05:30",
+  "updated": "2026-10-26T11:42:28+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -80,8 +80,9 @@
           "id": "WS1-07",
           "phase": "P1",
           "title": "Chennai reference data: stations, wards, POIs, IPC-BNS map, calendar",
-          "status": "todo",
-          "owner": "nexus-1"
+          "status": "in_progress",
+          "owner": "nexus-1",
+          "note": "nexus-1: reference data"
         },
         {
           "id": "WS1-08",
@@ -213,22 +214,24 @@
           "id": "WS2-06",
           "phase": "P3",
           "title": "World Model engine (Python port) + tests",
-          "status": "todo",
-          "owner": "nexus-2"
+          "status": "in_progress",
+          "owner": "nexus-2",
+          "note": "facade + E4 tests on sample backend (#12); sidecar CI pending"
         },
         {
           "id": "WS2-07",
           "phase": "P3",
           "title": "Extractor agent: text and vision lanes",
-          "status": "todo",
-          "owner": "nexus-3"
+          "status": "in_progress",
+          "owner": "nexus-3",
+          "note": "nexus-3: agents PR in progress"
         },
         {
           "id": "WS2-08",
           "phase": "P3",
           "title": "Scout Intent + Tip Guard + fixtures",
-          "status": "todo",
-          "note": "Optional engine; claim only if tested",
+          "status": "in_progress",
+          "note": "first classifier in; 120 fixtures pending",
           "owner": "nexus-2"
         },
         {
@@ -258,8 +261,9 @@
           "id": "WS2-12",
           "phase": "P4",
           "title": "H-MEM engine (Python port) + three-session changed-score test",
-          "status": "todo",
-          "owner": "nexus-2"
+          "status": "in_progress",
+          "owner": "nexus-2",
+          "note": "facade + 3-session test on sample backend (#12); sidecar CI pending"
         },
         {
           "id": "WS2-13",
@@ -279,8 +283,9 @@
           "id": "WS2-15",
           "phase": "P4",
           "title": "Markovian engine + series dossier",
-          "status": "todo",
-          "owner": "nexus-2"
+          "status": "in_progress",
+          "owner": "nexus-2",
+          "note": "facade + limits test on sample backend (#12); sidecar CI pending"
         },
         {
           "id": "WS2-16",
@@ -295,7 +300,7 @@
           "title": "Engines TypeScript sidecar + official conformance runs (World Model, H-MEM, Markovian)",
           "status": "in_progress",
           "owner": "nexus-2",
-          "note": "nexus-2: facade first, then TS sidecar + official conformance"
+          "note": "official conformance passes locally: WM 8/8, H-MEM 13/13, Markovian 8/8; logs + CI job next"
         },
         {
           "id": "WS2-18",
@@ -346,9 +351,10 @@
           "id": "WS3-03",
           "phase": "P5",
           "title": "Sign-in and roles (officer, analyst, supervisor, admin)",
-          "status": "in_progress",
+          "status": "done",
           "owner": "nexus-4",
-          "note": "nexus-4: demo users seed + console sign-in (feat/console-auth)"
+          "note": "Supabase Auth + 5 demo users (Admin API seed); middleware on /console only; RLS check PASS",
+          "ref": "#13"
         },
         {
           "id": "WS3-04",
