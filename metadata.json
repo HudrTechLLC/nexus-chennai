@@ -18,7 +18,7 @@
       "nvidia/nemotron-3.5-super-vl-120b-a12b"
     ],
     "cursor": "not used",
-    "nvidia_vision": "nvidia/nemotron-3.5-super-vl-120b-a12b is served through a Nightshift cloud lane (OpenRouter free route, key held only in Nightshift), verified by a direct image test on 27 Oct (D-036); image extraction inside Nexus is pending a live trace with a vision model call"
+    "nvidia_vision": "nvidia/nemotron-3.5-super-vl-120b-a12b is served through a Nightshift cloud lane (OpenRouter free route, key held only in Nightshift), verified by a direct image test and in a live Nexus run on 27 Oct: Extractor vision model_call ok in run reextract_vis_1793040194 (D-036); the judge path and sample mode use the caption fallback (offline)"
   },
   "entry_point": "python run.py; POST /run",
   "sample_mode": "SAMPLE_MODE=true",
