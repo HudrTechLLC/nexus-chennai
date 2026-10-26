@@ -94,7 +94,7 @@ def test_a_timed_out_step_stays_skipped_for_the_whole_run_after_the_breaker_expi
     planner.execute(plan(1))
     out = planner.execute(plan(2))
     assert "q_dq_flags" not in out and "q_context" in out
-    assert len(fake.timeouts("nexus.dq_flags")) == 1
+    assert len(fake.timeouts(DQ)) == 1
     ev = [e for e in tracer.read() if e["action"] == "step_degraded"]
     assert [e["status"] for e in ev] == ["degraded", "degraded"]
     assert "earlier in this run" in ev[1]["output_summary"]
@@ -108,4 +108,4 @@ def test_a_fresh_run_tries_the_step_again(tmp_path):
         client = ZetarisClient(Settings(_env_file=None, sample_mode=False, zetaris_api_key="k"), tracer=tracer,
                                transport=httpx.MockTransport(fake))
         Planner(AgentDeps(tracer=tracer, zetaris=client, store=MemoryStore(), nightshift=None)).execute(plan())
-    assert len(fake.timeouts("nexus.dq_flags")) == 2
+    assert len(fake.timeouts(DQ)) == 2
