@@ -206,12 +206,29 @@ def dq_samples(key: str, mapping: list[dict], station_id: str, tz: str,
             "OR fir_no IS NULL OR fir_no = '' OR category IS NULL OR category = '' ORDER BY fir_no LIMIT 20")
 
 
-def likely_duplicates(key: str, mapping: list[dict], station_id: str, tz: str) -> str:
+def date_range(key: str, mapping: list[dict], station_id: str, tz: str) -> str:
+    """The file's first and last occurrence (UTC), read before likely_duplicates so its sb.crimes range is literal."""
+    base = mapped_select(key, mapping, station_id, tz)
+    return ("SELECT CAST(min(occurred_from) AS STRING) AS lo, CAST(max(occurred_from) AS STRING) AS hi "
+            f"FROM ({base}) m WHERE occurred_from IS NOT NULL")
+
+
+def _ts_literal(value: str, days: int = 0) -> str:
+    """A checked TIMESTAMP literal from a Zetaris timestamp string, shifted by `days` here (an expression on the
+    literal in SQL would not be pushed down). No free text reaches SQL."""
+    from datetime import datetime, timedelta
+
+    dt = datetime.fromisoformat(str(value).strip().replace(" ", "T")[:19]) + timedelta(days=days)
+    return f"TIMESTAMP '{dt.strftime('%Y-%m-%d %H:%M:%S')}'"
+
+
+def likely_duplicates(key: str, mapping: list[dict], station_id: str, tz: str, lo: str, hi: str) -> str:
     """New rows that look like a crime Nexus already holds, with dq_rules' thresholds (DUP_MAX_DEG, ~275 m).
     Time: within DUP_WINDOW_MIN minutes when the file gives a time of occurrence; when it gives a date only, any time
     that day (a window from that midnight, not a date equality). Category is NOT compared: the export uses its own
-    crime heads, so these are reported at info severity, "category not compared". The sb.crimes side is limited to
-    the file's date range so the filter pushes down to Postgres."""
+    crime heads, so these are reported at info severity, "category not compared". `lo`/`hi` come from date_range()
+    and are rendered as TIMESTAMP literals, so the sb.crimes range is a pushed-down filter (EXPLAIN: PushedFilters on
+    occurred_from), not a join condition."""
     timed = any(m.get("unified_field") == "occurred_from" and m.get("transform") == "datetime_dmy_hm" for m in mapping)
     if timed:
         window = f"abs(unix_timestamp(c.occurred_from) - unix_timestamp(m.occurred_from)) <= {int(DUP_WINDOW_MIN) * 60}"
@@ -219,9 +236,9 @@ def likely_duplicates(key: str, mapping: list[dict], station_id: str, tz: str) -
         window = "c.occurred_from >= m.occurred_from AND c.occurred_from < m.occurred_from + INTERVAL 1 DAY"
     deg = float(DUP_MAX_DEG)
     base = mapped_select(key, mapping, station_id, tz)
-    return ("WITH m AS (" + base + "), r AS (SELECT min(occurred_from) AS lo, max(occurred_from) AS hi FROM m "
-            "WHERE occurred_from IS NOT NULL) "
-            "SELECT m.fir_no, c.crime_id FROM m JOIN r ON true "
-            "JOIN sb.crimes c ON c.occurred_from >= date_sub(r.lo, 1) AND c.occurred_from < date_add(r.hi, 2) "
-            f"AND {window} AND abs(c.lat - m.lat) <= {deg} AND abs(c.lon - m.lon) <= {deg} "
-            "ORDER BY m.fir_no, c.crime_id LIMIT 50")
+    return ("WITH m AS (" + base + "), "
+            f"c AS (SELECT crime_id, occurred_from, lat, lon FROM sb.crimes WHERE occurred_from >= {_ts_literal(lo, -1)} "
+            f"AND occurred_from < {_ts_literal(hi, 2)}) "
+            "SELECT m.fir_no, c.crime_id FROM m JOIN c "
+            f"ON {window} AND abs(c.lat - m.lat) <= {deg} AND abs(c.lon - m.lon) <= {deg} "
+            "ORDER BY m.fir_no, c.crime_id LIMIT 200")

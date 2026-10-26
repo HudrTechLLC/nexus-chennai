@@ -242,14 +242,15 @@ class FakeZetaris:
         self.calls.append(template)
         zo_builders = {"create_raw": zo.create_raw, "describe_raw": zo.describe_raw, "profile": zo.profile,
                        "examples": zo.examples, "dq": zo.dq, "dq_samples": zo.dq_samples,
-                       "likely_duplicates": zo.likely_duplicates, "create_view": zo.create_view,
+                       "likely_duplicates": zo.likely_duplicates, "date_range": zo.date_range, "create_view": zo.create_view,
                        "count_view": zo.count_view}
         zo_builders[template](*args)  # the real template must build without raising
         rows = {"create_raw": [], "describe_raw": [[h, "string", None] for h in self.headers],
                 "profile": [[150] + [150, 100] * len(self.headers)],
                 "examples": [[f"v{i}" for i in range(len(self.headers))]],
                 "dq": [[150, 5, 4, 3, 4, 0, 0]], "dq_samples": [["RH/1/2026", "bad_date"], ["RH/2/2026", "out_of_city"]],
-                "likely_duplicates": [["RH/9/2026", "CHN-MD-2025-000126"]], "create_view": [], "count_view": [[150]]}
+                "likely_duplicates": [["RH/9/2026", "CHN-MD-2025-000126"]], "create_view": [], "count_view": [[150]],
+                "date_range": [["2026-05-31 18:30:00", "2026-10-19 18:30:00"]]}
         return SimpleNamespace(rows=rows[template])
 
 
@@ -323,10 +324,13 @@ def test_duplicates_use_dq_rules_thresholds_and_a_time_window():
     from app.adapters.dq_rules import DUP_MAX_DEG, DUP_WINDOW_MIN
 
     split = ob.lat_lon_split(MAPPING)
-    day = zo.likely_duplicates("k_ok", split, "PS-X1", "Asia/Kolkata")
+    day = zo.likely_duplicates("k_ok", split, "PS-X1", "Asia/Kolkata", "2026-06-01 00:00:00", "2026-10-20 00:00:00")
     assert f"<= {float(DUP_MAX_DEG)}" in day and "INTERVAL 1 DAY" in day and "to_date" not in day
     timed = [{**m, "transform": "datetime_dmy_hm"} if m["unified_field"] == "occurred_from" else m for m in split]
-    assert f"<= {DUP_WINDOW_MIN * 60}" in zo.likely_duplicates("k_ok", timed, "PS-X1", "Asia/Kolkata")
+    assert f"<= {DUP_WINDOW_MIN * 60}" in zo.likely_duplicates("k_ok", timed, "PS-X1", "Asia/Kolkata", "2026-06-01", "2026-10-20")
+    assert "occurred_from >= TIMESTAMP '2026-05-31 00:00:00' AND occurred_from < TIMESTAMP '2026-10-22 00:00:00'" in day
+    with pytest.raises(ValueError):
+        zo.likely_duplicates("k_ok", split, "PS-X1", "Asia/Kolkata", "2026-06-01'; DROP", "2026-10-20")
 
 
 def test_time_order_checks_appear_only_when_those_fields_are_mapped():

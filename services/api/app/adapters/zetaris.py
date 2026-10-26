@@ -326,7 +326,7 @@ class ZetarisClient:
 
         builder = {"create_raw": zo.create_raw, "describe_raw": zo.describe_raw, "profile": zo.profile,
                    "examples": zo.examples, "dq": zo.dq, "dq_samples": zo.dq_samples,
-                   "likely_duplicates": zo.likely_duplicates, "create_view": zo.create_view,
+                   "likely_duplicates": zo.likely_duplicates, "date_range": zo.date_range, "create_view": zo.create_view,
                    "count_view": zo.count_view}.get(template)
         if builder is None:
             raise ZetarisError(f"'{template}' is not an onboarding template")

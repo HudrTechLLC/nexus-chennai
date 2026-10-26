@@ -282,7 +282,9 @@ class Onboarder:
         bounds = tuple(load_city(self.settings.city)["map"]["bounds"])
         counts = self.zetaris.onboard("dq", key, full, station_id, tz, bounds, agent=AGENT).rows[0]
         samples = self.zetaris.onboard("dq_samples", key, full, station_id, tz, bounds, agent=AGENT).rows
-        dups = self.zetaris.onboard("likely_duplicates", key, full, station_id, tz, agent=AGENT).rows
+        lo, hi = (self.zetaris.onboard("date_range", key, full, station_id, tz, agent=AGENT).rows or [[None, None]])[0]
+        dups = (self.zetaris.onboard("likely_duplicates", key, full, station_id, tz, lo, hi, agent=AGENT).rows
+                if lo and hi else [])
         by_rule = {"bad_date": int(counts[1] or 0), "out_of_city": int(counts[2] or 0),
                    "missing_required": int(counts[3] or 0), "repeated_fir_no": int(counts[4] or 0),
                    "ends_before_start": int(counts[5] or 0), "occurred_after_reported": int(counts[6] or 0),
@@ -292,7 +294,7 @@ class Onboarder:
         out = []
         for rule, count in by_rule.items():
             if rule == "likely_duplicate_of_existing":
-                rows = [f"{r[0]} ~ {r[1]}" for r in dups][:10]
+                rows = [f"{r[0] or '(no FIR number)'} ~ {r[1]}" for r in dups][:10]
             elif rule == "repeated_fir_no":
                 rows = []
             else:
