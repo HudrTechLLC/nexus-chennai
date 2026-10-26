@@ -79,7 +79,7 @@ Caps: the Planner runs at most 3 rounds, the Skeptic sends back at most 2 times,
 | Briefer | Lightning | every number | prose (rejected if it invents a number) | no |
 | **Analyst (human)** | console | — | — | **yes, always** |
 
-Scores are computed in code: the nine factors are modus operandi, space–time, vehicle, suspect description, weapon/tool, target, forensic, corroboration and offender return. The models write labels, plans and reasons, and any number a model returns is ignored. Details: [engg/docs/AGENTS.md](engg/docs/AGENTS.md).
+Scores are computed in code: the nine factors are modus operandi, space–time, vehicle, suspect description, weapon/tool, target, forensic, corroboration and offender return. The models write labels, plans and reasons, and any number a model returns is ignored. Each alert also shows its **coverage**: the share of the factor weights that had data for this pair. Under 50% coverage the band is capped at medium, so a pair can score 1.0 on the few factors it has and still be medium. Details: [engg/docs/AGENTS.md](engg/docs/AGENTS.md).
 
 ## Meterless engines
 
@@ -105,7 +105,7 @@ Full text: [engg/docs/SPONSOR_TECH.md](engg/docs/SPONSOR_TECH.md).
 
 ## Setup
 
-You need Python 3.11, Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center (<https://hackathon.genai.works/resources>, login needed). The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
+You need Python 3.11 or newer (3.13 tested on Windows), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center (<https://hackathon.genai.works/resources>, login needed). The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
 
 ### Option A: Docker (the judge path)
 
@@ -120,12 +120,26 @@ For live mode, copy `.env.example` to `.env`, fill it in, and run `docker compos
 
 ### Option B: Python virtual environment
 
+macOS / Linux (bash):
+
 ```bash
 git clone https://github.com/HudrTechLLC/nexus-chennai.git && cd nexus-chennai
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt          # Windows: .venv\Scripts\pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 SAMPLE_MODE=true .venv/bin/python run.py           # serves on http://127.0.0.1:8000
 ```
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/HudrTechLLC/nexus-chennai.git; cd nexus-chennai
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+$env:SAMPLE_MODE = "true"
+.venv\Scripts\python run.py                        # serves on http://127.0.0.1:8000
+```
+
+The install takes a few minutes. On Windows it includes `tzdata`, because Windows Python has no time-zone database of its own.
 
 `run.py` sets its own import path, so no `PYTHONPATH` is needed.
 
@@ -148,6 +162,14 @@ python run.py --once input_examples/example_1.json
 # or against the running API
 curl -s -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json
 ```
+
+On Windows PowerShell, `curl` is an alias for `Invoke-WebRequest`, so call `curl.exe` instead (same arguments), or:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/run -ContentType "application/json" -InFile input_examples\example_1.json | ConvertTo-Json -Depth 8
+```
+
+`run.py --once` first prints the trace lines as the agents work, then the result. The result is the last JSON block in the output. `[chief: update this sentence if the trace echo moves to stderr]`
 
 `POST /run` takes `{"run_id"?, "input": {"kind": "case" | "batch" | "tip" | "search", ...}, "options": {...}}` and returns `run_id`, `status`, `output` (`alerts`, `series`, `hotspots`, `summary`), `agents`, `engines`, `trace_id`, `log_file` and `execution_time_seconds`. Bad input returns a 422; it never returns a made-up answer.
 
