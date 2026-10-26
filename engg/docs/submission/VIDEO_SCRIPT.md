@@ -127,7 +127,7 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 
 ### 8 · The series on the map · 2:50–3:12 (22 s, ~50 words)
 
-- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order. **Widen the scrubber window so every member shows** before playing. The series is labelled on screen by its generated name ("10 linked cases (…)"), not "Red Pulsar Duo", so the narration doesn't name it. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
+- **Screen:** Pulse Map with **series only** on: the Red Pulsar members joined across stations in time order. **Widen the scrubber window so every member shows** before playing. The series is labelled on screen **"Red two-wheeler chain snatchings · 3 stations"** (9 cases), not "Red Pulsar Duo". The narration says "this series" and doesn't name it. Optional: the series page with its dossier (`/console/series/[seriesId]`, on main since #70); use it only if it shows real rows.
 - **Narration:**
   > Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier.
 - **Check no secrets visible:** the map tiles carry no key in view; crop the URL bar (a MapTiler key can sit in tile URLs in devtools, so keep devtools closed).
@@ -178,8 +178,8 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic refuses what th
 |---|---|---|
 | "Adyar on a Wednesday evening… Velachery two days later" | hero pair in `series.yaml`: CHN-AD-2026-001182 on Wed 14 Oct 19:40 IST, CHN-VL-2026-000877 on Fri 16 Oct 19:55 IST (checked) | Change the weekday words to match the dates on screen |
 | "two riders on a red motorcycle, a partial plate" | the hero case narrative in `series.yaml` | Read the narrative shown and match it |
-| Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, high 0.787, coverage 0.72, pending. **Judge path (sample mode, fresh clone @ `de8e666`):** the same pair, high 0.789 (the top link there is Adyar ↔ Thiruvanmiyur, high 0.819) | Read the score shown on screen; never the number from this table |
-| "across three stations" | Live series SER-B687C36CFC: 10 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-6, 26 Oct). Final count after nexus-3's D-033 (test FIR removed) and the series-naming fix | Say the station count shown on screen, or just "across stations" |
+| Hero alert is Adyar ↔ Velachery, high | **Live:** LA-2026-E38C6B38B865, **high 0.7887, pending** (nexus-3 DB read, 26 Oct 22:56, after rp7). **Judge path (sample mode, fresh clone @ `de8e666`):** the same pair, high 0.789 (the top link there is Adyar ↔ Thiruvanmiyur, high 0.819) | Read the score shown on screen; never the number from this table |
+| "across three stations" | Live series SER-B687C36CFC, "Red two-wheeler chain snatchings · 3 stations": 9 cases across PS-ADYAR / THIRUVANMIYUR / VELACHERY (nexus-3 DB read, 26 Oct 22:56, after D-033 removed test FIR AD-2026-001231 and the naming fix #245) | Say the station count shown on screen, or just "across stations" |
 | Seg 3: "The CCTV still can't be read today…" | a `vision_unavailable` step in the live FIR-with-still run (none yet at the dry run) | Cut that sentence |
 | Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
 | Seg 6: "ages don't match… shop theft… two-wheeler theft… nothing else overlaps… drops the link" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
