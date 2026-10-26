@@ -59,8 +59,8 @@ def build_alert(res: SkepticResult, run_id: str, now: datetime | None = None) ->
         score=ps.score,
         band=ps.band,
         factors=factors,
-        memory_applied=[{"memory_id": m["memory_id"] or "HM-unknown", "effect": m["effect"], "text": m["text"]}
-                        for m in ps.memory_applied],
+        memory_applied=[{"memory_id": m["memory_id"] or "HM-unknown", "memory_ids": list(m.get("memory_ids") or []),
+                         "effect": m["effect"], "text": m["text"]} for m in ps.memory_applied],
         skeptic=res.review_block(),
         rationale=rationale,
         recommended_action=sp.recommended_action,
