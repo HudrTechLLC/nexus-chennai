@@ -217,3 +217,91 @@ ORDER BY any_value(n.published_at), n.article_id
     timeout_s=NEWS_TIMEOUT_S,
 )
 N2_SPECS[Q_NEWS["name"]] = Q_NEWS
+
+
+# ---------------------------------------------------------------------------- q_search (spec E5, SRCH-02/03)
+# Text plus structured filters over crimes and their witness statements. Zetaris returns the matching rows,
+# newest first; app.engines.similarity.rank_rows re-ranks them by text relevance in code (D-027). Call it
+# through search_params(q, filters), which fills every parameter: an empty string means "no filter".
+#   pattern     word-prefix regex built from the query tokens ("" = no text filter)
+#   category, station_id, status   exact match
+#   since, until                    city-local dates or datetimes (ISO); until is exclusive
+SEARCH_COLUMNS = ("crime_id", "station_id", "category", "sub_type", "occurred_from", "lat", "lon", "address",
+                  "status", "severity", "text", "matched_in")
+SEARCH_FILTERS = ("category", "station_id", "status", "since", "until")
+SEARCH_MAX_TOKENS = 12
+
+
+def search_pattern(q: str) -> str:
+    """Word-prefix regex for the query: tokens are [a-z0-9] only, so nothing needs escaping, and there is no
+    backslash (Spark SQL string literals would treat it as an escape)."""
+    from app.engines.similarity import tokens
+
+    toks = list(dict.fromkeys(tokens(q)))[:SEARCH_MAX_TOKENS]
+    return f"(^|[^a-z0-9])({'|'.join(toks)})" if toks else ""
+
+
+def search_params(q: str | None, filters: dict | None = None) -> dict[str, str]:
+    """Every q_search parameter, from the search text and the console's filters."""
+    f = filters or {}
+    out = {"pattern": search_pattern(q or "")}
+    for key in SEARCH_FILTERS:
+        v = f.get(key)
+        out[key] = "" if v is None else str(v)
+    return out
+
+
+def _city_tz() -> tuple[str, str]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from ..config import get_settings, load_city
+
+    tz = load_city(get_settings().city)["timezone"]
+    off = datetime(2026, 1, 1, tzinfo=ZoneInfo(tz)).strftime("%z")
+    return tz, f"{off[:3]}:{off[3:]}"
+
+
+def _q_search() -> dict:
+    tz, offset = _city_tz()
+    # Lightning (Spark SQL): sb.crimes timestamps arrive in UTC; city time via from_utc_timestamp (as q_case).
+    ts = f"concat(replace(cast(from_utc_timestamp(c.occurred_from, '{tz}') AS STRING), ' ', 'T'), '{offset}')"
+    hit = ("(lower(coalesce(c.narrative, '')) rlike :pattern OR lower(coalesce(c.address, '')) rlike :pattern "
+           "OR lower(c.category) rlike :pattern)")
+    lightning = (
+        f"SELECT c.crime_id, c.station_id, c.category, c.sub_type, {ts} AS occurred_from, c.lat, c.lon, c.address, "
+        f"c.status, c.severity, c.narrative AS text, "
+        f"CASE WHEN :pattern = '' THEN 'filters' WHEN {hit} THEN 'crime' ELSE 'statement' END AS matched_in "
+        "FROM sb.crimes c "
+        "WHERE (:category = '' OR c.category = :category) AND (:station_id = '' OR c.station_id = :station_id) "
+        "AND (:status = '' OR c.status = :status) "
+        f"AND (:since = '' OR c.occurred_from >= to_utc_timestamp(CAST(:since AS TIMESTAMP), '{tz}')) "
+        f"AND (:until = '' OR c.occurred_from < to_utc_timestamp(CAST(:until AS TIMESTAMP), '{tz}')) "
+        f"AND (:pattern = '' OR {hit} OR c.crime_id IN (SELECT s.crime_id FROM sb.statements s "
+        "WHERE lower(coalesce(s.text, '')) rlike :pattern)) "
+        "ORDER BY c.occurred_from DESC, c.crime_id"
+    )
+    dhit = ("(regexp_matches(lower(coalesce(c.narrative, '')), :pattern) "
+            "OR regexp_matches(lower(coalesce(c.address, '')), :pattern) "
+            "OR regexp_matches(lower(c.category), :pattern))")
+    sample = f"""
+WITH c AS (SELECT *, CAST(occurred_from AS TIMESTAMPTZ) AS t FROM 'sb/crimes.parquet')
+SELECT c.crime_id, c.station_id, c.category, c.sub_type,
+       strftime(c.t AT TIME ZONE '{tz}', '%Y-%m-%dT%H:%M:%S') || '{offset}' AS occurred_from,
+       c.lat, c.lon, c.address, c.status, c.severity, c.narrative AS text,
+       CASE WHEN :pattern = '' THEN 'filters' WHEN {dhit} THEN 'crime' ELSE 'statement' END AS matched_in
+FROM c
+WHERE (:category = '' OR c.category = :category) AND (:station_id = '' OR c.station_id = :station_id)
+  AND (:status = '' OR c.status = :status)
+  AND (:since = '' OR c.t >= (CAST(:since AS TIMESTAMP) AT TIME ZONE '{tz}'))
+  AND (:until = '' OR c.t < (CAST(:until AS TIMESTAMP) AT TIME ZONE '{tz}'))
+  AND (:pattern = '' OR {dhit} OR c.crime_id IN (
+        SELECT s.crime_id FROM 'sb/statements.parquet' s WHERE regexp_matches(lower(coalesce(s.text, '')), :pattern)))
+ORDER BY c.t DESC, c.crime_id
+""".strip()
+    return dict(name="q_search", lightning=lightning, sample=sample, columns=SEARCH_COLUMNS,
+                description="Text + filters over crimes and statements (SRCH-02/03); re-ranked in code")
+
+
+Q_SEARCH = _q_search()
+N2_SPECS[Q_SEARCH["name"]] = Q_SEARCH
