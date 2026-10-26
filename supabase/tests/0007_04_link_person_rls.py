@@ -18,7 +18,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 import db_migrate  # noqa: E402  (pooler connection, password from the environment)
 
-MIG = Path(__file__).resolve().parents[1] / "migrations" / "0007_04_link_person.sql"
+MIGS = [Path(__file__).resolve().parents[1] / "migrations" / name
+        for name in ("0007_04_link_person.sql", "0007_05_link_person_no_complexion.sql")]
 ADYAR = "5a301b38-26e4-4614-90cc-42fe416eb61b"      # station_officer, PS-ADYAR-J2
 VELACHERY = "2e4e8dbe-c796-4276-8581-49813f70a718"  # station_officer, PS-VELACHERY-J7
 ANALYST = "92b32c25-0e5a-443f-831a-379cfd40874c"
@@ -59,7 +60,8 @@ def check(label: str, ok: bool, detail: str = "") -> None:
 
 with db_migrate.connect() as conn:
     with conn.cursor() as cur:
-        cur.execute(MIG.read_text(encoding="utf8"))
+        for mig in MIGS:
+            cur.execute(mig.read_text(encoding="utf8"))
 
         as_user(cur, ADYAR)
         accused = call(cur, "officer links a new named accused", {"crime_id": CASE, "role": "accused", "name": "Raju alias Pulsar Raju",
@@ -69,6 +71,7 @@ with db_migrate.connect() as conn:
         call(cur, "witness with a name refused (J5)", {"crime_id": CASE, "role": "witness", "name": "Lakshmi"}, False)
         call(cur, "named person linked as victim refused (J5)", {"crime_id": CASE, "role": "victim", "person_id": accused}, False)
         call(cur, "unknown descriptor refused", {"crime_id": CASE, "role": "suspect", "descriptors": {"religion": "x"}}, False)
+        call(cur, "complexion refused (LNK-13, 0007_05)", {"crime_id": CASE, "role": "suspect", "descriptors": {"complexion": "fair"}}, False)
         call(cur, "empty person refused", {"crime_id": CASE, "role": "suspect"}, False)
         call(cur, "bad role refused", {"crime_id": CASE, "role": "informer", "name": "x"}, False)
 

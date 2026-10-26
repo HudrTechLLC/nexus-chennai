@@ -10,7 +10,8 @@ export type PersonRole = (typeof PERSON_ROLES)[number];
 export const NAMED_ROLES: PersonRole[] = ["accused", "suspect"];
 
 /** Descriptor keys the RPC accepts (same list as link_person). */
-export const DESCRIPTOR_KEYS = ["height_band", "build", "age_band", "gender", "marks", "clothing", "complexion", "hair"] as const;
+/** No complexion: a skin-colour proxy for community (LNK-13, 0007_05). */
+export const DESCRIPTOR_KEYS = ["height_band", "build", "age_band", "gender", "marks", "clothing", "hair"] as const;
 export type DescriptorKey = (typeof DESCRIPTOR_KEYS)[number];
 
 export type LinkForm = {
