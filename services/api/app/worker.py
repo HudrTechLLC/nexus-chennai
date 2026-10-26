@@ -11,7 +11,10 @@ worker picks the work up:
    and, on approval, a joint-case proposal (LNK-09).
 2. `tips` with status 'new' -> Tip Guard (Scout Intent). Each tip gets its guard verdict
    and a status of screened, quarantined or urgent. Nothing else reads a tip before this (R8).
-3. New crimes without `crime_features` -> the agent graph (extract -> link -> Skeptic -> alerts).
+2b. `appeal_requests` -> Sanitiser drafts in `public_incidents`.
+2c. `series` with no dossier -> Series analyst (Markovian), stored in `series.dossier`.
+3. New crimes (reported_at <= now) without `crime_features` -> the agent graph (extract -> link ->
+   Skeptic -> alerts); the run row carries subject = crime_id so the console can link its trace.
 
 Queue and state rows come from Supabase. The crime facts behind an H-MEM memory are read
 through Zetaris named queries (R1).
@@ -21,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from dataclasses import replace
 from datetime import datetime
 from typing import Any
 
@@ -30,6 +34,7 @@ from .adapters.supabase import SupabaseClient
 from .adapters.zetaris import ZetarisClient
 from .agents import AgentDeps, Sanitiser, TipGuard, hmem_pair
 from .agents.base import crime_from_row, features_from_row, rows_as_dicts
+from .agents.series import SeriesAnalyst, dossier_record
 from .config import Settings, get_settings
 from .graph.runner import run_request
 from .graph.store import SupabaseStore
@@ -55,6 +60,7 @@ class Worker:
         self.run_case = run_case or (lambda cid: run_request("case", {"crime_id": cid}, {}, settings,
                                                              store_factory=lambda s, t: SupabaseStore(sb, t)))
         self.deps = AgentDeps(tracer=self.tracer, zetaris=self.zetaris, nightshift=self.nightshift, engines=engines)
+        self._dossier_failed: set[str] = set()
 
     # ----- 1. analyst decisions -> H-MEM ---------------------------------------------
 
@@ -150,10 +156,36 @@ class Worker:
                                  output_summary=str(exc)[:300], status="error")
         return len(reqs)
 
+    # ----- 2c. series without a dossier -> Series analyst (WS2-21) --------------------------
+
+    DOSSIERS_PER_PASS = 1  # reason-lane chunks; keep a pass short
+    DOSSIER_SECONDS = 180  # chunks past this fall back to the extractive generator (traced)
+
+    def process_dossiers(self) -> int:
+        series = self.sb.select("series", {"select": "series_id", "dossier": "is.null", "order": "created_at.asc",
+                                           "limit": str(self.DOSSIERS_PER_PASS + len(self._dossier_failed))})
+        todo = [r["series_id"] for r in series if r["series_id"] not in self._dossier_failed]
+        done = 0
+        for sid in todo[: self.DOSSIERS_PER_PASS]:
+            try:
+                members = [r["crime_id"] for r in self.sb.select("series_members", {
+                    "select": "crime_id", "series_id": f"eq.{sid}", "order": "crime_id.asc"})]
+                deps = replace(self.deps, deadline=time.monotonic() + self.DOSSIER_SECONDS)
+                out = SeriesAnalyst(deps).dossier(sid, members)
+                SupabaseStore(self.sb, self.tracer).write_dossier(sid, dossier_record(out, self.tracer.run_id))
+                done += 1
+            except Exception as exc:  # retried by the next worker process, not every pass
+                self._dossier_failed.add(sid)
+                self.tracer.emit("Series analyst", "dossier_failed", input_summary=sid,
+                                 output_summary=str(exc)[:300], status="error")
+        return done
+
     # ----- 3. new cases -> agent graph ---------------------------------------------------------
 
     def process_new_cases(self) -> int:
-        recent = self.sb.select("crimes", {"select": "crime_id", "order": "reported_at.desc", "limit": str(BATCH)})
+        # reported_at <= now: seed rows dated in the future must not crowd a just-filed FIR out of the batch.
+        recent = self.sb.select("crimes", {"select": "crime_id", "reported_at": f"lte.{_now()}",
+                                           "order": "reported_at.desc", "limit": str(BATCH)})
         ids = [r["crime_id"] for r in recent]
         if not ids:
             return 0
@@ -208,7 +240,7 @@ class Worker:
         self.heartbeat()
         with engines.use_tracer(self.tracer):
             out = {"decisions": self.process_decisions(), "tips": self.process_tips(),
-                   "appeals": self.process_appeal_requests()}
+                   "appeals": self.process_appeal_requests(), "dossiers": self.process_dossiers()}
         out["cases"] = self.process_new_cases()
         return out
 

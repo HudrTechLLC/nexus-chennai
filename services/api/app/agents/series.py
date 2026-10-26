@@ -77,9 +77,23 @@ def detect_series(alerts: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     return sorted(out, key=lambda s: -len(s["crime_ids"]))
 
 
+DOSSIER_FIELDS = ("text", "cited_ids", "chunks", "tokens_projected", "tokens_actual", "model", "receipt_id")
+
+
+def dossier_record(out: Mapping[str, Any], run_id: str) -> dict[str, Any]:
+    """The shape stored in series.dossier (agreed with nexus-6 for the WS3-11 pages)."""
+    from datetime import datetime
+
+    from ..tracing import IST
+    return {**{k: out.get(k) for k in DOSSIER_FIELDS}, "receipt_ids": list(out.get("receipt_ids") or []),
+            "record_count": out.get("record_count"), "run_id": run_id,
+            "generated_at": datetime.now(IST).isoformat(timespec="seconds")}
+
+
 class SeriesAnalyst:
     def __init__(self, deps: AgentDeps) -> None:
         self.deps = deps
+        self.receipts: list[tuple[str, str]] = []  # (model, receipt_id) per chunk the model wrote
 
     def records(self, crime_ids: Sequence[str]) -> list[dict[str, Any]]:
         """Every case, statement, evidence tag and clean tip of the series, read through Zetaris (R1)."""
@@ -135,6 +149,7 @@ class SeriesAnalyst:
                 text = res.content or ""
                 if "[STATE_CHECKPOINT]" not in text:
                     raise AgentError("no state checkpoint in chunk notes")
+                self.receipts.append((res.model, res.receipt_id))
                 return text
             except Exception as exc:
                 self.deps.tracer.emit(AGENT, "chunk_fallback", input_summary=f"chunk {step}",
@@ -144,6 +159,7 @@ class SeriesAnalyst:
         return generate
 
     def dossier(self, series_id: str, crime_ids: Sequence[str], use_model: bool = True) -> dict[str, Any]:
+        self.receipts = []
         recs = self.records(crime_ids)
         if not recs:
             raise AgentError(f"series {series_id}: no records found")
@@ -154,4 +170,8 @@ class SeriesAnalyst:
                               output_summary=f"{out['chunks']} chunks, cited {len(out['cited_ids'])}, "
                                              f"tokens {out['tokens_projected']}→{out['tokens_actual']}",
                               engine="markovian", status="ok")
-        return {**out, "series_id": series_id, "record_count": len(recs)}
+        # model = None when every chunk fell back to the extractive generator (no model wrote any of it).
+        model = self.receipts[-1][0] if self.receipts else None
+        return {**out, "series_id": series_id, "record_count": len(recs), "model": model,
+                "receipt_id": self.receipts[-1][1] if self.receipts else None,
+                "receipt_ids": [r for _, r in self.receipts]}

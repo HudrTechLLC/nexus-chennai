@@ -38,6 +38,31 @@ class Store(Protocol):
 
     def notify(self, notifications: list[dict[str, Any]]) -> None: ...
 
+    def write_series(self, series: dict[str, Any], run_id: str) -> str: ...
+
+    def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool: ...
+
+
+def series_name(series: Mapping[str, Any]) -> str:
+    stations = list(series.get("stations") or [])
+    where = ", ".join(stations[:3]) + (f" +{len(stations) - 3}" if len(stations) > 3 else "")
+    return f"{len(series.get('crime_ids') or [])} linked cases" + (f" ({where})" if where else "")
+
+
+def choose_series_id(series: Mapping[str, Any], existing: Mapping[str, str]) -> str:
+    """Keep a series id stable as it grows: reuse the stored series sharing the most members.
+
+    `existing` maps crime_id -> series_id for already-stored members. Ties go to the smaller id, so the
+    choice is deterministic. A series with no stored members keeps its content-hash id.
+    """
+    overlap: dict[str, int] = {}
+    for cid in series.get("crime_ids") or []:
+        if cid in existing:
+            overlap[existing[cid]] = overlap.get(existing[cid], 0) + 1
+    if not overlap:
+        return str(series["series_id"])
+    return sorted(overlap, key=lambda sid: (-overlap[sid], sid))[0]
+
 
 @dataclass
 class MemoryStore:
@@ -46,6 +71,7 @@ class MemoryStore:
     features: dict[str, dict[str, Any]] = field(default_factory=dict)
     alerts: dict[str, dict[str, Any]] = field(default_factory=dict)
     notifications: list[dict[str, Any]] = field(default_factory=list)
+    series: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def upsert_features(self, features: dict[str, Any]) -> None:
         self.features[features["crime_id"]] = features
@@ -56,6 +82,18 @@ class MemoryStore:
 
     def notify(self, notifications: list[dict[str, Any]]) -> None:
         self.notifications.extend(notifications)
+
+    def write_series(self, series: dict[str, Any], run_id: str) -> str:
+        existing = {cid: sid for sid, s in self.series.items() for cid in s["crime_ids"]}
+        sid = choose_series_id(series, existing)
+        row = self.series.setdefault(sid, {"series_id": sid, "crime_ids": [], "dossier": None, "status": "candidate"})
+        row.update(name=series_name(series), run_id=run_id, synthetic=True,
+                   crime_ids=sorted(set(row["crime_ids"]) | set(series.get("crime_ids") or [])))
+        return sid
+
+    def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool:
+        self.series.setdefault(series_id, {"series_id": series_id, "crime_ids": []})["dossier"] = dossier
+        return True
 
 
 @dataclass

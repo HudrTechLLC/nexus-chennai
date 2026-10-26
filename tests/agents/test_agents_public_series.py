@@ -8,7 +8,7 @@ import pytest
 from agents_fixtures import ADYAR, FEATURES, HOUSEBREAK, VELACHERY, FakeEngines, as_row, default_handlers
 
 from app import engines
-from app.agents import Briefer, Sanitiser, SeriesAnalyst, detect_series
+from app.agents import Briefer, MemoryStore, Sanitiser, SeriesAnalyst, detect_series
 from app.agents.base import crime_from_row, features_from_row
 from app.agents.sanitiser import leaks
 from app.models import PublicIncident
@@ -111,12 +111,14 @@ def test_series_dossier_cites_only_real_records(make_deps):
     assert "TIP-1" in out["cited_ids"] and out["record_count"] == 5
     assert out["chunks"] >= 1 and {"tokens_projected", "tokens_actual"} <= set(out)
     assert deps.nightshift.calls[0][0] == "reason"
+    assert out["model"] == "nvidia/test-reason" and out["receipt_id"] == out["receipt_ids"][-1]
 
 
 def test_series_dossier_falls_back_per_chunk(make_deps):
     deps = make_deps(responder=lambda *a: "no checkpoint here", engines=engines)
     out = SeriesAnalyst(deps).dossier("SER-T", [ADYAR["crime_id"], VELACHERY["crime_id"]])
     assert out["cited_ids"] and any(e["action"] == "chunk_fallback" for e in deps.tracer.read())
+    assert out["model"] is None and out["receipt_ids"] == []  # no model wrote any of it
 
 
 # ----- API routes -------------------------------------------------------------------
@@ -135,7 +137,11 @@ def client(monkeypatch, make_deps):
         yield make_deps(responder=lambda *a: "{}", engines=engines)
 
     monkeypatch.setattr(main, "agent_deps", fake_deps)
-    return TestClient(main.app)
+    store = MemoryStore()
+    monkeypatch.setattr(main, "default_store", lambda settings, tracer: store)
+    c = TestClient(main.app)
+    c.store = store  # type: ignore[attr-defined]
+    return c
 
 
 def test_public_draft_route(client):
@@ -147,6 +153,10 @@ def test_public_draft_route(client):
 def test_dossier_and_briefing_routes(client):
     r = client.post("/api/series/SER-1/dossier", json={"crime_ids": [ADYAR["crime_id"], VELACHERY["crime_id"]]})
     assert r.status_code == 200 and r.json()["series_id"] == "SER-1"
+    saved = client.store.series["SER-1"]["dossier"]
+    assert set(saved) >= {"text", "cited_ids", "chunks", "tokens_projected", "tokens_actual", "model", "receipt_id",
+                          "run_id", "generated_at"} and saved["run_id"] == r.json()["run_id"]
+    assert r.json()["persisted"] is False  # memory store: nothing reached Supabase
     r = client.post("/api/briefing", json={"zone": "South", "day": "2026-10-26", "alerts": ALERTS})
     assert r.status_code == 200 and r.json()["facts"]["new_alerts"] == 2
 

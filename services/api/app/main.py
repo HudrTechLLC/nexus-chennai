@@ -17,7 +17,9 @@ from .config import REPO_ROOT, get_settings, load_city
 from .feeds import router as feeds_router
 from .agents import AgentError, Briefer, Sanitiser, SeriesAnalyst
 from .agents.base import crime_from_row, features_from_row
-from .graph.runner import agent_deps, run_request
+from .agents.series import dossier_record
+from .graph.runner import agent_deps, default_store, run_request
+from .graph.store import SupabaseStore
 from .tracing import new_run_id
 
 app = FastAPI(title="Nexus Chennai API", version="0.1.0")
@@ -141,6 +143,7 @@ def public_draft(crime_id: str) -> dict[str, Any]:
 
 class DossierBody(BaseModel):
     crime_ids: list[str] = Field(min_length=1)
+    persist: bool = True
 
 
 @app.post("/api/series/{series_id}/dossier")
@@ -153,7 +156,16 @@ def series_dossier(series_id: str, body: DossierBody) -> dict[str, Any]:
             out = SeriesAnalyst(deps).dossier(series_id, body.crime_ids)
         except AgentError as exc:
             raise HTTPException(status_code=422, detail=str(exc))
-    return {**out, "run_id": run_id, "log_file": f"logs/trace-{run_id}.jsonl"}
+        persisted = False
+        if body.persist:
+            try:  # series.dossier for the console (Vercel cannot call this API); a stored series row only
+                store = default_store(s, deps.tracer)
+                persisted = store.write_dossier(series_id, dossier_record(out, run_id)) and isinstance(
+                    store, SupabaseStore)
+            except Exception as exc:
+                deps.tracer.emit("Series analyst", "dossier_save_failed", input_summary=series_id,
+                                 output_summary=str(exc)[:300], status="error")
+    return {**out, "run_id": run_id, "persisted": persisted, "log_file": f"logs/trace-{run_id}.jsonl"}
 
 
 class BriefingBody(BaseModel):

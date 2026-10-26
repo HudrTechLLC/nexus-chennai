@@ -100,7 +100,8 @@ def run_request(
     else:
         store = (store_factory or default_store)(settings, tracer)
     if isinstance(store, SupabaseStore):
-        store.start_run(run_id, kind, f"logs/trace-{run_id}.jsonl")
+        store.start_run(run_id, kind, f"logs/trace-{run_id}.jsonl",
+                        subject=str(payload.get("crime_id")) if kind == "case" and payload.get("crime_id") else None)
     tracer.emit("api", "run_received", input_summary=f"kind={kind}", status="ok",
                 output_summary=f"sample_mode={settings.sample_mode} deadline={settings.run_deadline_seconds}s")
     status = "failed"
@@ -175,6 +176,19 @@ def _hotspots(graph: AgentGraph, case_dates: list[str], case_ids: set[str], opti
             for a in graph.writer.write_hotspots(relevant)], []
 
 
+def _save_series(graph: AgentGraph, series: list[dict[str, Any]]) -> list[str]:
+    """Persist detected series (series + series_members); the stored id replaces the hash id when a series grew."""
+    errors: list[str] = []
+    for ser in series:
+        try:
+            ser["series_id"] = graph.deps.store.write_series(ser, graph.deps.tracer.run_id)
+        except Exception as exc:  # the run's answer stands without the write
+            graph.deps.tracer.emit("Series analyst", "series_save_failed", input_summary=ser.get("series_id"),
+                                   output_summary=str(exc)[:300], status="error")
+            errors.append(f"series {ser.get('series_id')}: {exc}")
+    return errors
+
+
 def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options: Mapping[str, Any]
               ) -> tuple[dict[str, Any], str]:
     if kind in ("case", "batch"):
@@ -203,6 +217,7 @@ def _dispatch(graph: AgentGraph, kind: str, payload: Mapping[str, Any], options:
         hotspots, herr = _hotspots(graph, case_dates, set(ids), options)
         errors += herr
         series = detect_series(alerts)  # 3+ connected cases among this run's links (LNK-05)
+        errors += _save_series(graph, series)
         return ({"alerts": alerts, "series": series, "hotspots": hotspots, "errors": errors,
                  "summary": summarise(alerts, struck, dropped, f"{len(statuses)}/{len(ids)} cases processed")},
                 status)

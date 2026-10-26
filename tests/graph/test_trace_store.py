@@ -100,5 +100,5 @@ def test_heartbeat_never_fails_a_worker_pass(tmp_path):
             raise RuntimeError("supabase down")
 
     w = worker(tmp_path, Broken())
-    assert w.run_once() == {"decisions": 0, "tips": 0, "appeals": 0, "cases": 0}
+    assert w.run_once() == {"decisions": 0, "tips": 0, "appeals": 0, "dossiers": 0, "cases": 0}
     assert any(e["action"] == "heartbeat_failed" for e in w.tracer.read())
