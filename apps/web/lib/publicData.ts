@@ -1,6 +1,7 @@
 import "server-only";
 import { publicClient } from "@/lib/publicApi";
 import type { AppealImage } from "@/lib/appealImages";
+import { isPublicId, type CrimeCard, type HexCrimes } from "@/lib/publicCards";
 
 /** A published appeal as the public sees it (spec D3.13; 0004_03 public_appeals). */
 export type Appeal = {
@@ -37,5 +38,26 @@ export async function getPublicMap(days: number): Promise<{ map: PublicMap | nul
     return { map: (data as PublicMap) ?? null, error: error ? "The map is unavailable right now." : null };
   } catch {
     return { map: null, error: "The map is unavailable right now." };
+  }
+}
+
+/** Cards for one hex (0007_11 public_hex_crimes): safe fields only; empty under the >=3 rule. */
+export async function getHexCrimes(cell: string, days: number, type: string | null): Promise<{ hex: HexCrimes | null; error: string | null }> {
+  try {
+    const { data, error } = await publicClient().rpc("public_hex_crimes", { p_cell: cell, p_days: days, p_category: type });
+    return { hex: (data as HexCrimes) ?? null, error: error ? "Crimes for this area are unavailable right now." : null };
+  } catch {
+    return { hex: null, error: "Crimes for this area are unavailable right now." };
+  }
+}
+
+/** One card by its public id (0007_11 public_crime), or null when it is unknown or no longer public. */
+export async function getPublicCrime(publicId: string): Promise<CrimeCard | null> {
+  if (!isPublicId(publicId)) return null;
+  try {
+    const { data } = await publicClient().rpc("public_crime", { p_public_id: publicId });
+    return (data as CrimeCard | null) ?? null;
+  } catch {
+    return null;
   }
 }
