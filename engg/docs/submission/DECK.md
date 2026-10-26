@@ -136,7 +136,8 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 11 · Results
 
 - **On slide:** precision and recall, Nexus vs rules-only baseline (same category, ≤ 2 km, ≤ 14 days) on the planted truth `[PENDING: WS2-14]`. Fill from `output_examples/eval_report.json` only; if it doesn't land, drop the table and keep the test evidence.
-- **Judge-path result (confirmed):** the Red Pulsar hero pair, Adyar ↔ Velachery, is linked **high (0.787) across two stations** from a fresh clone with no credentials. Use this line even if the eval table doesn't land.
+- **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.787**, coverage 0.72, with five factors (MO 0.885, vehicle 0.84 on a partial plate, suspect 1, target 1, space–time 0.328).
+- **Judge-path result (confirmed; label it "fresh clone, sample mode"):** the Red Pulsar hero pair, Adyar ↔ Velachery, is linked **high (0.787) across two stations** from a fresh clone with no credentials. Use this line even if the eval table doesn't land.
 - **Also:** typical `/run` execution time from `output_examples/` `[PENDING: WS2-16]`; tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
 - **Visual:** the eval page or a clean table. No chart without real numbers.
 
