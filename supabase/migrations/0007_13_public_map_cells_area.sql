@@ -12,11 +12,12 @@
 -- per cell (+130 ms at 30 days, +750 ms at 90). Here the same expression is computed set-based instead:
 -- one grouped pass over the card cells' crimes for the centres, then the nearest station per centre.
 -- Output is identical to public_area_label() (parity checked for every card cell before applying).
--- Everything else in the function is unchanged (same window, same cutoff, same fields, same grants).
+-- Everything else in the function is unchanged (same window, same cutoff, same fields, same grants), except
+-- that it now pins search_path = public, pg_temp like every SECURITY DEFINER function since 0007_11.
 
 create or replace function public.public_map_cells(p_days integer default 30, p_min integer default 3)
 returns jsonb
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, pg_temp as $$
   with d as (select least(greatest(coalesce(p_days, 30), 7), 90) as days, greatest(coalesce(p_min, 3), 3) as min_n),
   agg as (
     select c.h3_r8 as cell, c.category, count(*)::int as n

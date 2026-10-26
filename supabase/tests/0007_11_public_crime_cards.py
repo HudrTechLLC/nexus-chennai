@@ -76,7 +76,8 @@ with db_migrate.connect() as conn:
                         (f"public.{t}", f"public.{t}"))
             check(f"RLS-NEGATIVE {t} unreadable by API roles", cur.fetchone() == (False, False))
         fns = ("crime_public_id", "public_card_pool", "public_area_label", "public_mo_summary", "public_crime_card",
-               "public_hex_crimes", "public_crime", "submit_tip", "tip_nearby_crimes")
+               "public_hex_crimes", "public_crime", "submit_tip", "tip_nearby_crimes",
+               "public_map_cells")  # 0007_13 (nexus-4) recreates it with the same pin
         cur.execute("""select proname, prosecdef, coalesce(array_to_string(proconfig, ';'), '') from pg_proc
                        where pronamespace = 'public'::regnamespace and proname = any(%s)""", (list(fns),))
         procs = cur.fetchall()
