@@ -22,7 +22,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </span>
           <Link
             href="/"
-            className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent-bright px-4 text-sm font-semibold text-brand transition-colors hover:bg-[#f6c96e]"
+            className="ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-accent-bright px-3 text-sm sm:px-4 font-semibold text-brand transition-colors hover:bg-[#f6c96e]"
           >
             Open app <ArrowRight className="size-4" aria-hidden />
           </Link>

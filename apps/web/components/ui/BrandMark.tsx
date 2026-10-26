@@ -35,8 +35,8 @@ export function BrandLockup({ sub, className }: { sub?: string; className?: stri
       <BrandMark />
       <span className="flex items-baseline gap-1.5 leading-none">
         <span className="text-[17px] font-semibold tracking-tight text-brand-ink">Nexus</span>
-        <span className="text-[13px] font-medium text-brand-muted">Chennai</span>
-        {sub && <span className="ml-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-medium text-accent-bright">{sub}</span>}
+        <span className="hidden text-[13px] font-medium text-brand-muted sm:inline">Chennai</span>
+        {sub && <span className="ml-1 whitespace-nowrap rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-medium text-accent-bright">{sub}</span>}
       </span>
     </span>
   );
