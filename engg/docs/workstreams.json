@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-26T16:36:22+05:30",
+  "updated": "2026-10-26T16:46:00+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -476,8 +476,9 @@
           "id": "WS3-13",
           "phase": "P7",
           "title": "Joint task forces page (LNK-09, DASH-07)",
-          "status": "in_progress",
-          "note": "nexus-6 · /console/taskforces; tables in 0002; write path via RPC if needed"
+          "status": "done",
+          "note": "nexus-6 · /console/taskforces list/new/detail, 0004_06_03 applied, 7/7 live RLS",
+          "ref": "#154"
         },
         {
           "id": "WS3-14",
