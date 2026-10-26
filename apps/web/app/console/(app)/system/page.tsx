@@ -2,6 +2,8 @@ import Link from "next/link";
 import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { runTone, stateTone, type RunRow, type StatusRow } from "@/lib/trace";
+import { evalReport } from "@/lib/evalReport.data";
+import { EvalSummary } from "@/components/console/system/EvalSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,8 @@ export default async function SystemPage() {
           Open a run to see each step: agent, model and receipt, Zetaris queries, engines and Skeptic decisions.
         </p>
       </div>
+
+      <EvalSummary report={evalReport} />
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="mb-3 font-semibold">Services</h2>

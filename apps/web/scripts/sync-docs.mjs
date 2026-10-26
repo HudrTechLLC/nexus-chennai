@@ -74,4 +74,14 @@ fs.writeFileSync(
   path.join(outContent, "index.json"),
   JSON.stringify({ tabs, notes, builtAt: new Date().toISOString() }, null, 2),
 );
-console.log(`sync-docs: ${tabs.length} spec tabs, ${notes.length} notes`);
+// ---- eval report (LNK-10, WS2-14) ----
+// Committed by the agents lane at output_examples/eval_report.json. Always write the file so the
+// static import in lib/evalReport.data.ts resolves; the placeholder means "not committed yet".
+const evalSrc = path.resolve(web, "../../output_examples/eval_report.json");
+const hasEval = fs.existsSync(evalSrc);
+fs.writeFileSync(
+  path.join(outContent, "eval_report.json"),
+  hasEval ? fs.readFileSync(evalSrc, "utf8") : JSON.stringify({ available: false }) + "\n",
+);
+
+console.log(`sync-docs: ${tabs.length} spec tabs, ${notes.length} notes, eval report ${hasEval ? "copied" : "absent"}`);
