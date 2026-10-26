@@ -68,8 +68,14 @@ QUERY_SIGNALS: dict[str, list[tuple[re.Pattern[str], float]]] = {
                                                r"\b(mo|modus operandi|method of entry|entry method)\b",
                                                r"\b(crimes?|cases|thefts?|burglar(y|ies)|robber(y|ies)|snatch(ing|ings)|"
                                                r"break-ins?)\s+(like|where|with|in which|involving)\b",
-                                               r"\b(m\.o\.)", r"\bsimilar (to|pattern|cases|crimes)\b"),
-                                           (1.5, 3.0, 1.5, 2.5, 1.5, 2.0))],
+                                               r"\b(m\.o\.)", r"\bsimilar (to|pattern|cases|crimes)\b",
+                                               # A free-text description built around a crime type ("red pulsar
+                                               # chain snatching adyar") is a search for crimes like it. Weak on
+                                               # purpose: map/stats/series/entity cues outrank it.
+                                               r"\b(chain[- ]?snatch\w*|snatch(ing|ings|ed|er|ers)?|robber(y|ies)|"
+                                               r"burglar(y|ies)|house[- ]?break\w*|break-?ins?|thefts?|pick-?pocket\w*|"
+                                               r"mugg(ing|ings|ed)|dacoit\w*|extortion)\b"),
+                                           (1.5, 3.0, 1.5, 2.5, 1.5, 2.0, 1.2))],
     "map_filter": [(p, w) for p, w in zip(_rx(r"\b(on|in) (the )?map\b", r"\bnear(by)?\b|\bwithin \d+\s*(m|km)\b",
                                                r"\b(hotspots?|heat ?map|around)\b", r"\b(show|plot|filter)\b.*\b(in|near|around)\b",
                                                r"\b(last|past) (night|week|month|\d+ days)\b"),

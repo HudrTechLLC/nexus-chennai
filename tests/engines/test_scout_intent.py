@@ -15,15 +15,16 @@ def results():
 def test_fixture_set_is_the_spec_size():
     queries, tips = harness.load("queries"), harness.load("tips")
     # 60 + 60 is the spec E4 set; tips t-061..t-087 are live-miss shapes and hard negatives added after the
-    # 2026-10 live screen (summariser-addressed injection, gibberish, promotion, prize lures).
-    assert len(queries) == 60 and len(tips) == 87
+    # 2026-10 live screen (summariser-addressed injection, gibberish, promotion, prize lures); queries
+    # q-061..q-066 are free-text MO descriptions (a live console search routed to entity) and near neighbours.
+    assert len(queries) == 66 and len(tips) == 87
     assert all(r["synthetic"] is True for r in queries + tips + harness.load("holdout"))
     assert {r["expected_intent"] for r in queries} >= set(scout_intent.QUERY_INTENTS)
     assert {r["expected_intent"] for r in tips} == set(scout_intent.TIP_INTENTS)
 
 
 def test_route_accuracy_meets_the_gate(results):
-    assert results["main"]["n"] == 147
+    assert results["main"]["n"] == 153
     assert results["main"]["route_accuracy"] >= harness.ROUTE_GATE, results["main"]["misses"]
 
 
@@ -104,3 +105,12 @@ def test_spam_shapes_quarantine(text):
 ])
 def test_genuine_or_distress_tips_are_not_spam(text):
     assert scout_intent.classify(text, "tip")["action"] != "quarantine"
+
+
+def test_free_text_mo_description_routes_to_similar_mo():
+    """Live miss (2026-10-26): a console search like this routed to entity (no rule matched) and found nothing."""
+    assert scout_intent.classify("red pulsar chain snatching Adyar", "query")["route"] == "similar_mo"
+    # Stronger cues still win.
+    assert scout_intent.classify("how many robberies last month", "query")["route"] == "stats"
+    assert scout_intent.classify("chain snatchings near Adyar after 9pm last month", "query")["route"] == "map"
+    assert scout_intent.classify("robbery accused Ravi", "query")["route"] == "entity"
