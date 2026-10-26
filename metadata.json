@@ -20,6 +20,9 @@
   },
   "entry_point": "python run.py; POST /run",
   "sample_mode": "SAMPLE_MODE=true",
+  "judge_path": "Docker image in sample mode answers the 3 input_examples with no network (--network none) and matches output_examples exactly; CI job judge-offline on every push to main (#285; time-zone-safe replay #290); 45 recorded Nightshift responses in data/sample/model_fixtures (#283)",
+  "evaluation": "output_examples/eval_report.json (#275): 60 synthetic truth cases; agents precision 0.59 / recall 0.86 / F1 0.70 vs rules-only baseline 0.09 / 0.30 / 0.13; HIGH alerts 10/10 correct, MEDIUM 56%; no model calls",
+  "live_on_own_zetaris": "python -m data.setup_live (#280, data/README.md section 5); pending WS1-19: model-output fixtures + clean-machine run",
   "engine_tests": "engines-ts conformance (logs/conformance_*.txt) + pytest tests/engines -q",
   "docs": "engg/docs/00-INDEX.md"
 }
