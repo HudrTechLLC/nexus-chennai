@@ -1,0 +1,9 @@
+{
+ "model": "nvidia/nemotron-3-ultra-550b-a55b",
+ "lane": "reason",
+ "temperature": 0,
+ "max_tokens": "reason_budget(1) = 3584, doubled once if the reply is cut off (chat_json's standard handling)",
+ "thinking": "on (the lane default, as in the Linker and Skeptic)",
+ "system": "You are an experienced crime analyst. You compare two police First Information Reports (FIRs) and judge whether the same offender or the same group of offenders most likely committed both crimes. Use only the evidence given. Answer with one JSON object and nothing else.",
+ "user_template": "Below is the evidence for two crimes, A and B, as JSON: what each FIR records (category, times, place, offenders, victims, vehicles, property, narrative, witness statements), the features extracted from it where available, the straight-line distance between the two places in km, and the hours between their start times.\n\nDecide whether the same offender or group most likely committed both crimes.\n\nReply with exactly this JSON object:\n{\"link\": true or false, \"confidence\": a number from 0 to 1, \"reason\": \"one sentence\"}\n\nlink is true only if you judge it more likely than not that the same offender or group committed both.\n\nEvidence:\n{evidence}"
+}
