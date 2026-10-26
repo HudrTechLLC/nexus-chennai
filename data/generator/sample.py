@@ -219,6 +219,29 @@ def write_anpr(con, src: Path, out: Path, subset: list[dict]) -> int:
     return con.execute(f"SELECT count(*) FROM '{path.as_posix()}'").fetchone()[0]
 
 
+CALLS_BACKGROUND = 2000
+
+
+def write_calls(con, src: Path, out: Path) -> int:
+    """112 calls for the bundle: every call within 1.5 km / 3 h of a bundle crime (the scenes table
+    from write_anpr), plus a fixed background sample. Same columns as live."""
+    glob = (src / "calls" / "calls_*.parquet").as_posix()
+    path = out / "calls" / "calls.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    con.execute(f"""
+        COPY (
+          WITH k AS (SELECT * FROM read_parquet('{glob}')),
+          near AS (SELECT DISTINCT k.call_id FROM k JOIN scenes s
+                   ON abs(k.lat - s.lat) <= 0.014 AND abs(k.lon - s.lon) <= 0.014
+                  AND abs(epoch(k.received_at) - epoch(s.t)) <= 10800),
+          keep AS (SELECT call_id FROM near
+                   UNION SELECT call_id FROM (SELECT call_id FROM k ORDER BY hash(call_id), call_id
+                                              LIMIT {CALLS_BACKGROUND}))
+          SELECT k.* FROM k JOIN keep USING (call_id) ORDER BY k.call_id
+        ) TO '{path.as_posix()}' (FORMAT PARQUET)""")
+    return con.execute(f"SELECT count(*) FROM '{path.as_posix()}'").fetchone()[0]
+
+
 def live_tip_guard(tips: list[dict]) -> list[dict]:
     """The generated tips with the live Tip Guard's recorded verdict (guard, status) where it has
     screened them, so sample mode corroborates like live. Never the passphrase hash."""
@@ -276,6 +299,7 @@ def build(src: Path, out: Path) -> dict:
     counts["stations"] = write_table(con, out, "stations", stations, ["station_id"])
 
     counts["anpr_reads"] = write_anpr(con, src, out, [crimes[i] for i in ids])
+    counts["calls"] = write_calls(con, src, out)
     ref = out / "ref"
     counts["place_aliases"] = _csv_subset(src / "ref" / "place_aliases.csv", ref / "place_aliases.csv")
     counts["calendar"] = _csv_subset(src / "ref" / "calendar.csv", ref / "calendar.csv")

@@ -237,6 +237,36 @@ def _q_offender_return(tz: str, *, sample: bool) -> str:
     )
 
 
+CALLS_COLUMNS = ("call_id", "crime_id", "received_at", "category", "lat", "lon", "cell", "dispatched_unit",
+                 "outcome", "fir_ref", "km_from_scene", "minutes_from_start")
+
+
+def _q_calls_near(tz: str, off: str, *, sample: bool) -> str:
+    """112 calls within :km of a crime, received from :minutes before it started to :minutes after it
+    ended (defaults 1 km, 120 min). minutes_from_start is signed (negative = before the crime)."""
+    if sample:
+        calls, crimes = "'calls/calls.parquet'", "'sb/crimes.parquet'"
+        secs = lambda x: f"epoch({x})"  # noqa: E731
+        out_ts = f"strftime(k.received_at AT TIME ZONE '{tz}', '%Y-%m-%dT%H:%M:%S') || '{off}'"
+    else:
+        calls, crimes = "s3pq.calls", "sb.crimes"
+        secs = lambda x: f"unix_timestamp({x})"  # noqa: E731
+        out_ts = _ts("k.received_at", tz, off)
+    km = ("2 * 6371 * asin(sqrt(pow(sin(radians(k.lat - c.lat) / 2), 2) + cos(radians(c.lat)) * cos(radians(k.lat)) "
+          "* pow(sin(radians(k.lon - c.lon) / 2), 2)))")
+    start, end = secs("c.occurred_from"), secs("coalesce(c.occurred_to, c.occurred_from)")
+    return (
+        "SELECT call_id, crime_id, received_at, category, lat, lon, cell, dispatched_unit, outcome, fir_ref, "
+        "km_from_scene, minutes_from_start FROM ("
+        f"SELECT k.call_id, c.crime_id, {out_ts} AS received_at, k.category, k.lat, k.lon, k.cell, k.dispatched_unit, "
+        f"k.outcome, k.fir_ref, round({km}, 3) AS km_from_scene, "
+        f"CAST(round(({secs('k.received_at')} - {start}) / 60.0) AS INT) AS minutes_from_start "
+        f"FROM {crimes} c JOIN {calls} k ON abs(k.lat - c.lat) <= :km / 108.0 AND abs(k.lon - c.lon) <= :km / 108.0 "
+        f"AND {secs('k.received_at')} BETWEEN {start} - :minutes * 60 AND {end} + :minutes * 60 "
+        "WHERE c.crime_id = :crime_id) t WHERE km_from_scene <= :km ORDER BY minutes_from_start, call_id"
+    )
+
+
 def _twin(name: str, columns: tuple[str, ...]) -> str:
     """The DuckDB twin from nexus-2 when available; otherwise a stub that fails the width check loudly."""
     try:
@@ -279,4 +309,8 @@ def specs() -> dict[str, dict[str, Any]]:
                               "description": "Offenders released within 60 days of :since whose prior MO shares "
                                              ":mo_tags; home ward (:ward) first",
                               "columns": RETURN_COLUMNS},
+        "q_calls_near": {"name": "q_calls_near", "lightning": _q_calls_near(tz, off, sample=False),
+                         "sample": _q_calls_near(tz, off, sample=True), "defaults": {"km": 1.0, "minutes": 120},
+                         "description": "112 calls within :km of a crime and :minutes of its time window",
+                         "columns": CALLS_COLUMNS},
     }
