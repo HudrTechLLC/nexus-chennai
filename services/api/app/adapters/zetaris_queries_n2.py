@@ -352,3 +352,70 @@ FROM p GROUP BY station_a, station_b ORDER BY approved_links DESC, station_a, st
 
 Q_STATION_MATRIX = _q_station_matrix()
 N2_SPECS[Q_STATION_MATRIX["name"]] = Q_STATION_MATRIX
+
+
+# ---------------------------------------------------------------------------- q_context (spec E5 v_context)
+# One row of context for a crime: city-local date, hour and day type; calendar entries that day (holidays,
+# festivals, travel-heavy days, from s3csv.calendar); the POI types within POI_RADIUS_KM (s3pq.osm_pois);
+# and the weather that hour (nexus.weather_hourly, Open-Meteo via zetaris/40_feeds.sql). The sample bundle
+# has no weather export, so the twin returns null weather columns (agreed with nexus-1).
+CONTEXT_COLUMNS = ("crime_id", "local_date", "hour_of_day", "day_type", "holidays", "holiday_kinds",
+                   "travel_heavy", "poi_types", "pois_within", "nearest_poi_type", "nearest_poi_km",
+                   "temperature_c", "precipitation_mm", "weather_code")
+POI_RADIUS_KM = 0.5
+
+
+def _km_sql(a: str, b: str) -> str:
+    return (f"2 * 6371 * asin(sqrt(pow(sin(radians({b}.lat - {a}.lat) / 2), 2) + cos(radians({a}.lat)) * "
+            f"cos(radians({b}.lat)) * pow(sin(radians({b}.lon - {a}.lon) / 2), 2)))")
+
+
+def _q_context() -> dict:
+    tz, _ = _city_tz()
+    r = POI_RADIUS_KM
+    box = (f"o.lat BETWEEN c.lat - {r} / 111.0 AND c.lat + {r} / 111.0 "
+           f"AND o.lon BETWEEN c.lon - {r} / 108.0 AND c.lon + {r} / 108.0")
+    lightning = (
+        f"WITH c AS (SELECT crime_id, lat, lon, from_utc_timestamp(occurred_from, '{tz}') AS lt FROM sb.crimes "
+        "WHERE crime_id = :crime_id), "
+        f"p AS (SELECT o.poi_type, {_km_sql('c', 'o')} AS km FROM c JOIN s3pq.osm_pois o ON {box}), "
+        "pa AS (SELECT concat_ws(',', sort_array(collect_set(poi_type))) AS poi_types, count(*) AS pois_within, "
+        f"min_by(poi_type, km) AS nearest_poi_type, round(min(km), 3) AS nearest_poi_km FROM p WHERE km <= {r}), "
+        "cal AS (SELECT k.date, concat_ws('; ', sort_array(collect_list(k.name))) AS holidays, "
+        "concat_ws(',', sort_array(collect_set(k.kind))) AS holiday_kinds, "
+        "max(lower(cast(k.travel_heavy AS STRING)) = 'true') AS travel_heavy "
+        "FROM s3csv.calendar k GROUP BY k.date) "
+        "SELECT c.crime_id, cast(to_date(c.lt) AS STRING) AS local_date, hour(c.lt) AS hour_of_day, "
+        "CASE WHEN dayofweek(c.lt) IN (1, 7) THEN 'weekend' ELSE 'weekday' END AS day_type, "
+        "cal.holidays, cal.holiday_kinds, coalesce(cal.travel_heavy, false) AS travel_heavy, "
+        "pa.poi_types, pa.pois_within, pa.nearest_poi_type, pa.nearest_poi_km, "
+        "w.temperature_c, w.precipitation_mm, w.weather_code "
+        "FROM c CROSS JOIN pa "
+        "LEFT JOIN cal ON cast(cal.date AS STRING) = cast(to_date(c.lt) AS STRING) "
+        "LEFT JOIN nexus.weather_hourly w ON w.hour = replace(substring(cast(c.lt AS STRING), 1, 13), ' ', 'T')"
+    )
+    sample = f"""
+WITH c AS (SELECT crime_id, lat, lon, CAST(occurred_from AS TIMESTAMPTZ) AT TIME ZONE '{tz}' AS lt
+           FROM 'sb/crimes.parquet' WHERE crime_id = :crime_id),
+p AS (SELECT o.poi_type, {_km_sql('c', 'o')} AS km FROM c JOIN 'ref/osm_pois.parquet' o ON {box}),
+pa AS (SELECT string_agg(DISTINCT poi_type, ',' ORDER BY poi_type) AS poi_types, count(*) AS pois_within,
+              arg_min(poi_type, km) AS nearest_poi_type, round(min(km), 3) AS nearest_poi_km
+       FROM p WHERE km <= {r}),
+cal AS (SELECT CAST(k.date AS VARCHAR) AS date, string_agg(k.name, '; ' ORDER BY k.name) AS holidays,
+               string_agg(DISTINCT k.kind, ',' ORDER BY k.kind) AS holiday_kinds,
+               bool_or(lower(CAST(k.travel_heavy AS VARCHAR)) = 'true') AS travel_heavy
+        FROM read_csv_auto('ref/calendar.csv') k GROUP BY 1)
+SELECT c.crime_id, CAST(CAST(c.lt AS DATE) AS VARCHAR) AS local_date, CAST(hour(c.lt) AS INTEGER) AS hour_of_day,
+       CASE WHEN dayofweek(c.lt) IN (0, 6) THEN 'weekend' ELSE 'weekday' END AS day_type,
+       cal.holidays, cal.holiday_kinds, coalesce(cal.travel_heavy, false) AS travel_heavy,
+       pa.poi_types, pa.pois_within, pa.nearest_poi_type, pa.nearest_poi_km,
+       CAST(NULL AS DOUBLE) AS temperature_c, CAST(NULL AS DOUBLE) AS precipitation_mm,
+       CAST(NULL AS INTEGER) AS weather_code
+FROM c CROSS JOIN pa LEFT JOIN cal ON cal.date = CAST(CAST(c.lt AS DATE) AS VARCHAR)
+""".strip()
+    return dict(name="q_context", lightning=lightning, sample=sample, columns=CONTEXT_COLUMNS,
+                description="Calendar, nearby POI types and hourly weather for one crime (v_context)")
+
+
+Q_CONTEXT = _q_context()
+N2_SPECS[Q_CONTEXT["name"]] = Q_CONTEXT
