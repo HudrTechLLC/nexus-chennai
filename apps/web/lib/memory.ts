@@ -197,12 +197,6 @@ export function summarise(memories: MemoryRow[], effects: Effect[]): MemorySumma
   };
 }
 
-/** The score the alert would have had without H-MEM (its recorded score minus the recorded effect). */
-export function scoreBeforeMemory(score: number, delta: number | null): number | null {
-  if (delta == null) return null;
-  return Math.max(0, Math.min(1, Math.round((score - delta) * 1000) / 1000));
-}
-
 /** Ledger filter from the URL: "decisions" hides the high-volume "read" entries (default). */
 export type LedgerFilter = "decisions" | "all" | string;
 

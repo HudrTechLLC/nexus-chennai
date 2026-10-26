@@ -56,13 +56,22 @@ declare
   v_found boolean := true;
 begin
   if p_seed is null or btrim(p_seed) = '' then
+    -- Degree in one grouped pass over the edges (no per-entity subquery), then the top 40.
     select coalesce(array_agg(id order by deg desc, id), '{}') into v_ids from (
-      select e.id, (select count(*) from public.wm_edges r where r.from_id = e.id or r.to_id = e.id) as deg
-      from public.wm_entities e
+      select e.id, d.deg
+      from (select g.id, count(*) as deg
+            from (select from_id as id from public.wm_edges union all select to_id from public.wm_edges) g
+            group by g.id) d
+      join public.wm_entities e on e.id = d.id
       where v_types is null or e.type = any (v_types)
-      order by deg desc, e.id
+      order by d.deg desc, e.id
       limit least(v_limit, 40)
     ) t;
+    if cardinality(v_ids) = 0 then  -- entities but no edges yet
+      select coalesce(array_agg(id order by id), '{}') into v_ids from (
+        select e.id from public.wm_entities e where v_types is null or e.type = any (v_types) order by e.id limit least(v_limit, 40)
+      ) t;
+    end if;
   else
     select coalesce(array_agg(id order by id), '{}') into v_ids from (
       select e.id from public.wm_entities e
@@ -100,7 +109,8 @@ begin
     'nodes', coalesce((select jsonb_agg(jsonb_build_object(
         'id', e.id, 'type', e.type, 'key', e.key, 'attrs', e.attrs, 'aliases', to_jsonb(e.aliases),
         'synthetic', e.synthetic, 'created_at', e.created_at, 'updated_at', e.updated_at,
-        'degree', (select count(*) from public.wm_edges r where r.from_id = e.id or r.to_id = e.id)) order by e.id)
+        'degree', (select count(*) from public.wm_edges r where r.from_id = e.id)
+                + (select count(*) from public.wm_edges r where r.to_id = e.id and r.from_id <> e.id)) order by e.id)
       from public.wm_entities e where e.id = any (v_ids)), '[]'::jsonb),
     'edges', coalesce((select jsonb_agg(jsonb_build_object(
         'id', r.id, 'from', r.from_id, 'to', r.to_id, 'type', r.type, 'crime_id', r.crime_id,

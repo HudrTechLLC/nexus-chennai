@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  actionLabel, confidenceChange, decisionLabel, memoryStories, parseEffect, parseLedgerFilter, scoreBeforeMemory, summarise,
+  actionLabel, confidenceChange, decisionLabel, memoryStories, parseEffect, parseLedgerFilter, summarise,
   type Effect, type LedgerRow, type MemoryRow,
 } from "../memory";
 
@@ -42,11 +42,6 @@ describe("parsing", () => {
     expect(parseLedgerFilter("all")).toBe("all");
     expect(parseLedgerFilter("feedback")).toBe("feedback");
     expect(parseLedgerFilter("drop table")).toBe("decisions");
-  });
-  it("recovers the pre-memory score", () => {
-    expect(scoreBeforeMemory(0.78, -0.04)).toBe(0.82);
-    expect(scoreBeforeMemory(0.05, 0.08)).toBe(0);
-    expect(scoreBeforeMemory(0.7, null)).toBeNull();
   });
 });
 

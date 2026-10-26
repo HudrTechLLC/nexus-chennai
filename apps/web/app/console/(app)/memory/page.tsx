@@ -5,7 +5,7 @@ import { officerNames } from "@/lib/alertsData";
 import { pct, REASON_LABEL } from "@/lib/alerts";
 import { decisionsFor, fetchEffects, fetchLedgerPage, fetchMemories, fetchStateLedger } from "@/lib/memoryData";
 import {
-  ACTION_LABEL, actionLabel, confidenceChange, decisionLabel, LAYER_LABEL, memoryStories, parseLedgerFilter, scoreBeforeMemory, summarise,
+  ACTION_LABEL, actionLabel, confidenceChange, decisionLabel, LAYER_LABEL, memoryStories, parseLedgerFilter, summarise,
   type MemoryStory,
 } from "@/lib/memory";
 import { BandPill } from "@/components/console/alerts/AlertBits";
@@ -73,13 +73,10 @@ function StoryCard({ s, decider, decidedAt, note }: { s: MemoryStory; decider: s
             </p>
             <ul className="mt-2 space-y-1">
               {s.applied.map((a) => {
-                const before = scoreBeforeMemory(a.score, a.delta);
                 return (
                   <li key={a.alert_id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                     <Link href={`/console/alerts/${encodeURIComponent(a.alert_id)}`} className="font-mono text-xs text-signal hover:underline">{a.alert_id}</Link>
-                    <span className="font-mono tabular-nums">
-                      {before != null ? <>{pct(before)} → </> : null}<b>{pct(a.score)}</b>
-                    </span>
+                    <span className="font-mono tabular-nums" title="final score, after H-MEM and the Skeptic"><b>{pct(a.score)}</b></span>
                     <span className={`font-mono text-xs ${a.delta != null && a.delta < 0 ? "text-red-600" : "text-signal"}`}>{a.effect ?? "?"}</span>
                     <BandPill band={a.band} />
                     <span className="text-xs text-muted">{a.status}{a.shared > 1 ? ` · one adjustment from ${a.shared} memories` : ""} · {fmt(a.created_at)}</span>
