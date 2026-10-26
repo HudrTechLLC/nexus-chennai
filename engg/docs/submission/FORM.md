@@ -58,7 +58,19 @@ Each police station sees only its own cases, so a gang working across a city loo
 | Public GitHub repository | https://github.com/HudrTechLLC/nexus-chennai (make public first: WS5-09) |
 | Demo video (1–4 min) | `<YouTube unlisted URL>`; backup `<Drive URL>`. Test both logged out, in a private window |
 | Slide deck | `<deck URL or upload>` (content: [DECK](DECK.md)) |
-| Live app (optional) | `<Vercel portal URL>` · `<Vercel console URL>` |
+| Live app (optional) | Portal https://nexus-chennai.vercel.app · console https://nexus-chennai.vercel.app/console/login |
+
+## Demo police accounts (judges only)
+
+**Form only, never in the README or any repo file**, because the repo is public and these accounts can decide alerts. nexus-chief fills these in with the user at submit time.
+
+| Role | Login | Password |
+|---|---|---|
+| Station officer (Adyar) | `<email>` | `<password>` |
+| Analyst | `<email>` | `<password>` |
+| Supervisor | `<email>` | `<password>` |
+
+Sign in at https://nexus-chennai.vercel.app/console/login.
 
 ## Sponsor technology explanation
 
