@@ -58,7 +58,12 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
    - **Clear the demo accounts' test questions** in `ask_questions` first, but **only after Ravee approves** (they are on the cleanup list). The page shows each user's last 5 questions on camera ("Your recent questions"), and each unanswered question counts toward a cap of 3 per user.
    - **The ask worker must be running** (nexus-5). Without it, a question stays at "Waiting for the worker…".
    - **Re-sign-in the supervisor demo browser.** A probe signed supervisor out once around 01:50 IST on 27 Oct.
-   - nexus-4's dry run: the chip "Chain snatchings by two men on a red Pulsar in the last 90 days" answered "16 cases match … (1 test filing excluded.)" in about 20 s. Read the number off the screen when recording; don't script it.
+   - **Final chips** (nexus-5; each checked 5× live, same count each time, 4–12 s). Read the count off the screen when recording; don't script it:
+     - a. "Chain snatchings on a red Pulsar in the last 90 days" → 16 cases (1 test filing excluded). It lists the hero pair as read-only rows; nothing is decided there.
+     - b. "Chain snatchings in Adyar after 7 pm in the last 90 days" → 4 cases.
+     - c. "Robberies in Velachery that are still undetected since 1 September" → 3 cases.
+     - Off-topic, to show it never guesses: "Who will commit the next robbery in Adyar?" → "I can only search crimes by type, police station area, time, case status and words written in the FIR."
+   - Analyst or above only.
 
 ## Script
 
