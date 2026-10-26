@@ -8,6 +8,6 @@ const PulseMap = dynamic(() => import("./PulseMap"), {
   loading: () => <div className="grid h-[calc(100vh-9rem)] place-items-center rounded-xl border border-line bg-surface text-sm text-muted">Loading the Pulse Map…</div>,
 });
 
-export function PulseMapLoader(props: { stationId: string | null; role: Role }) {
+export function PulseMapLoader(props: { stationId: string | null; role: Role; focusCell?: string | null; focusCrime?: string | null }) {
   return <PulseMap {...props} />;
 }

@@ -20,6 +20,8 @@ export type TipRow = {
   guard: Guard;
   approx_cell: string | null; // H3 r8 (the parent when the tipster picked a finer area)
   approx_cell_fine?: string | null; // H3 r8, r9 or r10 as picked (0007_12); absent on older rows
+  /** The crime the public chose on a crime card (0007_11). */
+  about_crime_id?: string | null;
   received_week: string;
   status: TipStatus;
   synthetic: boolean;
