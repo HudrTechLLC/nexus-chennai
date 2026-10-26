@@ -1,10 +1,11 @@
 import "server-only";
 import { publicClient } from "@/lib/publicApi";
+import type { AppealImage } from "@/lib/appealImages";
 
 /** A published appeal as the public sees it (spec D3.13; 0004_03 public_appeals). */
 export type Appeal = {
   id: string; title: string; category: string; area: string; cell: string; week: string; time_window: string;
-  summary: string; looking_for: string[]; images: { path: string; blurred: boolean }[]; tip_count: number; published_at: string | null;
+  summary: string; looking_for: string[]; images: AppealImage[]; tip_count: number; published_at: string | null;
 };
 
 export type PublicCell = { cell: string; n: number; by_category: Record<string, number>; appeal: boolean };
