@@ -74,9 +74,9 @@ NAMED_QUERIES: dict[str, NamedQuery] = {
 }
 
 # Engines-lane queries (q_hex_counts, q_dq_flags, q_news): owned by nexus-2, agreed with nexus-1.
-from .zetaris_queries_n2 import N2_QUERIES  # noqa: E402  (needs NamedQuery defined above)
+from .zetaris_queries_n2 import N2_SPECS  # noqa: E402
 
-NAMED_QUERIES.update(N2_QUERIES)
+NAMED_QUERIES.update({name: NamedQuery(**spec) for name, spec in N2_SPECS.items()})
 
 # Data-lane queries (q_case, q_features, ...): owned by nexus-1.
 from .zetaris_queries_n1 import specs as _n1_specs  # noqa: E402
