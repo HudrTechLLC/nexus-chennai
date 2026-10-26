@@ -23,7 +23,7 @@ python zetaris/register.py --file 00_sources.sql --only 6     # run one statemen
   - `stations` and `wards`: no PostGIS column, because geometry doesn't map over Spark JDBC.
   - `crime_features_v`: `text[]` and `jsonb` become JSON text on the source.
 - `SELECT count(*) FROM sb.crimes` returns 14000.
-- `tips` is **not** registered raw: it holds a passphrase hash and untrusted text. `zetaris_reader` gets column-level SELECT on safe columns only (migration `0003_zetaris_reader_tips.sql`), and a `tips_v` view follows.
+- `tips` is **not** registered raw: it holds a passphrase hash and untrusted text. `zetaris_reader` has column-level SELECT on safe columns only (`0003_zetaris_reader_tips.sql`), and Zetaris reads the `tips_v` view of exactly those columns.
 
 ## Gotchas found while registering
 - `DESCRIBE BY` text allows only letters, digits, space, `_ . , -`. No parentheses.
