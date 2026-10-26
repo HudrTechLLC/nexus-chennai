@@ -64,7 +64,7 @@ export async function POST(req: Request, { params }: { params: { crimeId: string
 
   const typed = String(form.get("captured_at") ?? "");
   const exif = check.mime === "image/jpeg" ? exifDateTime(bytes) : null;
-  const capturedAt = (typed && cityLocalToIso(typed, CITY.timezone)) || (exif && cityLocalToIso(exif.slice(0, 16), CITY.timezone)) || null;
+  const capturedAt = (typed && cityLocalToIso(typed, CITY.timezone)) || (exif && cityLocalToIso(exif, CITY.timezone)) || null;
   const camera = String(form.get("camera_id") ?? "").trim().slice(0, 40) || null;
   const custody: CustodyStep[] = [{ at: now, by: officer.userId, action: "uploaded", sha256, bytes: bytes.length, mime: check.mime }];
   const evidenceId = `EV-${id}`;

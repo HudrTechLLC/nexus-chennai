@@ -28,6 +28,11 @@ describe("city time", () => {
     expect(cityLocalToIso("2026-10-26T10:40", TZ)).toBe("2026-10-26T05:10:00.000Z");
     expect(cityLocalToIso("2026-10-26 10:40", TZ)).toBeNull();
   });
+  it("keeps seconds from an EXIF capture time (regression: they were dropped)", () => {
+    // nexus-4's click-through: EXIF 2026:10:20 19:44:12 (city time) was stored as 14:14:00Z.
+    expect(cityLocalToIso("2026-10-20T19:44:12", TZ)).toBe("2026-10-20T14:14:12.000Z");
+    expect(cityLocalToIso("2026-10-20T19:44:99", TZ)).toBeNull();
+  });
 });
 
 describe("location cells", () => {
