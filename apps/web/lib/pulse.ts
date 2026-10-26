@@ -339,6 +339,11 @@ export function decodeFacets(raw: unknown): Facets {
   return { stations, weapon: idMap(o.weapon), vehicle: idMap(o.vehicle), mo: idMap(o.mo) };
 }
 
+/** Facet values, most crimes first (ties alphabetical), so common tags lead and one-offs sink. */
+export function byCount(m: Map<string, Set<string>>): string[] {
+  return Array.from(m.entries()).sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0])).map(([k]) => k);
+}
+
 /**
  * Crime ids matching the weapon / vehicle / MO choices: any chosen value within a kind (OR), every kind
  * that has a choice (AND). null when nothing is chosen, so the filter does not restrict at all.
