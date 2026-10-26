@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  buildTimeline, canWriteCase, casesHref, dayRange, describe as describeObj, maskPii, moRows,
+  buildTimeline, canWriteCase, casesHref, dayRange, describe as describeObj, maskPii, moCorrections, moRows, moToText,
   normaliseFir, normalisePlate, parseCaseFilters, plateIlike, plateMatches,
 } from "../cases";
 
@@ -98,5 +98,27 @@ describe("display helpers", () => {
       { at: "2026-10-27T11:27:00Z", kind: "fir", label: "b" },
     ]);
     expect(t.map((x) => x.label)).toEqual(["b", "a"]);
+  });
+});
+
+describe("moCorrections", () => {
+  const mo = { approach: "two_wheeler_from_behind", offender_count: 2, disguise: ["helmet"], place_type: ["bus_stop"], verbal: null, violence: "push" };
+  it("returns nothing when the officer changed nothing", () => {
+    expect(moCorrections(mo, { approach: "two wheeler from behind", offender_count: "2", disguise: "helmet", verbal: "" })).toEqual({ corrections: {} });
+  });
+  it("returns only changed fields in the stored shape", () => {
+    expect(moCorrections(mo, { violence: "Snatching", disguise: "black helmet, mask", offender_count: "3", place_type: "bus stop" })).toEqual({
+      corrections: { violence: "snatching", disguise: ["black_helmet", "mask"], offender_count: 3 },
+    });
+  });
+  it("can clear a field", () => {
+    expect(moCorrections(mo, { violence: "" })).toEqual({ corrections: { violence: null } });
+  });
+  it("rejects a bad offender count", () => {
+    expect(moCorrections(mo, { offender_count: "two" })).toHaveProperty("error");
+  });
+  it("shows values as text", () => {
+    expect(moToText(["bus_stop", "main_road"])).toBe("bus stop, main road");
+    expect(moToText(null)).toBe("");
   });
 });

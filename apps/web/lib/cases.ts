@@ -182,6 +182,45 @@ export function moRows(mo: Record<string, unknown> | null | undefined): [string,
     .map(([k, v]): [string, string] => [k, Array.isArray(v) ? v.map((x) => humanise(String(x))).join(", ") : humanise(String(v))]);
 }
 
+// =====================
+// Officer review of extracted MO (0007_01 review_features)
+// =====================
+
+/** The D3.2 "mo" fields an officer may correct (same list as review_features in SQL). */
+export const MO_FIELDS = ["approach", "offender_count", "target", "target_item", "escape", "violence", "time_band", "place_type", "disguise", "verbal"] as const;
+export type MoField = (typeof MO_FIELDS)[number];
+const LIST_FIELDS: MoField[] = ["place_type", "disguise"];
+
+/** An MO value as the review form shows it: lists comma-separated, labels with spaces. */
+export function moToText(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  return Array.isArray(v) ? v.map((x) => String(x).replace(/_/g, " ")).join(", ") : String(v).replace(/_/g, " ");
+}
+
+function textToMo(field: MoField, text: string): unknown {
+  const snake = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "_");
+  const t = text.trim();
+  if (field === "offender_count") return t === "" ? null : Number.parseInt(t, 10);
+  if (LIST_FIELDS.includes(field)) return t === "" ? [] : t.split(",").map(snake).filter(Boolean);
+  return t === "" ? null : snake(t);
+}
+
+/**
+ * Only the fields the officer changed, in the stored shape (snake_case values, lists as arrays).
+ * Returns an error for an invalid offender count.
+ */
+export function moCorrections(mo: Record<string, unknown>, edited: Partial<Record<MoField, string>>): { corrections: Record<string, unknown> } | { error: string } {
+  const out: Record<string, unknown> = {};
+  for (const f of MO_FIELDS) {
+    const text = edited[f];
+    if (text === undefined || moToText(mo[f]) === text.trim()) continue;
+    const v = textToMo(f, text);
+    if (f === "offender_count" && v !== null && (!Number.isInteger(v) || (v as number) < 0 || (v as number) > 50)) return { error: "Offender count must be a whole number." };
+    if (JSON.stringify(v) !== JSON.stringify(mo[f] ?? (LIST_FIELDS.includes(f) ? [] : null))) out[f] = v;
+  }
+  return { corrections: out };
+}
+
 /** Merges dated events into one newest-first timeline; undated items are skipped. */
 export function buildTimeline(items: (TimelineItem | null | undefined)[]): TimelineItem[] {
   return items
