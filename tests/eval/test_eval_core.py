@@ -15,6 +15,14 @@ from app.eval.core import band_precision_note, key  # noqa: E402
 from app.tracing import Tracer  # noqa: E402
 
 
+def eval_handlers():
+    """default_handlers plus q_cases, which the evaluator uses to prefetch candidates in batches."""
+    h = default_handlers()
+    h["q_cases"] = lambda p: [h["q_case"]({"crime_id": v})[0] for _, v in sorted(p.items())
+                              if v and h["q_case"]({"crime_id": v})]
+    return h
+
+
 def test_pair_metrics_excludes_duplicates():
     pos = {("A", "B"), ("C", "D")}
     m = pair_metrics([("A", "B"), ("A", "C"), ("E", "F")], pos, exclude={("E", "F")})
@@ -43,7 +51,7 @@ def test_evaluator_beats_baseline_on_planted_pair(tmp_path):
     truth = Truth({key(a, b): "series", key(a, h): "decoy"}, [{"series_id": "S1", "crime_ids": [a, b]}])
     tr = Tracer("e", tmp_path, echo=False)
     nightshift = FakeNightshift(lambda *x: (_ for _ in ()).throw(AssertionError("eval must not call a model")))
-    deps = AgentDeps(tracer=tr, zetaris=FakeZetaris(default_handlers()), nightshift=nightshift)
+    deps = AgentDeps(tracer=tr, zetaris=FakeZetaris(eval_handlers()), nightshift=nightshift)
     report = Evaluator(deps, truth).run([a, b, h])
     assert report["agent"]["tp"] == 1 and report["agent"]["fp"] == 0 and report["agent"]["recall"] == 1.0
     assert report["baseline_rules_only"]["tp"] == 0
@@ -58,7 +66,7 @@ def test_evaluator_excludes_non_generated_crimes(tmp_path):
     """A console-filed FIR copying a planted MO must not count as a false positive (nexus-5)."""
     a, b, h = ADYAR["crime_id"], VELACHERY["crime_id"], HOUSEBREAK["crime_id"]
     truth = Truth({key(a, h): "decoy"}, [])  # truth knows nothing about VELACHERY: treat it as the console FIR
-    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(default_handlers()),
+    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(eval_handlers()),
                      nightshift=FakeNightshift(lambda *x: "{}"))
     with_fir = Evaluator(deps, truth).run([a, h])
     assert with_fir["agent"]["fp"] == 1  # the a<->b link would be a false positive
@@ -94,3 +102,16 @@ def test_non_generated_ids_uses_generator_namespace(monkeypatch):
     assert cli.non_generated_ids(None) == ["CHN-AD-2026-001231"]
     seed = (Path(__file__).resolve().parents[2] / "data" / "seed.py").read_text(encoding="utf-8")
     assert str(cli.GEN_NS) in seed  # one namespace: the generator's (data/seed.py GEN_NS)
+
+
+def test_candidates_are_prefetched_in_batches_not_one_by_one(tmp_path):
+    """Live each q_case + q_features costs ~2.4 s; candidates come in one q_cases + one q_features call."""
+    a, b, h = ADYAR["crime_id"], VELACHERY["crime_id"], HOUSEBREAK["crime_id"]
+    truth = Truth({key(a, b): "series"}, [{"series_id": "S1", "crime_ids": [a, b]}])
+    deps = AgentDeps(tracer=Tracer("e", tmp_path, echo=False), zetaris=FakeZetaris(eval_handlers()),
+                     nightshift=FakeNightshift(lambda *x: "{}"))
+    Evaluator(deps, truth).run([a])
+    evals = [c for c in deps.zetaris.calls if c[1] == "Eval"]
+    assert [c[0] for c in evals].count("q_case") == 1  # the case itself
+    assert [c[0] for c in evals].count("q_cases") == 1  # both candidates in one call
+    assert {b, h} <= set(next(c[2] for c in evals if c[0] == "q_cases").values())
