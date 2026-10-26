@@ -158,3 +158,21 @@ def test_unreadable_narratives_exclude_and_remove_nothing(tmp_path):
 def test_no_series_means_no_narrative_read(tmp_path):
     graph, calls = graph_for(tmp_path, MemoryStore())
     assert _detect_series(graph, [pair("A", "B")]) == ([], {}) and calls == []
+
+
+def test_a_deadline_during_series_detection_skips_series_and_keeps_the_runs_alerts(tmp_path):
+    """Live (run_866f913f): the batch's 3600 s deadline passed at case 4; the member read raised DeadlineExceeded
+    out of series detection and the batch lost its whole output, though every case's alerts were written."""
+    from app.agents import DeadlineExceeded
+
+    store = MemoryStore()
+    graph, _ = graph_for(tmp_path, store)
+
+    def late(name, *, agent, **params):
+        raise DeadlineExceeded("run deadline passed")
+
+    graph.deps.query = late
+    series, excluded = _detect_series(graph, [pair("A", "B"), pair("B", "C"), pair("C", "T")])
+    assert (series, excluded) == ([], {}) and store.series == {}
+    ev = [e for e in events(tmp_path, "run_1") if e["action"] == "series_skipped"]
+    assert ev and ev[0]["status"] == "degraded" and "deadline" in ev[0]["output_summary"]
