@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T02:03:06+05:30",
+  "updated": "2026-10-27T02:19:45+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -213,7 +213,7 @@
           "id": "WS1-23",
           "phase": "P2",
           "title": "New source onboarding: profile a new station export via Zetaris, Lightning proposes mapping, DQ, admin approves → registered (not linked)",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-1 + nexus-6 · #368 #372 #373 #376; live E2E pending"
         }
       ]
@@ -723,7 +723,7 @@
           "id": "WS3-30",
           "phase": "P7",
           "title": "Ask Nexus: plain-English analyst questions → allow-listed Zetaris queries → cited table + map",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-5 + nexus-4 · #369 (0007_16) #374 #375"
         }
       ]
