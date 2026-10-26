@@ -49,6 +49,8 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
       attributionControl: { compact: true, customAttribution: "© OpenStreetMap contributors · OpenFreeMap" },
     });
     m.on("load", () => {
+      // Start the compact attribution collapsed (the ⓘ still opens it): expanded it covers the hexagon on phones.
+      el.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       m.addSource("pick", { type: "geojson", data: geo(cellRef.current) });
       m.addLayer({ id: "pick-fill", type: "fill", source: "pick", paint: { "fill-color": "#0e7c86", "fill-opacity": 0.3 } });
       m.addLayer({ id: "pick-line", type: "line", source: "pick", paint: { "line-color": "#0e7c86", "line-width": 2 } });
@@ -56,6 +58,9 @@ export function HexPicker({ cell, onChange }: { cell: string | null; onChange: (
     m.on("click", (e) => {
       point.current = { lat: e.lngLat.lat, lng: e.lngLat.lng };
       cb.current(latLngToCell(e.lngLat.lat, e.lngLat.lng, resRef.current));
+      // From the city view a small hexagon is a dot: zoom in so the tipster can see and nudge it.
+      const z = zoomFor(resRef.current);
+      if (m.getZoom() < z - 1) m.easeTo({ center: e.lngLat, zoom: z });
     });
     // Zooming in close steps the size down to the finer one (never back up).
     m.on("zoomend", () => {
