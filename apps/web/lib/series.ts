@@ -122,6 +122,20 @@ export function tokenSaving(d: Dossier): number | null {
   return Math.max(-1, Math.min(1, 1 - d.tokens_actual / d.tokens_projected));
 }
 
+/**
+ * How to describe the token saving honestly. A dossier read in one chunk cannot save tokens (the
+ * chunk overhead can even cost a little more), so show "none" with the reason instead of a negative %.
+ */
+export function savingLabel(d: Pick<Dossier, "chunks" | "tokens_projected" | "tokens_actual">): { text: string; hint: string | null } {
+  const s = tokenSaving(d as Dossier);
+  if (s == null) return { text: "—", hint: null };
+  if (s > 0) return { text: `${Math.round(s * 100)}% fewer tokens`, hint: null };
+  return {
+    text: "none",
+    hint: d.chunks <= 1 ? "The series fitted in one chunk; chunking only saves tokens on long series." : "This run used about as many tokens as a single read.",
+  };
+}
+
 /** Splits cited ids into member crimes and other records (statements, tips, evidence). */
 export function splitCitations(cited: string[], memberIds: string[]): { crimes: string[]; other: string[] } {
   const members = new Set(memberIds);
