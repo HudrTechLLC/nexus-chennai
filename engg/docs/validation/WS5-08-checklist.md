@@ -83,7 +83,7 @@ EOF
 | 4.4 | Zetaris queries | `zetaris` > 0 query ids. In sample mode the `zetaris_query` lines say `via=sample` |
 | 4.5 | Engine activity | `engines` includes `hmem` (and `world_model` / `scout_intent` where used) |
 | 4.6 | Model per request | Every `models` entry names a pinned `nvidia/…` id. In sample mode with fixtures, the status is `replayed`, **not** `error`. Without fixtures, it's `error` + "no recorded fixture", which is a FAIL for this step |
-| 4.7 | No unexpected errors | `errors` has no `not a registered named query` and no `IO Error … news/articles.jsonl`. On a live run, `q_news` with 0 rows is expected until WS1-16 registers the news feed |
+| 4.7 | No unexpected errors | `errors` has no `not a registered named query` and no `IO Error … news/articles.jsonl`. On a live run, `q_news` reads live rows (news feed registered, WS1-16); a `400 TABLE_OR_VIEW_NOT_FOUND` is a FAIL |
 | 4.8 | Trace also on stdout/stderr | `docker logs nexus` (before 3.7) shows trace lines. Locally, `run.py --once` sends them to stderr |
 
 ## 5 · No hardcoded outputs: outputs differ across inputs
