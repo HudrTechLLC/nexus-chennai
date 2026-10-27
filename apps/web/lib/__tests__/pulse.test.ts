@@ -134,7 +134,7 @@ describe("misc", () => {
   });
 });
 
-import { isoWeek, weekInRange } from "../pulse";
+import { isoWeek, seriesLabel, weekInRange } from "../pulse";
 
 describe("isoWeek", () => {
   it("matches ISO-8601 including year boundaries", () => {
@@ -274,5 +274,15 @@ describe("overlayPadding", () => {
     expect(p.bottom).toBe(232);
     expect(phone.right - p.left - p.right).toBeGreaterThanOrEqual(350 * 0.4);
     expect(phone.bottom - p.top - p.bottom).toBeGreaterThanOrEqual(660 * 0.4);
+  });
+});
+
+describe("seriesLabel", () => {
+  it("does not repeat a station count the series name already carries", () => {
+    expect(seriesLabel("Red two-wheeler chain snatchings · 3 stations", 9, 3)).toBe("Red two-wheeler chain snatchings · 3 stations · 9 cases");
+  });
+  it("adds the station count when the name has none, with singulars", () => {
+    expect(seriesLabel("Night burglaries", 4, 2)).toBe("Night burglaries · 4 cases · 2 stations");
+    expect(seriesLabel("One-off", 1, 1)).toBe("One-off · 1 case · 1 station");
   });
 });
