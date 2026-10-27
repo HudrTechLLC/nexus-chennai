@@ -5,6 +5,7 @@ import { consoleBrowserClient } from "@/lib/supabase/browser";
 import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
 import { FileText, ListOrdered, Loader2, MapPin, MessageSquareText, Sparkles } from "lucide-react";
 import { Badge, buttonClass, Card, Id, SectionHeader } from "@/components/ui";
+import { receiptLabel } from "@/lib/receipts";
 import {
   ASK_CRIME_COLUMNS, checkQuestion, crimeLabel, hitScenes, insertErrorText, isSettled, nextPoll, POLL_MS, QUESTION_MAX, RECENT_LIMIT, SAMPLE_QUESTIONS, STATUS_TEXT,
   visibleResults, type AskCrime, type AskQuestion, type AskResultRow,
@@ -283,7 +284,7 @@ export function HowAnswered({ q, canOpenTrace }: { q: AskQuestion; canOpenTrace:
       )}
       <p className="mt-3 text-xs text-muted">
         Plan by {q.model ?? "—"}{q.routed_model && q.routed_model !== q.model ? ` (routed to ${q.routed_model})` : ""}
-        {q.receipt_id ? <> · receipt <span className="font-mono">{q.receipt_id}</span></> : null}
+        {q.receipt_id ? <> · {receiptLabel(q.receipt_id)} <span className="font-mono">{q.receipt_id}</span></> : null}
         {q.run_id && canOpenTrace ? <> · <Link href={`/console/system/trace/${encodeURIComponent(q.run_id)}`} className="text-signal hover:underline">Full trace →</Link></> : null}
       </p>
     </details>
