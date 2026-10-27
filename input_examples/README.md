@@ -41,7 +41,7 @@ That run's outputs match `output_examples/` on every field (`scripts/judge_compa
 
 So the query ids in a trace differ from the ids cited in `output_examples/` (example 1's were minted by its live run).
 Run an example yourself and its new trace's query ids match that run's own output. Traces from your own runs land in
-`logs/` too, and overwrite these files.
+`logs/` too, and are appended to these files.
 
 ## Live runs (not needed for judging)
 
