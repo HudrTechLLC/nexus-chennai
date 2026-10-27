@@ -27,7 +27,7 @@ BUNDLE = "data/eval/planted2/sample"
 CASES2 = REPO_ROOT / "engg" / "docs" / "eval" / "planted_skeptic_cases_set2.json"
 SPEC2 = json.loads(CASES2.read_text(encoding="utf-8"))
 CASES2_SHA = "b77276cb21809dd7b5e3a7c5a7bf7c8e42989c1e180a031d1eacecc00989a85f"
-BUNDLE_SHA = "0fe54716e02b04588f148fe4c8ee2ec19e9d803c2f148561b62b50970f567a7e"
+BUNDLE_SHA = "25673ac60c5e06e4876751d2c1ae1517fdd6445690d2107fffd52ff6a1ba939d"
 ARMS2 = [(c, n) for c in SPEC2["cases"] for n in c["near_misses"]]
 
 
@@ -39,9 +39,8 @@ def bundle2(monkeypatch):
 def bundle_sha() -> str:
     root = REPO_ROOT / BUNDLE
     h = hashlib.sha256()
-    for f in sorted(p for p in root.rglob("*") if p.is_file()):
-        h.update(f.relative_to(root).as_posix().encode() + b"\0" + hashlib.sha256(f.read_bytes()).hexdigest().encode()
-                 + b"\n")
+    for rel in sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()):  # same order on any OS
+        h.update(rel.encode() + b"\0" + hashlib.sha256((root / rel).read_bytes()).hexdigest().encode() + b"\n")
     return h.hexdigest()
 
 
