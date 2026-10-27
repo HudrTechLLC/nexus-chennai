@@ -6,7 +6,7 @@ Each police station in a city sees only its own cases. A gang that snatches chai
 
 > **All crime, person, case and tip data in this repository is synthetic.** Database rows carry `synthetic: true`; the 8 legacy station CSV exports have no per-row flag, but they are generated too and are labelled synthetic in [data/README.md](data/README.md) and `data/sample/MANIFEST.json`. Map, ward, police-station and weather reference data is real public open data ([data/README.md](data/README.md)). No real people, cases or police systems are involved.
 
-Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://nexus-chennai.vercel.app>. Demo sign-ins for judges are in the submission form; see [Live app](#live-app).
+Demo video: <https://www.youtube.com/watch?v=FOUdFGT-GHY> · Live app: <https://nexus-chennai.vercel.app>. Demo sign-ins for judges are in the submission form; see [Live app](#live-app).
 
 In this repo: [demo video, MP4 1080p, 3:39](submission/media/Nexus_Chennai_demo_v2_1080p.mp4) · [slide deck, PDF, 15 slides](submission/media/Nexus_Chennai_Heisenbugs_deck.pdf).
 
