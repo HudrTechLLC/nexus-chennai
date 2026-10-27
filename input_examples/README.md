@@ -31,7 +31,7 @@ How the outputs were made:
 ## Traces (`logs/trace-demo-00N.jsonl`)
 
 Each output's `log_file` points to `logs/trace-demo-00N.jsonl`, and those three files are committed. They are the JSONL
-traces of one offline run of each example: `SAMPLE_MODE=true`, no `.env`, no keys, commit `2f9b415`, run with
+traces of one offline run of each example: `SAMPLE_MODE=true`, no `.env`, no keys, commit `f26d0ba` (after #447: the route step is traced as "Router"), run with
 `python run.py --once input_examples/example_N.json` (27 Oct). They show every agent step, handoff, named Zetaris
 query (`via=sample`), engine call and replayed model call (lane, pinned model, receipt id) behind the output.
 
