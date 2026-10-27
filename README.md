@@ -13,7 +13,7 @@ Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://
 **What's new compared with established crime linkage.** Established linkage systems rely on structured case forms and analysts comparing cases by hand. Nexus instead:
 - reads every source where it already lives (case files, legacy station exports, ANPR, 112 calls, tips, feeds) through Zetaris, with no central copy;
 - has agents cite the Zetaris query and row behind every factor in an alert;
-- has a Skeptic that re-queries the data itself and gives a second opinion on each pair (send back or drop); the officer decides;
+- has a Skeptic that re-queries the data itself and gives a second opinion on each pair, which can drop or downgrade a link (or send it back for a narrower search); the officer decides;
 - feeds screened public tips back in as corroborating evidence on a link (the corroboration factor);
 - learns from each analyst decision within a capped ±0.08 (H-MEM).
 
@@ -23,7 +23,7 @@ Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://
 ## What it does
 
 - **Links cases across stations.** For a new case, agents find candidate cases city-wide, score each pair on nine factors in code, and write an alert with per-factor evidence.
-- **Gives a second opinion.** The Skeptic re-queries Zetaris itself, critiques each pair against its own rows, and can send a pair back for a narrower search or drop it. It is not a guarantee: on a planted test its model critique dropped none of 24 look-alike false links. Since ~07:20 IST on 27 Oct a deterministic contradiction check also runs on new cases (Known limitations). The officer decides.
+- **Gives a second opinion.** The Skeptic re-queries Zetaris itself and critiques each pair against its own rows: a second opinion that can drop or downgrade a link, or send it back for a narrower search. It does not refute false links reliably: on a planted test its model critique dropped none of 24 look-alike false links. Since ~07:20 IST on 27 Oct a deterministic contradiction check also runs on new cases (Known limitations). The officer decides.
 - **Keeps a human in charge.** Every alert waits for an analyst. Approvals and rejections go to H-MEM, so a similar pair scores differently next time.
 - **Lets the public help safely.** Anyone can send an anonymous tip. Tip Guard (Meterless Scout Intent) screens it for injection, threats and spam before any agent reads it.
 - **Groups links into series** and builds a dossier with the Meterless Markovian engine.
@@ -50,7 +50,7 @@ Diagrams and the full design: [engg/docs/ARCHITECTURE.md](engg/docs/ARCHITECTURE
 
 ## Agents
 
-A LangGraph graph routes each input down one of three paths:
+A LangGraph graph sends each input down one of three paths. The **Router** is an input-type lookup in code (`case`, `tip` or `search`; no model and no engine). Scout Intent does two other jobs: it screens tips (Tip Guard) and routes searches. (The Router's trace line is labelled `Scout Intent` / `route`; it records only the input-type lookup.)
 
 - **case:** `load_case → extract → plan → link → skeptic → write`; the Skeptic can send pairs back to `plan`.
 - **tip:** `tip_guard → tip_extract` (clean tips only).
@@ -100,7 +100,7 @@ Full text: [engg/docs/submission/SPONSOR_TECH_FINAL.md](engg/docs/submission/SPO
 
 ## Setup
 
-You need Python 3.11 or newer (3.13 tested on Windows), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
+You need Python 3.11–3.13 (3.13 tested on Windows; 3.14+ fails, because the pinned `pydantic-core` does not install on it; Docker is the safe path), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
 
 ### Option A: Docker (the judge path)
 
@@ -135,6 +135,8 @@ $env:SAMPLE_MODE = "true"
 ```
 
 The install takes a few minutes. On Windows it includes `tzdata`, because Windows Python has no time-zone database of its own.
+
+To run the full test suite as well, also install the development requirements (they add pytest, ruff, `shapely` and `cryptography`, among others): `.venv/bin/pip install -r services/api/requirements-dev.txt` (Windows: `.venv\Scripts\pip install -r services/api/requirements-dev.txt`).
 
 `run.py` sets its own import path, so no `PYTHONPATH` is needed.
 
@@ -221,7 +223,7 @@ Every run writes `logs/trace-<run_id>.jsonl` and echoes each line to stdout. Eac
 ## Tests
 
 ```bash
-pip install -r services/api/requirements-dev.txt
+pip install -r services/api/requirements-dev.txt   # needed for the full suite (adds shapely, cryptography)
 pytest -q                                   # all Python tests
 pytest tests/engines -q                     # engine feature tests (sample backend)
 (cd engines-ts && npm ci && npm run install:references)   # once
