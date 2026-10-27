@@ -20,6 +20,7 @@
   ["eval/INDEPENDENT_LOOKALIKE_PREREG", "Contradiction rule, independent look-alikes (pre-registration and results)"],
   ["eval/NEMOTRON_ALONE_PREREG", "Nemotron-alone baseline (pre-registration)"],
   ["eval/NEMOTRON_ALONE_RESULTS", "Nemotron-alone baseline (results)"],
+  ["eval/STRONGER_BASELINE_PREREG", "Stronger rules + vehicle baseline (pre-registration)"],
   ["validation/README", "Validation runs"],
   ["validation/WS3-06-WS3-10-2026-10-26", "Validation: WS3-06 to WS3-10"],
   ["validation/WS5-08-checklist", "Validation: WS5-08 checklist"],
