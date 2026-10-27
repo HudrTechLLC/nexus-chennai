@@ -89,7 +89,7 @@ The chief announces the live base URL and token file when ready.
    - Don't change Vercel or Supabase project settings. Ask the chief.
 4. **Don't edit** `workstreams.json`, `PROGRESS.md`, `DECISIONS.md` or `LANES.md`. Send the chief the task ids you finished and any decision you need. The chief updates the tracker with `scripts/tracker.py`.
 5. **Secrets: read from files, never inline, never echoed, never in a repo file** (global CLAUDE.md). Paths:
-   - Supabase DB password: `C:/Apps/healgrid-app/.secrets/nexus-db.txt` (nexus-1 for migrations; nexus-2/nexus-4 ask nexus-1 to apply theirs, or use it the same way for their own merged migration)
+   - Supabase DB password: `~/.secrets/nexus-db.txt` (nexus-1 for migrations; nexus-2/nexus-4 ask nexus-1 to apply theirs, or use it the same way for their own merged migration)
    - Supabase secret key: `~/.secrets/nexus-service-role.key` → `SUPABASE_SERVICE_ROLE_KEY_FILE`
    - Zetaris token: `~/.secrets/nexus-zetaris.key` → `ZETARIS_API_KEY_FILE`; `ZETARIS_ORG_ID=1`; REST `http://localhost:8888/api/v1.0`; UI `http://localhost:3000`
    - Supabase URL `https://ukrujnsjucwvytnokbtw.supabase.co`; the publishable key is in Vercel env.
