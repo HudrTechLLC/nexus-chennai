@@ -60,7 +60,7 @@ Text: [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md).
 |---|---|---|
 | Zetaris integration | "Zetaris: the data layer" (23 sources in 8 types; 18 registered named queries: 13 agent-facing) | ✅ |
 | Which Meterless engines, what each does, the test | "Meterless engines: all four" (8/8, 13/13, 8/8; Scout Intent held-out 0.975, 7/7) | ✅ |
-| How the app connects to Nightshift | "Meterless Nightshift: the primary AI provider" (pinned lanes; 190/193 calls with a receipt, all 190 verify) | ✅ |
+| How the app connects to Nightshift | "Meterless Nightshift: the primary AI provider" (pinned lanes; 190/193 calls with a receipt, all 190 verify; each receipt also checked at call time since #455) | ✅ |
 | Where NVIDIA contributes | "NVIDIA Nemotron" (Ultra 550B, Lightning 30B, Super VL; model logged per call) | ✅ |
 | What was unique | "What was unique about our use of the sponsor technology" | ✅ |
 
