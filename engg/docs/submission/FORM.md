@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # HackOS submission form answers
 
-Paste-ready answers for the HackOS submission form. Every claim comes from [EVIDENCE](EVIDENCE.md). Before pasting, replace each `<…>` placeholder and resolve each `[PENDING: id]`, or delete that sentence.
+Paste-ready answers for the HackOS submission form. Every claim comes from [EVIDENCE](EVIDENCE.md). Before pasting, replace each `<…>` placeholder, and resolve or delete any sentence still marked as pending.
 Related: [COMPLIANCE](COMPLIANCE.md) · [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [README_DRAFT](README_DRAFT.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md)
 
 > **Notes for the chief, not form text:**
@@ -78,7 +78,7 @@ Sign in at https://nexus-chennai.vercel.app/console/login.
 
 ## Sponsor technology explanation
 
-Paste the text of [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), from the line down. Resolve its `[PENDING]` items first.
+Paste the text of [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), from the line down. Resolve or delete anything still marked as pending first.
 
 ## Cursor
 

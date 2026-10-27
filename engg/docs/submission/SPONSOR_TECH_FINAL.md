@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # Sponsor technology explanation: final draft (WS5-04)
 
-This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Claims added tonight carry their PR numbers; the rest trace to [EVIDENCE](EVIDENCE.md). Delete or replace each `[PENDING: id]` before you paste. Nothing pending may be pasted as if it were done.
+This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Claims added tonight carry their PR numbers; the rest trace to [EVIDENCE](EVIDENCE.md). Delete or replace anything still marked as pending before you paste. Nothing pending may be pasted as if it were done.
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
