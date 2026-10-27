@@ -230,9 +230,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
               </Card>
               <Card className="self-start lg:sticky lg:top-4 lg:col-span-2">
                 <SectionHeader title="Where" icon={MapPin} className="mb-3" actions={<Badge tone="signal">{hitScenes(phase.rows).length}</Badge>} />
-                <div className="overflow-hidden rounded-lg ring-1 ring-inset ring-line">
-                  <AlertMapLoader scenes={hitScenes(phase.rows)} trail={[]} />
-                </div>
+                <AlertMapLoader scenes={hitScenes(phase.rows)} trail={[]} />
               </Card>
             </div>
           )}
