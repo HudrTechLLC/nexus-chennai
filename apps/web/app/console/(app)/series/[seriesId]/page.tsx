@@ -10,6 +10,7 @@ import { consoleServerClient } from "@/lib/supabase/server";
 import { audit, crimeTitle } from "@/lib/alertsData";
 import { pct } from "@/lib/alerts";
 import { allows } from "@/lib/roles";
+import { canOpenTrace } from "@/lib/trace";
 import { alertsTouching, briefsChunked, fetchMemberIds, fetchSeries, taskforcesFor } from "@/lib/seriesData";
 import { dossierAuthor, memberLonLat, parseDossier, savingLabel, seriesHull, splitCitations, timeline, type MemberPoint } from "@/lib/series";
 import { BandPill, StatusPill } from "@/components/console/alerts/AlertBits";
@@ -70,7 +71,11 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
   const cites = dossier ? splitCitations(dossier.cited_ids, memberIds) : null;
   const saving = dossier ? savingLabel(dossier) : null;
   const hidden = members.filter((m) => !m.full).length;
-  const isAdmin = allows(officer.role, "admin");
+  // The dossier's run link shows only where the trace page will open for this viewer (canOpenTrace).
+  const dossierRun = dossier?.run_id && allows(officer.role, "analyst+")
+    ? (await sb.from("runs").select("kind").eq("run_id", dossier.run_id).maybeSingle()).data as { kind: string } | null
+    : null;
+  const openTrace = canOpenTrace(officer.role, dossierRun?.kind);
 
   return (
     <div className="space-y-5">
@@ -138,7 +143,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
                 {dossier.receipt_ids.length > 0
                   ? <span title={dossier.receipt_ids.join(", ")}>{dossier.receipt_ids.length} receipt{dossier.receipt_ids.length === 1 ? "" : "s"} · </span>
                   : dossier.receipt_id && <>receipt {dossier.receipt_id} · </>}
-                {dossier.run_id && (isAdmin
+                {dossier.run_id && (openTrace
                   ? <Link href={`/console/system/trace/${encodeURIComponent(dossier.run_id)}`} className="text-signal hover:underline">run {dossier.run_id}</Link>
                   : <>run {dossier.run_id}</>)}
               </p>

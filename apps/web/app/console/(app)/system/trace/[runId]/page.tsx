@@ -10,6 +10,7 @@ import {
   queryRows,
   runMode,
   stepKind,
+  traceAccess,
   summarise,
   type RunRow,
   type StepKind,
@@ -44,30 +45,34 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { timeZo
 
 /** One agent run, step by step, exactly as the trace recorded it (D3.12; copied and redacted per D-025). */
 export default async function TracePage({ params }: { params: { runId: string } }) {
-  await requireOfficer("admin");
+  // Analysts and supervisors may open case, batch and sweep runs; tip and search runs stay admin-only (traceAccess).
+  const officer = await requireOfficer("analyst+");
+  const isAdmin = officer.role === "admin";
   const runId = decodeURIComponent(params.runId);
   if (!isRunId(runId)) notFound();
   const sb = consoleServerClient();
-  const [run, events] = await Promise.all([
-    sb.from("runs").select("run_id, kind, started, finished, status, log_path").eq("run_id", runId).maybeSingle(),
-    sb.from("trace_events").select("*").eq("run_id", runId).order("seq").limit(5000),
-  ]);
-  const rows = (events.data ?? []) as TraceRow[];
-  if (!run.data && rows.length === 0) notFound();
+  // The run row decides access, so it is read before any trace row.
+  const run = await sb.from("runs").select("run_id, kind, started, finished, status, log_path").eq("run_id", runId).maybeSingle();
   const r = run.data as RunRow | null;
+  if (traceAccess(officer.role, r) !== "ok") notFound();
+  const events = await sb.from("trace_events").select("*").eq("run_id", runId).order("seq").limit(5000);
+  const rows = (events.data ?? []) as TraceRow[];
+  if (!r && rows.length === 0) notFound();
   const s = summarise(rows);
 
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/console/system" className="text-sm text-muted hover:text-ink">← System</Link>
+        {isAdmin
+          ? <Link href="/console/system" className="text-sm text-muted hover:text-ink">← System</Link>
+          : <Link href="/console/alerts" className="text-sm text-muted hover:text-ink">← Alerts</Link>}
         <div className="mt-1 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold">Run <span className="font-mono">{runId}</span></h1>
           {rows.length > 0 && <RunModeBadge mode={runMode(rows) ?? "unknown"} />}
         </div>
         <p className="text-sm text-muted">
           {r ? <>{r.kind} · <span className={`rounded-full border px-2 py-0.5 text-xs ${RUN_TONE[runTone(r.status)]}`}>{r.status}</span></> : "run row not found"}
-          {r?.log_path ? <> · trace file <span className="font-mono text-xs">{r.log_path}</span></> : null}
+          {isAdmin && r?.log_path ? <> · trace file <span className="font-mono text-xs">{r.log_path}</span></> : null}
           {s.seconds !== null ? ` · ${s.seconds}s` : ""}
         </p>
       </div>

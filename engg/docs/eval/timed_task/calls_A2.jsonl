@@ -1,0 +1,21 @@
+{"t": 1793118893.0689604, "cmd": "start", "session": "A2", "condition": "nexus", "case": "CHN-KU-2025-000082"}
+{"t": 1793118897.8356478, "cmd": "alerts", "n": 8}
+{"t": 1793118902.9641159, "cmd": "case", "id": "CHN-KU-2025-000082", "found": true}
+{"t": 1793118903.664851, "cmd": "alert", "id": "LA-2026-0F92ACDAA53B", "found": true}
+{"t": 1793118903.9237719, "cmd": "alert", "id": "LA-2026-A6F2363D3614", "found": true}
+{"t": 1793118904.8045743, "cmd": "alert", "id": "LA-2026-A023CB5FF0D7", "found": true}
+{"t": 1793118905.0070055, "cmd": "alert", "id": "LA-2026-40AE94754401", "found": true}
+{"t": 1793118910.5028942, "cmd": "case", "id": "CHN-KU-2025-000078", "found": true}
+{"t": 1793118910.6714942, "cmd": "case", "id": "CHN-AS-2025-000080", "found": true}
+{"t": 1793118910.8781762, "cmd": "case", "id": "CHN-MG-2025-000079", "found": true}
+{"t": 1793118911.232243, "cmd": "case", "id": "CHN-MG-2025-000077", "found": true}
+{"t": 1793118911.6264691, "cmd": "case", "id": "CHN-VI-2025-000079", "found": true}
+{"t": 1793118911.7516754, "cmd": "case", "id": "CHN-PO-2025-000068", "found": true}
+{"t": 1793118911.8930345, "cmd": "case", "id": "CHN-KA-2025-000077", "found": true}
+{"t": 1793118912.0680885, "cmd": "case", "id": "CHN-AS-2025-000141", "found": true}
+{"t": 1793118919.7409906, "cmd": "case", "id": "CHN-KU-2025-000078", "found": true}
+{"t": 1793118919.885816, "cmd": "alert", "id": "LA-2026-8CEF57FE0AA9", "found": true}
+{"t": 1793118920.039303, "cmd": "alert", "id": "LA-2026-A570B2F9454C", "found": true}
+{"t": 1793118920.1610045, "cmd": "alert", "id": "LA-2026-71C8A6B97637", "found": true}
+{"t": 1793118920.3172796, "cmd": "alert", "id": "LA-2026-D179C10A2518", "found": true}
+{"t": 1793118929.9345858, "cmd": "answer", "ids": ["CHN-KU-2025-000078", "CHN-AS-2025-000080", "CHN-MG-2025-000079", "CHN-MG-2025-000077", "CHN-VI-2025-000079", "CHN-KA-2025-000077", "CHN-PO-2025-000068"], "note": "Case files helped: same MO (cut window grille, cutter, 2 men 30-40 medium, night, on foot). KU-078 is strongest: same station, same night, has corroboration from a tip and 112 calls. Got in the way: alert factors are generic, with no model rationale or skeptic critique, and the descriptors are boilerplate, so the others are hard to tell apart. Six break-ins in about 72 minutes across 4 areas is implausible for one crew. Excluded AS-141 (daytime, duplicate key, no tool).", "elapsed_s": 36.9}

@@ -18,7 +18,7 @@ import { alertTimeline, SKEPTIC_ACTIONS, skepticTraceFilter, type SkepticEventRo
 import { AlertHowMade } from "@/components/console/alerts/AlertHowMade";
 import { alertSteps } from "@/lib/alertTrace";
 import { allows } from "@/lib/roles";
-import { runMode, type TraceRow } from "@/lib/trace";
+import { canOpenTrace, runMode, type TraceRow } from "@/lib/trace";
 import { RunModeBadge } from "@/components/console/runs/RunModeBadge";
 import { Id } from "@/components/ui";
 import { sharedTags } from "@/lib/alertTrace";
@@ -103,14 +103,17 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
   // How this alert was made (WS3-25): its run's steps, analyst+ only (trace_events RLS).
   const canSeeTrace = allows(officer.role, "analyst+");
   // Its run's steps and any later re-explanation run, fetched together (nexus-4).
-  const [traceRes, rexRunRes] = canSeeTrace
+  const [traceRes, rexRunRes, runKindRes] = canSeeTrace
     ? await Promise.all([
         alert.run_id
           ? sb.from("trace_events").select("run_id, seq, ts, agent_name, action, input_summary, output_summary, target_agent, model, routed_model, receipt_id, zetaris_query_ids, engine, confidence, retry_count, status").eq("run_id", alert.run_id).order("seq").limit(5000)
           : Promise.resolve({ data: [] }),
         sb.from("trace_events").select("run_id").eq("action", "rationale_reexplained").eq("input_summary", alert.alert_id).limit(10),
+        alert.run_id ? sb.from("runs").select("kind").eq("run_id", alert.run_id).maybeSingle() : Promise.resolve({ data: null }),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: null }];
+  // The trace link shows only where the trace page will open for this viewer (canOpenTrace, same rule as the page).
+  const openTrace = canOpenTrace(officer.role, (runKindRes.data as { kind: string } | null)?.kind);
   const traceRows = (traceRes.data ?? []) as TraceRow[];
   // LIVE / SAMPLE from the run's own recorded flag; nothing for viewers who cannot read its steps.
   const mode = canSeeTrace && alert.run_id && traceRows.length ? (runMode(traceRows) ?? "unknown") : null;
@@ -141,7 +144,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
           <p className="mt-1 text-sm">{alert.rationale}</p>
           <p className="mt-1 font-mono text-xs text-muted">
             score {alert.score.toFixed(2)} · coverage {pct(coverageOf(alert))} of factor weight had data
-            {alert.run_id && officer.role === "admin" && (
+            {alert.run_id && openTrace && (
               <> · <Link className="text-signal hover:underline" href={`/console/system/trace/${encodeURIComponent(alert.run_id)}`}>run {alert.run_id}</Link></>
             )}
           </p>
@@ -176,7 +179,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
         <p className="mt-2 text-xs text-muted">A camera read is a sighting, not proof of involvement. Sources: crimes (your access), crimes_citywide, map_anpr_reads.</p>
       </section>
 
-      {canSeeTrace && <AlertHowMade steps={howSteps} runId={alert.run_id} verdict={finalVerdict} canOpenTrace={officer.role === "admin"} />}
+      {canSeeTrace && <AlertHowMade steps={howSteps} runId={alert.run_id} verdict={finalVerdict} canOpenTrace={openTrace} />}
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-lg font-bold">Factors</h2>

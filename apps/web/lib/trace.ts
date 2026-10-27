@@ -4,6 +4,8 @@
  * invents or edits an event; it only groups and labels what the run wrote.
  */
 
+import { allows, type Role } from "./roles";
+
 export type TraceRow = {
   run_id: string;
   seq: number;
@@ -185,4 +187,31 @@ export function runMode(rows: Pick<TraceRow, "action" | "output_summary">[]): "l
   const r = rows.find((x) => x.action === "run_received");
   const m = /\bsample_mode=(true|false)\b/i.exec(r?.output_summary ?? "");
   return m ? (m[1].toLowerCase() === "true" ? "sample" : "live") : null;
+}
+
+/**
+ * Run kinds an analyst or supervisor may open in the trace viewer. Tip runs carry the start of a public tip and
+ * search runs carry another officer's Ask question, so those stay admin-only. Station officers never see traces
+ * (trace_events RLS denies them too).
+ */
+export const SHARED_RUN_KINDS: readonly string[] = ["case", "batch", "sweep"];
+
+/** Source onboarding (admin-only) records its runs as kind "batch"; its run ids carry this prefix (onboarding.py). */
+export const ADMIN_ONLY_RUN_PREFIX = "onboard_";
+
+/** True when `role` may open the trace of a run of this kind. An unknown kind or an onboarding run is admin-only. */
+export function canOpenTrace(role: Role | null | undefined, kind: string | null | undefined, runId?: string | null): boolean {
+  if (role === "admin") return true;
+  if (!allows(role, "analyst+")) return false;
+  if (runId?.startsWith(ADMIN_ONLY_RUN_PREFIX)) return false;
+  return !!kind && SHARED_RUN_KINDS.includes(kind);
+}
+
+/**
+ * What the trace page does for this viewer: "denied" sends them to the console home (not a police role that
+ * reads traces), "not_found" hides the run (a tip, search or unknown run for a non-admin), "ok" renders it.
+ */
+export function traceAccess(role: Role | null | undefined, run: Pick<RunRow, "kind" | "run_id"> | null): "ok" | "denied" | "not_found" {
+  if (!allows(role, "analyst+")) return "denied";
+  return canOpenTrace(role, run?.kind, run?.run_id) ? "ok" : "not_found";
 }

@@ -260,6 +260,16 @@ TWINS: dict[str, tuple[str, tuple[str, ...]]] = {
 # was published within NEWS_DAYS days after the crime. category_hint = the headline names the category's
 # first word (e.g. "chain" for chain_snatching); it is reported, not required. One row per article.
 NEWS_DAYS = 4
+# The sample feeds are read with explicit column types, not read_json_auto: from duckdb 1.5.x auto-detection
+# turns "2025-01-10T18:47:00+05:30" into a naive UTC TIMESTAMP (offset dropped), which a later
+# CAST(... AS TIMESTAMPTZ) reads in the session zone, so every article moved 5.5 h on an IST machine.
+# Typing the timestamps as VARCHAR keeps the offset on every duckdb version (what 1.1.3 auto-detected).
+NEWS_JSON = ("read_json('news/articles.jsonl', format = 'newline_delimited', columns = {"
+             "'article_id': 'VARCHAR', 'body': 'VARCHAR', 'headline': 'VARCHAR', 'outlet': 'VARCHAR', "
+             "'places_mentioned': 'VARCHAR[]', 'published_at': 'VARCHAR', 'synthetic': 'BOOLEAN', 'url': 'VARCHAR'})")
+SOCIAL_JSON = ("read_json('social/posts.jsonl', format = 'newline_delimited', columns = {"
+               "'handle': 'VARCHAR', 'hashtags': 'VARCHAR[]', 'places_mentioned': 'VARCHAR[]', 'platform': 'VARCHAR', "
+               "'post_id': 'VARCHAR', 'posted_at': 'VARCHAR', 'synthetic': 'BOOLEAN', 'text': 'VARCHAR'})")
 NEWS_TIMEOUT_S = 12.0  # warm ~2 s; a cold first call ~9 s (2026-10-26), so 8 s tripped the breaker
 NEWS_COLUMNS = ("crime_id", "article_id", "headline", "outlet", "published_at", "url", "matched_place",
                 "hours_after", "category_hint")
@@ -291,7 +301,7 @@ WITH c AS (
 n AS (
   SELECT article_id, headline, outlet, CAST(published_at AS TIMESTAMPTZ) AS published_at, url,
          unnest(places_mentioned) AS place
-  FROM read_json_auto('news/articles.jsonl') WHERE synthetic),
+  FROM {NEWS_JSON} WHERE synthetic),
 a AS (SELECT alias, canonical, station_id, ward_no FROM read_csv_auto('ref/place_aliases.csv'))
 SELECT c.crime_id, n.article_id, any_value(n.headline) AS headline, any_value(n.outlet) AS outlet,
        CAST(any_value(n.published_at) AS VARCHAR) AS published_at, any_value(n.url) AS url,
@@ -572,8 +582,8 @@ SOURCE_COUNTS: tuple[tuple[str, str, str | None], ...] = (
     ("s3csv.place_aliases", "s3csv.place_aliases", "read_csv('ref/place_aliases.csv', all_varchar = true, header = true)"),
     ("s3csv.calendar", "s3csv.calendar", "read_csv('ref/calendar.csv', all_varchar = true, header = true)"),
     ("s3pq.osm_pois", "s3pq.osm_pois", "'ref/osm_pois.parquet'"),
-    ("nexus_feeds.rest_news", "nexus.news_items", "read_json_auto('news/articles.jsonl')"),
-    ("nexus_feeds.rest_social", "nexus.social_posts", "read_json_auto('social/posts.jsonl')"),
+    ("nexus_feeds.rest_news", "nexus.news_items", NEWS_JSON),
+    ("nexus_feeds.rest_social", "nexus.social_posts", SOCIAL_JSON),
     ("nexus_feeds.rest_weather", "nexus.weather_hourly", None),
 )
 

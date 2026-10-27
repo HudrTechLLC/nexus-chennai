@@ -8,7 +8,9 @@ import { getIndex, rewriteHref } from "@/lib/docs";
 export function Markdown({ source, from }: { source: string; from?: string }) {
   const index = getIndex();
   return (
-    <div className="prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-32 prose-a:text-signal prose-code:before:content-none prose-code:after:content-none">
+    // Inline code (paths, sha256s) may break anywhere so it never widens the page on phones; code blocks and tables
+    // keep their own horizontal scroll box, so they are excluded.
+    <div className="prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-32 prose-a:text-signal prose-code:before:content-none prose-code:after:content-none [&_:where(code):not(:where(pre_*,table_*))]:[overflow-wrap:anywhere]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSlug]}
