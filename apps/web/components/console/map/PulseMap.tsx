@@ -475,27 +475,33 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
       </div>
 
       {/* layers + filters */}
-      <div data-map-overlay className={`${panelOpen ? "" : "max-md:hidden"} absolute right-12 top-3 z-10 max-h-[calc(100%-9.5rem)] w-56 space-y-3 overflow-y-auto rounded-xl bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-xs shadow-lg backdrop-blur max-md:top-12`}>
+      <div data-map-overlay className={`${panelOpen ? "" : "max-md:hidden"} absolute right-12 top-3 z-10 max-h-[calc(100%-9.5rem)] w-52 space-y-3 overflow-y-auto rounded-xl border border-line bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-3 text-xs shadow-raised backdrop-blur max-md:top-12`}>
         <div>
-          <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Layers</p>
+          <p className="mb-1 text-[13px] font-semibold text-ink">Layers</p>
+          {/* Grouped by what the layer shows (CRITIQUE Pulse Map P2); the labels are unchanged. */}
           {([
-            ["arcs", "Link arcs"], ["hulls", "Series hulls"], ["hex", "Hex heat (city-wide)"], ["stations", "Station boundaries"],
-            ["wards", "Wards"], ["rejected", "Show rejected links"], ["glyphs", "Shape glyphs"],
-            ["cctv", "CCTV cones (" + cones.length + ")"], ["anpr", "ANPR cameras (" + data.layers.anpr.length + ")"],
-            ["tips", "Tips (diamonds)"], ["calls", "112 calls"], ["release", "Released-offender density (per ward)"],
-          ] as [keyof Toggles, string][]).map(([k, label]) => (
-            <label key={k} className="flex cursor-pointer items-center gap-2 py-0.5">
-              <input type="checkbox" checked={toggles[k]} onChange={() => flip(k)} /> {label}
-            </label>
+            ["Links", [["arcs", "Link arcs"], ["rejected", "Show rejected links"], ["hulls", "Series hulls"], ["glyphs", "Shape glyphs"]]],
+            ["Context", [["hex", "Hex heat (city-wide)"], ["stations", "Station boundaries"], ["wards", "Wards"], ["release", "Released-offender density (per ward)"]]],
+            ["Cameras", [["cctv", "CCTV cones (" + cones.length + ")"], ["anpr", "ANPR cameras (" + data.layers.anpr.length + ")"]]],
+            ["Public", [["tips", "Tips (diamonds)"], ["calls", "112 calls"]]],
+          ] as [string, [keyof Toggles, string][]][]).map(([group, items]) => (
+            <div key={group} role="group" aria-label={group} className="mt-1.5 first-of-type:mt-0">
+              <p className="mb-0.5 text-[11px] font-medium text-muted">{group}</p>
+              {items.map(([k, label]) => (
+                <label key={k} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 -mx-1 hover:bg-surface-2">
+                  <input type="checkbox" className="accent-[var(--signal)]" checked={toggles[k]} onChange={() => flip(k)} /> {label}
+                </label>
+              ))}
+            </div>
           ))}
           {data.layers.cctv.length + data.layers.anpr.length + data.layers.release.length === 0 && (
             <p className="mt-1 text-[11px] leading-snug text-muted">CCTV, ANPR, 112 and release layers have no rows yet.</p>
           )}
         </div>
         <div>
-          <p className="mb-1 font-semibold uppercase tracking-wider text-muted">Filters</p>
-          <label className="flex items-center gap-2 py-0.5"><input type="checkbox" checked={linkedOnly} onChange={() => setLinkedOnly((v) => !v)} /> Linked only</label>
-          <label className="flex items-center gap-2 py-0.5"><input type="checkbox" checked={seriesOnly} onChange={() => setSeriesOnly((v) => !v)} /> In a series</label>
+          <p className="mb-1 text-[13px] font-semibold text-ink">Filters</p>
+          <label className="flex items-center gap-2 py-0.5"><input type="checkbox" className="accent-[var(--signal)]" checked={linkedOnly} onChange={() => setLinkedOnly((v) => !v)} /> Linked only</label>
+          <label className="flex items-center gap-2 py-0.5"><input type="checkbox" className="accent-[var(--signal)]" checked={seriesOnly} onChange={() => setSeriesOnly((v) => !v)} /> In a series</label>
           <details className="mt-1" onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) void loadFacets(); }}>
             <summary className="cursor-pointer py-0.5 text-muted hover:text-ink">More filters{moreActive ? ` (${moreActive})` : ""}</summary>
             <div className="mt-1 space-y-1.5">
