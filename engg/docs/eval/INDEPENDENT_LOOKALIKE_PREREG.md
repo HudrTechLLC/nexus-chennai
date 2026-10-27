@@ -93,3 +93,53 @@ Path: `engg/docs/eval/independent_lookalike_cases.json`.
 - Shape as pre-registered: 24 look-alikes (S1 8, S2 8, S3 8) and 8 twins (6 clean, 2 witness-error).
 - No case was run before this commit.
 - **Clock correction:** the status line above says "14:52 IST". That was a wrong local clock reading. The pre-registration was pushed at **20:23 IST** (commit `11acb84`). The commit timestamps are the record of order.
+
+---
+
+## Results (27 Oct 2026, one pass after the pin; the text above is unchanged)
+
+Run: `cd services/api && SAMPLE_MODE=true python -m app.eval.independent_lookalike`, run once. Output: `engg/docs/eval/independent_lookalike_results.json`. The pinned sha256s of the cases and `contradiction.py` were checked by the script before running.
+
+**Both pre-registered numbers FAIL, as predicted.**
+
+| Metric | Result | Threshold | Verdict |
+|---|---|---|---|
+| **Primary: look-alikes dropped** | **10 of 24 (0.42)** | ≥ 0.60 | **FAIL** |
+| **Guard: twins wrongly dropped** | **2 of 8** | ≤ 1 of 8 | **FAIL** |
+
+| Breakdown | Dropped |
+|---|---|
+| S1 · in scope, parseable | **8 of 8** |
+| S2 · in scope, hard to parse | **2 of 8**: colour inside `make_model` ("red Splendor" vs "black Splendor") and helmet "dark" vs "bright yellow" |
+| S3 · out of scope | **0 of 8** |
+| Clean twins | **0 of 6** |
+| Witness-error twins | **2 of 2**: ages "about 25" vs "38"; colour "red" vs "maroon" |
+
+**Missed by the rule (14):**
+- S2, ages in words: "mid-twenties" vs "around forty-five"; "teenager" vs "elderly"; "college-going boy" vs "man in his fifties". The rule reads an age only from digits.
+- S2, counts as text: "two" vs "one"; "a pair of men" vs "lone rider". The rule compares counts only when both are integers.
+- S2, a short plate fragment: "71" vs "17". The rule compares plates only when both end in at least 4 characters.
+- S3, all 8: time of day, weapon, target, approach, escape, MO detail, stolen item and build. The rule does not read these fields.
+
+**What this means:**
+- The rule does what it says on the fields it reads, when the values come in a form it parses. That held on independent wording too: 8 of 8 in S1, including makes, plates, ages and colours the generator never uses.
+- It is **not** a general look-alike detector. It missed everything outside its four kinds, and in-scope differences worded as an extractor might word them (ages and counts in words).
+- It also drops true pairs when witnesses disagree on age or on colours that are not aliases. Real witness descriptions vary like that.
+- So the #422 result (24/24 dropped, 0/8 twin false-drops) shows the rule working on the generator's plants. It does **not** show general catching of false links.
+- **Not tested here:** the Skeptic's model critique, and the Extractor turning FIR narratives into these fields.
+
+### Overlap with the generator (labelled after the run, as pre-registered)
+
+After the run I opened `eval/planted_skeptic.py` (the plant recipe: `COLOUR_SWAP`, `MAKE_SWAP`, `COUNT_SWAP`, `AGE_SWAP`, `HELMET_SWAP`).
+- **All 8 S1 cases share a plant kind with the generator.** That was by design (S1 = the rule's fields).
+- **Values that also appear in the generator's maps:**
+  - S1-02 uses "Hero Splendor Plus", a `MAKE_SWAP` target;
+  - S1-05 is 1 vs 3 offenders (`COUNT_SWAP` maps 3 → 1);
+  - S1-06 is "no helmet" vs "white", close to the `HELMET_SWAP` pair "no helmet" → "white full-face";
+  - S2-08's "bright yellow" is near the generator's "plain yellow".
+- **Different from the generator in value or form:**
+  - Pulsar 220 vs 150, green/orange, hyphenated and spaced plates, "early 20s" vs "about 45", "under 18";
+  - every S2 wording;
+  - every S3 difference. The generator's fifth kind, `simultaneous`, is a time that makes the same offenders impossible. No S3 case uses it.
+- The twins are not the generator's series twins: they differ on the surface by design.
+- No case was removed.
