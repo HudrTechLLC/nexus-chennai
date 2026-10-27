@@ -28,7 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..agents.base import ExcludeFn, choose_series_id, series_name
+from ..agents.base import ExcludeFn, NameFn, choose_series_id, series_name
 from ..config import Settings
 from ..tracing import IST
 from .store import RUN_STATUS
@@ -139,7 +139,8 @@ class LocalStore:
     def notify(self, notifications: list[dict[str, Any]]) -> None:
         self.notifications.extend(notifications)
 
-    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str:
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None,
+                     name_for: NameFn | None = None) -> str:
         ids = set(series.get("crime_ids") or [])
 
         def put(d: dict[str, Any]) -> str:

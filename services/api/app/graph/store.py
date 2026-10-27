@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Any
 
 from ..adapters.supabase import SupabaseClient
-from ..agents.base import ExcludeFn, choose_series_id, series_name
+from ..agents.base import ExcludeFn, NameFn, choose_series_id, series_name
 from ..tracing import IST, Tracer
 from .redact import redact_event
 
@@ -107,13 +107,28 @@ class SupabaseStore:
 
     # ----- series (WS2-21) ----------------------------------------------------------------
 
-    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str:
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None,
+                     name_for: NameFn | None = None) -> str:
         ids = list(series.get("crime_ids") or [])
         stored = self.client.select("series_members", {"select": "series_id,crime_id",
                                                        "crime_id": f"in.({','.join(ids)})"}) if ids else []
         sid = choose_series_id(series, {r["crime_id"]: r["series_id"] for r in stored})
-        self.client.upsert("series", {"series_id": sid, "name": series_name(series), "run_id": run_id,
-                                      "synthetic": True}, on_conflict="series_id")
+        row: dict[str, Any] = {"series_id": sid, "name": series_name(series), "run_id": run_id, "synthetic": True}
+        if name_for and sid != series.get("series_id"):
+            # This run grew a STORED series but saw only its own links (e.g. a new FIR joining 3 of 10 members), so
+            # the run's name describes a subset ("· 2 stations" for a 3-station series, run_0a2af3e9). Name it
+            # from ALL members; if they can't be read, keep the stored name rather than write the subset's.
+            have = {r["crime_id"] for r in self.client.select("series_members", {"select": "crime_id",
+                                                                                 "series_id": f"eq.{sid}"})}
+            gone = set(exclude(sorted(have - set(ids)))) if exclude and have - set(ids) else set()
+            whole = sorted((have - gone) | set(ids))
+            if set(whole) != set(ids):
+                name = name_for(whole)
+                if name:
+                    row["name"] = name
+                else:
+                    row.pop("name")
+        self.client.upsert("series", row, on_conflict="series_id")
         if exclude:  # D-033: only this series' members, only those `exclude` names; the crimes are never touched
             members = self.client.select("series_members", {"select": "crime_id", "series_id": f"eq.{sid}"})
             others = sorted({r["crime_id"] for r in members} - set(ids))

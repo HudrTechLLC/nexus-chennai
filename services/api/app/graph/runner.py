@@ -264,11 +264,19 @@ def _save_series(graph: AgentGraph, series: list[dict[str, Any]], excluded: Mapp
         known.update(find_test_firs(graph.deps, unread) if unread else {})
         return {cid: known[cid] for cid in ids if cid in known}
 
+    def name_for(ids: list[str]) -> str | None:
+        """The descriptive name over every member of a stored series (not just this run's), or None if unreadable."""
+        try:
+            rows = read_member_cases(graph.deps, ids) or {}
+        except DeadlineExceeded:
+            return None
+        return describe_series([rows[cid] for cid in ids if cid in rows]) if rows else None
+
     store = graph.deps.store
     for ser in series:
         try:
             before = len(getattr(store, "removed", []))
-            ser["series_id"] = store.write_series(ser, graph.deps.tracer.run_id, exclude=exclude)
+            ser["series_id"] = store.write_series(ser, graph.deps.tracer.run_id, exclude=exclude, name_for=name_for)
             for r in getattr(store, "removed", [])[before:]:
                 graph.deps.tracer.emit("Series analyst", "series_member_removed", input_summary=r["series_id"],
                                        output_summary=f"{r['crime_id']}: {r['reason']}", status="ok", extra=dict(r))
