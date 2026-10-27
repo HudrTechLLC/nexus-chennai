@@ -350,7 +350,9 @@ def specs() -> dict[str, dict[str, Any]]:
         "q_calls_near": {"name": "q_calls_near", "lightning": _q_calls_near(tz, off, sample=False),
                          "sample": _q_calls_near(tz, off, sample=True), "defaults": {"km": 1.0, "minutes": 120},
                          "description": "112 calls within :km of a crime and :minutes of its time window",
-                         "columns": CALLS_COLUMNS},
+                         "columns": CALLS_COLUMNS,
+                         # REST returns text; the DuckDB twin returns numbers, so match it live.
+                         "numeric": ("lat", "lon", "km_from_scene", "minutes_from_start")},
         # The 7 views do a 19,540-row self-join among other things: about 80 s live (26 Oct). Fail fast at
         # 180 s, one attempt; app.dq_status keeps the last good counts.
         "q_dq_summary": {"name": "q_dq_summary", "lightning": _q_dq_summary(sample=False),
