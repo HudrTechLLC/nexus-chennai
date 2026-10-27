@@ -216,7 +216,7 @@ Data layer · required
 
 ### Zetaris
 
-Queries station FIRs, legacy CCTNS files, ANPR, 112 calls, releases and live feeds where they live, and turns them into views every agent trusts.
+Queries station FIRs, legacy CCTNS files, ANPR, 112 calls, releases and live feeds (federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store), and turns them into views every agent trusts.
 
 Seen in demo: the Skeptic re-runs the vehicle-trail query and the alert shows its query id.
 
@@ -737,7 +737,7 @@ nexus-chennai/
 
 **Zetaris**
 
-- 6 registered sources (no copy, no ETL)
+- 6 registered sources (federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store)
 - v_crime_unified (IPC↔BNS, legacy schemas)
 - v_link_candidates · v_vehicle_trail (cell + time joins)
 - v_offender_return · v_tip_corroboration
@@ -1696,7 +1696,7 @@ ELEVENLABS_API_KEY=your-elevenlabs-key
 | Time | Screen | Narration |
 | --- | --- | --- |
 | 0:00–0:20 | Pulse Map of Chennai, time scrubber playing | "Chennai has more than a hundred police stations, and each one sees only its own cases. A gang that snatches chains in Adyar on Monday and Velachery on Friday looks like two unrelated robberies. Nexus is our entry for Solving Fragmented Intelligence." |
-| 0:20–0:45 | Architecture diagram | "Case files live in Supabase. Legacy station exports, ANPR reads and emergency calls sit in S3. News and weather come from live feeds. Zetaris joins them all in place, and our agents read only through Zetaris. Every model call runs on NVIDIA Nemotron through Meterless Nightshift." |
+| 0:20–0:45 | Architecture diagram | "Case files live in Supabase. Legacy station exports, ANPR reads and emergency calls sit in S3. News and weather come from live feeds. Zetaris joins them all (federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store), and our agents read only through Zetaris. Every model call runs on NVIDIA Nemotron through Meterless Nightshift." |
 | 0:45–1:30 | Officer saves a FIR with a CCTV still; trace streams | "An Adyar officer registers a chain snatching. Nemotron Lightning extracts the modus operandi. Super VL reads the CCTV still: red motorcycle, two riders, a partial plate. The Planner asks Zetaris for similar cases city-wide, the plate's ANPR trail and recently released offenders." |
 | 1:30–2:10 | Trace viewer: Skeptic strike and send-back | "The Linker scores each pair in code. Then the Skeptic checks every reason against the data itself. Here it strikes a weapon match that no record supports, and sends one pair back because the time window was too wide. Only what survives reaches a human." |
 | 2:10–2:40 | Alert card, factor bars, memory chip; reject another alert | "The analyst sees a high-confidence link to Velachery, the evidence for each reason and the Zetaris query behind it. She rejects a different alert as coincidental. That rejection stays visible to every station, and H-MEM remembers it, so similar pairs score lower next time." |
