@@ -24,8 +24,14 @@ export function ScoreRing({ score, band, size = 64 }: { score: number; band: Ban
   );
 }
 
+/**
+ * The band pill. High stays the short "HIGH" tag; medium reads "Lead · analyst review" in plain sentence case, so a band
+ * that is right only about half the time is not presented like a high alert (copy only: scores and bands are unchanged).
+ */
 export function BandPill({ band }: { band: Band }) {
-  return <Badge tone={bandTone(band)} mono className="uppercase">{bandLabel(band)}</Badge>;
+  return band === "high"
+    ? <Badge tone={bandTone(band)} mono className="uppercase">{bandLabel(band)}</Badge>
+    : <Badge tone={bandTone(band)} title="Medium band: a lead for an analyst to review, not a confirmed link">{bandLabel(band)}</Badge>;
 }
 
 const STATE = {

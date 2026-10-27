@@ -124,10 +124,10 @@ export function coverageCap(
   return { withData, total: FACTORS.length, coverage };
 }
 
-/** "Capped at medium: only N of 9 factors had data (coverage 35%)", or null when no cap applied. */
+/** "Held as a lead for analyst review: only N of 9 factors had data (coverage 35%)", or null when no cap applied. */
 export function coverageCapLine(alert: Parameters<typeof coverageCap>[0]): string | null {
   const c = coverageCap(alert);
-  return c && `Capped at medium: only ${c.withData} of ${c.total} factors had data (coverage ${Math.round(c.coverage * 100)}%)`;
+  return c && `Held as a lead for analyst review: only ${c.withData} of ${c.total} factors had data (coverage ${Math.round(c.coverage * 100)}%)`;
 }
 
 /** All distinct Zetaris query ids cited by an alert's evidence. */
@@ -235,5 +235,5 @@ export function pct(x: number): string {
 }
 
 export function bandLabel(b: Band): string {
-  return b === "high" ? "High" : "Medium";
+  return b === "high" ? "High" : "Lead · analyst review";
 }

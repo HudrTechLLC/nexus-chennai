@@ -18,7 +18,8 @@ import { alertTimeline, SKEPTIC_ACTIONS, skepticTraceFilter, type SkepticEventRo
 import { AlertHowMade } from "@/components/console/alerts/AlertHowMade";
 import { alertSteps } from "@/lib/alertTrace";
 import { allows } from "@/lib/roles";
-import type { TraceRow } from "@/lib/trace";
+import { runMode, type TraceRow } from "@/lib/trace";
+import { RunModeBadge } from "@/components/console/runs/RunModeBadge";
 import { Id } from "@/components/ui";
 import { sharedTags } from "@/lib/alertTrace";
 
@@ -111,6 +112,8 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
       ])
     : [{ data: [] }, { data: [] }];
   const traceRows = (traceRes.data ?? []) as TraceRow[];
+  // LIVE / SAMPLE from the run's own recorded flag; nothing for viewers who cannot read its steps.
+  const mode = canSeeTrace && alert.run_id && traceRows.length ? (runMode(traceRows) ?? "unknown") : null;
   const rexRuns = Array.from(new Set(((rexRunRes.data ?? []) as { run_id: string }[]).map((r) => r.run_id)));
   const rexRows = rexRuns.length
     ? (((await sb.from("trace_events").select("run_id, seq, ts, agent_name, action, input_summary, output_summary, target_agent, model, routed_model, receipt_id, zetaris_query_ids, engine, confidence, retry_count, status")
@@ -131,6 +134,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
           <div className="flex flex-wrap items-center gap-2">
             <BandPill band={alert.band} />
             <StatusPill state={state} />
+            {mode && <RunModeBadge mode={mode} />}
             <span className="font-mono text-xs text-muted">{alert.alert_id} · {alert.kind} · raised {fmt(alert.created_at)}</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold">{alert.crimes.map((id) => crimeTitle(crimes[id], id)).join(" ↔ ")}</h1>

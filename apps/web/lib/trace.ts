@@ -174,3 +174,15 @@ export function runTone(status: string | null | undefined): "good" | "warn" | "b
     default: return "bad";
   }
 }
+
+/**
+ * The run's mode from its own `run_received` event ("sample_mode=True|False", written by the API), never assumed.
+ * "live": sample_mode off, so every Zetaris and model call had to be live (no sample fallback possible).
+ * "sample": sample_mode on, so the run was allowed to fall back to the bundled sample data.
+ * null: the run has no run_received row, or that row does not carry the flag.
+ */
+export function runMode(rows: Pick<TraceRow, "action" | "output_summary">[]): "live" | "sample" | null {
+  const r = rows.find((x) => x.action === "run_received");
+  const m = /\bsample_mode=(true|false)\b/i.exec(r?.output_summary ?? "");
+  return m ? (m[1].toLowerCase() === "true" ? "sample" : "live") : null;
+}
