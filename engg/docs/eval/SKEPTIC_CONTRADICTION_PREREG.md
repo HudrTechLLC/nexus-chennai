@@ -155,3 +155,46 @@ These checks used no model and did not touch the fresh set. I ran them while des
   another "one man" would be dropped unless forensic or known-offender evidence confirms it. That trade-off is
   deliberate and stated.
 - As in #370: small, synthetic, two-wheeler street crime, round 1 only.
+
+## Addendum before the run (27 Oct 2026, committed before any call on set #2)
+
+**Declared deviation: the code was rebased; the rule is unchanged.** nexus-1's set #2 (#402) comes from a new
+eval-only bundle that is selected by `NEXUS_SAMPLE_DIR`. That variable exists only from #402 on. Without it, the
+same crime ids would resolve to different crimes in `data/sample`. So the rule commit was rebased onto `main` at
+#402 (`5a7c549`). The only conflict was the report line, which keeps both `prereg` and #402's `sample_dir`.
+
+| What | Pre-registered | Run commit |
+|---|---|---|
+| Commit | `fa6445e9d96ebfd25f8a7c8d3774d8ae711b31e5` | **`9259e78fbd7743d22ef8b1d92e9771f468f68993`** (same branch, rebased) |
+| `services/api` tree | `faae63b8…` | **`e8371adc3ab378a4d3d8f9760fe3508bbf9beee2`** (includes #402) |
+| `agents/contradiction.py` sha256 | `9e088b13…930ac` | `9e088b135744b383861c7726317dbb283c2082fe645bfd0a89423764912930ac` (**byte-identical**) |
+| `agents/skeptic.py` sha256 | `b4ba5ded…128ba9e` | `b4ba5ded77295a3316c1235de36d7f4b6db597d2577360a8491701d16128ba9e` (**byte-identical**) |
+| `tests/agents/test_contradiction.py` sha256 | (at fa6445e) | `1372c8638ac8f1a4f6168d2e9635abb70dd66837f27b4634e26daa072b770961` (byte-identical to fa6445e) |
+| `eval/planted_skeptic.py` sha256 | `0403f39b…` | **`ee536e3d8ebe192263986c2c9ab58ece9caab3f6f618d8f1b6478f4c30ebead0`** (mine merged with #402's bundle loader and its refusal guard) |
+
+The gate on `9259e78`: 443 tests passed, ruff clean, verify_replay, judge ex1–3 EXACT. The prompts are unchanged.
+
+**The fresh set, as nexus-1 delivered it** (#402, merged as `5a7c549`):
+
+| What | Value |
+|---|---|
+| Case file | `engg/docs/eval/planted_skeptic_cases_set2.json` |
+| sha256 | `b77276cb21809dd7b5e3a7c5a7bf7c8e42989c1e180a031d1eacecc00989a85f` |
+| Bundle | `data/eval/planted2/sample`, generator seed 1027 (eval-only); `run()` refuses any other bundle |
+| Shape | 8 twins and 24 near-misses (the full target), all of which reach the Skeptic; 16 distinct crimes, none from set #1; 5 series |
+| Kinds | `offender_count` 8, `offender_age` 8, `vehicle_identity` 5, `helmet` 3 (same fixed rotation as set #1) |
+| `features_source` | **all `generator_truth`**. The bundle has no stored extractions, so the by-source split has one bucket |
+| Dry run (nexus-1) | all 32 arms ran with the model stubbed to fail: no traceback, all alert, critique "unavailable" as expected |
+
+**The run** (clean shell, no live credentials loaded; the harness guard refuses otherwise):
+
+    cd services/api
+    SAMPLE_MODE=true NEXUS_STORE=memory NEXUS_SAMPLE_DIR=data/eval/planted2/sample \
+      METERLESS_RUNTIME_TOKEN_FILE=<Nightshift token path> \
+      python -m app.eval.planted_skeptic run --cases ../../engg/docs/eval/planted_skeptic_cases_set2.json \
+        --expect-sha b77276cb21809dd7b5e3a7c5a7bf7c8e42989c1e180a031d1eacecc00989a85f \
+        --out ../../output_examples/skeptic_contradiction.json \
+        --prereg engg/docs/eval/SKEPTIC_CONTRADICTION_PREREG.md
+
+The report must show `code_sha = 9259e78…` and `code_dirty = false`. The metrics, pass rules and "publish whatever
+happens" are exactly as above; nothing is changed by this addendum.
