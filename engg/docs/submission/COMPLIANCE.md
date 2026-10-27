@@ -23,7 +23,7 @@ Final length **3:14** (narration ElevenLabs voice Adam). Status: ✅ **recorded 
 | The feature an engine powers | seg 7 · ~2:28–2:37 (`s7_hmem_trace`) | the hero approved on camera (09:00:51 IST), then the trace row #61 `memory_applied` (mem-1 rejected, delta -0.055, within ±0.08) | ✅ landed |
 | One real request through Nightshift, model named | seg 5 · 1:24–1:44 | *How this alert was made* card, then the Skeptic `model_call` #49 in `run_da0092da` (Nemotron Ultra, receipt id) | ✅ |
 | 1–4 minutes | whole | 3:14 | ✅ |
-| Link works logged out (YouTube unlisted + Drive) | — | — | 🔴 after upload (Ravee) |
+| Link works logged out (YouTube unlisted + Drive) | — | <https://www.youtube.com/watch?v=LtisPFLVUwQ> | ✅ YouTube plays signed out (checked by the chief); the Drive backup is not linked from the README |
 
 ## 2. Slide deck (8 points)
 
@@ -48,7 +48,7 @@ Content is in [DECK](DECK.md). Status: ✅ **built**: 15 slides as a Claude arti
 | README: setup | README "Setup" (Docker, venv, live configuration) | ✅ |
 | README: usage | README "Run", "Examples", "Live app" | ✅ |
 | README: dependencies | README "Setup" (Python 3.11+, Docker) and "Licences" (every library) | ✅ |
-| README: video link | README line 9 | 🔴 `[PENDING: video link]` until upload |
+| README: video link | README line 9 | ✅ <https://www.youtube.com/watch?v=LtisPFLVUwQ> |
 | Strongly recommended: `run.py`, `POST /run`, Docker, JSONL traces in `logs/` + stdout, ≥ 3 inputs with real outputs, `SAMPLE_MODE` with no credentials, capped loops and timeouts, `.env.example`, `metadata.json` | README; `input_examples/`, `output_examples/`; CI `judge-offline` | ✅ (WS5-08) |
 | Disqualifiers (runs, no hardcoding, traces, sponsor tech, no secrets, synthetic data, declarations) | [WS5-08 checklist and results](../validation/WS5-08-2026-10-27.md) | ✅ part 3 PASS on `5a7c549` (#416); hard-freeze diff check at 19:00 (nexus-7) |
 
@@ -76,7 +76,7 @@ Text: [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md).
 
 ## 6. Only Ravee can do these
 
-The remaining 🔴 items are all Ravee's: make the repo public, the team roster, the form, and submit (plus the video link once the HQ upload is done).
+The remaining 🔴 items are all Ravee's: make the repo public, the team roster, the form, and submit.
 
 
 1. **Team roster names** on HackOS. The roster **locks when the draft is first created**, so confirm the members first (WS5-10).
@@ -91,7 +91,7 @@ The remaining 🔴 items are all Ravee's: make the repo public, the team roster,
 
 Closed after recording: ✅ video recorded and final (3:14) · ✅ deck built (15 slides) · ✅ H-MEM beat landed (seg 7, `s7_hmem_trace`).
 
-1. 🔴 Video link: HQ render re-uploaded by Ravee, then README line 9 and the form (chief sends the link).
+1. ✅ Video link: <https://www.youtube.com/watch?v=LtisPFLVUwQ> (README line 9; the form still needs it, Ravee).
 2. 🔴 Repo still private (Ravee, at submission).
 3. 🔴 Team roster names (Ravee).
 4. 🔴 Form filled and submitted (Ravee, by 23:15 IST).
