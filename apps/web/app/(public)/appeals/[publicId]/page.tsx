@@ -33,7 +33,7 @@ export default async function AppealDetail({ params }: { params: { publicId: str
       </header>
       <p className="text-lg">{a.summary}</p>
       {a.looking_for.length > 0 && (
-        <section className="rounded-xl border border-line border-l-4 border-l-signal bg-surface p-5 shadow-card">
+        <section className="rounded-xl border border-[color-mix(in_srgb,var(--signal)_35%,transparent)] bg-signal-soft p-5">
           <h2 className="font-semibold">What police are looking for</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">{a.looking_for.map((l, i) => <li key={i}>{l}</li>)}</ul>
         </section>
