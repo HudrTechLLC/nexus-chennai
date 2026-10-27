@@ -184,7 +184,7 @@ Use it only if #320 ("From the public" on alert and series pages) is merged and 
 
 ## ElevenLabs narration text (one block per segment)
 
-`demo/narrate.py` reads these blocks directly and writes `demo/out/seg_NN.mp3` through the ElevenLabs API: `python demo/narrate.py --key-file ~/.secrets/elevenlabs.key --voice <id>` (`--list-voices` to pick, `--only seg_03` to redo one, `--dry-run` for word counts and timings). The key is read from the file and never printed. Settings: one voice, Indian English if available, stability ~0.5, similarity ~0.75. These blocks are identical to the narration above; if you edit one, edit both.
+`demo/narrate.py` reads these blocks directly and writes `demo/out/seg_NN.mp3` through the ElevenLabs API: `python demo/narrate.py --key-file ~/.secrets/elevenlabs.key --voice <id>` (`--list-voices` to pick, `--only seg_03` to redo one, `--dry-run` for word counts and timings). The key is read from the file and never printed. Settings: one voice, Indian English if available, stability ~0.5, similarity ~0.75. These blocks are identical to the narration above; if you edit one, edit both. **Exception, seg_03:** this block is **variant A** only (the chief's call, vision verified). If the recorded take's trace shows `vision_unavailable`, swap the sentence "Nexus reads the CCTV still with Nemotron Super VL." for "This time the vision model couldn't be reached, so Nexus says so in the trace and uses the officer's caption instead." and re-render with `--only seg_03`. Never put both variants in the block: `demo/narrate.py` voices the whole block.
 
 ```
 [seg_01]
@@ -194,7 +194,7 @@ Chennai's police stations each see only their own cases. A gang that snatches a 
 Case files, legacy exports, ANPR reads and live feeds stay where they are. Zetaris federates them, and agents read only through its named queries. Every model call goes to NVIDIA Nemotron through Meterless Nightshift, and four Meterless engines give agents memory.
 
 [seg_03]
-An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. [A] Nexus reads the CCTV still with Nemotron Super VL. [B] This time the vision model couldn't be reached, so Nexus says so in the trace and uses the officer's caption instead. The World Model files the plate and place as entities every agent shares.
+An Adyar officer files a chain snatching: two riders on a red motorcycle, a partial plate. Nemotron Lightning extracts the modus operandi. Nexus reads the CCTV still with Nemotron Super VL. The World Model files the plate and place as entities every agent shares.
 
 [seg_04]
 Here is the same question in Zetaris: same-category crimes within a few kilometres and days of the Adyar case, across every station. One query over the federated sources, no warehouse. The Planner chooses queries like this, and each query's id is kept as evidence.
