@@ -39,8 +39,8 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
    **Recipe:**
    1. Start the API and the worker: `python run.py` + `python -m app.worker` from one checkout, or `docker compose --profile worker up`.
    2. **Record segment 7's approval on camera** (the hero must still be pending, see step 0). Then let the worker pass once off camera (it calls `hmem.record_decision`).
-   3. Off camera, run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
-   4. Check that alert's "Memory applied" section in the console is non-empty, then record the cut for the end of segment 7. If it is empty, use the ledger fallback in segment 7.
+   3. **Done (27 Oct, nexus-6, Ravee-approved):** the demo FIR `CHN-TU-2026-001211` ran as `run_9e0e99ba`. Its trace shows Linker `memory_applied` on all 25 scored pairs. TU-425 pair: "mem-1 rejected (different_offenders) relevance 0.55", −0.055; TU-431: relevance 0.46, −0.046. **No alert was written** (coverage guard / below threshold), so segment 7 films the trace, not an alert card. Kept for reference: run a **second, similar Red Pulsar case** that was not part of the first alert (pick a `SER-RED-PULSAR` member from the generated data). Existing alerts are not rescored; only an alert created *after* the decision can show "Memory applied".
+   4. nexus-4 films `/console/system/trace/run_9e0e99ba`, filtered to `memory_applied`, for the end of segment 7.
    - **Never rehearse step 2 on the hero.** If you must rehearse, use another pending alert.
 4. **Hide everything that can hold a secret** before you press record:
    - Nightshift's Providers and Console tabs;
@@ -131,10 +131,10 @@ From the Submission Requirements ([DIGEST](../hackathon/DIGEST.md)): the problem
 - **Screen:**
   - the alert inbox (`/console/alerts`), then click the hero card **directly**: LA-2026-E38C6B38B865, Adyar–Velachery. In the dry run it was the **3rd card by Score**, not the first, and some other Red Pulsar cards showed "model rationale unavailable", so don't open those. Then the alert detail: factor bars, the evidence with each Zetaris query id, the Skeptic verdict;
   - the analyst clicks **Approve**;
-  - cut to the alert for the second, similar Red Pulsar case (run after the decision; see Before recording, step 3), whose "Memory applied" section shows the memory from that decision.
+  - cut to the trace `/console/system/trace/run_9e0e99ba` filtered to `memory_applied`: the TU-425 pair line "mem-1 rejected (different_offenders) relevance 0.55", −0.055 (filmed by nexus-4). The memory comes from an earlier **rejection** (LA-2026-266EFBCEEBBE), which is why the narration says "an earlier rejection".
   - Fallback if no affected alert exists: the H-MEM ledger lines from the worker run (`logs/hmem/ledger.jsonl`). Or the memory page (`/console/memory`): live on real rows, and it already shows a real reject turned into a memory with its ledger row. Its "Changed later scores" list fills only after step 3 of Before recording.
 - **Narration:**
-  > The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
+  > The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory. On the next similar case, the trace shows it applied: an earlier rejection lowered this pair's score by a small, capped amount.
 - **Check no secrets visible:**
   - the console shows the demo analyst's name only;
   - if you show the ledger file, use a terminal with no env output above it.
@@ -206,7 +206,7 @@ Every model call is accountable. This is the Skeptic's critique, sent through Ni
 The Linker scores each pair on nine factors, in code. Two thefts near the CMBT bus terminus look close: same area, same hour, two thin men. The Skeptic runs its own Zetaris queries: the ages differ, and one is a shop theft, the other a two-wheeler theft. It drops this link. It is a second opinion, not a guarantee: in our planted test it missed look-alike false links, so the officer decides.
 
 [seg_07]
-The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory, so the next similar pair is scored with it, by a small, capped amount, and the alert says so. Rejections work the same way, and they stay visible to every station.
+The analyst sees why: each reason, its evidence, and the Zetaris query behind it. She approves the link. That decision isn't just stored. The Meterless H-MEM engine turns it into a memory. On the next similar case, the trace shows it applied: an earlier rejection lowered this pair's score by a small, capped amount.
 
 [seg_08]
 Approved links grow into a series. On the map, this series appears as one trail across three stations in Chennai's south, instead of separate robberies in separate registers. The Markovian engine can read the whole series in bounded steps to write its dossier. From the series, an analyst proposes a joint task force, and a supervisor approves it.
@@ -226,7 +226,7 @@ Zetaris finds the facts, Nemotron reads and reasons, the Skeptic gives a second 
 | Seg 3: variant A "Nexus reads the CCTV still with Nemotron Super VL" / variant B "…couldn't be reached…" | A: a vision `model_call` (Super VL, receipt) in the recorded take's trace. B: a `vision_unavailable` step | Say only the variant the trace shows; read one sentence, not both. If the trace has neither, cut the sentence |
 | Seg 7: the hero card | LA-2026-E38C6B38B865 still `pending`; 3rd by Score in the dry run | Click it directly wherever it sits; never approve another card |
 | Seg 6: "the ages differ… shop theft… two-wheeler theft… It drops this link… in our planted test it missed look-alike false links" | `run_da0092da` step #50: age bands 40-50 vs 18-20, shop_theft vs two_wheeler_theft, no vehicle or MO overlap, drop 0.69 (verified in the trace viewer) | If the recorded trace differs, narrate exactly what it shows. **Never a strike** |
-| "the next similar pair is scored with it" | an alert whose Memory applied section is non-empty | Use the ledger fallback and say "is ready to score the next similar pair" |
+| "the trace shows it applied: an earlier rejection lowered this pair's score" | `run_9e0e99ba` Linker `memory_applied`, TU-425 pair: mem-1 rejected, −0.055 (within ±0.08) | If the shot isn't available, use the memory page (`/console/memory`, mem-1) and end at "turns it into a memory" |
 | Zetaris "across every station"; seg 2 "legacy exports and ANPR reads in files" | `sb` + the 12 file-store tables (#140) | If the file tables aren't registered on the recording laptop, cut "legacy exports and ANPR reads in files" |
 
 ## After export
