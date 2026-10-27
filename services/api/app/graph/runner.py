@@ -270,7 +270,9 @@ def _save_series(graph: AgentGraph, series: list[dict[str, Any]], excluded: Mapp
             rows = read_member_cases(graph.deps, ids) or {}
         except DeadlineExceeded:
             return None
-        return describe_series([rows[cid] for cid in ids if cid in rows]) if rows else None
+        if any(cid not in rows for cid in ids):  # a partial read would name a subset again: keep the stored name
+            return None
+        return describe_series([rows[cid] for cid in ids])
 
     store = graph.deps.store
     for ser in series:
