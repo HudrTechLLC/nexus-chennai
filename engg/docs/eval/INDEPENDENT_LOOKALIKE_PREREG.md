@@ -86,3 +86,10 @@ Path: `engg/docs/eval/independent_lookalike_cases.json`.
 - The results go below a line in this note, plus a results JSON next to the case file.
 - The author then opens the generator's plant code and the #422 case files, and labels any case whose variation matches a generator plant kind or wording. Those cases are reported, not removed.
 - Any EVIDENCE or README line states the result as measured. Never "the Skeptic now catches false links".
+
+## Addendum: case file pinned (committed before the run)
+
+- `engg/docs/eval/independent_lookalike_cases.json` sha256 `93f72b97baaee720f93e2a0c3dca7ebe2d1c4e0b2d2c7e9ff9d18937b1ea9ece`.
+- Shape as pre-registered: 24 look-alikes (S1 8, S2 8, S3 8) and 8 twins (6 clean, 2 witness-error).
+- No case was run before this commit.
+- **Clock correction:** the status line above says "14:52 IST". That was a wrong local clock reading. The pre-registration was pushed at **20:23 IST** (commit `11acb84`). The commit timestamps are the record of order.

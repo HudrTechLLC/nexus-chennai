@@ -1,0 +1,1895 @@
+{
+ "synthetic": true,
+ "author": "nexus-7",
+ "about": "Hand-written look-alike pairs for INDEPENDENT_LOOKALIKE_PREREG.md. Written without opening the generator's plant code. Feature-level records (the fields agents/contradiction.py reads), all synthetic.",
+ "pairs": [
+  {
+   "pair_id": "S1-01",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "make_model: Pulsar 220 vs Pulsar 150",
+   "a": {
+    "crime_id": "X-S1-01A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-05T19:10",
+    "place": "Kotturpuram, near the bus shelter",
+    "mo_text": "pillion snatched chain from woman walking",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": "Bajaj Pulsar 220",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-01B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-07T19:40",
+    "place": "Kotturpuram main road",
+    "mo_text": "pillion rider grabbed chain of pedestrian",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": "Bajaj Pulsar 150",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-02",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "make_model: TVS Apache RTR vs Hero Splendor",
+   "a": {
+    "crime_id": "X-S1-02A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-03T20:05",
+    "place": "Saidapet, Jones Road",
+    "mo_text": "two men on bike snatched chain from elderly woman",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": null,
+      "make_model": "TVS Apache RTR",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-02B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-04T20:30",
+    "place": "Saidapet market lane",
+    "mo_text": "chain pulled by rider passing on motorcycle",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": null,
+      "make_model": "Hero Splendor Plus",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-03",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "plate: TN-09-AB-4471 vs TN 09 AB 4417 (two digits swapped)",
+   "a": {
+    "crime_id": "X-S1-03A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-10T18:50",
+    "place": "Mylapore tank",
+    "mo_text": "snatch from behind, escaped towards beach road",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": "TN-09-AB-4471"
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-03B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-11T19:15",
+    "place": "Mylapore, Kutchery Road",
+    "mo_text": "chain snatched, fled on motorcycle",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": "TN 09 AB 4417"
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-04",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "age: early 20s vs about 45",
+   "a": {
+    "crime_id": "X-S1-04A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-12T07:15",
+    "place": "Besant Nagar, 2nd Avenue",
+    "mo_text": "morning walker's chain snatched by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "early 20s",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "blue",
+      "make_model": "scooter",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-04B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-13T07:30",
+    "place": "Besant Nagar beach road",
+    "mo_text": "chain snatched from jogger by scooter rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "about 45",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "blue",
+      "make_model": "scooter",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-05",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "offender count: 1 vs 3",
+   "a": {
+    "crime_id": "X-S1-05A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-14T21:00",
+    "place": "Ashok Nagar 11th Ave",
+    "mo_text": "lone rider snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-05B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-15T21:20",
+    "place": "Ashok Nagar, 4th Ave",
+    "mo_text": "three men on two bikes surrounded woman, took chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 3,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-06",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "helmet: no helmet vs white helmet",
+   "a": {
+    "crime_id": "X-S1-06A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-16T19:45",
+    "place": "T Nagar, Usman Road",
+    "mo_text": "rider snatched chain, bare face seen",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "without a helmet",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "grey",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-06B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-17T20:10",
+    "place": "T Nagar, Pondy Bazaar",
+    "mo_text": "chain snatched by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "white helmet",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "grey",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-07",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "colour: green vs orange (not aliases)",
+   "a": {
+    "crime_id": "X-S1-07A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-18T18:30",
+    "place": "Velachery, Vijayanagar",
+    "mo_text": "snatch by two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "green",
+      "make_model": "Yamaha FZ",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-07B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-19T18:55",
+    "place": "Velachery bypass",
+    "mo_text": "chain pulled off by pillion",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "orange",
+      "make_model": "Yamaha FZ",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S1-08",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "age: 40-50 vs under 18",
+   "a": {
+    "crime_id": "X-S1-08A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-20T17:40",
+    "place": "Adambakkam",
+    "mo_text": "snatcher on moped",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "40-50",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "moped",
+      "colour": "white",
+      "make_model": "TVS XL",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S1-08B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-21T18:05",
+    "place": "Adambakkam lake road",
+    "mo_text": "boy on moped snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "under 18",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "moped",
+      "colour": "white",
+      "make_model": "TVS XL",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-01",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age in words: mid-twenties vs around forty-five",
+   "a": {
+    "crime_id": "X-S2-01A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-05T20:00",
+    "place": "Guindy, Race Course Road",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "mid-twenties",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-01B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-06T20:20",
+    "place": "Guindy industrial estate",
+    "mo_text": "chain grabbed by pillion",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "around forty-five",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-02",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age in words: teenager vs elderly",
+   "a": {
+    "crime_id": "X-S2-02A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-07T16:30",
+    "place": "Royapettah",
+    "mo_text": "snatch on foot then ran to waiting bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "teenager",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": []
+   },
+   "b": {
+    "crime_id": "X-S2-02B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-08T16:50",
+    "place": "Royapettah high road",
+    "mo_text": "chain snatched near temple",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "elderly",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": []
+   }
+  },
+  {
+   "pair_id": "S2-03",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "count as text: 'two' vs 'one'",
+   "a": {
+    "crime_id": "X-S2-03A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-09T19:00",
+    "place": "Alwarpet",
+    "mo_text": "snatched from behind",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": "two",
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-03B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-10T19:25",
+    "place": "Alwarpet, TTK Road",
+    "mo_text": "chain snatched by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": "one",
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-04",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "count as text: 'a pair of men' vs 'lone rider'",
+   "a": {
+    "crime_id": "X-S2-04A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-11T21:10",
+    "place": "Nungambakkam",
+    "mo_text": "snatch on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": "a pair of men",
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "silver",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-04B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-12T21:30",
+    "place": "Nungambakkam high road",
+    "mo_text": "chain snatched from woman at signal",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": "lone rider",
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "silver",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-05",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "colour only inside make_model: red Splendor vs black Splendor",
+   "a": {
+    "crime_id": "X-S2-05A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-13T18:45",
+    "place": "Kodambakkam",
+    "mo_text": "snatch by pillion",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": null,
+      "make_model": "red Splendor",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-05B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-14T19:05",
+    "place": "Kodambakkam bridge",
+    "mo_text": "chain grabbed by pillion rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": null,
+      "make_model": "black Splendor",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-06",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "short plate fragments: '71' vs '17'",
+   "a": {
+    "crime_id": "X-S2-06A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-15T20:15",
+    "place": "Vadapalani",
+    "mo_text": "snatch, plate partly read",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "blue",
+      "make_model": null,
+      "plate": "71"
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-06B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-16T20:35",
+    "place": "Vadapalani temple road",
+    "mo_text": "snatch, plate partly read",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "blue",
+      "make_model": null,
+      "plate": "17"
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-07",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age as a description: 'college-going boy' vs 'man in his fifties'",
+   "a": {
+    "crime_id": "X-S2-07A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-17T17:20",
+    "place": "Anna Nagar 2nd Ave",
+    "mo_text": "snatcher on scooter",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "college-going boy",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "white",
+      "make_model": "scooter",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-07B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-18T17:45",
+    "place": "Anna Nagar tower park",
+    "mo_text": "chain pulled by scooter rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": "man in his fifties",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "white",
+      "make_model": "scooter",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S2-08",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "helmet colour in different words: 'dark' vs 'bright yellow'",
+   "a": {
+    "crime_id": "X-S2-08A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-19T19:50",
+    "place": "Kilpauk",
+    "mo_text": "snatch by two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "dark",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S2-08B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-20T20:10",
+    "place": "Kilpauk garden road",
+    "mo_text": "chain snatched by pillion",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "bright yellow",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-01",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "time of day: 02:10 vs 14:10",
+   "a": {
+    "crime_id": "X-S3-01A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-05T02:10",
+    "place": "Perungudi OMR",
+    "mo_text": "chain snatched from night-shift worker",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-01B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-06T14:10",
+    "place": "Perungudi bus stop",
+    "mo_text": "chain snatched in daylight",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-02",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "weapon: knife shown vs no weapon",
+   "a": {
+    "crime_id": "X-S3-02A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-07T19:30",
+    "place": "Thoraipakkam",
+    "mo_text": "threatened with knife, chain taken",
+    "target": null,
+    "weapon": "knife",
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-02B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-08T19:50",
+    "place": "Thoraipakkam service road",
+    "mo_text": "quick snatch from behind, no weapon",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-03",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "target: shopkeeper at counter vs pedestrian",
+   "a": {
+    "crime_id": "X-S3-03A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-09T20:40",
+    "place": "Sholinganallur",
+    "mo_text": "entered jewellery counter, snatched chain from shopkeeper",
+    "target": "shopkeeper",
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-03B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-10T21:00",
+    "place": "Sholinganallur junction",
+    "mo_text": "pedestrian's chain snatched from bike",
+    "target": "lone_pedestrian_woman",
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-04",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "approach: on foot vs on a bike (no vehicle stated for A)",
+   "a": {
+    "crime_id": "X-S3-04A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-11T18:20",
+    "place": "Medavakkam",
+    "mo_text": "snatcher came on foot, ran into lane",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": []
+   },
+   "b": {
+    "crime_id": "X-S3-04B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-12T18:40",
+    "place": "Medavakkam main road",
+    "mo_text": "snatch from moving bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-05",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "escape: by auto-rickshaw vs on the bike",
+   "a": {
+    "crime_id": "X-S3-05A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-13T19:05",
+    "place": "Pallikaranai",
+    "mo_text": "snatcher jumped into a waiting auto-rickshaw",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": []
+   },
+   "b": {
+    "crime_id": "X-S3-05B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-14T19:25",
+    "place": "Pallikaranai marsh road",
+    "mo_text": "fled on motorcycle",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-06",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "MO: distraction ('asked for directions') vs snatch from behind",
+   "a": {
+    "crime_id": "X-S3-06A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-15T17:10",
+    "place": "Nanganallur",
+    "mo_text": "asked woman for directions then grabbed chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-06B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-16T17:35",
+    "place": "Nanganallur 4th main",
+    "mo_text": "came from behind and pulled chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-07",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "stolen item: mangalsutra vs mobile phone",
+   "a": {
+    "crime_id": "X-S3-07A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-17T20:25",
+    "place": "Chromepet",
+    "mo_text": "mangalsutra snatched",
+    "target": "lone_pedestrian_woman",
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-07B",
+    "synthetic": true,
+    "category": "phone_snatching",
+    "occurred_at": "2026-10-18T20:45",
+    "place": "Chromepet station road",
+    "mo_text": "mobile phone snatched from hand",
+    "target": "lone_pedestrian_woman",
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "S3-08",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "build: heavy-set vs very thin (build is not a rule field)",
+   "a": {
+    "crime_id": "X-S3-08A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-19T19:15",
+    "place": "Tambaram",
+    "mo_text": "snatch by two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": "heavy-set"
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-S3-08B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-20T19:35",
+    "place": "Tambaram east",
+    "mo_text": "snatch by two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": "very thin"
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-01",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "less detail: Bajaj vs Bajaj Pulsar 150",
+   "a": {
+    "crime_id": "X-T-01A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-05T19:00",
+    "place": "Adyar, LB Road",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-01B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-08T19:20",
+    "place": "Adyar, Gandhi Nagar",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Bajaj Pulsar 150",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-02",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "colour spelling: grey vs gray",
+   "a": {
+    "crime_id": "X-T-02A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-06T20:00",
+    "place": "Velachery",
+    "mo_text": "snatch by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "grey",
+      "make_model": "Honda Activa",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-02B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-09T20:15",
+    "place": "Velachery 100 ft road",
+    "mo_text": "snatch by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 1,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "scooter",
+      "colour": "gray",
+      "make_model": "Honda Activa",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-03",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "overlapping ages: 20-30 vs about 25",
+   "a": {
+    "crime_id": "X-T-03A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-07T18:40",
+    "place": "Thiruvanmiyur",
+    "mo_text": "two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-03B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-10T18:55",
+    "place": "Thiruvanmiyur beach",
+    "mo_text": "two on bike",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "about 25",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "black",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-04",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "plate with one unread digit: TN09AB44?1 vs TN09AB4471",
+   "a": {
+    "crime_id": "X-T-04A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-08T19:30",
+    "place": "Adyar depot",
+    "mo_text": "snatch, plate partly read",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": "TN09AB44?1"
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-04B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-11T19:45",
+    "place": "Adyar signal",
+    "mo_text": "snatch, plate read by ANPR",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": "TN09AB4471"
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-05",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "helmet detail: black vs black with red stripe",
+   "a": {
+    "crime_id": "X-T-05A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-09T20:10",
+    "place": "Kotturpuram",
+    "mo_text": "snatch",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-05B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-12T20:25",
+    "place": "Kotturpuram bridge",
+    "mo_text": "snatch",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": null,
+      "helmet": "black with red stripe",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-06",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "count stated vs not stated",
+   "a": {
+    "crime_id": "X-T-06A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-10T17:50",
+    "place": "Saidapet",
+    "mo_text": "snatch by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "blue",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-06B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-13T18:05",
+    "place": "Saidapet bridge",
+    "mo_text": "snatch by rider",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": null,
+      "age_band": "20-30",
+      "helmet": null,
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "blue",
+      "make_model": null,
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-07",
+   "stratum": "twin_witness_error",
+   "label": "true_twin",
+   "differs": "witnesses disagree on age: about 25 vs 38",
+   "a": {
+    "crime_id": "X-T-07A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-11T19:10",
+    "place": "Guindy",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "about 25",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-07B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-14T19:30",
+    "place": "Guindy estate",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "38",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  },
+  {
+   "pair_id": "T-08",
+   "stratum": "twin_witness_error",
+   "label": "true_twin",
+   "differs": "witnesses disagree on colour: red vs maroon",
+   "a": {
+    "crime_id": "X-T-08A",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-12T20:00",
+    "place": "Mylapore",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "red",
+      "make_model": "Pulsar",
+      "plate": null
+     }
+    ]
+   },
+   "b": {
+    "crime_id": "X-T-08B",
+    "synthetic": true,
+    "category": "chain_snatching",
+    "occurred_at": "2026-10-15T20:20",
+    "place": "Mylapore tank",
+    "mo_text": "pillion snatched chain",
+    "target": null,
+    "weapon": null,
+    "offenders_described": [
+     {
+      "count": 2,
+      "age_band": "20-30",
+      "helmet": "black",
+      "build": null
+     }
+    ],
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "colour": "maroon",
+      "make_model": "Pulsar",
+      "plate": null
+     }
+    ]
+   }
+  }
+ ]
+}
