@@ -132,9 +132,11 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 ## Slide 10 · Product visuals (point 7)
 
 - **Use the polished screens (#400, f48e92f), all synthetic, all read-only:**
-  - `C:/Apps/Nexus-handover/console-polish-400/hero-detail-1536.png`: alert detail (factor bars, evidence, How this alert was made, Skeptic panel);
-  - `…/alerts-1536.png`: the alert inbox; `…/alerts-375.png`: the same on a phone (responsive);
-  - `…/ask-form-1536.png` + `…/ask-result-1536.png`: Ask Nexus question and answer;
+  - `C:/Apps/Nexus-handover/console-polish-400/hero-header-1536.png`: alert detail top (score ring, HIGH and status pills, both crimes). The shot shows **Pending**; at build, use a post-decision frame from the recording if the hero was approved on camera;
+  - `…/hero-detail-1536.png`: factor bars, evidence, How this alert was made, Skeptic panel;
+  - `…/hero-map-1536.png`: crime scenes plus the ANPR trail;
+  - `…/alerts-1536.png`: the alert inbox; `…/alerts-375.png` and `…/alerts-officer-375.png`: phone views (analyst, officer);
+  - `…/ask-form-1536.png` + `…/ask-result-1536.png` (retaken after #415, c695289, caption below the map); phone: `…/ask-form-375.png`, `…/ask-result-375.png`;
   - frames from nexus-4's clips in `C:/Apps/Nexus-handover/clips/console/`: `s1_map` (Pulse Map), `s8_series` / `s8_map` (series), `onboard_run` (onboarding), `bk_tipguard` (Tip Guard quarantine).
   - **At build:** prefer the recorded take's frames for the hero (after the on-camera decision); check every frame for secrets (no settings page, no tokens, no `.env`).
 - **Earlier tile plan (fallback):**
