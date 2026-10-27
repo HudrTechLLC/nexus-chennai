@@ -321,7 +321,7 @@ def specs() -> dict[str, dict[str, Any]]:
     return {
         "q_case": {"name": "q_case", "lightning": _q_case_bundle(), "sample": _twin("q_case", CASE_COLUMNS),
                    "description": "One crime with vehicles, statements, evidence, forensics and features (D3.1)",
-                   "columns": CASE_COLUMNS},
+                   "columns": CASE_COLUMNS, "boolean": ("synthetic",)},
         "q_candidates": {"name": "q_candidates", "lightning": _q_candidates(tz, off),
                          "sample": _twin("q_candidates", CANDIDATE_COLUMNS),
                          "description": "Blocking: same-category crimes within :days and :ring km (F1 step 3)",
@@ -343,7 +343,10 @@ def specs() -> dict[str, dict[str, Any]]:
                               "sample": _q_offender_return(tz, sample=True),
                               "description": "Offenders released within 60 days of :since whose prior MO shares "
                                              ":mo_tags; home ward (:ward) first",
-                              "columns": RETURN_COLUMNS},
+                              "columns": RETURN_COLUMNS,
+                              # REST returns text; factors.offender_return compares mo_overlap with floats.
+                              "numeric": ("mo_overlap", "days_since_release"),
+                              "boolean": ("near_home", "sheet_active")},
         "q_calls_near": {"name": "q_calls_near", "lightning": _q_calls_near(tz, off, sample=False),
                          "sample": _q_calls_near(tz, off, sample=True), "defaults": {"km": 1.0, "minutes": 120},
                          "description": "112 calls within :km of a crime and :minutes of its time window",
