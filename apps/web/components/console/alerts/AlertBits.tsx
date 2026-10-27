@@ -1,6 +1,6 @@
-import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import { Badge, bandTone } from "@/components/ui";
-import { bandLabel, pct, type Band, type FactorRow } from "@/lib/alerts";
+import { bandLabel, pct, receiptsUnverifiedLine, type Band, type FactorRow, type Skeptic } from "@/lib/alerts";
 
 /** Band colours follow the foundation (G3): high = sev-high, medium = warn, low = sev-low. Gold is for evidence only. */
 const BAND_VAR: Record<string, string> = { high: "var(--sev-high)", medium: "var(--warn)", low: "var(--sev-low)" };
@@ -69,5 +69,21 @@ export function FactorBars({ rows, compact = false }: { rows: FactorRow[]; compa
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Small warning under the alert header when model receipts in its run failed verification (#15 degraded mode).
+ * Renders nothing when every receipt verified (the key is absent), so a normal alert looks exactly as before.
+ */
+export function ReceiptsWarning({ skeptic }: { skeptic: Pick<Skeptic, "receipts_unverified"> | null | undefined }) {
+  const line = receiptsUnverifiedLine(skeptic);
+  if (!line) return null;
+  return (
+    <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-warn"
+       title="Nightshift returned these model replies without a valid signed receipt. The alert stands, but those calls could not be proven to come from the model named in the trace.">
+      <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+      {line}
+    </p>
   );
 }

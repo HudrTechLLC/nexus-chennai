@@ -6,7 +6,7 @@ import { coverageCapLine, coverageOf, decisionState, factorRows, latestDecision,
 import { audit, crimeBriefs, crimeTitle, fetchAlert, officerNames, type CrimeBrief } from "@/lib/alertsData";
 import { canDecideAlerts } from "@/lib/roles";
 import { canPropose } from "@/lib/taskforces";
-import { BandPill, FactorBars, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
+import { BandPill, FactorBars, ReceiptsWarning, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { DecisionForm } from "@/components/console/alerts/DecisionForm";
 import { AlertsLive } from "@/components/console/alerts/AlertsLive";
 import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
@@ -146,6 +146,7 @@ export default async function AlertDetail({ params }: { params: { alertId: strin
             )}
           </p>
           {coverageCapLine(alert) && <p className="mt-1 text-xs text-muted">{coverageCapLine(alert)}</p>}
+          <ReceiptsWarning skeptic={alert.skeptic} />
         </div>
       </header>
 
