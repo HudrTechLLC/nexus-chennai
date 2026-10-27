@@ -109,3 +109,19 @@ def test_errors_never_print_the_key(tmp_path, monkeypatch, capsys):
     assert rc == 1
     assert key[:8] not in out.out + out.err
     assert not (tmp_path / "out.json").exists()
+
+
+def test_fixtures_carry_the_pinned_key_and_another_key_is_reported():
+    """#50: the committed fixtures all carry the pinned key; a validly signed receipt from another key is key_mismatch."""
+    assert vr.PIN == vr.PINNED_KEY_SHA256
+    assert {vr.check_envelope(e, vr.PIN) for e in FIXTURES} == {"valid"}
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    import base64 as b64
+    k = Ed25519PrivateKey.generate()
+    body = copy.deepcopy(FIXTURES[0]["body"])
+    env = {"body": body, "pubkey_b64": b64.b64encode(k.public_key().public_bytes_raw()).decode(),
+           "sig_b64": b64.b64encode(k.sign(vr.canonical(body))).decode()}
+    assert vr.check_envelope(env) == "valid"  # signature alone is fine
+    assert vr.check_envelope(env, vr.PIN) == "key_mismatch"
+    out = vr.check_fixtures([*FIXTURES, env], None)
+    assert out["signature_valid"] == len(FIXTURES) and len(out["key_mismatch"]) == 1

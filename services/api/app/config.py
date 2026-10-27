@@ -15,6 +15,8 @@ from typing import Any
 import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .receipts import PINNED_KEY_SHA256
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # Model ids that hand routing to Nightshift. Rule R2 forbids them, because the
@@ -41,6 +43,8 @@ class Settings(BaseSettings):
     meterless_runtime_token: str = ""
     meterless_app: str = "nexus-chennai"
     nightshift_timeout_seconds: float = 180.0
+    # Pinned Nightshift receipt-signing key (sha256 of the raw Ed25519 public key; app/receipts.py). Empty = no pin.
+    nightshift_receipt_key_sha256: str = PINNED_KEY_SHA256
     # Pinned defaults = the verified D-017 lanes, so a judge with no .env still
     # names the right model (and sample-mode replay can find its fixtures).
     lane_fast: str = "nvidia/nemotron-3.5-lightning-30b-a3b"

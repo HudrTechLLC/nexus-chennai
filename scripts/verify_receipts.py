@@ -51,7 +51,16 @@ from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services" / "api"))
-from app.receipts import canonical, check_envelope  # noqa: E402,F401  (shared with the live adapter)
+from app.receipts import PINNED_KEY_SHA256, canonical  # noqa: E402,F401  (shared with the live adapter)
+from app.receipts import check_envelope as _check_envelope  # noqa: E402
+
+# Receipts must carry the pinned key; a valid signature from any other key is reported as key_mismatch.
+PIN = os.environ.get("NIGHTSHIFT_RECEIPT_KEY_SHA256", PINNED_KEY_SHA256).strip() or None
+
+
+def check_envelope(env: Any, expected_key_sha256: str | None = None) -> str:
+    """The shared check; `expected_key_sha256` defaults to nothing here so callers choose (the report passes PIN)."""
+    return _check_envelope(env, expected_key_sha256)
 APP = "nexus-chennai"
 FIXTURES = ROOT / "data" / "sample" / "model_fixtures"
 DEFAULT_LOG = Path(os.environ.get("LOCALAPPDATA", "")) / "ai.meterless.runtime" / "receipts.jsonl"
@@ -104,7 +113,7 @@ def load_log(path: Path) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any
                 facts["unparseable_lines"] += 1
                 continue
             keys[env.get("pubkey_b64")] += 1
-            status = check_envelope(env)
+            status = check_envelope(env, PIN)
             facts[f"all_{status}"] += 1
             # The signed bytes must be reproducible from the line itself (guards the canonical form).
             start = line.find('"body":')
@@ -167,12 +176,14 @@ def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[
         if not envs:
             outcome["not_in_log"].append(rid)
             continue
-        results = {check_envelope(e) for e in envs}
+        results = {check_envelope(e, PIN) for e in envs}
         receipt_status.update(str(e["body"]["receipt"].get("status")) for e in envs)
         if results == {"valid"}:
             outcome["verified"].append(rid)
         elif "malformed" in results:
             outcome["malformed"].append(rid)
+        elif "key_mismatch" in results:
+            outcome["key_mismatch"].append(rid)
         else:
             outcome["bad_signature"].append(rid)
     total = sum(len(v) for v in outcome.values())
@@ -182,6 +193,7 @@ def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[
         "not_in_log": outcome["not_in_log"],
         "bad_signature": outcome["bad_signature"],
         "malformed": outcome["malformed"],
+        "key_mismatch": outcome["key_mismatch"],
         "nightshift_receipt_status": dict(receipt_status),
     }
 
@@ -189,9 +201,10 @@ def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[
 def check_fixtures(envs: list[dict[str, Any]], log: dict[str, list[dict[str, Any]]] | None) -> dict[str, Any]:
     status = defaultdict(list)
     for e in envs:
-        status[check_envelope(e)].append(request_id(e) or "?")
+        status[check_envelope(e, PIN)].append(request_id(e) or "?")
     out = {"receipts": len(envs), "signature_valid": len(status["valid"]),
-           "bad_signature": status["bad_signature"], "malformed": status["malformed"]}
+           "bad_signature": status["bad_signature"], "malformed": status["malformed"],
+           "key_mismatch": status["key_mismatch"]}
     if log is not None:
         out["also_in_local_log"] = sum(1 for e in envs if request_id(e) in log)
     return out
@@ -267,7 +280,7 @@ def runtime_keys(base: str, token: str, limit: int = 50) -> dict[str, Any]:
     envs = list(find_envelopes(r.json()))
     keys = Counter(e.get("pubkey_b64") for e in envs)
     return {"endpoint": "/v1/meterless/receipts", "receipts_read": len(envs),
-            "signature_valid": sum(check_envelope(e) == "valid" for e in envs),
+            "signature_valid": sum(check_envelope(e, PIN) == "valid" for e in envs),
             "keys": [{"sha256": hashlib.sha256(base64.b64decode(k)).hexdigest(), "receipts": n} for k, n in keys.items()]}
 
 

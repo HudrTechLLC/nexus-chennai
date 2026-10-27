@@ -6,6 +6,7 @@ Valid -> receipt_verified=True. Missing, tampered or malformed -> receipt_verifi
 """
 
 import base64
+import hashlib
 import json
 
 import httpx
@@ -24,9 +25,13 @@ def settings(**kw):
     return Settings(_env_file=None, **base)
 
 
-def envelope(body=None, *, tamper=False):
+KEY = Ed25519PrivateKey.generate()  # throwaway test key, never a real one
+KEY_SHA256 = hashlib.sha256(KEY.public_key().public_bytes_raw()).hexdigest()
+
+
+def envelope(body=None, *, tamper=False, key=None):
     """A receipt envelope signed with a throwaway test key (never a real one)."""
-    key = Ed25519PrivateKey.generate()
+    key = key or KEY
     body = body or {"receipt": {"request_id": "req_test1", "receipt_id": "rcpt_req_test1"}, "app": "nexus-chennai"}
     sig = key.sign(receipts.canonical(body))
     pub = key.public_key().public_bytes_raw()
@@ -46,9 +51,9 @@ def handler_with(meterless):
     return handler
 
 
-def call(tmp_path, meterless):
+def call(tmp_path, meterless, pin=KEY_SHA256):
     tracer = Tracer("rv", tmp_path, echo=False)
-    c = NightshiftClient(settings(), tracer, transport=httpx.MockTransport(handler_with(meterless)))
+    c = NightshiftClient(settings(nightshift_receipt_key_sha256=pin), tracer, transport=httpx.MockTransport(handler_with(meterless)))
     r = c.chat("fast", [{"role": "user", "content": "hi"}], agent="Extractor")
     (event,) = tracer.read()
     return c, r, event
@@ -110,3 +115,23 @@ def test_committed_fixture_receipts_still_verify():
     assert files
     checks = {receipts.verify_response(json.loads(f.read_text(encoding="utf-8"))["response"]) for f in files}
     assert checks == {"valid"}
+
+
+def test_receipt_from_another_key_is_key_mismatch_but_not_refused(tmp_path):
+    """#50: receipts are pinned to Nightshift's key; a correctly signed receipt from any other key is flagged."""
+    other = Ed25519PrivateKey.generate()
+    c, r, event = call(tmp_path, {"receipt_envelope": envelope(key=other)})
+    assert r.content == "OK" and r.receipt_verified is False and r.receipt_check == "key_mismatch"
+    assert "receipt unverified (degraded): key_mismatch" in event["output_summary"]
+    assert c.receipts_unverified == 1
+
+
+def test_default_pin_is_the_published_nightshift_key():
+    assert Settings(_env_file=None).nightshift_receipt_key_sha256 == receipts.PINNED_KEY_SHA256
+    assert receipts.PINNED_KEY_SHA256 == "c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865"
+
+
+def test_empty_pin_disables_the_key_check(tmp_path):
+    other = Ed25519PrivateKey.generate()
+    _, r, _ = call(tmp_path, {"receipt_envelope": envelope(key=other)}, pin="")
+    assert r.receipt_verified is True and r.receipt_check == "valid"
