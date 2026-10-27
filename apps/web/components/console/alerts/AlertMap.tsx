@@ -5,15 +5,10 @@ import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { CITY } from "@/lib/city";
 import { bbox } from "@/lib/series";
 import type { LonLat } from "@/lib/pulse";
-import type { Scene, TrailRead } from "@/lib/alertMap";
+import { mapCaption, type Hover, type Scene, type TrailRead } from "@/lib/alertMap";
 import { MapCanvas } from "@/components/console/map/MapCanvas";
 
 export type AlertMapProps = { scenes: (Scene & { label: string })[]; trail: { plate: string; reads: TrailRead[] }[] };
-
-type Hover = { kind: "scene"; label: string; exact: boolean } | { kind: "read"; r: TrailRead } | null;
-
-const istTime = (at: string) =>
-  new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 
 /**
  * Both scenes of a link alert, plus the ANPR trail of the plates read near them (camera points joined in time
@@ -63,11 +58,7 @@ export function AlertMap({ scenes, trail }: AlertMapProps) {
   if (scenes.length === 0) {
     return <div className="grid h-72 place-items-center rounded-xl border border-dashed border-line text-sm text-muted">Neither scene can be placed on the map.</div>;
   }
-  const caption = !hover
-    ? "Red: scenes (hollow = area cell only) · gold: ANPR camera reads of the matched plate, joined in time order"
-    : hover.kind === "scene"
-      ? `${hover.label}${hover.exact ? "" : " (area cell centre)"}`
-      : `${hover.r.plate_text} · camera ${hover.r.camera_id} · ${istTime(hover.r.read_at)}`;
+  const caption = mapCaption(hover, reads.length > 0);
   return (
     <div>
       <div className="relative h-72 overflow-hidden rounded-xl border border-line">
