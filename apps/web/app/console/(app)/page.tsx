@@ -3,6 +3,8 @@ import { requireOfficer } from "@/lib/auth";
 import { consoleServerClient } from "@/lib/supabase/server";
 import { ROLE_LABEL, canDecideAlerts } from "@/lib/roles";
 import { StartHereCard } from "@/components/console/StartHereCard";
+import { ArrowRight, BellRing, FolderOpen, GitMerge, LayoutDashboard, ListChecks, Network, Percent, Users, Workflow } from "lucide-react";
+import { Card, PageHeader, SectionHeader, StatTile, StatusPill } from "@/components/ui";
 import {
   OPEN_STATUSES, alertFunnel, approvalRate, briefing, istIsoWeek, istMidnight, seriesCount, topSeries, weekKpis,
   type AlertRow, type SeriesRow,
@@ -12,16 +14,6 @@ export const dynamic = "force-dynamic";
 
 /** PostgREST returns at most this many rows per request; the page says so if a list hits it. */
 const ROW_CAP = 1000;
-
-function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
-      <div className="mt-1 text-xs text-muted">{sub}</div>
-    </div>
-  );
-}
 
 /**
  * Command overview (spec G2 `/console`, DASH-07, WS3-15): KPIs, alert funnel, top series and a
@@ -69,47 +61,53 @@ export default async function Overview({ searchParams }: { searchParams: { denie
           Your role ({ROLE_LABEL[officer.role]}) cannot open that screen.
         </p>
       )}
-      <div>
-        <h1 className="text-2xl font-bold">Command overview</h1>
-        <p className="text-sm text-muted">
+      <PageHeader
+        icon={LayoutDashboard}
+        title="Command overview"
+        description={<>
           Signed in as {officer.name} · {ROLE_LABEL[officer.role]}
           {officer.stationId ? ` · ${officer.stationId}` : " · all stations"} ·{" "}
           {canDecideAlerts(officer.role) ? "can approve or reject link alerts" : "can read link alerts, including rejected ones"}
-        </p>
-      </div>
-      {errors.length > 0 && <p role="alert" className="text-sm text-red-600">Some figures could not load: {errors.join("; ")}</p>}
+        </>}
+      />
+      {errors.length > 0 && <p role="alert" className="text-sm text-danger">Some figures could not load: {errors.join("; ")}</p>}
 
       <section aria-label="Key figures" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Tile label={`Open cases · ${scopeLabel}`} value={n(open.count)} sub={`registered or under investigation · ${n(undetected.count)} closed as undetected`} />
-        <Tile label="New link alerts · last 7 days" value={n(week.newAlerts)} sub="city-wide" />
-        <Tile
-          label="Approval rate"
+        <StatTile icon={FolderOpen} tone="info" label={`Open cases · ${scopeLabel}`} value={n(open.count)} emphasis={open.count === 0 ? "quiet" : "default"}
+          sub={`registered or under investigation · ${n(undetected.count)} closed as undetected`} />
+        <StatTile icon={BellRing} tone="signal" label="New link alerts · last 7 days" value={n(week.newAlerts)} sub="city-wide"
+          emphasis={week.newAlerts === 0 ? "quiet" : "primary"} />
+        <StatTile icon={Percent} tone="ok" label="Approval rate"
           value={rate.rate == null ? "—" : `${Math.round(rate.rate * 100)}%`}
+          emphasis={rate.rate == null || rate.rate === 0 ? "quiet" : "default"}
           sub={rate.rate == null ? `nothing decided yet (${rate.approved} approved, ${rate.rejected} rejected)` : `${rate.approved} approved, ${rate.rejected} rejected`}
         />
-        <Tile label="Cross-station links · last 7 days" value={n(week.crossStation)} sub="alerts spanning two or more stations" />
-        <Tile label="Joint task forces" value={n(taskforces.count)} sub="active" />
+        <StatTile icon={GitMerge} tone="accent" label="Cross-station links · last 7 days" value={n(week.crossStation)} sub="alerts spanning two or more stations"
+          emphasis={week.crossStation === 0 ? "quiet" : "default"} />
+        <StatTile icon={Users} tone="neutral" label="Joint task forces" value={n(taskforces.count)} sub="active"
+          emphasis={!taskforces.count ? "quiet" : "default"} />
       </section>
 
       <StartHereCard sb={sb} officer={officer} alerts={alertRows} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-line bg-surface p-5">
-          <h2 className="mb-1 font-semibold">Today&apos;s briefing</h2>
-          <p className="mb-3 text-xs text-muted">Since 00:00 IST, counted from the records (not written by a model).</p>
-          <ul className="space-y-2 text-sm">
+        <Card>
+          <SectionHeader icon={ListChecks} title="Today&apos;s briefing" description="Since 00:00 IST, counted from the records (not written by a model)." />
+          <ul className="mt-4 space-y-1 text-sm">
             {lines.map((l) => (
               <li key={l.key}>
-                <Link href={l.href} className={`underline-offset-2 hover:underline ${l.count === 0 ? "text-muted" : ""}`}>{l.text}</Link>
+                <Link href={l.href} className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-surface-2 ${l.count === 0 ? "text-muted" : "text-ink"}`}>
+                  <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${l.count === 0 ? "bg-line" : "bg-signal"}`} />
+                  <span className="underline-offset-2 group-hover:underline">{l.text}</span>
+                </Link>
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
 
-        <section className="rounded-xl border border-line bg-surface p-5">
-          <h2 className="mb-1 font-semibold">Alert funnel</h2>
-          <p className="mb-3 text-xs text-muted">Link alerts written by the agents, then approved by an analyst. Only pairs the Skeptic passed are stored as alerts; the pairs it dropped are in each run’s trace.</p>
-          <ol className="space-y-2">
+        <Card>
+          <SectionHeader icon={Network} title="Alert funnel" description="Link alerts written by the agents, then approved by an analyst. Only pairs the Skeptic passed are stored as alerts; the pairs it dropped are in each run’s trace." />
+          <ol className="mt-4 space-y-3">
             {[
               ["Alerts written", funnel.raised],
               ["Skeptic-approved", funnel.skepticApproved],
@@ -117,30 +115,35 @@ export default async function Overview({ searchParams }: { searchParams: { denie
             ].map(([label, v]) => (
               <li key={label as string} className="flex items-center gap-3 text-sm">
                 <span className="w-36 shrink-0">{label}</span>
-                <span className="h-3 rounded bg-signal" style={{ width: `${funnel.raised ? Math.max(2, ((v as number) / funnel.raised) * 100) : 0}%`, maxWidth: "60%" }} aria-hidden />
-                <span className="tabular-nums">{v as number}</span>
+                <span aria-hidden className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-line">
+                  <span className="block h-full rounded-full bg-signal" style={{ width: `${funnel.raised ? Math.max(2, ((v as number) / funnel.raised) * 100) : 0}%` }} />
+                </span>
+                <span className="w-10 text-right font-medium tabular-nums">{v as number}</span>
               </li>
             ))}
           </ol>
-          <Link href="/console/alerts" className="mt-3 inline-block text-xs underline-offset-2 hover:underline">Open the alert inbox</Link>
-        </section>
+          <Link href="/console/alerts" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-signal underline-offset-2 hover:underline">
+            Open the alert inbox <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </Card>
       </div>
 
-      <section className="rounded-xl border border-line bg-surface p-5">
-        <h2 className="mb-3 font-semibold">Top series</h2>
+      <Card>
+        <SectionHeader icon={Workflow} title="Top series" />
         {top.length === 0 ? (
-          <p className="text-sm text-muted">No series yet. A series appears when the Linker groups three or more linked cases.</p>
+          <p className="mt-2 text-sm text-muted">No series yet. A series appears when the Linker groups three or more linked cases.</p>
         ) : (
-          <ul className="space-y-1 text-sm">
+          <ul className="mt-3 divide-y divide-line text-sm">
             {top.map((s) => (
-              <li key={s.series_id}>
-                <Link href={`/console/series/${encodeURIComponent(s.series_id)}`} className="underline-offset-2 hover:underline">{s.name}</Link>
-                <span className="text-muted"> · {[seriesCount(s.name, s.members), s.status].filter(Boolean).join(" · ")}</span>
+              <li key={s.series_id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                <Link href={`/console/series/${encodeURIComponent(s.series_id)}`} className="font-medium text-ink underline-offset-2 hover:underline">{s.name}</Link>
+                {seriesCount(s.name, s.members) && <span className="text-muted">{seriesCount(s.name, s.members)}</span>}
+                {s.status && <StatusPill status={s.status} />}
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </Card>
       {capped && <p className="text-xs text-muted">Some lists reached 1,000 rows; figures from them are a lower bound.</p>}
     </div>
   );
