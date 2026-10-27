@@ -328,7 +328,7 @@ Details:
 
 The web app is deployed on Vercel at <https://nexus-chennai.vercel.app>. It reads from Supabase, so it shows the shared synthetic dataset, not your local run.
 
-Demo police accounts (station officer, analyst, supervisor) are provided to judges in the submission form. The sign-in page shows the demo accounts as one row of tiles (#431, #437): one click signs in as station officer, analyst or supervisor. The admin tile fills the email only; the admin password is not shared.
+Demo police accounts (station officer, analyst, supervisor) are provided to judges in the submission form. The sign-in page shows the demo accounts as one row of tiles (#431, #437): clicking the station officer, analyst or supervisor tile fills the form, then press **Sign in**. The admin tile fills the email only; the admin password is not shared.
 
 **What the police console does** (beyond alerts and the map):
 - **Case file:** narrative and statements, with phone and Aadhaar numbers masked; vehicles; an evidence gallery; the MO that Nemotron extracted, with officer corrections stored separately; linked alerts, series, similar cases and the World Model graph; case diary and status.
