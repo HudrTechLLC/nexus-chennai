@@ -232,5 +232,9 @@
     "weights_version": "f2-default-v1",
     "git_commit": "8d8e789",
     "generated_at": "2026-10-26T15:28:35+00:00"
+  },
+  "series_high_only": {
+    "predicted_series": 2,
+    "mean_purity": 1.0
   }
 }
