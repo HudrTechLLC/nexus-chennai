@@ -146,15 +146,22 @@ def _km(a: dict, b: dict) -> float:
     return 2 * 6371 * math.asin(math.sqrt(h))
 
 
-def select(crimes: dict[str, dict], truth: Path) -> tuple[set[str], dict]:
-    """The closed subset: judge series + decoys + their q_candidates neighbours + DQ/duplicate rows."""
+def select(crimes: dict[str, dict], truth: Path, core_series: list[str] | None = None) -> tuple[set[str], dict]:
+    """The closed subset: judge series + decoys + their q_candidates neighbours + DQ/duplicate rows.
+
+    `core_series` (eval bundles only, e.g. data/eval/planted2/sample): these series ids, or every series for
+    ["all"], are the core instead of the judge series. Default None = the judge sample, unchanged."""
     series = json.loads((truth / "series.json").read_text(encoding="utf-8"))
     decoys = json.loads((truth / "decoys.json").read_text(encoding="utf-8"))
     dups = json.loads((truth / "duplicates.json").read_text(encoding="utf-8"))
     dq = json.loads((truth / "dq.json").read_text(encoding="utf-8"))
-    judge_series = [s for s in series if set(s["crime_ids"]) & set(JUDGE_IDS)]
+    if core_series is None:
+        judge_series = [s for s in series if set(s["crime_ids"]) & set(JUDGE_IDS)]
+        core = set(JUDGE_IDS)
+    else:
+        judge_series = [s for s in series if core_series == ["all"] or s["series_id"] in core_series]
+        core = set()
     sids = {s["series_id"] for s in judge_series}
-    core = set(JUDGE_IDS)
     for s in judge_series:
         core |= set(s["crime_ids"])
     for d in decoys:
@@ -337,10 +344,10 @@ def _csv_subset(src: Path, dst: Path, keep=None) -> int:
     return len(rows)
 
 
-def build(src: Path, out: Path) -> dict:
+def build(src: Path, out: Path, core_series: list[str] | None = None) -> dict:
     sb = src / "supabase"
     crimes = {c["crime_id"]: c for c in _jl(sb / "crimes.jsonl")}
-    keep, info = select(crimes, src / "_truth")
+    keep, info = select(crimes, src / "_truth", core_series)
     ids = sorted(keep)
     con = duckdb.connect()
     con.execute("SET threads = 1")  # stable row groups, so a rebuild gives the same bytes
@@ -412,8 +419,11 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--from", dest="src", default=str(ROOT / "data" / "generated"))
     ap.add_argument("--out", default=str(ROOT / "data" / "sample"))
+    ap.add_argument("--core-series", default=None,
+                    help="eval bundles only: comma-separated series ids, or 'all', as the core (default: judge series)")
     a = ap.parse_args()
-    print(json.dumps(build(Path(a.src), Path(a.out)), indent=1))
+    core = a.core_series.split(",") if a.core_series else None
+    print(json.dumps(build(Path(a.src), Path(a.out), core), indent=1))
 
 
 if __name__ == "__main__":

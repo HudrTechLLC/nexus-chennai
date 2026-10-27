@@ -1,0 +1,1543 @@
+[
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AD-2026-001002",
+   "CHN-AD-2026-001142",
+   "CHN-AD-2026-001182",
+   "CHN-TI-2026-000943",
+   "CHN-TI-2026-001037",
+   "CHN-TI-2026-001105",
+   "CHN-VL-2026-000877",
+   "CHN-VL-2026-000975",
+   "CHN-VL-2026-001067"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Red Pulsar Duo",
+  "series_id": "SER-RED-PULSAR",
+  "stations": [
+   "PS-ADYAR-J2",
+   "PS-THIRUVANMIYUR-J6",
+   "PS-VELACHERY-J7"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler_towards_main_road",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "main_road"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "thin",
+    "count": 2,
+    "helmet": "black with red stripe"
+   },
+   "signature": null,
+   "vehicle": {
+    "colour": "red",
+    "make_model": "Bajaj Pulsar 150",
+    "plate": "TN 09 BX 4471",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 09 ?? 4471",
+     "TN 09 B? 4471",
+     "?? 4471",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-AS-2025-000079",
+   "CHN-KU-2025-000077",
+   "CHN-KU-2025-000080",
+   "CHN-KU-2025-000084",
+   "CHN-KU-2025-000085",
+   "CHN-MG-2025-000077",
+   "CHN-MM-2025-000070",
+   "CHN-VA-2025-000083"
+  ],
+  "crime_type": "night_house_break",
+  "kind": "series",
+  "name": "Grille Cutters",
+  "series_id": "SER-GRILLE-CUTTERS",
+  "stations": [
+   "PS-ASHOKNAGAR-R3",
+   "PS-KUMARANNAGAR-R6",
+   "PS-MAMBALAM-R1",
+   "PS-MGRNAGAR-R10",
+   "PS-VADAPALANI-R8"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "window_grille_cut",
+    "disguise": [
+     "mask"
+    ],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "residential"
+    ],
+    "target": "locked_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "medium",
+    "count": 2
+   },
+   "signature": null,
+   "vehicle": null,
+   "weapon": "cutter"
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AM-2025-000413",
+   "CHN-AM-2025-000486",
+   "CHN-AM-2025-000527",
+   "CHN-NA-2025-000623",
+   "CHN-ST-2025-000454",
+   "CHN-ST-2025-000571"
+  ],
+  "crime_type": "cab_robbery",
+  "kind": "series",
+  "name": "Night Cab",
+  "series_id": "SER-NIGHT-CAB",
+  "stations": [
+   "PS-ADAMBAKKAM-S8",
+   "PS-NANDAMBAKKAM-S4",
+   "PS-STTHOMASMOUNT-S1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_ride_hailing_cab",
+    "disguise": [],
+    "escape": "car",
+    "offender_count": 3,
+    "place_type": [
+     "main_road",
+     "hotel"
+    ],
+    "target": "lone_passenger",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "knife_threat"
+   },
+   "offenders": {
+    "age_band": "25-35",
+    "build": "heavy",
+    "count": 3
+   },
+   "signature": null,
+   "vehicle": {
+    "colour": "white",
+    "make_model": "Maruti Swift Dzire",
+    "plate": "TN 22 CK 7312",
+    "type": "car",
+    "witnessed": [
+     "TN 22 ?? 7312",
+     "TN 22 C? 73??",
+     null
+    ]
+   },
+   "weapon": "knife"
+  }
+ },
+ {
+  "category": "homicide",
+  "crime_ids": [
+   "CHN-KN-2025-000222",
+   "CHN-SN-2025-000321"
+  ],
+  "crime_type": "murder",
+  "kind": "series",
+  "name": "Ligature pair",
+  "series_id": "SER-LIGATURE",
+  "stations": [
+   "PS-KUNDRATHUR-T13",
+   "PS-SHANKARNAGAR-S6"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "acquaintance_lure",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "residential"
+    ],
+    "target": "lone_man",
+    "target_item": "none",
+    "time_band": null,
+    "violence": "ligature"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "medium",
+    "count": 1
+   },
+   "signature": null,
+   "vehicle": null,
+   "weapon": "ligature"
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AY-2026-000269",
+   "CHN-EG-2026-000329",
+   "CHN-EG-2026-000389",
+   "CHN-KI-2025-001393",
+   "CHN-KI-2025-001489",
+   "CHN-KI-2026-000199",
+   "CHN-OT-2025-001415",
+   "CHN-VE-2026-000059",
+   "CHN-VE-2026-000135",
+   "CHN-VE-2026-000429"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Generated series 1",
+  "series_id": "SER-G01",
+  "stations": [
+   "PS-AYANAVARAM-K2",
+   "PS-EGMORE-F2",
+   "PS-KILPAUK-G3",
+   "PS-OTTERI-P2",
+   "PS-VEPERY-G1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "asked_for_directions",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "market"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "heavy",
+    "count": 2,
+    "helmet": "red"
+   },
+   "signature": "red cap",
+   "vehicle": {
+    "colour": "maroon",
+    "make_model": "Hero Splendor",
+    "plate": "TN 90 BX 8553",
+    "type": "motorcycle",
+    "witnessed": [
+     "?? 8553",
+     "TN 90 B? 8553",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-KO-2025-000770",
+   "CHN-KO-2025-000863",
+   "CHN-KO-2025-000929",
+   "CHN-KO-2025-001177",
+   "CHN-MU-2025-000986",
+   "CHN-SE-2025-001032",
+   "CHN-WA-2025-001105",
+   "CHN-WA-2025-001130"
+  ],
+  "crime_type": "mobile_snatching",
+  "kind": "series",
+  "name": "Generated series 2",
+  "series_id": "SER-G02",
+  "stations": [
+   "PS-KOTHAVALCHAVADI-C5",
+   "PS-MUTHIALPET-N3",
+   "PS-SEVENWELLS-C3",
+   "PS-WASHERMANPET-H1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "metro_station"
+    ],
+    "target": "pedestrian",
+    "target_item": "mobile_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "heavy",
+    "count": 2,
+    "helmet": "yellow"
+   },
+   "signature": "tattoo of an anchor on forearm",
+   "vehicle": {
+    "colour": "green",
+    "make_model": "Honda Shine",
+    "plate": "TN 10 ME 0376",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 10 ?? 0376",
+     "TN 10 ?? 0376",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-MG-2026-000148",
+   "CHN-NA-2025-001308",
+   "CHN-NA-2026-000092",
+   "CHN-NA-2026-000169",
+   "CHN-RA-2025-001450",
+   "CHN-RA-2026-000059",
+   "CHN-RA-2026-000136",
+   "CHN-RA-2026-000153",
+   "CHN-RA-2026-000247",
+   "CHN-SR-2025-001383"
+  ],
+  "crime_type": "night_house_break",
+  "kind": "series",
+  "name": "Generated series 3",
+  "series_id": "SER-G03",
+  "stations": [
+   "PS-MGRNAGAR-R10",
+   "PS-NANDAMBAKKAM-S4",
+   "PS-RAMAPURAM-T11",
+   "PS-SRMCPORUR-T15"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "back_door_pried",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "locked_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "thin",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "speaks Telugu",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-EG-2025-001382",
+   "CHN-EG-2025-001418",
+   "CHN-KI-2025-001339",
+   "CHN-OT-2025-001281",
+   "CHN-OT-2025-001400",
+   "CHN-OT-2026-000042",
+   "CHN-PE-2025-001217",
+   "CHN-PU-2025-001168",
+   "CHN-TR-2025-001445",
+   "CHN-VE-2025-001270",
+   "CHN-VE-2025-001359",
+   "CHN-VE-2026-000038"
+  ],
+  "crime_type": "day_house_break",
+  "kind": "series",
+  "name": "Generated series 4",
+  "series_id": "SER-G04",
+  "stations": [
+   "PS-EGMORE-F2",
+   "PS-KILPAUK-G3",
+   "PS-OTTERI-P2",
+   "PS-PERIAMET-G2",
+   "PS-PULIANTHOPE-P1",
+   "PS-TRIPLICANE-D1",
+   "PS-VEPERY-G1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "posed_as_eb_staff",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "occupied_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "heavy",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "red cap",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-NA-2025-001276",
+   "CHN-NA-2025-001370",
+   "CHN-NA-2025-001441",
+   "CHN-NA-2025-001465",
+   "CHN-NA-2026-000080",
+   "CHN-RA-2025-001258",
+   "CHN-RA-2026-000017",
+   "CHN-RA-2026-000268",
+   "CHN-RA-2026-000342",
+   "CHN-SR-2026-000167"
+  ],
+  "crime_type": "two_wheeler_theft",
+  "kind": "series",
+  "name": "Generated series 5",
+  "series_id": "SER-G05",
+  "stations": [
+   "PS-NANDAMBAKKAM-S4",
+   "PS-RAMAPURAM-T11",
+   "PS-SRMCPORUR-T15"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "wire_bypass",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "cinema",
+     "hospital"
+    ],
+    "target": "parked_two_wheeler",
+    "target_item": "two_wheeler",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "thin",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "scar on left cheek",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-ES-2025-000711",
+   "CHN-ES-2025-000863",
+   "CHN-FL-2025-000889",
+   "CHN-KO-2025-000761",
+   "CHN-KO-2025-000781",
+   "CHN-KO-2025-000919",
+   "CHN-KO-2025-001020"
+  ],
+  "crime_type": "street_robbery",
+  "kind": "series",
+  "name": "Generated series 6",
+  "series_id": "SER-G06",
+  "stations": [
+   "PS-ESPLANADE-B2",
+   "PS-FLOWERBAZAAR-C1",
+   "PS-KOTHAVALCHAVADI-C5"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "knife_threat_two_men",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "atm",
+     "bar"
+    ],
+    "target": "lone_pedestrian",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "medium",
+    "count": 2,
+    "helmet": "white full-face"
+   },
+   "signature": "red cap",
+   "vehicle": {
+    "colour": "green",
+    "make_model": "Suzuki Access",
+    "plate": "TN 04 HA 9564",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 04 H? 9564",
+     "TN 04 H? 9564",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-ES-2025-000465",
+   "CHN-FL-2025-000624",
+   "CHN-PE-2025-000486",
+   "CHN-PE-2025-000566",
+   "CHN-SE-2025-000448"
+  ],
+  "crime_type": "pickpocket",
+  "kind": "series",
+  "name": "Generated series 7",
+  "series_id": "SER-G07",
+  "stations": [
+   "PS-ESPLANADE-B2",
+   "PS-FLOWERBAZAAR-C1",
+   "PS-PERIAMET-G2",
+   "PS-SEVENWELLS-C3"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "bus_door_press",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "bus_station",
+     "bus_stop"
+    ],
+    "target": "commuter",
+    "target_item": "wallet",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "heavy",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "wears a saffron thread on wrist",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-ES-2025-001218",
+   "CHN-ES-2025-001366",
+   "CHN-KO-2025-001352",
+   "CHN-MU-2025-001269",
+   "CHN-SE-2025-001053",
+   "CHN-SE-2025-001081",
+   "CHN-SE-2025-001136",
+   "CHN-SE-2025-001160",
+   "CHN-SE-2025-001227",
+   "CHN-SE-2025-001278",
+   "CHN-SE-2025-001450",
+   "CHN-SE-2026-000016"
+  ],
+  "crime_type": "shop_theft",
+  "kind": "series",
+  "name": "Generated series 8",
+  "series_id": "SER-G08",
+  "stations": [
+   "PS-ESPLANADE-B2",
+   "PS-KOTHAVALCHAVADI-C5",
+   "PS-MUTHIALPET-N3",
+   "PS-SEVENWELLS-C3"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_bill_swap",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "electronics",
+     "jeweller"
+    ],
+    "target": "shop",
+    "target_item": "goods",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "medium",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "wears spectacles",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "cheating",
+  "crime_ids": [
+   "CHN-AD-2025-001171",
+   "CHN-AD-2025-001339",
+   "CHN-SH-2025-001079",
+   "CHN-TI-2025-001270"
+  ],
+  "crime_type": "cheating",
+  "kind": "series",
+  "name": "Generated series 9",
+  "series_id": "SER-G09",
+  "stations": [
+   "PS-ADYAR-J2",
+   "PS-SHASTRINAGAR-J5",
+   "PS-THIRUVANMIYUR-J6"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "atm_card_swap",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "atm",
+     "bank"
+    ],
+    "target": "account_holder",
+    "target_item": "cash",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "thin",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "tattoo of an anchor on forearm",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-SL-2025-000462",
+   "CHN-SL-2025-000645",
+   "CHN-SL-2025-000833",
+   "CHN-SL-2025-000983",
+   "CHN-TM-2025-000543",
+   "CHN-TM-2025-000623",
+   "CHN-TM-2025-000738",
+   "CHN-TM-2025-000753",
+   "CHN-TM-2025-000913",
+   "CHN-TM-2025-000941",
+   "CHN-TM-2025-001022"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Generated series 10",
+  "series_id": "SER-G10",
+  "stations": [
+   "PS-SELAIYUR-T16",
+   "PS-TAMBARAM-S11"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "market"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "medium",
+    "count": 2,
+    "helmet": "yellow"
+   },
+   "signature": "tattoo of an anchor on forearm",
+   "vehicle": {
+    "colour": "silver",
+    "make_model": "Hero Splendor",
+    "plate": "TN 15 JP 9869",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 15 ?? 9869",
+     "TN 15 J? 9869",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-KY-2024-001467",
+   "CHN-KY-2025-000042",
+   "CHN-TU-2025-000196",
+   "CHN-VA-2025-000100"
+  ],
+  "crime_type": "mobile_snatching",
+  "kind": "series",
+  "name": "Generated series 11",
+  "series_id": "SER-G11",
+  "stations": [
+   "PS-KOYAMBEDU-K10",
+   "PS-THIRUMANGALAM-V5",
+   "PS-VADAPALANI-R8"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "metro_station"
+    ],
+    "target": "pedestrian",
+    "target_item": "mobile_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "medium",
+    "count": 2,
+    "helmet": "red"
+   },
+   "signature": "red cap",
+   "vehicle": {
+    "colour": "silver",
+    "make_model": "Hero Splendor",
+    "plate": "TN 92 EJ 3138",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 92 E? 3138",
+     "?? 3138",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-EL-2026-000510",
+   "CHN-EL-2026-000607",
+   "CHN-ES-2026-000414",
+   "CHN-FL-2026-000709",
+   "CHN-KO-2026-000620",
+   "CHN-KO-2026-000732",
+   "CHN-PE-2026-000342",
+   "CHN-WA-2026-000523"
+  ],
+  "crime_type": "night_house_break",
+  "kind": "series",
+  "name": "Generated series 12",
+  "series_id": "SER-G12",
+  "stations": [
+   "PS-ELEPHANTGATE-C2",
+   "PS-ESPLANADE-B2",
+   "PS-FLOWERBAZAAR-C1",
+   "PS-KOTHAVALCHAVADI-C5",
+   "PS-PERIAMET-G2",
+   "PS-WASHERMANPET-H1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "back_door_pried",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "locked_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "heavy",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "limps slightly",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-MI-2024-001478",
+   "CHN-MI-2025-000021",
+   "CHN-MI-2025-000106",
+   "CHN-MI-2025-000156",
+   "CHN-MI-2025-000201",
+   "CHN-MI-2025-000293",
+   "CHN-MI-2025-000337",
+   "CHN-MI-2025-000363",
+   "CHN-MI-2025-000431",
+   "CHN-PL-2025-000165"
+  ],
+  "crime_type": "day_house_break",
+  "kind": "series",
+  "name": "Generated series 13",
+  "series_id": "SER-G13",
+  "stations": [
+   "PS-MADIPAKKAM-S5",
+   "PS-PALLAVARAM-T3"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "posed_as_gas_delivery",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "occupied_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "heavy",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "red cap",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-FL-2026-000782",
+   "CHN-NE-2026-000605",
+   "CHN-NO-2026-000615",
+   "CHN-NO-2026-000718"
+  ],
+  "crime_type": "two_wheeler_theft",
+  "kind": "series",
+  "name": "Generated series 14",
+  "series_id": "SER-G14",
+  "stations": [
+   "PS-FLOWERBAZAAR-C1",
+   "PS-NEWWASHERMANPET-H5",
+   "PS-NORTHBEACH-B1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "duplicate_key",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "cinema",
+     "hospital"
+    ],
+    "target": "parked_two_wheeler",
+    "target_item": "two_wheeler",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "thin",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "wears spectacles",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-KN-2025-001330",
+   "CHN-KN-2025-001405",
+   "CHN-SN-2025-001460",
+   "CHN-SN-2026-000039",
+   "CHN-SN-2026-000094",
+   "CHN-SN-2026-000142",
+   "CHN-SN-2026-000225"
+  ],
+  "crime_type": "street_robbery",
+  "kind": "series",
+  "name": "Generated series 15",
+  "series_id": "SER-G15",
+  "stations": [
+   "PS-KUNDRATHUR-T13",
+   "PS-SHANKARNAGAR-S6"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_police_check",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "atm",
+     "bar"
+    ],
+    "target": "lone_pedestrian",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "thin",
+    "count": 2,
+    "helmet": "grey with sticker"
+   },
+   "signature": "sports shoes with neon laces",
+   "vehicle": {
+    "colour": "blue",
+    "make_model": "Honda Activa",
+    "plate": "TN 05 AT 9872",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 05 ?? 9872",
+     "TN 05 AT 98??",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-AY-2026-000291",
+   "CHN-CH-2026-000213",
+   "CHN-KI-2026-000356",
+   "CHN-OT-2026-000381"
+  ],
+  "crime_type": "pickpocket",
+  "kind": "series",
+  "name": "Generated series 16",
+  "series_id": "SER-G16",
+  "stations": [
+   "PS-AYANAVARAM-K2",
+   "PS-CHETPET-G7",
+   "PS-KILPAUK-G3",
+   "PS-OTTERI-P2"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "crowd_jostle",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "bus_station",
+     "bus_stop"
+    ],
+    "target": "commuter",
+    "target_item": "wallet",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "medium",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "wears a saffron thread on wrist",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-FL-2025-000347",
+   "CHN-MU-2025-000333",
+   "CHN-NO-2025-000317",
+   "CHN-NO-2025-000456",
+   "CHN-SE-2025-000431",
+   "CHN-SE-2025-000468"
+  ],
+  "crime_type": "shop_theft",
+  "kind": "series",
+  "name": "Generated series 17",
+  "series_id": "SER-G17",
+  "stations": [
+   "PS-FLOWERBAZAAR-C1",
+   "PS-MUTHIALPET-N3",
+   "PS-NORTHBEACH-B1",
+   "PS-SEVENWELLS-C3"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "distraction_pair",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "electronics",
+     "jeweller"
+    ],
+    "target": "shop",
+    "target_item": "goods",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "thin",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "has a bandage on right hand",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "cheating",
+  "crime_ids": [
+   "CHN-MI-2024-001334",
+   "CHN-MI-2024-001465",
+   "CHN-MI-2025-000036",
+   "CHN-PA-2024-001323",
+   "CHN-PA-2024-001384",
+   "CHN-PA-2024-001483"
+  ],
+  "crime_type": "cheating",
+  "kind": "series",
+  "name": "Generated series 18",
+  "series_id": "SER-G18",
+  "stations": [
+   "PS-MADIPAKKAM-S5",
+   "PS-PALLIKARANAI-S10"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_kyc_call",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "atm",
+     "bank"
+    ],
+    "target": "account_holder",
+    "target_item": "cash",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "thin",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "has a bandage on right hand",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-CH-2026-000293",
+   "CHN-NU-2026-000076",
+   "CHN-NU-2026-000240",
+   "CHN-TH-2026-000173"
+  ],
+  "crime_type": "chain_snatching",
+  "kind": "series",
+  "name": "Generated series 19",
+  "series_id": "SER-G19",
+  "stations": [
+   "PS-CHETPET-G7",
+   "PS-NUNGAMBAKKAM-F3",
+   "PS-THOUSANDLIGHTS-F4"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "two_wheeler_from_behind",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "market"
+    ],
+    "target": "lone_pedestrian_woman",
+    "target_item": "gold_chain",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "heavy",
+    "count": 2,
+    "helmet": "white full-face"
+   },
+   "signature": "limps slightly",
+   "vehicle": {
+    "colour": "grey",
+    "make_model": "Honda Activa",
+    "plate": "TN 04 RJ 9622",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 04 R? 9622",
+     "TN 04 ?? 9622",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-NL-2025-000679",
+   "CHN-NL-2025-000867",
+   "CHN-TA-2025-000641",
+   "CHN-TA-2025-000702",
+   "CHN-TA-2025-000885",
+   "CHN-TI-2025-000739",
+   "CHN-TI-2025-000770",
+   "CHN-TI-2025-000947",
+   "CHN-VL-2025-001046"
+  ],
+  "crime_type": "mobile_snatching",
+  "kind": "series",
+  "name": "Generated series 20",
+  "series_id": "SER-G20",
+  "stations": [
+   "PS-NEELANKARAI-J8",
+   "PS-THIRUVANMIYUR-J6",
+   "PS-THORAIPAKKAM-J9",
+   "PS-VELACHERY-J7"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "on_foot_snatch_and_run",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "bus_stop",
+     "metro_station"
+    ],
+    "target": "pedestrian",
+    "target_item": "mobile_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "thin",
+    "count": 2,
+    "helmet": "white full-face"
+   },
+   "signature": "red cap",
+   "vehicle": {
+    "colour": "yellow",
+    "make_model": "Honda Shine",
+    "plate": "TN 87 DZ 7059",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 87 ?? 7059",
+     "TN 87 ?? 7059",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-FL-2024-001489",
+   "CHN-FL-2025-000080",
+   "CHN-KO-2025-000179",
+   "CHN-SE-2025-000087"
+  ],
+  "crime_type": "night_house_break",
+  "kind": "series",
+  "name": "Generated series 21",
+  "series_id": "SER-G21",
+  "stations": [
+   "PS-FLOWERBAZAAR-C1",
+   "PS-KOTHAVALCHAVADI-C5",
+   "PS-SEVENWELLS-C3"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "roof_sheet_removed",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "locked_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "thin",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "carries a black backpack",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "house_break",
+  "crime_ids": [
+   "CHN-AN-2025-000259",
+   "CHN-AN-2025-000334",
+   "CHN-AN-2025-000478",
+   "CHN-AN-2025-000526",
+   "CHN-AN-2025-000602",
+   "CHN-AN-2025-000658",
+   "CHN-RO-2025-000253",
+   "CHN-TH-2025-000272",
+   "CHN-TH-2025-000390",
+   "CHN-TH-2025-000650"
+  ],
+  "crime_type": "day_house_break",
+  "kind": "series",
+  "name": "Generated series 22",
+  "series_id": "SER-G22",
+  "stations": [
+   "PS-ANNASALAI-D2",
+   "PS-ROYAPETTAH-E2",
+   "PS-THOUSANDLIGHTS-F4"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "posed_as_gas_delivery",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "residential",
+     "school"
+    ],
+    "target": "occupied_house",
+    "target_item": "gold_jewellery",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "30-40",
+    "build": "medium",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "red cap",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-CH-2025-001279",
+   "CHN-CH-2025-001470",
+   "CHN-CH-2026-000246",
+   "CHN-CH-2026-000389",
+   "CHN-EG-2025-001349",
+   "CHN-EG-2025-001393",
+   "CHN-EG-2026-000023",
+   "CHN-EG-2026-000194",
+   "CHN-EG-2026-000369",
+   "CHN-NU-2026-000289",
+   "CHN-VE-2026-000099"
+  ],
+  "crime_type": "two_wheeler_theft",
+  "kind": "series",
+  "name": "Generated series 23",
+  "series_id": "SER-G23",
+  "stations": [
+   "PS-CHETPET-G7",
+   "PS-EGMORE-F2",
+   "PS-NUNGAMBAKKAM-F3",
+   "PS-VEPERY-G1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "duplicate_key",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "cinema",
+     "hospital"
+    ],
+    "target": "parked_two_wheeler",
+    "target_item": "two_wheeler",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "18-20",
+    "build": "medium",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "tattoo of an anchor on forearm",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "robbery",
+  "crime_ids": [
+   "CHN-AS-2026-000468",
+   "CHN-AS-2026-000625",
+   "CHN-KA-2026-000247",
+   "CHN-KA-2026-000494",
+   "CHN-KU-2026-000553",
+   "CHN-MM-2026-000182",
+   "CHN-MM-2026-000425",
+   "CHN-PO-2026-000326",
+   "CHN-VA-2026-000235",
+   "CHN-VA-2026-000691"
+  ],
+  "crime_type": "street_robbery",
+  "kind": "series",
+  "name": "Generated series 24",
+  "series_id": "SER-G24",
+  "stations": [
+   "PS-ASHOKNAGAR-R3",
+   "PS-KODAMBAKKAM-R2",
+   "PS-KUMARANNAGAR-R6",
+   "PS-MAMBALAM-R1",
+   "PS-PONDYBAZAAR-R4",
+   "PS-VADAPALANI-R8"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "fake_police_check",
+    "disguise": [
+     "helmet"
+    ],
+    "escape": "two_wheeler",
+    "offender_count": 2,
+    "place_type": [
+     "atm",
+     "bar"
+    ],
+    "target": "lone_pedestrian",
+    "target_item": "cash_and_phone",
+    "time_band": null,
+    "violence": "push"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "heavy",
+    "count": 2,
+    "helmet": "yellow"
+   },
+   "signature": "tattoo of an anchor on forearm",
+   "vehicle": {
+    "colour": "maroon",
+    "make_model": "Hero Splendor",
+    "plate": "TN 95 VK 9951",
+    "type": "motorcycle",
+    "witnessed": [
+     "TN 95 V? 9951",
+     "TN 95 V? 9951",
+     null
+    ]
+   },
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-KU-2024-001443",
+   "CHN-MM-2025-000011",
+   "CHN-SA-2024-001341",
+   "CHN-SA-2025-000057"
+  ],
+  "crime_type": "pickpocket",
+  "kind": "series",
+  "name": "Generated series 25",
+  "series_id": "SER-G25",
+  "stations": [
+   "PS-KUMARANNAGAR-R6",
+   "PS-MAMBALAM-R1",
+   "PS-SAIDAPET-J1"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "crowd_jostle",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 2,
+    "place_type": [
+     "bus_station",
+     "bus_stop"
+    ],
+    "target": "commuter",
+    "target_item": "wallet",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "20-30",
+    "build": "medium",
+    "count": 2,
+    "helmet": null
+   },
+   "signature": "speaks Telugu",
+   "vehicle": null,
+   "weapon": null
+  }
+ },
+ {
+  "category": "theft",
+  "crime_ids": [
+   "CHN-CM-2025-000670",
+   "CHN-CM-2025-000806",
+   "CHN-CM-2025-000863",
+   "CHN-CM-2025-000909",
+   "CHN-CM-2025-000955",
+   "CHN-CM-2025-001029",
+   "CHN-CM-2025-001075",
+   "CHN-TU-2025-000611",
+   "CHN-VA-2025-000944",
+   "CHN-VI-2025-000710"
+  ],
+  "crime_type": "shop_theft",
+  "kind": "series",
+  "name": "Generated series 26",
+  "series_id": "SER-G26",
+  "stations": [
+   "PS-CMBT-K11",
+   "PS-THIRUMANGALAM-V5",
+   "PS-VADAPALANI-R8",
+   "PS-VIRUGAMBAKKAM-R5"
+  ],
+  "true_mo": {
+   "mo": {
+    "approach": "distraction_pair",
+    "disguise": [],
+    "escape": "on_foot",
+    "offender_count": 1,
+    "place_type": [
+     "electronics",
+     "jeweller"
+    ],
+    "target": "shop",
+    "target_item": "goods",
+    "time_band": null,
+    "violence": "none"
+   },
+   "offenders": {
+    "age_band": "40-50",
+    "build": "heavy",
+    "count": 1,
+    "helmet": null
+   },
+   "signature": "carries a black backpack",
+   "vehicle": null,
+   "weapon": null
+  }
+ }
+]

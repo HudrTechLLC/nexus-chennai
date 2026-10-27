@@ -67,8 +67,38 @@ def excluded_ids(root: Path = REPO_ROOT) -> set[str]:
     return set(PROTECTED) | judge_ids(root)
 
 
-def eligible_pairs(truth: Path = TRUTH, excluded: set[str] | None = None) -> list[tuple[str, str, str]]:
+def sample_truth_dir() -> Path:
+    """_truth/ of the active sample bundle: data/sample, or NEXUS_SAMPLE_DIR's bundle (set #2: data/eval/planted2)."""
+    return get_settings().sample_dir / "_truth"
+
+
+def overlay_bundle() -> str | None:
+    """The eval bundle in use, repo-relative, or None for the default data/sample."""
+    d = get_settings().sample_dir.resolve()
+    if d == (REPO_ROOT / "data" / "sample").resolve():
+        return None
+    try:
+        return d.relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return d.as_posix()
+
+
+def _repo_rel(path: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return Path(path).as_posix()
+
+
+def case_file_ids(path: Path) -> set[str]:
+    """Every crime id a previous case file used (its twins' a and b): an exclusion list, nothing else is read."""
+    spec = json.loads(Path(path).read_text(encoding="utf-8"))
+    return {c[k] for c in spec.get("cases") or [] for k in ("a", "b")}
+
+
+def eligible_pairs(truth: Path | None = None, excluded: set[str] | None = None) -> list[tuple[str, str, str]]:
     """(crime_a, crime_b, group_id) for every ground-truth SERIES pair with neither crime excluded, in file order."""
+    truth = sample_truth_dir() / "pairs.csv" if truth is None else truth
     ex = excluded_ids() if excluded is None else excluded
     with truth.open(encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
@@ -192,7 +222,7 @@ def truth_features() -> dict[str, dict[str, Any]]:
     """Features for crimes with none stored: the generator's ground-truth MO for their series (no extraction, no
     model call). Marked source=generator_truth in the case file; visual tags are empty."""
     out: dict[str, dict[str, Any]] = {}
-    for ser in json.loads(SERIES.read_text(encoding="utf-8")):
+    for ser in json.loads((sample_truth_dir() / "series.json").read_text(encoding="utf-8")):
         mo = dict((ser.get("true_mo") or {}).get("mo") or {})
         for cid in ser.get("crime_ids") or []:
             out[cid] = {"crime_id": cid, "mo": mo, "visual_tags": [], "entities": {"persons": [], "phones": [],
@@ -453,19 +483,26 @@ def score_pair(deps: Any, a_id: str, b_id: str) -> Any:
 PLANTS_PER_BASE = 3
 
 
-def prepare(settings: Settings) -> dict[str, Any]:
+def prepare(settings: Settings, exclude_cases: Path | None = None, max_twins: int | None = None) -> dict[str, Any]:
     """The pre-registered case list. Deterministic, code only.
 
     Base pairs (TWINS, unaltered): ground-truth series pairs that the Linker alerts on, chosen per series in file order
     so that no crime is used twice (the widest set of distinct crimes). Each twin gets PLANTS_PER_BASE near-misses,
     each with one different planted fact; kinds follow a fixed rotation over the kinds that apply to the pair and are
     never retried, and the vehicle plant alternates colour / make. Planted pairs the Linker already stops never reach
-    the Skeptic: they are listed (`reaches_skeptic: false`) and not run."""
-    pool = eligible_pairs()
+    the Skeptic: they are listed (`reaches_skeptic: false`) and not run.
+
+    `exclude_cases`: a previous case file whose twins' crimes are excluded too (set #2 excludes set #1's). With
+    NEXUS_SAMPLE_DIR set, the population is that bundle's ground truth and the case file records it. `max_twins`:
+    stop once that many twins have passed, in file order (no choosing among them)."""
+    excluded = excluded_ids() | (case_file_ids(exclude_cases) if exclude_cases else set())
+    pool = eligible_pairs(excluded=excluded)
     truth = truth_features()
     bases, skipped, used = [], [], set()
     slot = vehicle_n = 0
     for a_id, b_id, group in pool:
+        if max_twins is not None and len(bases) >= max_twins:
+            break
         if a_id in used or b_id in used:
             skipped.append({"a": a_id, "b": b_id, "group": group, "why": "a crime is already used by another twin"})
             continue
@@ -506,10 +543,21 @@ def prepare(settings: Settings) -> dict[str, Any]:
         bases.append({"case_id": case_id, "a": a_id, "b": b_id, "group": group, "category": b.get("sub_type"),
                       "features_source": src, "twin_score": base.score.score, "twin_band": base.score.band,
                       "twin_expected": "approve", "near_misses": near})
-    return {"version": 3, "population": "data/sample/_truth/pairs.csv label=series; protected and judge crimes "
-                                         "excluded; one twin per crime (no crime reused); features stored, else the "
-                                         "series' generator-truth MO",
-            "excluded": sorted(excluded_ids()), "plant_kinds": list(PLANT_KINDS),
+    bundle = overlay_bundle()
+    if bundle is None and exclude_cases is None:
+        head: dict[str, Any] = {"version": 3, "population": "data/sample/_truth/pairs.csv label=series; protected and "
+                                                            "judge crimes excluded; one twin per crime (no crime "
+                                                            "reused); features stored, else the series' "
+                                                            "generator-truth MO"}
+    else:
+        manifest = json.loads((settings.sample_dir / "MANIFEST.json").read_text(encoding="utf-8"))
+        head = {"version": 3, "sample_dir": bundle or "data/sample", "sample_seed": manifest.get("seed"),
+                "population": f"{bundle or 'data/sample'}/_truth/pairs.csv label=series; protected, judge-input "
+                              "and excluded-case crime ids excluded; one twin per crime (no crime reused); features "
+                              "stored, else the series' generator-truth MO",
+                "excluded_cases_from": _repo_rel(exclude_cases) if exclude_cases else None,
+                "max_twins": max_twins}
+    return {**head, "excluded": sorted(excluded), "plant_kinds": list(PLANT_KINDS),
             "vehicle_variants": list(VEHICLE_VARIANTS), "plants_per_base": PLANTS_PER_BASE,
             "cases": bases, "skipped": skipped}
 
@@ -616,6 +664,11 @@ def run(settings: Settings, cases_path: Path, expect_sha: str, out_path: Path) -
     if sha != expect_sha:
         sys.exit(f"refusing to run: case file sha256 {sha} != pre-registered {expect_sha}")
     spec = json.loads(cases_path.read_text(encoding="utf-8"))
+    want = spec.get("sample_dir")  # set #2 onwards: the bundle the cases were drawn from
+    have = overlay_bundle() or "data/sample"
+    if (want or "data/sample") != have:
+        sys.exit(f"refusing to run: the cases come from {want or 'data/sample'} but the sample bundle is {have} "
+                 f"(set NEXUS_SAMPLE_DIR={want})")
     from ..tracing import new_run_id
 
     run_id = new_run_id("planted")
@@ -631,6 +684,7 @@ def run(settings: Settings, cases_path: Path, expect_sha: str, out_path: Path) -
         return subprocess.run(["git", *a], cwd=REPO_ROOT, capture_output=True, text=True).stdout.strip()
 
     report = {"prereg": "engg/docs/eval/PLANTED_SKEPTIC_PREREG.md", "cases_sha256": sha, "run_id": run_id,
+              "sample_dir": have,
               "code_sha": git("rev-parse", "HEAD"), "code_dirty": bool(git("status", "--porcelain", "services/api")),
               "lane_reason": settings.lanes.get("reason"), "summary": summarise(results),
               "stopped_by_linker": [n for c in spec["cases"] for n in c["near_misses"] if not n["reaches_skeptic"]],
@@ -644,6 +698,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("prepare")
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--exclude-cases", type=Path, default=None,
+                   help="a previous case file: its twins' crimes are excluded (an exclusion list only)")
+    p.add_argument("--max-twins", type=int, default=None, help="stop after this many twins, in file order")
     r = sub.add_parser("run")
     r.add_argument("--cases", type=Path, required=True)
     r.add_argument("--expect-sha", required=True)
@@ -653,7 +710,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "prepare":
         if not settings.sample_mode:
             sys.exit("prepare runs on the sample data: set SAMPLE_MODE=true")
-        spec = prepare(settings)
+        spec = prepare(settings, args.exclude_cases, args.max_twins)
         # LF on every OS: the pre-registration pins this file's sha256.
         args.out.write_text(json.dumps(spec, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
         nm = [n for c in spec["cases"] for n in c["near_misses"]]

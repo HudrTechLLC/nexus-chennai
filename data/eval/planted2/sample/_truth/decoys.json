@@ -1,0 +1,212 @@
+[
+ {
+  "crime_ids": [
+   "CHN-AD-2026-001012",
+   "CHN-TI-2026-001016"
+  ],
+  "decoy_id": "DEC-01",
+  "shadows_series_id": "SER-RED-PULSAR"
+ },
+ {
+  "crime_ids": [
+   "CHN-MM-2025-000049",
+   "CHN-SA-2025-000109",
+   "CHN-SA-2025-000110"
+  ],
+  "decoy_id": "DEC-02",
+  "shadows_series_id": "SER-GRILLE-CUTTERS"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-000380",
+   "CHN-ST-2025-000397"
+  ],
+  "decoy_id": "DEC-03",
+  "shadows_series_id": "SER-NIGHT-CAB"
+ },
+ {
+  "crime_ids": [
+   "CHN-KN-2025-000273",
+   "CHN-PL-2025-000288",
+   "CHN-SN-2025-000314"
+  ],
+  "decoy_id": "DEC-04",
+  "shadows_series_id": "SER-LIGATURE"
+ },
+ {
+  "crime_ids": [
+   "CHN-CH-2025-001471",
+   "CHN-NU-2025-001491"
+  ],
+  "decoy_id": "DEC-05",
+  "shadows_series_id": "SER-G01"
+ },
+ {
+  "crime_ids": [
+   "CHN-EL-2025-000882",
+   "CHN-ES-2025-000884",
+   "CHN-ES-2025-000916"
+  ],
+  "decoy_id": "DEC-06",
+  "shadows_series_id": "SER-G02"
+ },
+ {
+  "crime_ids": [
+   "CHN-NA-2025-001270",
+   "CHN-NA-2025-001283"
+  ],
+  "decoy_id": "DEC-07",
+  "shadows_series_id": "SER-G03"
+ },
+ {
+  "crime_ids": [
+   "CHN-AY-2025-001320",
+   "CHN-PU-2025-001240",
+   "CHN-VY-2025-001251"
+  ],
+  "decoy_id": "DEC-08",
+  "shadows_series_id": "SER-G04"
+ },
+ {
+  "crime_ids": [
+   "CHN-NA-2025-001349",
+   "CHN-NA-2025-001369"
+  ],
+  "decoy_id": "DEC-09",
+  "shadows_series_id": "SER-G05"
+ },
+ {
+  "crime_ids": [
+   "CHN-KO-2025-000934",
+   "CHN-PE-2025-000885"
+  ],
+  "decoy_id": "DEC-10",
+  "shadows_series_id": "SER-G06"
+ },
+ {
+  "crime_ids": [
+   "CHN-FL-2025-000453",
+   "CHN-FL-2025-000469"
+  ],
+  "decoy_id": "DEC-11",
+  "shadows_series_id": "SER-G07"
+ },
+ {
+  "crime_ids": [
+   "CHN-FL-2025-001073",
+   "CHN-NO-2025-001017",
+   "CHN-PE-2025-001030"
+  ],
+  "decoy_id": "DEC-12",
+  "shadows_series_id": "SER-G08"
+ },
+ {
+  "crime_ids": [
+   "CHN-AD-2025-001318",
+   "CHN-AD-2025-001380"
+  ],
+  "decoy_id": "DEC-13",
+  "shadows_series_id": "SER-G09"
+ },
+ {
+  "crime_ids": [
+   "CHN-SL-2025-000493",
+   "CHN-TM-2025-000527",
+   "CHN-TM-2025-000593"
+  ],
+  "decoy_id": "DEC-14",
+  "shadows_series_id": "SER-G10"
+ },
+ {
+  "crime_ids": [
+   "CHN-CM-2025-000105",
+   "CHN-CM-2025-000132",
+   "CHN-VI-2025-000054"
+  ],
+  "decoy_id": "DEC-15",
+  "shadows_series_id": "SER-G11"
+ },
+ {
+  "crime_ids": [
+   "CHN-FL-2026-000371",
+   "CHN-VE-2026-000314",
+   "CHN-VE-2026-000336"
+  ],
+  "decoy_id": "DEC-16",
+  "shadows_series_id": "SER-G12"
+ },
+ {
+  "crime_ids": [
+   "CHN-AM-2025-000187",
+   "CHN-MI-2025-000199"
+  ],
+  "decoy_id": "DEC-17",
+  "shadows_series_id": "SER-G13"
+ },
+ {
+  "crime_ids": [
+   "CHN-WA-2026-000586",
+   "CHN-WA-2026-000647"
+  ],
+  "decoy_id": "DEC-18",
+  "shadows_series_id": "SER-G14"
+ },
+ {
+  "crime_ids": [
+   "CHN-SN-2026-000034",
+   "CHN-SN-2026-000081",
+   "CHN-TM-2026-000049"
+  ],
+  "decoy_id": "DEC-19",
+  "shadows_series_id": "SER-G15"
+ },
+ {
+  "crime_ids": [
+   "CHN-AY-2026-000262",
+   "CHN-KI-2026-000238"
+  ],
+  "decoy_id": "DEC-20",
+  "shadows_series_id": "SER-G16"
+ },
+ {
+  "crime_ids": [
+   "CHN-NO-2025-000401",
+   "CHN-SE-2025-000454"
+  ],
+  "decoy_id": "DEC-21",
+  "shadows_series_id": "SER-G17"
+ },
+ {
+  "crime_ids": [
+   "CHN-PA-2024-001367",
+   "CHN-PA-2024-001394",
+   "CHN-PA-2024-001426"
+  ],
+  "decoy_id": "DEC-22",
+  "shadows_series_id": "SER-G18"
+ },
+ {
+  "crime_ids": [
+   "CHN-NU-2026-000077",
+   "CHN-PO-2026-000056"
+  ],
+  "decoy_id": "DEC-23",
+  "shadows_series_id": "SER-G19"
+ },
+ {
+  "crime_ids": [
+   "CHN-NL-2025-000675",
+   "CHN-TA-2025-000680"
+  ],
+  "decoy_id": "DEC-24",
+  "shadows_series_id": "SER-G20"
+ },
+ {
+  "crime_ids": [
+   "CHN-MU-2025-000036",
+   "CHN-PE-2025-000101"
+  ],
+  "decoy_id": "DEC-25",
+  "shadows_series_id": "SER-G21"
+ }
+]
