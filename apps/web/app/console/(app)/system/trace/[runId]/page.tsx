@@ -8,12 +8,14 @@ import {
   KIND_LABEL,
   querySource,
   queryRows,
+  runMode,
   stepKind,
   summarise,
   type RunRow,
   type StepKind,
   type TraceRow,
 } from "@/lib/trace";
+import { RunModeBadge } from "@/components/console/runs/RunModeBadge";
 
 const RUN_TONE = {
   good: "border-signal text-signal",
@@ -59,7 +61,10 @@ export default async function TracePage({ params }: { params: { runId: string } 
     <div className="space-y-5">
       <div>
         <Link href="/console/system" className="text-sm text-muted hover:text-ink">← System</Link>
-        <h1 className="mt-1 text-2xl font-bold">Run <span className="font-mono">{runId}</span></h1>
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold">Run <span className="font-mono">{runId}</span></h1>
+          {rows.length > 0 && <RunModeBadge mode={runMode(rows) ?? "unknown"} />}
+        </div>
         <p className="text-sm text-muted">
           {r ? <>{r.kind} · <span className={`rounded-full border px-2 py-0.5 text-xs ${RUN_TONE[runTone(r.status)]}`}>{r.status}</span></> : "run row not found"}
           {r?.log_path ? <> · trace file <span className="font-mono text-xs">{r.log_path}</span></> : null}
@@ -67,7 +72,8 @@ export default async function TracePage({ params }: { params: { runId: string } 
         </p>
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* min-w-0 lets the truncated tile text shrink, so the grid never widens the page on phones */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
         <Stat label="Agents" value={s.agents.length} note={s.agents.join(", ")} />
         <Stat label="Model calls" value={s.modelCalls}
               note={`${s.receipts} Nightshift receipts${s.replayed ? ` · ${s.replayed} replayed (sample mode)` : ""} · ${s.models.join(", ") || "none"}`} />

@@ -10,3 +10,4 @@ h3==4.5.0
 langgraph==1.2.17
 pytz==2024.2
 tzdata==2025.2
+cryptography==45.0.7

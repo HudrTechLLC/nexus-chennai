@@ -7,11 +7,11 @@ tags: [nexus, deliverables]
 Every HackOS requirement, mapped to where Nexus meets it. Requirements come from [DIGEST](../hackathon/DIGEST.md) ("Required submission components", "Required sponsor technology", "Strongly recommended"). Status: ✅ met on `main` · 🟡 met, with a risk noted · 🔴 **not met yet**.
 Related: [FORM](FORM.md) · [DECK](DECK.md) · [VIDEO_SCRIPT](VIDEO_SCRIPT.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [EVIDENCE](EVIDENCE.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
-Written 27 Oct (nexus-7); statuses updated after recording. Video timestamps are from the **final cut** (3:14, nexus-2's timeline), checked frame by frame by nexus-7.
+Written 27 Oct (nexus-7); statuses updated after recording. Video timestamps are from the **final cut v2** (3:39): nexus-2's 3:14 timeline, checked frame by frame by nexus-7, with nexus-6's seg 9 *For the judges* added at 3:00–3:25. Segments 1–8 are unchanged, and Close moves to seg 10 · 3:25–3:39.
 
 ## 1. Demo video (1–4 min)
 
-Final length **3:14** (narration ElevenLabs voice Adam). Status: ✅ **recorded and final**. Take B (the Zetaris UI running `q_candidates`) was skipped by the chief, so the Zetaris UI itself is not shown; agents querying Zetaris is shown in the trace instead (row below).
+Final length **3:39** (v2, 27 Oct; narration ElevenLabs voice Adam). Status: ✅ **recorded and final**. Also committed as `submission/media/Nexus_Chennai_demo_v2_1080p.mp4` (#462). Take B (the Zetaris UI running `q_candidates`) was skipped by the chief, so the Zetaris UI itself is not shown; agents querying Zetaris is shown in the trace instead (row below).
 
 | Required | Segment · planned time | What is on screen | Status |
 |---|---|---|---|
@@ -22,8 +22,9 @@ Final length **3:14** (narration ElevenLabs voice Adam). Status: ✅ **recorded 
 | Agent querying Zetaris | seg 3 · ~0:52–1:03 (Extractor `zetaris_query` rows, `via=zetaris`, query ids); seg 5 · ~1:34–1:45 and seg 6 · ~1:57–2:13 (Skeptic's own `zetaris_query` rows #46–#48, `via=zetaris`, query ids, then the drop citing them); seg 7 · ~2:28–2:37 (Linker `zetaris_query` #59). Context: seg 4 · 1:03–1:24 Data sources ("federated by Zetaris", counts "via Zetaris"); seg 5 card "31 Zetaris queries" | trace lines, not the Zetaris UI (take B skipped) | ✅ |
 | The feature an engine powers | seg 7 · ~2:28–2:37 (`s7_hmem_trace`) | the hero approved on camera (09:00:51 IST), then the trace row #61 `memory_applied` (mem-1 rejected, delta -0.055, within ±0.08) | ✅ landed |
 | One real request through Nightshift, model named | seg 5 · 1:24–1:44 | *How this alert was made* card, then the Skeptic `model_call` #49 in `run_da0092da` (Nemotron Ultra, receipt id) | ✅ |
-| 1–4 minutes | whole | 3:14 | ✅ |
-| Link works logged out (YouTube unlisted + Drive) | — | <https://www.youtube.com/watch?v=LtisPFLVUwQ> | ✅ YouTube plays signed out (checked by the chief); the Drive backup is not linked from the README |
+| Judge path, Tip Guard, Ask Nexus (requested by the judging panel) | seg 9 · 3:00–3:25 | terminal: `SAMPLE_MODE=true run.py`, `POST /run` example_1, trace steps `"status": "replayed"` (each command run verbatim on a fresh clone); Tip Guard quarantining a prompt-injection tip; Ask Nexus answering "Chain snatchings on a red Pulsar in the last 90 days" (16 cases) | ✅ |
+| 1–4 minutes | whole | 3:39 | ✅ |
+| Link works logged out (YouTube unlisted + Drive) | — | <https://www.youtube.com/watch?v=FOUdFGT-GHY> | ✅ v2 is public; YouTube oEmbed returns 200 signed out and the page reports 219 s (checked by the chief and nexus-6); the Drive backup is not linked from the README |
 
 ## 2. Slide deck (8 points)
 
@@ -48,7 +49,7 @@ Content is in [DECK](DECK.md). Status: ✅ **built**: 15 slides as a Claude arti
 | README: setup | README "Setup" (Docker, venv, live configuration) | ✅ |
 | README: usage | README "Run", "Examples", "Live app" | ✅ |
 | README: dependencies | README "Setup" (Python 3.11+, Docker) and "Licences" (every library) | ✅ |
-| README: video link | README line 9 | ✅ <https://www.youtube.com/watch?v=LtisPFLVUwQ> |
+| README: video link | README line 9 | ✅ <https://www.youtube.com/watch?v=FOUdFGT-GHY> |
 | Strongly recommended: `run.py`, `POST /run`, Docker, JSONL traces in `logs/` + stdout, ≥ 3 inputs with real outputs, `SAMPLE_MODE` with no credentials, capped loops and timeouts, `.env.example`, `metadata.json` | README; `input_examples/`, `output_examples/`; CI `judge-offline` | ✅ (WS5-08) |
 | Disqualifiers (runs, no hardcoding, traces, sponsor tech, no secrets, synthetic data, declarations) | [WS5-08 checklist and results](../validation/WS5-08-2026-10-27.md) | ✅ part 3 PASS on `5a7c549` (#416); hard-freeze diff check at 19:00 (nexus-7) |
 
@@ -60,7 +61,7 @@ Text: [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md).
 |---|---|---|
 | Zetaris integration | "Zetaris: the data layer" (23 sources in 8 types; 18 registered named queries: 13 agent-facing) | ✅ |
 | Which Meterless engines, what each does, the test | "Meterless engines: all four" (8/8, 13/13, 8/8; Scout Intent held-out 0.975, 7/7) | ✅ |
-| How the app connects to Nightshift | "Meterless Nightshift: the primary AI provider" (pinned lanes; 190/193 calls with a receipt, all 190 verify) | ✅ |
+| How the app connects to Nightshift | "Meterless Nightshift: the primary AI provider" (pinned lanes; 190/193 calls with a receipt, all 190 verify; each receipt also checked at call time since #455) | ✅ |
 | Where NVIDIA contributes | "NVIDIA Nemotron" (Ultra 550B, Lightning 30B, Super VL; model logged per call) | ✅ |
 | What was unique | "What was unique about our use of the sponsor technology" | ✅ |
 
@@ -89,9 +90,9 @@ The remaining 🔴 items are all Ravee's: make the repo public, the team roster,
 
 ## Gaps (red), in order
 
-Closed after recording: ✅ video recorded and final (3:14) · ✅ deck built (15 slides) · ✅ H-MEM beat landed (seg 7, `s7_hmem_trace`).
+Closed after recording: ✅ video recorded and final (v2, 3:39) · ✅ deck built (15 slides) · ✅ H-MEM beat landed (seg 7, `s7_hmem_trace`).
 
-1. ✅ Video link: <https://www.youtube.com/watch?v=LtisPFLVUwQ> (README line 9; the form still needs it, Ravee).
+1. ✅ Video link: <https://www.youtube.com/watch?v=FOUdFGT-GHY> (README line 9; the form still needs it, Ravee).
 2. 🔴 Repo still private (Ravee, at submission).
 3. 🔴 Team roster names (Ravee).
 4. 🔴 Form filled and submitted (Ravee, by 23:15 IST).

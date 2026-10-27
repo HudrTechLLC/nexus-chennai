@@ -127,6 +127,30 @@
     "rule": "same category, <= 2 km, <= 14 days",
     "false_alerts_per_100_cases": 510.0
   },
+  "baseline_rules_plus_vehicle": {
+    "tp": 78,
+    "fp": 468,
+    "fn": 20,
+    "precision": 0.1429,
+    "recall": 0.7959,
+    "f1": 0.2422,
+    "alerts": 552,
+    "rule": "same category AND (<= 2 km and <= 14 days OR vehicle match)",
+    "false_alerts_per_100_cases": 780.0,
+    "strict": {
+      "tp": 15,
+      "fp": 6,
+      "fn": 83,
+      "precision": 0.7143,
+      "recall": 0.1531,
+      "f1": 0.2521,
+      "alerts": 23,
+      "rule": "same category AND <= 2 km and <= 14 days AND vehicle match",
+      "false_alerts_per_100_cases": 10.0
+    },
+    "vehicle_match": "offender vehicles: both plates present -> >= 4 known characters agree right-aligned, none conflict; else same type and colour; conflicting plates never match",
+    "prereg": "engg/docs/eval/STRONGER_BASELINE_PREREG.md"
+  },
   "duplicates": {
     "truth_pairs": 6,
     "flagged_by_agent": 6,
@@ -208,5 +232,9 @@
     "weights_version": "f2-default-v1",
     "git_commit": "8d8e789",
     "generated_at": "2026-10-26T15:28:35+00:00"
+  },
+  "series_high_only": {
+    "predicted_series": 2,
+    "mean_purity": 1.0
   }
 }

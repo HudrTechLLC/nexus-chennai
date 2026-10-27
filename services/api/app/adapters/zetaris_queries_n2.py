@@ -309,6 +309,9 @@ ORDER BY any_value(n.published_at), n.article_id
     # Zetaris reads the news REST table from this API (/mock-feeds), so a live q_news is a callback into us.
     # It is optional evidence: one attempt, 8 s, then skipped for the run; callers degrade to "no news".
     timeout_s=NEWS_TIMEOUT_S,
+    # REST returns every value as text; DuckDB returns an int and a bool (the sample twin), so match it live.
+    numeric=("hours_after",),
+    boolean=("category_hint",),
 )
 N2_SPECS[Q_NEWS["name"]] = Q_NEWS
 

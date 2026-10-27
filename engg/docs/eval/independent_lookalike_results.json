@@ -1,0 +1,387 @@
+{
+ "synthetic": true,
+ "pinned": {
+  "cases": "93f72b97baaee720f93e2a0c3dca7ebe2d1c4e0b2d2c7e9ff9d18937b1ea9ece",
+  "contradiction_py": "9e088b135744b383861c7726317dbb283c2082fe645bfd0a89423764912930ac"
+ },
+ "primary_drop_rate": {
+  "dropped": 10,
+  "n": 24,
+  "rate": 0.4167,
+  "pass_threshold": 0.6,
+  "pass": false
+ },
+ "guard_twin_false_drop": {
+  "dropped": 2,
+  "n": 8,
+  "pass_max": 1,
+  "pass": false
+ },
+ "per_stratum": {
+  "S1": {
+   "dropped": 8,
+   "n": 8,
+   "rate": 1.0
+  },
+  "S2": {
+   "dropped": 2,
+   "n": 8,
+   "rate": 0.25
+  },
+  "S3": {
+   "dropped": 0,
+   "n": 8,
+   "rate": 0.0
+  }
+ },
+ "twins_clean_dropped": {
+  "dropped": 0,
+  "n": 6
+ },
+ "twins_witness_error_dropped": {
+  "dropped": 2,
+  "n": 2
+ },
+ "pairs": [
+  {
+   "pair_id": "S1-01",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "make_model: Pulsar 220 vs Pulsar 150",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "make_model",
+     "a": "Bajaj Pulsar 220",
+     "b": "Bajaj Pulsar 150"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-02",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "make_model: TVS Apache RTR vs Hero Splendor",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "make_model",
+     "a": "TVS Apache RTR",
+     "b": "Hero Splendor Plus"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-03",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "plate: TN-09-AB-4471 vs TN 09 AB 4417 (two digits swapped)",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "plate",
+     "a": "TN-09-AB-4471",
+     "b": "TN 09 AB 4417"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-04",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "age: early 20s vs about 45",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "early 20s",
+     "b": "about 45"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-05",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "offender count: 1 vs 3",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 1,
+     "b": 3
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-06",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "helmet: no helmet vs white helmet",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "helmet",
+     "field": "helmet",
+     "a": "without a helmet",
+     "b": "white helmet"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-07",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "colour: green vs orange (not aliases)",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "green",
+     "b": "orange"
+    }
+   ]
+  },
+  {
+   "pair_id": "S1-08",
+   "stratum": "S1",
+   "label": "false_link",
+   "differs": "age: 40-50 vs under 18",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "40-50",
+     "b": "under 18"
+    }
+   ]
+  },
+  {
+   "pair_id": "S2-01",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age in words: mid-twenties vs around forty-five",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-02",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age in words: teenager vs elderly",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-03",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "count as text: 'two' vs 'one'",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-04",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "count as text: 'a pair of men' vs 'lone rider'",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-05",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "colour only inside make_model: red Splendor vs black Splendor",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "make_model",
+     "a": "red Splendor",
+     "b": "black Splendor"
+    }
+   ]
+  },
+  {
+   "pair_id": "S2-06",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "short plate fragments: '71' vs '17'",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-07",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "age as a description: 'college-going boy' vs 'man in his fifties'",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S2-08",
+   "stratum": "S2",
+   "label": "false_link",
+   "differs": "helmet colour in different words: 'dark' vs 'bright yellow'",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "helmet",
+     "field": "helmet",
+     "a": "dark",
+     "b": "bright yellow"
+    }
+   ]
+  },
+  {
+   "pair_id": "S3-01",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "time of day: 02:10 vs 14:10",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-02",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "weapon: knife shown vs no weapon",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-03",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "target: shopkeeper at counter vs pedestrian",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-04",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "approach: on foot vs on a bike (no vehicle stated for A)",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-05",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "escape: by auto-rickshaw vs on the bike",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-06",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "MO: distraction ('asked for directions') vs snatch from behind",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-07",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "stolen item: mangalsutra vs mobile phone",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "S3-08",
+   "stratum": "S3",
+   "label": "false_link",
+   "differs": "build: heavy-set vs very thin (build is not a rule field)",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-01",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "less detail: Bajaj vs Bajaj Pulsar 150",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-02",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "colour spelling: grey vs gray",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-03",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "overlapping ages: 20-30 vs about 25",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-04",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "plate with one unread digit: TN09AB44?1 vs TN09AB4471",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-05",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "helmet detail: black vs black with red stripe",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-06",
+   "stratum": "twin_clean",
+   "label": "true_twin",
+   "differs": "count stated vs not stated",
+   "dropped": false,
+   "contradictions": []
+  },
+  {
+   "pair_id": "T-07",
+   "stratum": "twin_witness_error",
+   "label": "true_twin",
+   "differs": "witnesses disagree on age: about 25 vs 38",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "about 25",
+     "b": "38"
+    }
+   ]
+  },
+  {
+   "pair_id": "T-08",
+   "stratum": "twin_witness_error",
+   "label": "true_twin",
+   "differs": "witnesses disagree on colour: red vs maroon",
+   "dropped": true,
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "red",
+     "b": "maroon"
+    }
+   ]
+  }
+ ]
+}

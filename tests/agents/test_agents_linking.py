@@ -481,3 +481,16 @@ def test_linker_rationale_goes_in_chunks_with_a_budget_sized_to_the_chunk(make_d
     assert [len(ids) for ids, _ in seen] == [2, 2, 1]
     assert [b for _, b in seen] == [reason_budget(2), reason_budget(2), reason_budget(1)]
     assert [p.rationale for p in pairs] == [f"why P{i}" for i in range(5)]
+
+
+def test_alert_writer_flags_unverified_receipts_only_when_present(make_deps):
+    """#15 degraded mode: a run with an unverified Nightshift receipt marks its alerts (skeptic jsonb); a run
+    without one leaves the alert exactly as before (no new key)."""
+    deps = make_deps(responder=approve_all)
+    row = AlertWriter(deps).write(Skeptic(deps).review(scored(deps)))[0]
+    assert "receipts_unverified" not in (row["skeptic"] or {})
+
+    deps = make_deps(responder=approve_all)
+    deps.nightshift.receipts_unverified = 2
+    row = AlertWriter(deps).write(Skeptic(deps).review(scored(deps)))[0]
+    assert row["skeptic"]["receipts_unverified"] == 2

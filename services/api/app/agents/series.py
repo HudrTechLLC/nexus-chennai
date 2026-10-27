@@ -280,11 +280,17 @@ def describe_series(rows: Sequence[Mapping[str, Any]]) -> str | None:
     return name + (f" · {stations} station{'s' if stations != 1 else ''}" if stations else "")
 
 
-def detect_series(alerts: Sequence[Mapping[str, Any]], excluded: Set[str] = frozenset()) -> list[dict[str, Any]]:
+def strong_link(a: Mapping[str, Any]) -> bool:
+    """A link strong enough to grow a series under SERIES_HIGH_ONLY (#16): HIGH band, or approved by an analyst."""
+    return a.get("band") == "high" or a.get("status") == "approved"
+
+
+def detect_series(alerts: Sequence[Mapping[str, Any]], excluded: Set[str] = frozenset(), *,
+                  high_only: bool = False) -> list[dict[str, Any]]:
     """Connected components of 3+ cases over pair alerts that are not rejected.
 
     `excluded` crimes (D-033 test FIRs) are left out before grouping, so they neither join a series nor bridge
-    two series together.
+    two series together. `high_only` (#16, off by default) keeps only HIGH-band or analyst-approved links.
     """
     parent: dict[str, str] = {}
 
@@ -296,7 +302,8 @@ def detect_series(alerts: Sequence[Mapping[str, Any]], excluded: Set[str] = froz
         return x
 
     edges = [a for a in alerts if a.get("kind", "pair") == "pair" and a.get("status") != "rejected"
-             and len(a.get("crimes") or []) == 2 and not set(a["crimes"]) & excluded]
+             and len(a.get("crimes") or []) == 2 and not set(a["crimes"]) & excluded
+             and (not high_only or strong_link(a))]
     for a in edges:
         x, y = a["crimes"]
         parent[find(x)] = find(y)

@@ -1,6 +1,6 @@
-import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import { Badge, bandTone } from "@/components/ui";
-import { bandLabel, pct, type Band, type FactorRow } from "@/lib/alerts";
+import { bandLabel, pct, receiptsUnverifiedLine, type Band, type FactorRow, type Skeptic } from "@/lib/alerts";
 
 /** Band colours follow the foundation (G3): high = sev-high, medium = warn, low = sev-low. Gold is for evidence only. */
 const BAND_VAR: Record<string, string> = { high: "var(--sev-high)", medium: "var(--warn)", low: "var(--sev-low)" };
@@ -24,8 +24,14 @@ export function ScoreRing({ score, band, size = 64 }: { score: number; band: Ban
   );
 }
 
+/**
+ * The band pill. High stays the short "HIGH" tag; medium reads "Lead · analyst review" in plain sentence case, so a band
+ * that is right only about half the time is not presented like a high alert (copy only: scores and bands are unchanged).
+ */
 export function BandPill({ band }: { band: Band }) {
-  return <Badge tone={bandTone(band)} mono className="uppercase">{bandLabel(band)}</Badge>;
+  return band === "high"
+    ? <Badge tone={bandTone(band)} mono className="uppercase">{bandLabel(band)}</Badge>
+    : <Badge tone={bandTone(band)} title="Medium band: a lead for an analyst to review, not a confirmed link">{bandLabel(band)}</Badge>;
 }
 
 const STATE = {
@@ -63,5 +69,21 @@ export function FactorBars({ rows, compact = false }: { rows: FactorRow[]; compa
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Small warning under the alert header when model receipts in its run failed verification (#15 degraded mode).
+ * Renders nothing when every receipt verified (the key is absent), so a normal alert looks exactly as before.
+ */
+export function ReceiptsWarning({ skeptic }: { skeptic: Pick<Skeptic, "receipts_unverified"> | null | undefined }) {
+  const line = receiptsUnverifiedLine(skeptic);
+  if (!line) return null;
+  return (
+    <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-warn"
+       title="Nightshift returned these model replies without a valid signed receipt. The alert stands, but those calls could not be proven to come from the model named in the trace.">
+      <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+      {line}
+    </p>
   );
 }
