@@ -71,6 +71,9 @@ class RunState(TypedDict, total=False):
     approved: list[SkepticResult]
     dropped: list[SkepticResult]
     pending: list[SkepticResult]
+    # Fail-closed (#R): pairs still unresolved at the send-back cap or unchanged on re-score; written as
+    # needs_revision, never approved.
+    unresolved: list[SkepticResult]
     # pair_id -> (Linker score signature, Skeptic result) for pairs sent back in the previous round
     last_sent: dict[str, tuple[Any, SkepticResult]]
     alerts: list[dict[str, Any]]
@@ -326,30 +329,37 @@ class AgentGraph:
             results = self.skeptic.review(to_review, round_no=rnd, critique=self._model_time()) if to_review else []
         except DeadlineExceeded:
             return self._deadline(state, "Skeptic")
+        held: list[SkepticResult] = []
         for p in unchanged:
             prev = last[p.pair_id][1]
-            verdict = "approve" if p.score.alert else "drop"
-            results.append(dataclasses.replace(prev, pair=p, verdict=verdict,
-                                               critique=prev.critique + " (no new evidence on re-score)"))
+            # Fail closed: a pair the Skeptic sent back is never approved without a fresh approval.
+            verdict = "send_back" if p.score.alert else "drop"
+            r = dataclasses.replace(prev, pair=p, verdict=verdict, critique=prev.critique + " (no new evidence on re-score)")
+            (held if verdict == "send_back" else results).append(r)
             self._trace("Skeptic", "sendback_no_new_evidence", input_summary=f"pair {p.pair_id} round {rnd}",
-                        confidence=p.score.score, status="approved" if verdict == "approve" else "rejected",
+                        confidence=p.score.score, status="needs_revision" if p.score.alert else "rejected",
                         output_summary=f"re-score identical to round {rnd - 1} (score={p.score.score}, factors "
-                                       f"unchanged): {verdict} as at the revision cap, no further critique")
+                                       "unchanged): " + ("written as needs_revision, never approved"
+                                                         if p.score.alert else "drop") + ", no further critique")
         approved = [*state.get("approved", []), *(r for r in results if r.verdict == "approve")]
         dropped = [*state.get("dropped", []), *(r for r in results if r.verdict == "drop")]
         sent = [r for r in results if r.verdict == "send_back"]
-        update: dict[str, Any] = {"approved": approved, "dropped": dropped, "to_review": [], "last_sent": {}}
+        unresolved = [*state.get("unresolved", []), *held]
+        update: dict[str, Any] = {"approved": approved, "dropped": dropped, "to_review": [], "last_sent": {},
+                                  "unresolved": unresolved}
         if sent and self._can_send_back(state):
             update.update(last_sent={r.pair.pair_id: (sigs[r.pair.pair_id], r) for r in sent})
             update.update(pending=sent, send_backs=rnd,
                           feedback="; ".join(f"{r.pair.pair_id}: {r.critique}" for r in sent)[:1500],
                           requery=next((r.requery for r in sent if r.requery), None))
         else:
-            # Caps or deadline reached: a sent-back pair that still alerts stands as approved.
+            # Caps reached: fail closed. A sent-back pair that still alerts is written as needs_revision (like the
+            # deadline path), never approved; one that no longer alerts is dropped.
             for r in sent:
-                r.verdict = "approve" if r.pair.score.alert else "drop"
+                if not r.pair.score.alert:
+                    r.verdict = "drop"
                 r.critique += " (revision cap reached)"
-            update["approved"] = [*approved, *(r for r in sent if r.verdict == "approve")]
+            update["unresolved"] = [*unresolved, *(r for r in sent if r.verdict == "send_back")]
             update["dropped"] = [*dropped, *(r for r in sent if r.verdict == "drop")]
             update["pending"] = []
         return update
@@ -371,6 +381,14 @@ class AgentGraph:
                             output_summary=f"{a['alert_id']} written as needs_revision: the Skeptic's send-back "
                                            "was not resolved before the run deadline")
             alerts = [*alerts, *partial]
+        if state.get("unresolved"):
+            held = self.writer.write(state["unresolved"], unresolved=True)
+            for a in held:
+                self._trace("Graph", "sendback_unresolved_write", input_summary="|".join(sorted(a["crimes"])),
+                            status="degraded", confidence=a.get("score"),
+                            output_summary=f"{a['alert_id']} written as needs_revision: the Skeptic sent it back and "
+                                           "no later round approved it (revision cap or no new evidence)")
+            alerts = [*alerts, *held]
         return {"alerts": alerts, "status": status if status in ("deadline", "error") else "success"}
 
     # ----- edges ------------------------------------------------------------------------
