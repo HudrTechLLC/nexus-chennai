@@ -35,8 +35,13 @@ def rest_text(v):
 
 
 def _client(tmp_path, *, sample: bool, rows=None):
-    s = Settings(_env_file=None, sample_mode=sample, zetaris_api_key="" if sample else "test-key",
-                 supabase_url="", supabase_service_role_key="")
+    s = Settings(
+        _env_file=None,
+        sample_mode=sample,
+        zetaris_api_key="" if sample else "test-key",
+        supabase_url="",
+        supabase_service_role_key="",
+    )
     c = Z.ZetarisClient(s, tracer=Tracer("types-test", tmp_path, echo=False))
     if not sample:
         c._post = lambda *a, **k: [list(r) for r in rows]  # the REST answer, no network
@@ -56,8 +61,9 @@ def test_live_rest_row_matches_sample_twin_types(tmp_path, name):
     sample = _client(tmp_path / "s", sample=True).named(name, agent="t", crime_id=HERO)
     assert sample.source != "zetaris" and sample.rows, f"{name}: the sample twin should return a row for {HERO}"
     twin = sample.rows[0]
-    live = _client(tmp_path / "l", sample=False, rows=[[rest_text(v) for v in twin]]).named(name, agent="t",
-                                                                                            crime_id=HERO)
+    live = _client(tmp_path / "l", sample=False, rows=[[rest_text(v) for v in twin]]).named(
+        name, agent="t", crime_id=HERO
+    )
     assert live.source == "zetaris"
     got, want = live.dicts()[0], sample.dicts()[0]
     for col in Z.NAMED_QUERIES[name].columns:
@@ -73,8 +79,11 @@ def test_live_rest_row_matches_sample_twin_types(tmp_path, name):
 def test_category_hint_false_text_is_false_not_truthy(tmp_path):
     cols = Z.NAMED_QUERIES["q_news"].columns
     row = {c: "x" for c in cols} | {"hours_after": "25", "category_hint": "false"}
-    d = _client(tmp_path, sample=False, rows=[[row[c] for c in cols]]).named("q_news", agent="t",
-                                                                           crime_id=HERO).dicts()[0]
+    d = (
+        _client(tmp_path, sample=False, rows=[[row[c] for c in cols]])
+        .named("q_news", agent="t", crime_id=HERO)
+        .dicts()[0]
+    )
     assert d["category_hint"] is False and d["hours_after"] == 25.0
 
 
