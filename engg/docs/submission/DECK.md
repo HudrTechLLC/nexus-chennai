@@ -154,7 +154,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 - **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.789**, coverage 0.72, `[AT BUILD: pending → decided on camera?]`, with five factors (MO 0.885, vehicle 0.85 on a partial plate, suspect 1, target 1, space–time 0.328). nexus-3 DB read after the re-run, 26 Oct 23:02.
 - **Judge-path result (confirmed @ `de8e666`; label it "fresh clone, sample mode"):** from a fresh clone with no credentials, the hero case gets **3 cross-station links, 2 of them high** (Adyar ↔ Thiruvanmiyur 0.819, Adyar ↔ Velachery 0.789), and a 3-station series. Use this line even if the eval table doesn't land.
 - **Nemotron Ultra alone (pre-registered, #405), honest framing:** on the 178 scored pairs it was shown, Ultra alone scores a **higher** F1 than the pipeline (0.80 vs 0.69), not a significant difference (McNemar p = 0.55). The pipeline's edge is coverage at zero model cost: it scores every candidate (~0.83 s per case), where the model alone would need ~26 h for all 5,750 pairs; under a 10-pair budget it reached 14 of 49 true links vs the system's 41. **Never "agents beat the LLM".**
-- **Skeptic planted test (pre-registered, #392):** dropped 0 of 24 planted look-alike false links (named the planted fact in 19/24, exploratory). **Re-test of the fix: `[TBD: fresh pre-registered set, nexus-3/nexus-1]`**; publish it either way.
+- **Skeptic planted test (pre-registered, #392):** dropped 0 of 24 planted look-alike false links (named the planted fact in 19/24, exploratory). **Fix, shipped ~07:20 IST (#422; new runs only, existing alerts untouched):** a deterministic contradiction check dropped 24/24 planted false links with 0/8 twin false-drops on a fresh pre-registered set. It passes by construction on generator data; the only non-planted evidence is the what-if (9 false alerts dropped, 0 true links lost). Never "the Skeptic now catches false links".
 - **Also:** `/run` takes seconds per example on replay (sample mode); live, a single filed FIR reaches its alert in ~4.6 min (the reasoning lane is Nemotron Ultra 550B); tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
 - **Visual:** the eval page or a clean table. No chart without real numbers.
 
@@ -180,7 +180,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 - **Limitations (stated plainly):**
   - synthetic data;
   - vision runs on a rate-limited third-party free route (fine for synthetic stills, not for real evidence);
-  - the Skeptic is a second opinion, not a guarantee: on a pre-registered planted test it dropped 0 of 24 look-alike false links (#392); fix re-test `[TBD]`;
+  - the Skeptic is a second opinion, not a guarantee: on a pre-registered planted test it dropped 0 of 24 look-alike false links (#392); a deterministic contradiction check (shipped 27 Oct, #422) passes a fresh planted set by construction; its only non-planted evidence is one offline what-if;
   - the reasoning lane is Ultra 550B because Super 120B isn't served to our key;
   - bcrypt instead of Argon2id for tip passphrases;
   - model-written explanations can be imperfect, but the numbers can't (code computes them).
