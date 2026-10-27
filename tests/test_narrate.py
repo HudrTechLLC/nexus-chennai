@@ -60,3 +60,9 @@ def test_key_comes_from_a_file_or_one_command_env_never_the_command_line(tmp_pat
         narrate.read_key(None)
     src = (ROOT / "demo" / "narrate.py").read_text(encoding="utf-8")
     assert "--api-key" not in src  # no flag that would put the key in shell history
+
+
+def test_real_blocks_have_no_variant_markers():
+    """narrate.py voices a whole block, so a block must hold one variant only (no "[A] … [B] …")."""
+    blocks = narrate.parse_blocks((ROOT / "engg/docs/submission/VIDEO_SCRIPT.md").read_text(encoding="utf-8"))
+    assert [k for k, v in blocks.items() if "[" in v or "]" in v] == []
