@@ -1,0 +1,112 @@
+[
+  {
+    "case_id": "CHN-AD-2026-001071",
+    "status_B": "success",
+    "truth_pos": 8,
+    "A_pairs": 8,
+    "A_tp": 8,
+    "B_pairs": 4,
+    "B_tp": 4,
+    "B_plan_rounds": 1,
+    "B_seconds": 354.3
+  },
+  {
+    "case_id": "CHN-AD-2026-001078",
+    "status_B": "deadline",
+    "truth_pos": 8,
+    "A_pairs": 9,
+    "A_tp": 8,
+    "B_pairs": 0,
+    "B_tp": 0,
+    "B_plan_rounds": 1,
+    "B_seconds": 314.3
+  },
+  {
+    "case_id": "CHN-AD-2026-001084",
+    "status_B": "deadline",
+    "truth_pos": 0,
+    "A_pairs": 9,
+    "A_tp": 0,
+    "B_pairs": 2,
+    "B_tp": 0,
+    "B_plan_rounds": 2,
+    "B_seconds": 313.9
+  },
+  {
+    "case_id": "CHN-AD-2026-001182",
+    "status_B": "success",
+    "truth_pos": 8,
+    "A_pairs": 9,
+    "A_tp": 8,
+    "B_pairs": 3,
+    "B_tp": 3,
+    "B_plan_rounds": 1,
+    "B_seconds": 266.2
+  },
+  {
+    "case_id": "CHN-AM-2024-001346",
+    "status_B": "success",
+    "truth_pos": 0,
+    "A_pairs": 1,
+    "A_tp": 0,
+    "B_pairs": 0,
+    "B_tp": 0,
+    "B_plan_rounds": 1,
+    "B_seconds": 140.8
+  },
+  {
+    "case_id": "CHN-AM-2025-000865",
+    "status_B": "success",
+    "truth_pos": 5,
+    "A_pairs": 4,
+    "A_tp": 3,
+    "B_pairs": 0,
+    "B_tp": 0,
+    "B_plan_rounds": 1,
+    "B_seconds": 65.2
+  },
+  {
+    "case_id": "CHN-AM-2025-001042",
+    "status_B": "deadline",
+    "truth_pos": 5,
+    "A_pairs": 5,
+    "A_tp": 5,
+    "B_pairs": 2,
+    "B_tp": 2,
+    "B_plan_rounds": 2,
+    "B_seconds": 331.4
+  },
+  {
+    "case_id": "CHN-AM-2025-001062",
+    "status_B": "success",
+    "truth_pos": 0,
+    "A_pairs": 2,
+    "A_tp": 0,
+    "B_pairs": 1,
+    "B_tp": 0,
+    "B_plan_rounds": 2,
+    "B_seconds": 184.9
+  },
+  {
+    "case_id": "CHN-AS-2025-000080",
+    "status_B": "deadline",
+    "truth_pos": 7,
+    "A_pairs": 8,
+    "A_tp": 7,
+    "B_pairs": 0,
+    "B_tp": 0,
+    "B_plan_rounds": 1,
+    "B_seconds": 354.8
+  },
+  {
+    "case_id": "CHN-AV-2026-000609",
+    "status_B": "success",
+    "truth_pos": 0,
+    "A_pairs": 1,
+    "A_tp": 0,
+    "B_pairs": 1,
+    "B_tp": 0,
+    "B_plan_rounds": 1,
+    "B_seconds": 173.4
+  }
+]

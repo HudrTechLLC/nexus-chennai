@@ -80,4 +80,4 @@ There is **no pass/fail threshold**. 10 cases cannot support a significance clai
 
 Harness: `services/api/app/eval/model_in_loop.py`.
 
-**Related:** [[PLANTED_SKEPTIC_PREREG]] · [[SKEPTIC_CONTRADICTION_PREREG]]
+**Related:** [[MODEL_IN_LOOP_RESULTS]] · [[PLANTED_SKEPTIC_PREREG]] · [[SKEPTIC_CONTRADICTION_PREREG]]
