@@ -89,7 +89,7 @@ describe("coverageCap (D-016)", () => {
 
   it("explains a high score held at medium by low coverage", () => {
     expect(coverageCap(capped)).toEqual({ withData: 2, total: 9, coverage: 0.35 });
-    expect(coverageCapLine(capped)).toBe("Capped at medium: only 2 of 9 factors had data (coverage 35%)");
+    expect(coverageCapLine(capped)).toBe("Held as a lead for analyst review: only 2 of 9 factors had data (coverage 35%)");
   });
   it("says nothing when the score was medium on its own merits", () => {
     expect(coverageCapLine({ ...capped, score: 0.7 })).toBeNull();

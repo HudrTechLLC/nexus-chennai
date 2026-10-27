@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isRunId, queryRows, querySource, runTone, stateTone, stepKind, summarise, type TraceRow } from "../trace";
+import { isRunId, queryRows, querySource, runMode, runTone, stateTone, stepKind, summarise, type TraceRow } from "../trace";
 
 function row(over: Partial<TraceRow>): TraceRow {
   return {
@@ -81,5 +81,26 @@ describe("runTone", () => {
     expect(runTone("failed")).toBe("bad");
     expect(runTone("success")).toBe("good");
     expect(runTone("running")).toBe("muted");
+  });
+});
+
+describe("runMode", () => {
+  const rr = (output_summary: string | null) => row({ seq: 0, agent_name: "api", action: "run_received", output_summary });
+  it("reads LIVE from sample_mode=False on the run's run_received event", () => {
+    expect(runMode([rr("sample_mode=False deadline=300s"), ...RUN])).toBe("live");
+  });
+  it("reads SAMPLE from sample_mode=True, in any case", () => {
+    expect(runMode([rr("sample_mode=True deadline=300s")])).toBe("sample");
+    expect(runMode([rr("deadline=300s sample_mode=true")])).toBe("sample");
+  });
+  it("is null when the run has no run_received event or it does not carry the flag (never assumed)", () => {
+    expect(runMode(RUN)).toBeNull();
+    expect(runMode([rr("deadline=300s")])).toBeNull();
+    expect(runMode([rr(null)])).toBeNull();
+    expect(runMode([rr("not_sample_mode=True")])).toBeNull();
+    expect(runMode([])).toBeNull();
+  });
+  it("ignores a sample_mode mention on any other step", () => {
+    expect(runMode([row({ action: "model_call", output_summary: "sample_mode=True" })])).toBeNull();
   });
 });
