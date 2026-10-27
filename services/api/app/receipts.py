@@ -30,9 +30,48 @@ KEY_MISMATCH = "key_mismatch"
 PINNED_KEY_SHA256 = "c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865"
 
 
+def js_number(x: float) -> str:
+    """A float exactly as JavaScript's Number.prototype.toString writes it, which is how Nightshift serialises the
+    receipt body it signs: shortest round-trip digits, plain decimals from 1e-6 up to (not incl.) 1e21, exponent form
+    ("1e-7", "1.5e+21") outside that, and whole numbers without ".0". Python's json writes 1.5e-05 and 1.0 instead,
+    so a receipt carrying such a float (the richer receipts since 27 Oct ~21:36) failed as bad_signature."""
+    if x != x or x in (float("inf"), float("-inf")):
+        raise ValueError("NaN/Infinity are not JSON")
+    if x == 0:
+        return "0"
+    sign = "-" if x < 0 else ""
+    mant, _, exp = repr(abs(x)).partition("e")  # repr = shortest round-trip digits
+    whole, _, frac = mant.partition(".")
+    raw = whole + frac.rstrip("0") if frac != "0" else whole
+    stripped = raw.lstrip("0")
+    digits = stripped.rstrip("0")
+    n = len(whole) + int(exp or 0) - (len(raw) - len(stripped))  # value = 0.digits x 10^n
+    k = len(digits)
+    if k <= n <= 21:
+        out = digits + "0" * (n - k)
+    elif 0 < n <= 21:
+        out = digits[:n] + "." + digits[n:]
+    elif -6 < n <= 0:
+        out = "0." + "0" * -n + digits
+    else:
+        e = n - 1
+        out = (digits if k == 1 else digits[0] + "." + digits[1:]) + "e" + ("+" if e >= 0 else "-") + str(abs(e))
+    return sign + out
+
+
+def _encode(v: Any) -> str:
+    if isinstance(v, dict):
+        return "{" + ",".join(json.dumps(str(k), ensure_ascii=False) + ":" + _encode(v[k]) for k in sorted(v)) + "}"
+    if isinstance(v, (list, tuple)):
+        return "[" + ",".join(_encode(x) for x in v) + "]"
+    if isinstance(v, float):
+        return js_number(v)
+    return json.dumps(v, ensure_ascii=False)  # str, int, bool, None: identical to the signer's output
+
+
 def canonical(body: dict[str, Any]) -> bytes:
-    """The bytes Nightshift signs: the body as compact, key-sorted JSON in UTF-8."""
-    return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    """The bytes Nightshift signs: the body as compact, key-sorted JSON in UTF-8, numbers written as JavaScript does."""
+    return _encode(body).encode("utf-8")
 
 
 def check_envelope(env: Any, expected_key_sha256: str | None = None) -> str:
