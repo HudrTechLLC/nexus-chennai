@@ -2,8 +2,9 @@
 
 Every source Nexus reads, where it comes from, how many rows it holds, and its licence. **All crime,
 person, vehicle, camera, call, tip, statement, evidence, news and social data is synthetic**: the
-seeded generator made it inside the hackathon window, and every row carries `synthetic: true`
-(rule R9). Real public data appears in only three places: map geometry and points of interest
+seeded generator made it inside the hackathon window. Database rows carry `synthetic: true`
+(rule R9); the 8 legacy station CSV exports have no per-row flag but are generated the same way,
+and `data/sample/MANIFEST.json` marks the bundle `"synthetic": true`. Real public data appears in only three places: map geometry and points of interest
 (OpenStreetMap, DataMeet), the station list, and weather (Open-Meteo). Each is listed with its
 licence below.
 
