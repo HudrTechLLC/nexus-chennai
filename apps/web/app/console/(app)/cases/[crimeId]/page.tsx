@@ -20,6 +20,7 @@ import { MoReview } from "../_components/MoReview";
 import { DiaryForm, StatusForm } from "../_components/CaseWrites";
 import { PersonLink } from "../_components/PersonLink";
 import { personLabel } from "@/lib/persons";
+import { receiptLabel } from "@/lib/receipts";
 
 export const dynamic = "force-dynamic";
 
@@ -291,7 +292,7 @@ async function FullCase({ file, canWrite, canExplore, role }: { file: CaseFile; 
                 )}
                 <p className="text-xs text-muted">
                   {features.model} · {features.extractor_version}{features.confidence !== null ? ` · confidence ${pct(features.confidence)}` : ""}
-                  {features.receipt_id ? <> · receipt <span className="font-mono">{features.receipt_id.slice(0, 18)}…</span></> : null}
+                  {features.receipt_id ? <> · {receiptLabel(features.receipt_id)} <span className="font-mono" title={features.receipt_id}>{features.receipt_id.slice(0, 18)}…</span></> : null}
                   {file.run ? <> · run {traceLink(file.run.run_id, file.run.kind)}</> : null}
                 </p>
                 {!latestReview && <p className="text-xs text-muted">Not reviewed by an officer yet.</p>}

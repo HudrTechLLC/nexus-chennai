@@ -19,6 +19,7 @@ import { TfStatusPill } from "@/components/console/taskforces/TfBits";
 import { canPropose } from "@/lib/taskforces";
 import { SeriesMapLoader } from "@/components/console/series/SeriesMapLoader";
 import type { SeriesMapPoint } from "@/components/console/series/SeriesMap";
+import { receiptCountLine, receiptLabel } from "@/lib/receipts";
 
 /** Bracketed record ids in the dossier text ("[CHN-AD-2026-001182]", "[ST-017554]") shown as small id chips. */
 const BRACKET_ID = /\[((?:CHN|ST|LA|SER)-[A-Z0-9-]+)\]/g;
@@ -141,8 +142,8 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
               <p className="mt-3 font-mono text-[11px] text-muted">
                 {(() => { const a = dossierAuthor(dossier); return a.model ? <>model {a.label} · </> : <span className="text-accent">{a.label} · </span>; })()}
                 {dossier.receipt_ids.length > 0
-                  ? <span title={dossier.receipt_ids.join(", ")}>{dossier.receipt_ids.length} receipt{dossier.receipt_ids.length === 1 ? "" : "s"} · </span>
-                  : dossier.receipt_id && <>receipt {dossier.receipt_id} · </>}
+                  ? <span title={dossier.receipt_ids.join(", ")}>{receiptCountLine(dossier.receipt_ids)} · </span>
+                  : dossier.receipt_id && <>{receiptLabel(dossier.receipt_id)} {dossier.receipt_id} · </>}
                 {dossier.run_id && (openTrace
                   ? <Link href={`/console/system/trace/${encodeURIComponent(dossier.run_id)}`} className="text-signal hover:underline">run {dossier.run_id}</Link>
                   : <>run {dossier.run_id}</>)}

@@ -17,6 +17,7 @@ import {
   type TraceRow,
 } from "@/lib/trace";
 import { RunModeBadge } from "@/components/console/runs/RunModeBadge";
+import { receiptCountLine, receiptLabel } from "@/lib/receipts";
 
 const RUN_TONE = {
   good: "border-signal text-signal",
@@ -81,7 +82,7 @@ export default async function TracePage({ params }: { params: { runId: string } 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
         <Stat label="Agents" value={s.agents.length} note={s.agents.join(", ")} />
         <Stat label="Model calls" value={s.modelCalls}
-              note={`${s.receipts} Nightshift receipts${s.replayed ? ` · ${s.replayed} replayed (sample mode)` : ""} · ${s.models.join(", ") || "none"}`} />
+              note={`${receiptCountLine(rows.map((x) => x.receipt_id))}${s.replayed ? ` · ${s.replayed} replayed (sample mode)` : ""} · ${s.models.join(", ") || "none"}`} />
         <Stat label="Zetaris queries" value={s.zetarisQueries} note={`${s.zetarisRows} rows read`} />
         <Stat label="Engines" value={s.engines.length} note={s.engines.join(", ") || "none"} />
         <Stat label="Skeptic strikes" value={s.strikes} note={`${s.sendBacks} sent back to the Planner`} />
@@ -118,7 +119,7 @@ export default async function TracePage({ params }: { params: { runId: string } 
                   {e.output_summary && <div className="break-words text-xs">out: {e.output_summary}</div>}
                   <div className="flex flex-wrap gap-x-3 font-mono text-xs text-muted">
                     {e.model && <span>model {e.routed_model && e.routed_model !== e.model ? `${e.model} → ${e.routed_model}` : e.model}</span>}
-                    {e.receipt_id && <span>receipt {e.receipt_id}</span>}
+                    {e.receipt_id && <span>{receiptLabel(e.receipt_id)} {e.receipt_id}</span>}
                     {(e.zetaris_query_ids ?? []).map((q) => <span key={q}>query {q}</span>)}
                     {n !== null && <span>{n} rows{via === "sample" ? " (sample twin)" : ""}</span>}
                     {e.engine && <span>engine {e.engine}</span>}
