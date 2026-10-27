@@ -109,7 +109,7 @@ def default_plan(case: Mapping[str, Any], features: Mapping[str, Any] | None, *,
                                                   "cells": s["h3_r9"] or ""}, "plate seen near other scenes"))
     tags = mo_tags(features)
     if tags and s["ward"] is not None:
-        steps.append(PlanStep("q_offender_return", {"mo_tags": tags, "ward": s["ward"],
+        steps.append(PlanStep("q_offender_return", {"mo_tags": ",".join(tags), "ward": s["ward"],
                                                     "since": case.get("occurred_from")}, "released offenders with MO"))
     steps += [
         PlanStep("q_tip_corroboration", {"crime_id": cid}, "clean tips mentioning the case"),
