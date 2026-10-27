@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { failureOutcome, stepsSummary, type AlertStep } from "@/lib/alertTrace";
-import { receiptLabel } from "@/lib/receipts";
+import { receiptLabel, receiptNote } from "@/lib/receipts";
 
 const STATUS_TONE: Record<string, string> = {
   approved: "text-signal", needs_revision: "text-accent", rejected: "text-red-600", degraded: "text-accent",
@@ -68,7 +68,7 @@ export function AlertHowMade({ steps, runId, verdict, canOpenTrace }: {
                   {x.zetaris} Zetaris {x.zetaris === 1 ? "query" : "queries"}
                 </span>
               )}
-              {x.receipt && <span className="text-xs text-muted">{receiptLabel(x.receipt)} <span className="font-mono">{x.receipt}</span></span>}
+              {x.receipt && <span className="text-xs text-muted">{receiptLabel(x.receipt)} <span className="font-mono">{x.receipt}</span>{receiptNote(x.receipt) && <span className="text-signal"> · {receiptNote(x.receipt)}</span>}</span>}
               {x.status && !["ok", "success"].includes(x.status) && (
                 <span
                   className={`text-xs ${failed ? FAILURE_TONE[failed] : STATUS_TONE[x.status] ?? "text-muted"}`}

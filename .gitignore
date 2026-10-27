@@ -26,6 +26,7 @@ logs/*
 !logs/feature_*.txt
 !logs/.gitkeep
 !logs/receipts_verification.json
+!logs/receipt_matches.json
 !logs/trace-demo-001.jsonl
 !logs/trace-demo-002.jsonl
 !logs/trace-demo-003.jsonl

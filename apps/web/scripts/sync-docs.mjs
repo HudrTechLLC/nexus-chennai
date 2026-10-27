@@ -83,4 +83,13 @@ fs.writeFileSync(
   hasEval ? fs.readFileSync(evalSrc, "utf8") : JSON.stringify({ available: false }) + "\n",
 );
 
-console.log(`sync-docs: ${tabs.length} spec tabs, ${notes.length} notes, eval report ${hasEval ? "copied" : "absent"}`);
+// ---- receipt matches (completion ids matched to signed Nightshift receipts; scripts/receipt_matches.py) ----
+// Ids only. Always written so lib/receipts.ts resolves; with no file every id reads "not yet matched".
+const matchSrc = path.resolve(web, "../../logs/receipt_matches.json");
+const hasMatches = fs.existsSync(matchSrc);
+fs.writeFileSync(
+  path.join(outContent, "receipt_matches.json"),
+  hasMatches ? fs.readFileSync(matchSrc, "utf8") : JSON.stringify({ checked: 0, verified: 0, not_verified: 0, ids: [] }) + "\n",
+);
+
+console.log(`sync-docs: ${tabs.length} spec tabs, ${notes.length} notes, eval report ${hasEval ? "copied" : "absent"}, receipt matches ${hasMatches ? "copied" : "absent"}`);
