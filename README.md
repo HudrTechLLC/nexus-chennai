@@ -31,6 +31,8 @@ docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission
 curl -s -X POST localhost:8000/run -H 'content-type: application/json' -d @input_examples/example_1.json
 ```
 
+Or pull the prebuilt image (built from this Dockerfile on every push to main): `docker run --rm -p 8000:8000 -e SAMPLE_MODE=true ghcr.io/hudrtechllc/nexus-chennai:latest`
+
 Expected for `example_1`: 3 cross-station links, Adyar ↔ Thiruvanmiyur **high 0.819**, Adyar ↔ Velachery **high 0.789**, Adyar ↔ Thiruvanmiyur medium 0.692, and one series of 4 cases. Every model step in the trace (`logs/trace-<run_id>.jsonl`; committed copies in `logs/trace-demo-00N.jsonl`) shows `replayed` with the recorded Nemotron model id. CI proves the same thing on every push to main with no network at all (`judge-offline`, see [Sample mode vs live](#sample-mode-vs-live)).
 
 ## What it does

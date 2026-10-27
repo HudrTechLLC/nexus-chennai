@@ -1,0 +1,45 @@
+name: publish-image
+
+# Publishes the judge image (the root Dockerfile, exactly as `docker build -t oah-submission .`) to
+# ghcr.io/hudrtechllc/nexus-chennai with tags :latest and :<commit sha> on every push to main.
+# No build args, no secrets: the image runs with SAMPLE_MODE=true and an empty environment, like the judge path.
+# Auth is the workflow's own GITHUB_TOKEN (packages: write); nothing else is read.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-image
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign in to GHCR with the workflow token
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: docker build (repo root, no build args)
+        run: docker build -t ghcr.io/hudrtechllc/nexus-chennai:latest -t ghcr.io/hudrtechllc/nexus-chennai:${{ github.sha }} .
+      - name: smoke test before pushing (SAMPLE_MODE=true, empty env, examples 1-3 EXACT)
+        run: |
+          docker run -d --name smoke -p 8000:8000 -e SAMPLE_MODE=true ghcr.io/hudrtechllc/nexus-chennai:${{ github.sha }}
+          for i in $(seq 1 30); do curl -fsS http://localhost:8000/health && break; sleep 2; done
+          mkdir -p got
+          for n in 1 2 3; do
+            code=$(curl -s -o got/got_$n.json -w '%{http_code}' -X POST http://localhost:8000/run \
+              -H 'Content-Type: application/json' -d @input_examples/example_$n.json)
+            [ "$code" = 200 ] || { echo "example_$n: HTTP $code"; docker logs smoke | tail -50; exit 1; }
+          done
+          python3 scripts/judge_compare.py . got
+          docker rm -f smoke
+      - name: push :latest and :sha
+        run: |
+          docker push ghcr.io/hudrtechllc/nexus-chennai:${{ github.sha }}
+          docker push ghcr.io/hudrtechllc/nexus-chennai:latest
