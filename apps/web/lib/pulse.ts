@@ -406,3 +406,9 @@ export function facetIds(f: Facets, sel: FacetSelection): Set<string> | null {
   if (perKind.length === 0) return null;
   return perKind.reduce((acc, ids) => new Set(Array.from(acc).filter((id) => ids.has(id))));
 }
+
+/** Map label for a series hull: "<name> · N cases · M stations", without repeating a station count the name already carries. */
+export function seriesLabel(name: string, cases: number, stations: number): string {
+  const st = /\bstations?\b/i.test(name) ? "" : ` · ${stations} station${stations === 1 ? "" : "s"}`;
+  return `${name} · ${cases} case${cases === 1 ? "" : "s"}${st}`;
+}

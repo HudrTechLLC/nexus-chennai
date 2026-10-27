@@ -9,7 +9,7 @@ import { CITY } from "@/lib/city";
 import type { Role } from "@/lib/roles";
 import {
   arcPath, binDaily, binHours, CAT_COLOUR, CAT_GLYPH, CAT_KEYS, CAT_LABEL, catKey, convexHull, DAY_MS, localDay,
-  boundsOf, byCount, cone, initialFrame, decodeFacets, facetIds, isoWeek, padRing, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
+  boundsOf, byCount, cone, initialFrame, decodeFacets, facetIds, isoWeek, padRing, seriesLabel, UNKNOWN_ZONE, zoneStations, type Facets, passes, pulsePhase, pulseTier, tzOffsetMinutes, weekInRange, type CatKey, type CrimeFilter, type LonLat, type MapCrime,
 } from "@/lib/pulse";
 import { MapCanvas } from "./MapCanvas";
 import { ClockDial } from "./ClockDial";
@@ -226,7 +226,7 @@ export default function PulseMap({ stationId, role, focusCell = null, focusCrime
     const stations = new Set(s.members.map((id) => data.links.points[id]?.st).filter(Boolean));
     const hull = padRing(convexHull(pts.map((x) => x.p)), 0.004);
     const centre: LonLat | null = pts.length ? [pts.reduce((a, x) => a + x.p[0], 0) / pts.length, Math.max(...pts.map((x) => x.p[1])) + 0.006] : null;
-    return { ...s, pts, hull, centre, label: `${s.name} · ${s.members.length} cases · ${stations.size} station${stations.size === 1 ? "" : "s"}` };
+    return { ...s, pts, hull, centre, label: seriesLabel(s.name, s.members.length, stations.size) };
   }).filter((s) => s.pts.length > 0), [data.links, byId]);
 
   // ---------- hex heat (city-wide summary, H3 r8) ----------
