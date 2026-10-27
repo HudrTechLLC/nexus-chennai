@@ -7,6 +7,9 @@ import type { PublicMap } from "@/lib/publicData";
 import { MAP_DAYS, labelOf, mapHref, type MapAt, type MapState } from "@/lib/publicCards";
 import { areaRows, escapeClosesPanel, focusAfterNavigation } from "@/lib/publicArea";
 import { AreaList } from "./AreaList";
+import { categoryIcon } from "./CategoryIcon";
+import { MapLegend } from "./MapLegend";
+
 
 const PublicHexMap = dynamic(() => import("./PublicHexMap"), {
   ssr: false, loading: () => <div className="h-[65vh] min-h-[420px] rounded-xl border border-line bg-surface" />,
@@ -73,9 +76,14 @@ export function PublicMapView({ map, state, panel }: { map: PublicMap; state: Ma
         ))}
         <span className="mx-1 text-muted">·</span>
         <button onClick={() => go({ ...state, type: null })} className={chip(!state.type)}>All types</button>
-        {categories.map((c) => (
-          <button key={c} onClick={() => go({ ...state, type: c })} className={chip(state.type === c)}>{labelOf(c)}</button>
-        ))}
+        {categories.map((c) => {
+          const CatIcon = categoryIcon(c);
+          return (
+            <button key={c} onClick={() => go({ ...state, type: c })} className={`${chip(state.type === c)} inline-flex items-center gap-1.5`}>
+              <CatIcon className="size-3.5" aria-hidden />{labelOf(c)}
+            </button>
+          );
+        })}
       </div>
       <div className="relative">
         <PublicHexMap
@@ -92,6 +100,7 @@ export function PublicMapView({ map, state, panel }: { map: PublicMap; state: Ma
         )}
         {panel}
       </div>
+      <MapLegend minCount={map.min_count} />
       <AreaList rows={rows} selected={state.hex} onOpen={openFromList} />
       <p className="text-xs text-muted">
         Each hexagon is about 0.7 km². Tap one, or pick it from the list, to see the crimes reported there. Areas with fewer than {map.min_count} reported

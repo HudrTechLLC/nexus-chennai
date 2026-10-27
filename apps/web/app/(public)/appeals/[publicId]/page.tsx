@@ -5,6 +5,9 @@ import { getAppeal } from "@/lib/publicData";
 import { APPEAL_IMAGE_ALT, appealImageUrl } from "@/lib/appealImages";
 import { appealTipHref, crimeMapHref, publicCell } from "@/lib/publicArea";
 import { AppealAreaMap } from "@/components/public/AppealAreaMap";
+import { CategoryBadge, CategoryMark } from "@/components/public/CategoryIcon";
+import { labelOf } from "@/lib/publicCards";
+import { buttonClass } from "@/components/ui";
 
 export const revalidate = 60;
 
@@ -20,13 +23,17 @@ export default async function AppealDetail({ params }: { params: { publicId: str
   return (
     <article className="mx-auto max-w-2xl space-y-5">
       <Link href="/appeals" className="text-sm text-muted hover:text-ink">← All appeals</Link>
-      <header>
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">{a.area} · week {a.week} · {a.time_window}</p>
-        <h1 className="mt-1 text-3xl font-bold">{a.title}</h1>
+      <header className="flex items-start gap-4 rounded-2xl border border-line bg-gradient-to-br from-surface to-signal-soft p-5 sm:p-6">
+        <CategoryMark category={a.category} size="lg" />
+        <div className="min-w-0">
+          {a.category && <CategoryBadge category={a.category} label={labelOf(a.category)} />}
+          <p className="mt-2 font-mono text-xs uppercase tracking-widest text-accent">{a.area} · week {a.week} · {a.time_window}</p>
+          <h1 className="mt-1 text-3xl font-bold">{a.title}</h1>
+        </div>
       </header>
       <p className="text-lg">{a.summary}</p>
       {a.looking_for.length > 0 && (
-        <section className="rounded-xl border border-line bg-surface p-5">
+        <section className="rounded-xl border border-line border-l-4 border-l-signal bg-surface p-5 shadow-card">
           <h2 className="font-semibold">What police are looking for</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">{a.looking_for.map((l, i) => <li key={i}>{l}</li>)}</ul>
         </section>
@@ -59,8 +66,8 @@ export default async function AppealDetail({ params }: { params: { publicId: str
         <p className="mt-1 text-muted">Happened in week {a.week} ({a.time_window.toLowerCase()}). Published {a.published_at ? new Date(a.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "recently"}. {a.tip_count} tip{a.tip_count === 1 ? "" : "s"} received.</p>
       </section>
       <div className="flex flex-wrap gap-3">
-        <Link href={appealTipHref(a.id)} className="rounded-md bg-signal px-4 py-2 font-medium text-white">Add a tip about this appeal</Link>
-        <Link href={appealTipHref(a.id, "cctv")} className="rounded-md border border-line px-4 py-2">I have CCTV</Link>
+        <Link href={appealTipHref(a.id)} className={buttonClass()}>Add a tip about this appeal</Link>
+        <Link href={appealTipHref(a.id, "cctv")} className={buttonClass({ variant: "secondary" })}>I have CCTV</Link>
       </div>
       <p className="text-xs text-muted">In an emergency, call 112.</p>
     </article>

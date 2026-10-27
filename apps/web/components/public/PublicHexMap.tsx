@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import { MAP_INK, currentMapTheme, mapStyleUrl } from "@/lib/publicMapTheme";
+import { HEX_FILL_OPACITY, MAP_INK, currentMapTheme, densityFill, mapStyleUrl } from "@/lib/publicMapTheme";
 import { cellToBoundary } from "h3-js";
 import { CITY } from "@/lib/city";
 import type { PublicCell } from "@/lib/publicData";
@@ -62,8 +62,8 @@ export function PublicHexMap({ cells, category, selected = null, initialAt = nul
       m.addLayer({
         id: "hex-fill", type: "fill", source: "hex",
         paint: {
-          "fill-color": ["interpolate", ["linear"], ["get", "k"], 0, "#fde68a", 0.5, "#f97316", 1, "#b91c1c"],
-          "fill-opacity": 0.55,
+          "fill-color": densityFill() as maplibregl.ExpressionSpecification,
+          "fill-opacity": HEX_FILL_OPACITY,
         },
       });
       m.addLayer({ id: "hex-line", type: "line", source: "hex", paint: { "line-color": "#ffffff", "line-width": 0.6, "line-opacity": 0.7 } });
