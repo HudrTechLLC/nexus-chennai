@@ -20,7 +20,9 @@ export function Id({ value, max, tone = "muted", className }: { value: string; m
   const color = tone === "evidence" ? "text-accent" : tone === "ink" ? "text-ink" : "text-muted";
   if (short === value) return <span className={cx("whitespace-nowrap font-mono text-xs", color, className)}>{value}</span>;
   return (
-    <span title={value} className={cx("whitespace-nowrap font-mono text-xs", color, className)}>
+    // `relative` keeps the absolutely positioned sr-only copy inside this span. Without it the copy is placed
+    // against a far ancestor and, inside a horizontally scrolling table, widens the whole page on phones.
+    <span title={value} className={cx("relative whitespace-nowrap font-mono text-xs", color, className)}>
       <span aria-hidden className="select-none">{short}</span>
       <span className="sr-only">{value}</span>
     </span>
