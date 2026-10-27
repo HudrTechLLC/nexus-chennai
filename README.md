@@ -172,7 +172,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8000/run -ContentType "appl
 
 Other routes: `POST /api/cases/{id}/process`, `POST /api/batch/link`, `POST /api/cases/{id}/public-draft`, `POST /api/series/{id}/dossier`, `POST /api/briefing`, `GET /api/traces/{run_id}`.
 
-**Workers.** The console on Vercel writes to Supabase, and two processes on the laptop pick the work up. Run exactly **one** of each.
+**Workers.** The console on Vercel writes to Supabase, and two processes on the laptop pick the work up. Run exactly **one** main worker. A second Ask worker would be safe, because it claims each question atomically, but there's no point running one.
 - **Main worker**, `python -m app.worker`: analyst decisions, new tips, new cases, and new source onboarding (`/console/system/sources/onboard`, WS1-23). Its other queues, such as decisions and tips, are not claimed atomically, which is why only one may run.
 - **Ask worker**, `python -m app.ask_worker`: answers Ask Nexus questions (`/console/ask`; see [ASK_NEXUS](engg/docs/ASK_NEXUS.md)). Start it beside the main worker, with the same environment. Without it, questions stay queued.
 - **`docker compose --profile worker up` starts only the main worker.** It does not start the Ask worker, so run `python -m app.ask_worker` separately.
