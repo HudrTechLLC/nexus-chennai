@@ -48,10 +48,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "services" / "api"))
+from app.receipts import canonical, check_envelope  # noqa: E402,F401  (shared with the live adapter)
 APP = "nexus-chennai"
 FIXTURES = ROOT / "data" / "sample" / "model_fixtures"
 DEFAULT_LOG = Path(os.environ.get("LOCALAPPDATA", "")) / "ai.meterless.runtime" / "receipts.jsonl"
@@ -62,27 +62,8 @@ DEFAULT_OUT = ROOT / "logs" / "receipts_verification.json"
 # =====================
 
 
-def canonical(body: dict[str, Any]) -> bytes:
-    """The bytes Nightshift signs: the body as compact, key-sorted JSON in UTF-8."""
-    return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
-
-def check_envelope(env: Any) -> str:
-    """'valid', 'bad_signature' or 'malformed' for one signed receipt envelope."""
-    try:
-        pub = base64.b64decode(env["pubkey_b64"], validate=True)
-        sig = base64.b64decode(env["sig_b64"], validate=True)
-        body = env["body"]
-        if len(pub) != 32 or len(sig) != 64 or not isinstance(body, dict):
-            return "malformed"
-        key = Ed25519PublicKey.from_public_bytes(pub)
-    except (KeyError, TypeError, ValueError):
-        return "malformed"
-    try:
-        key.verify(sig, canonical(body))
-        return "valid"
-    except InvalidSignature:
-        return "bad_signature"
+# canonical() and check_envelope() live in the app (app/receipts.py) so the live adapter checks receipts at call
+# time with the same code (#15).
 
 
 def request_id(env: dict[str, Any]) -> str | None:

@@ -97,6 +97,11 @@ class AlertWriter:
             row = alert.model_dump(mode="json")
             row["synthetic"] = bool(res.pair.crime_a.get("synthetic", True) or res.pair.crime_b.get("synthetic", True))
             row["weights_version"] = res.pair.score.weights_version  # link_alerts.weights_version (0007_07)
+            unverified = getattr(self.deps.nightshift, "receipts_unverified", 0) or 0
+            if unverified and isinstance(row.get("skeptic"), dict):
+                # #15 degraded mode: a model reply in this run carried no valid signed receipt. Stored in the skeptic
+                # jsonb (no schema change) and only when it happened, so a verified run's alert is unchanged.
+                row["skeptic"]["receipts_unverified"] = unverified
             stored = self.deps.store.write_alert(row)
             self.deps.store.notify([
                 {"station_id": st, "kind": "link_alert",
