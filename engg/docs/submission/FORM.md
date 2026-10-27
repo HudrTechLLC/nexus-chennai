@@ -60,7 +60,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 | Field | Value |
 |---|---|
 | Public GitHub repository | https://github.com/HudrTechLLC/nexus-chennai |
-| Demo video (1–4 min) | https://www.youtube.com/watch?v=FOUdFGT-GHY (3:39); the same video is in the repo: `submission/media/Nexus_Chennai_demo_v2_1080p.mp4` |
+| Demo video (1–4 min) | https://www.youtube.com/watch?v=EcCSA-5kI1E (3:51); the same video is in the repo: `submission/media/Nexus_Chennai_demo_v3_1440p.mp4` |
 | Slide deck | upload `submission/media/Nexus_Chennai_Heisenbugs_deck.pdf` (15 slides; content: [DECK](DECK.md)) |
 | Live app (optional) | Portal https://nexus-chennai.vercel.app · console https://nexus-chennai.vercel.app/console/login |
 
