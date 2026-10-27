@@ -11,3 +11,4 @@ Related: [DELIVERABLES](../DELIVERABLES.md) · [WS5-08 checklist](WS5-08-checkli
 |---|---|---|
 | [WS3-06 / WS3-10](WS3-06-WS3-10-2026-10-26.md) case file, search, FIR capture | 2026-10-26 | 10 PASS · 5 PARTIAL · 1 FAIL (accepted, D-029) · 1 N/A |
 | [WS5-08](WS5-08-2026-10-27.md) fresh-clone validation (L3), part 1 pre-run | 2026-10-26 | 14 PASS · 1 OPEN (video link) · 0 FAIL, history scan clean, 3 hygiene fixes (#316); part 2 Tue 27 Oct |
+| [WS5-08](WS5-08-2026-10-27.md) part 3, final fresh clone on `5a7c549` | 2026-10-27 | Every runnable step PASS · 0 FAIL; sample mode EXACT (venv, no `.env`) and offline in CI; docker via CI stand-in (local RAM 1.5 GB); README workers gap fixed (#410) |
