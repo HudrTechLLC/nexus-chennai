@@ -1,10 +1,15 @@
+import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import { Badge, bandTone } from "@/components/ui";
 import { bandLabel, pct, type Band, type FactorRow } from "@/lib/alerts";
+
+/** Band colours follow the foundation (G3): high = sev-high, medium = warn, low = sev-low. Gold is for evidence only. */
+const BAND_VAR: Record<string, string> = { high: "var(--sev-high)", medium: "var(--warn)", low: "var(--sev-low)" };
 
 /** Circular score gauge (score is computed by the pipeline in code; F2). */
 export function ScoreRing({ score, band, size = 64 }: { score: number; band: Band; size?: number }) {
   const r = (size - 8) / 2;
   const c = 2 * Math.PI * r;
-  const colour = band === "high" ? "var(--signal)" : "var(--accent)";
+  const colour = BAND_VAR[band] ?? "var(--signal)";
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
@@ -20,19 +25,19 @@ export function ScoreRing({ score, band, size = 64 }: { score: number; band: Ban
 }
 
 export function BandPill({ band }: { band: Band }) {
-  const cls = band === "high" ? "bg-signal-soft text-signal" : "bg-accent-soft text-accent";
-  return <span className={`rounded-full px-2 py-0.5 font-mono text-xs uppercase tracking-wider ${cls}`}>{bandLabel(band)}</span>;
+  return <Badge tone={bandTone(band)} mono className="uppercase">{bandLabel(band)}</Badge>;
 }
 
+const STATE = {
+  pending: { label: "Pending", tone: "warn", icon: Clock },
+  awaiting_worker: { label: "Decision recorded · applying", tone: "info", icon: Loader2 },
+  approved: { label: "Approved", tone: "ok", icon: CheckCircle2 },
+  rejected: { label: "Rejected", tone: "danger", icon: XCircle },
+} as const;
+
 export function StatusPill({ state }: { state: "pending" | "awaiting_worker" | "approved" | "rejected" }) {
-  const map = {
-    pending: ["Pending", "border-line text-muted"],
-    awaiting_worker: ["Decision recorded · applying", "border-accent text-accent"],
-    approved: ["Approved", "border-signal text-signal"],
-    rejected: ["Rejected", "border-red-500 text-red-600"],
-  } as const;
-  const [label, cls] = map[state];
-  return <span className={`rounded-full border px-2 py-0.5 text-xs ${cls}`}>{label}</span>;
+  const s = STATE[state];
+  return <Badge tone={s.tone} icon={s.icon}>{s.label}</Badge>;
 }
 
 /** Factor bars: bar length = value, label shows weight; struck factors are crossed out (spec G2, D3.11). */

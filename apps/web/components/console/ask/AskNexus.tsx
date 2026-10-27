@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { consoleBrowserClient } from "@/lib/supabase/browser";
 import { AlertMapLoader } from "@/components/console/alerts/AlertMapLoader";
+import { FileText, ListOrdered, Loader2, MapPin, MessageSquareText, Sparkles } from "lucide-react";
+import { Badge, buttonClass, Card, Id, SectionHeader } from "@/components/ui";
 import {
   ASK_CRIME_COLUMNS, checkQuestion, crimeLabel, hitScenes, insertErrorText, isSettled, nextPoll, POLL_MS, QUESTION_MAX, RECENT_LIMIT, SAMPLE_QUESTIONS, STATUS_TEXT,
   visibleResults, type AskCrime, type AskQuestion, type AskResultRow,
@@ -108,16 +110,16 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
     <div className="space-y-5">
       <form
         onSubmit={(e) => { e.preventDefault(); void ask(text); }}
-        className="space-y-3 rounded-xl border border-line bg-surface p-5"
+        className="space-y-3 rounded-xl border border-line bg-surface p-5 shadow-card"
       >
         <label htmlFor="ask-q" className="text-sm font-semibold">Your question</label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             id="ask-q" value={text} onChange={(e) => setText(e.target.value)} maxLength={QUESTION_MAX} disabled={busy}
             placeholder="e.g. Chain snatchings in Adyar after 7 pm this month"
-            className="min-w-0 flex-1 rounded-md border border-line bg-bg px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded-md border border-line bg-bg px-3 py-2 text-sm shadow-inner"
           />
-          <button disabled={busy} className="rounded-md bg-signal px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+          <button disabled={busy} className={buttonClass({ variant: "primary", className: "disabled:opacity-60" })}>
             {busy ? "Asking…" : "Ask"}
           </button>
         </div>
@@ -126,7 +128,8 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
           <span className="text-muted">Try:</span>
           {SAMPLE_QUESTIONS.map((s) => (
             <button key={s} type="button" disabled={busy} onClick={() => { setText(s); void ask(s); }}
-              className="rounded-full border border-line px-3 py-1 text-left hover:border-signal disabled:opacity-60">
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-left hover:border-signal hover:bg-signal-soft hover:text-signal disabled:opacity-60">
+              <Sparkles className="size-3.5 shrink-0 text-signal" aria-hidden />
               {s}
             </button>
           ))}
@@ -134,7 +137,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
       </form>
 
       {recent.length > 0 && (
-        <details className="rounded-xl border border-line bg-surface px-5 py-3 text-sm">
+        <details className="rounded-xl border border-line bg-surface px-5 py-3 text-sm shadow-card">
           <summary className="cursor-pointer font-semibold">Your recent questions <span className="font-normal text-muted">({recent.length})</span></summary>
           <ul className="mt-2 divide-y divide-line">
             {recent.map((q) => (
@@ -155,30 +158,30 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
       </p>
 
       {phase.kind === "asking" && (
-        <section className="rounded-xl border border-line bg-surface p-5 text-sm" data-testid="ask-status">
-          <p className="font-medium"><span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-signal align-middle" />{STATUS_TEXT[phase.q?.status ?? "queued"]}</p>
+        <section className="rounded-xl border border-[color-mix(in_srgb,var(--signal)_40%,transparent)] bg-surface p-5 text-sm shadow-card" data-testid="ask-status">
+          <p className="flex items-center gap-2 font-medium"><Loader2 className="size-4 shrink-0 animate-spin text-signal" aria-hidden />{STATUS_TEXT[phase.q?.status ?? "queued"]}</p>
           {phase.q?.plan?.understood && <p className="mt-1 text-muted">Understood: {phase.q.plan.understood}</p>}
           <p className="mt-1 text-xs text-muted">Usually 10–40 seconds: the plan is written by a model, the searches run on Zetaris.</p>
         </section>
       )}
 
       {phase.kind === "gave_up" && (
-        <section className="rounded-xl border border-line bg-surface p-5 text-sm">
+        <section className="rounded-xl border border-line bg-surface p-5 text-sm shadow-card">
           <p className="font-medium">Still working on it.</p>
           <p className="mt-1 text-muted">The worker has not finished after two minutes. It may still answer: open it from Your recent questions in a little while.</p>
         </section>
       )}
 
-      {phase.kind === "error" && <p role="alert" className="rounded-xl border border-line bg-surface p-5 text-sm text-red-600">{phase.message}</p>}
+      {phase.kind === "error" && <p role="alert" className="rounded-xl border border-[color-mix(in_srgb,var(--danger)_40%,transparent)] bg-danger-soft p-5 text-sm text-danger">{phase.message}</p>}
 
       {phase.kind === "settled" && (
         <div ref={resultsRef} tabIndex={-1} className="space-y-5 outline-none" data-testid="ask-result">
-          <section className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wider text-muted">{phase.q.question}</p>
+          <Card tone={phase.q.status === "answered" ? "signal" : "raised"}>
+            <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><MessageSquareText className="size-4 shrink-0" aria-hidden />{phase.q.question}</p>
             {phase.q.status === "failed" ? (
-              <p className="mt-2 text-sm text-red-600">{phase.q.error ?? "Something went wrong. Please ask again."}</p>
+              <p className="mt-2 text-sm text-danger">{phase.q.error ?? "Something went wrong. Please ask again."}</p>
             ) : (
-              <p className="mt-2 text-lg">{phase.q.answer?.summary ?? "No answer."}</p>
+              <p className="mt-2 text-lg font-medium leading-snug text-ink">{phase.q.answer?.summary ?? "No answer."}</p>
             )}
             {phase.q.status === "answered" && phase.q.answer && (
               <p className="mt-1 text-xs text-muted">
@@ -188,35 +191,49 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
                 {phase.detailsFailed ? " · couldn't load the case details, please ask again" : ""}
               </p>
             )}
-          </section>
+            {phase.rows.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {phase.rows.map((r) => (
+                  <li key={r.crime_id}>
+                    <Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 font-mono text-xs text-ink ring-1 ring-inset ring-line hover:bg-signal-soft hover:text-signal">
+                      <FileText className="size-3 shrink-0" aria-hidden />{r.crime_id}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
           {phase.rows.length > 0 && (
             <div className="grid gap-5 lg:grid-cols-5">
-              <section className="overflow-x-auto rounded-xl border border-line bg-surface p-5 lg:col-span-3">
-                <h2 className="mb-2 font-semibold">Cases</h2>
+              <Card className="overflow-x-auto lg:col-span-3">
+                <SectionHeader title="Cases" icon={ListOrdered} className="mb-3" actions={<Badge tone="signal">{phase.rows.length}</Badge>} />
                 <table className="w-full text-sm">
-                  <thead className="text-left text-xs text-muted">
-                    <tr><th className="py-1 pr-3">Case</th><th className="py-1 pr-3">What · where</th><th className="py-1 pr-3">When</th><th className="py-1">Why it matched</th></tr>
+                  <thead className="bg-surface-2 text-left text-xs text-muted">
+                    <tr><th className="rounded-l-md px-2 py-1.5">Case</th><th className="px-2 py-1.5">What · where</th><th className="px-2 py-1.5">When</th><th className="rounded-r-md px-2 py-1.5">Why it matched</th></tr>
                   </thead>
                   <tbody>
                     {phase.rows.map((r) => (
-                      <tr key={r.crime_id} className="border-t border-line align-top">
-                        <td className="whitespace-nowrap py-2 pr-3"><Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`} className="font-mono text-xs text-signal hover:underline">{r.crime_id}</Link></td>
-                        <td className="py-2 pr-3">
-                          {crimeLabel(r)}
-                          <div className="text-xs text-muted">{(r.station_id ?? "").replace(/^PS-/, "")}{r.address ? ` · ${r.address}` : ""}</div>
+                      <tr key={r.crime_id} className="border-t border-line align-top hover:bg-surface-2">
+                        <td className="whitespace-nowrap px-2 py-2"><Link href={`/console/cases/${encodeURIComponent(r.crime_id)}`} className="font-mono text-xs text-signal hover:underline">{r.crime_id}</Link></td>
+                        <td className="px-2 py-2">
+                          <span className="font-medium">{crimeLabel(r)}</span>
+                          <div className="flex items-start gap-1 text-xs text-muted"><MapPin className="mt-0.5 size-3 shrink-0" aria-hidden /><span>{(r.station_id ?? "").replace(/^PS-/, "")}{r.address ? ` · ${r.address}` : ""}</span></div>
                         </td>
-                        <td className="whitespace-nowrap py-2 pr-3 text-xs">{istDate(r.occurred_from)}</td>
-                        <td className="py-2 text-xs">{r.why}</td>
+                        <td className="whitespace-nowrap px-2 py-2 text-xs tabular-nums">{istDate(r.occurred_from)}</td>
+                        <td className="px-2 py-2 text-xs text-muted">{r.why}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </section>
-              <section className="self-start rounded-xl border border-line bg-surface p-5 lg:sticky lg:top-4 lg:col-span-2">
-                <h2 className="mb-2 font-semibold">Where</h2>
-                <AlertMapLoader scenes={hitScenes(phase.rows)} trail={[]} />
-              </section>
+              </Card>
+              <Card className="self-start lg:sticky lg:top-4 lg:col-span-2">
+                <SectionHeader title="Where" icon={MapPin} className="mb-3" actions={<Badge tone="signal">{hitScenes(phase.rows).length}</Badge>} />
+                <div className="overflow-hidden rounded-lg ring-1 ring-inset ring-line">
+                  <AlertMapLoader scenes={hitScenes(phase.rows)} trail={[]} />
+                </div>
+              </Card>
             </div>
           )}
 
@@ -231,7 +248,7 @@ export function AskNexus({ canOpenTrace }: { canOpenTrace: boolean }) {
 export function HowAnswered({ q, canOpenTrace }: { q: AskQuestion; canOpenTrace: boolean }) {
   const steps = q.plan?.steps ?? [];
   return (
-    <details className="rounded-xl border border-line bg-surface p-5">
+    <details className="rounded-xl border border-line bg-surface p-5 shadow-card">
       <summary className="cursor-pointer font-semibold">
         How this was answered
         <span className="ml-2 text-sm font-normal text-muted">
@@ -253,9 +270,9 @@ export function HowAnswered({ q, canOpenTrace }: { q: AskQuestion; canOpenTrace:
             <li key={i} className="flex flex-wrap items-baseline gap-x-2 border-t border-line pt-1.5 first:border-t-0 first:pt-0">
               <span className="text-muted">{i + 1}.</span>
               <span>{s.purpose}</span>
-              <span className="font-mono text-xs text-muted">{s.query}</span>
+              <Badge tone="accent" mono>{s.query}</Badge>
               {typeof s.rows === "number" && <span className="text-xs text-muted">{s.rows} rows</span>}
-              {s.query_id && <span className="font-mono text-xs text-muted">query {s.query_id}</span>}
+              {s.query_id && <span className="text-xs text-muted">query <Id value={s.query_id} tone="evidence" /></span>}
             </li>
           ))}
         </ol>
