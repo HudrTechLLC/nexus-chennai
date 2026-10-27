@@ -6,7 +6,7 @@ tags: [nexus, eval, prereg]
 
 Related: [00-INDEX](../00-INDEX.md) · [PLANTED_SKEPTIC_PREREG](PLANTED_SKEPTIC_PREREG.md) · [AGENTS](../AGENTS.md) · [DECISIONS](../DECISIONS.md)
 
-**Status: pre-registered, not yet run.** This note is committed before the fresh case set is opened and before
+**Status: run on 27 Oct 2026 (set #2): PASS on both pre-registered numbers, which are weak evidence (see Limits). Results are at the end; the text above them is unchanged.** Pre-registered: this note was committed before the fresh case set is opened and before
 any run. The results will be published whatever they are. Decided by Ravee and the chief (27 Oct 2026).
 - Owner: nexus-3.
 - Fresh set: built by nexus-1, blind to the rule.
@@ -198,3 +198,61 @@ The gate on `9259e78`: 443 tests passed, ruff clean, verify_replay, judge ex1–
 
 The report must show `code_sha = 9259e78…` and `code_dirty = false`. The metrics, pass rules and "publish whatever
 happens" are exactly as above; nothing is changed by this addendum.
+
+## Results (run 27 Oct 2026, 06:39–07:10 IST, set #2)
+
+**Result: PASS on both pre-registered numbers.** As stated in Limits before the run, both are weak evidence on
+generator data.
+
+| Run fact | Value |
+|---|---|
+| Output | `output_examples/skeptic_contradiction.json` |
+| Run id | `planted_93629a1e` |
+| `code_sha` / `code_dirty` | `9259e78fbd7743d22ef8b1d92e9771f468f68993` (the addendum's run commit) / `false` |
+| Case file / bundle | `b77276cb…a85f` / `data/eval/planted2/sample` (checked by the harness before any call) |
+| Model calls | 43 to `nvidia/nemotron-3-ultra-550b-a55b`, all ok, all with a receipt. Code drops make no model call |
+| Unavailable | none |
+| Re-runs | none |
+| `git status` after the run | only the new output file; no change under `data/**/model_fixtures/` or `output_examples/example_*` |
+
+**Deviations: none beyond the declared rebase** (addendum above).
+
+| Metric | Result | Pass rule | |
+|---|---|---|---|
+| **Primary:** planted drop rate (code or model) | **24 / 24 = 1.00** | ≥ 0.60 | **PASS** |
+| **Guard:** twin false-drops | **0 / 8** | ≤ 1 / 8 | **PASS** |
+| Drops by source | code 24, model 0 | — | |
+| #370 paired metric (dropped while the twin was approved) | 18 / 24 = 0.75 (set #1: 0 / 24) | — | |
+| Twins approved / sent back / dropped | 6 / 2 / 0 | — | |
+
+**By kind:** `vehicle_identity` 5/5, `offender_count` 8/8, `offender_age` 8/8, `helmet` 3/3. All are code drops.
+
+**By twin:**
+
+| Twin | Series | Twin verdict | a | b | c |
+|---|---|---|---|---|---|
+| PS-01 | Red Pulsar | approve | vehicle: drop | count: drop | age: drop |
+| PS-02 | G24 | approve | vehicle: drop | count: drop | age: drop |
+| PS-03 | G01 | approve | vehicle: drop | count: drop | age: drop |
+| PS-04 | G19 | approve | count: drop | age: drop | helmet: drop |
+| PS-05 | G01 | approve | vehicle: drop | count: drop | age: drop |
+| PS-06 | G06 | **send_back** (model: 37-day gap, missing plate) | count: drop | age: drop | helmet: drop |
+| PS-07 | G06 | **send_back** (model: 32-day gap, different stations) | count: drop | age: drop | helmet: drop |
+| PS-08 | G24 | approve | vehicle: drop | count: drop | age: drop |
+
+`features_source`: every pair is `generator_truth` (a single bucket, as declared in the addendum).
+
+### What it means
+
+- **The code does what it says on generator data.** Every planted contradiction was caught by the rule, and no
+  clean twin was dropped. Item 1 predicted both: the rule targets the recipe's plant kinds, and generator series
+  pairs never contradict.
+- **The model's behaviour is unchanged.** It still never chose `drop`: 0 model drops in set #2, as in #392. It still
+  sends back weak-looking true pairs (PS-06, PS-07: long gaps). Under #358's cap, those end approved.
+- **The paired metric (0.75) is below the planted drop rate only because of those two twin send-backs.** It is
+  reported for comparison with #392, not as a pass rule.
+- **The only evidence on non-planted pairs** is the offline linking what-if (item 5): 9 false alerts dropped, 0 true
+  links lost.
+- **Deck wording (chief):** "a deterministic contradiction check dropped 24/24 planted false links with 0/8 twin
+  false-drops. It passes by construction on generator data; the only non-planted evidence is the what-if (9 false
+  alerts dropped, 0 true links lost)."

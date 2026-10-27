@@ -1,0 +1,2545 @@
+{
+ "prereg": "engg/docs/eval/SKEPTIC_CONTRADICTION_PREREG.md",
+ "cases_sha256": "b77276cb21809dd7b5e3a7c5a7bf7c8e42989c1e180a031d1eacecc00989a85f",
+ "run_id": "planted_93629a1e",
+ "sample_dir": "data/eval/planted2/sample",
+ "code_sha": "9259e78fbd7743d22ef8b1d92e9771f468f68993",
+ "code_dirty": false,
+ "lane_reason": "nvidia/nemotron-3-ultra-550b-a55b",
+ "summary": {
+  "planted_decided": 24,
+  "planted_drop_rate": 1.0,
+  "planted_dropped_by_code": 24,
+  "twin_false_drops": 0,
+  "twin_false_drop_rate": 0.0,
+  "near_misses_scored": 24,
+  "unavailable": [],
+  "primary_dropped_while_twin_approved": 18,
+  "primary_rate": 0.75,
+  "planted_dropped": 24,
+  "planted_dropped_or_sent_back": 24,
+  "twins_scored": 8,
+  "twins_approved": 6,
+  "twins_sent_back": 2,
+  "twins_dropped": 0,
+  "by_plant_kind": {
+   "vehicle_identity": {
+    "n": 5,
+    "dropped_twin_approved": 5,
+    "dropped": 5,
+    "sent_back": 0
+   },
+   "offender_count": {
+    "n": 8,
+    "dropped_twin_approved": 6,
+    "dropped": 8,
+    "sent_back": 0
+   },
+   "offender_age": {
+    "n": 8,
+    "dropped_twin_approved": 6,
+    "dropped": 8,
+    "sent_back": 0
+   },
+   "helmet": {
+    "n": 3,
+    "dropped_twin_approved": 1,
+    "dropped": 3,
+    "sent_back": 0
+   }
+  },
+  "by_features_source": {
+   "generator_truth": {
+    "planted_decided": 24,
+    "planted_drop_rate": 1.0,
+    "planted_dropped_by_code": 24,
+    "twin_false_drops": 0,
+    "twin_false_drop_rate": 0.0,
+    "near_misses_scored": 24,
+    "unavailable": [],
+    "primary_dropped_while_twin_approved": 18,
+    "primary_rate": 0.75,
+    "planted_dropped": 24,
+    "planted_dropped_or_sent_back": 24,
+    "twins_scored": 8,
+    "twins_approved": 6,
+    "twins_sent_back": 2,
+    "twins_dropped": 0,
+    "by_plant_kind": {
+     "vehicle_identity": {
+      "n": 5,
+      "dropped_twin_approved": 5,
+      "dropped": 5,
+      "sent_back": 0
+     },
+     "offender_count": {
+      "n": 8,
+      "dropped_twin_approved": 6,
+      "dropped": 8,
+      "sent_back": 0
+     },
+     "offender_age": {
+      "n": 8,
+      "dropped_twin_approved": 6,
+      "dropped": 8,
+      "sent_back": 0
+     },
+     "helmet": {
+      "n": 3,
+      "dropped_twin_approved": 1,
+      "dropped": 3,
+      "sent_back": 0
+     }
+    }
+   }
+  }
+ },
+ "stopped_by_linker": [],
+ "results": [
+  {
+   "case_id": "PS-01",
+   "id": "PS-01",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7458,
+   "band": "medium",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Despite a 34-day gap (space_time only 0.06), the link is credible: identical MO across all fields, identical suspect description (two thin males 20-30, black helmet with red stripe), matching vehicle make/model/colour with partial plate convergence (both ending 4471), same target profile, and 1.7 km separation within the same station (PS-ADYAR-J2). The specificity of the helmet description and pla",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "The two chain snatchings in Adyar show identical MO, identical suspect description (two thin males 20-30 with black helmet red stripe), and matching vehicle signature (red Bajaj Pulsar 150 plate ending 4471) across 1.7 km and 34 days, indicating a likely series by the same offenders.",
+   "payload_b": {
+    "crime_id": "CHN-AD-2026-001142",
+    "station": "PS-ADYAR-J2",
+    "category": "chain_snatching",
+    "when": "2026-10-05T20:21:00+05:30",
+    "where": "near MOH bus stop, Adyar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN09??4471",
+      "make_model": "Bajaj Pulsar 150",
+      "colour": "red"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "thin",
+      "count": 2,
+      "helmet": "black with red stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler_towards_main_road",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "main_road"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-1962ef72-9c38-42cc-836a-902b510e6048",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-95b0c1ce-5beb-411c-9190-9ede68328591",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-01",
+   "id": "PS-01a",
+   "arm": "planted",
+   "plant_kind": "vehicle_identity",
+   "features_source": "generator_truth",
+   "score": 0.5958,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): vehicle_identity (colour): 'red' vs 'blue'; vehicle_identity (plate): '??4471' vs 'TN09??9788'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "red",
+     "b": "blue"
+    },
+    {
+     "kind": "vehicle_identity",
+     "field": "plate",
+     "a": "??4471",
+     "b": "TN09??9788"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "The two chain snatchings in Adyar show identical MO, identical suspect description (two thin males 20-30 with black helmet red stripe), and identical target profile across 1.7 km and 34 days, but vehicles differ in colour and plate with no convergence.",
+   "payload_b": {
+    "crime_id": "CHN-AD-2026-001142",
+    "station": "PS-ADYAR-J2",
+    "category": "chain_snatching",
+    "when": "2026-10-05T20:21:00+05:30",
+    "where": "near MOH bus stop, Adyar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN09??9788",
+      "make_model": "Bajaj Pulsar 150",
+      "colour": "blue"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "thin",
+      "count": 2,
+      "helmet": "black with red stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler_towards_main_road",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "main_road"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-5efa8462-0bac-4611-b854-442c7c683b3f",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-01",
+   "id": "PS-01b",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.6725,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "The two chain snatchings in Adyar show nearly identical MO, matching vehicle signature (red Bajaj Pulsar 150 plate ending 4471), similar suspect description (thin male 20-30 with black helmet red stripe), and identical target profile across 1.7 km and 34 days, with only offender count differing (2 vs 1).",
+   "payload_b": {
+    "crime_id": "CHN-AD-2026-001142",
+    "station": "PS-ADYAR-J2",
+    "category": "chain_snatching",
+    "when": "2026-10-05T20:21:00+05:30",
+    "where": "near MOH bus stop, Adyar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN09??4471",
+      "make_model": "Bajaj Pulsar 150",
+      "colour": "red"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "thin",
+      "count": 1,
+      "helmet": "black with red stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler_towards_main_road",
+     "offender_count": 1,
+     "place_type": [
+      "bus_stop",
+      "main_road"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-6df53aec-9deb-402a-9a62-8d54c012bc86",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-01",
+   "id": "PS-01c",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7042,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '20-30' vs '50-60'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "20-30",
+     "b": "50-60"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "The two chain snatchings in Adyar show identical MO, matching vehicle signature (red Bajaj Pulsar 150 plate ending 4471), similar suspect description (two thin males with black helmet red stripe), and identical target profile across 1.7 km and 34 days, with only suspect age band differing (20-30 vs 50-60).",
+   "payload_b": {
+    "crime_id": "CHN-AD-2026-001142",
+    "station": "PS-ADYAR-J2",
+    "category": "chain_snatching",
+    "when": "2026-10-05T20:21:00+05:30",
+    "where": "near MOH bus stop, Adyar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN09??4471",
+      "make_model": "Bajaj Pulsar 150",
+      "colour": "red"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "50-60",
+      "build": "thin",
+      "count": 2,
+      "helmet": "black with red stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler_towards_main_road",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "main_road"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-903c9358-529f-4b80-9969-1b9ff9f977e7",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "id": "PS-02",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7785,
+   "band": "high",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Despite a 38-day gap (space_time only 0.07), the link is credible: identical MO (fake_police_check), identical suspect description (2 heavy males 40-50, yellow helmets), identical vehicle (maroon Hero Splendor, partial plate TN95V?9951) confirmed by ANPR hit R0449557, and identical target profile (lone pedestrian, cash_and_phone) within 0.5 km in the same station. The distinctive MO and ANPR corro",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match on MO, suspect description, vehicle, and target profile within the same police station area, but the 38-day gap significantly reduces space-time confidence.",
+   "payload_b": {
+    "crime_id": "CHN-AS-2026-000625",
+    "station": "PS-ASHOKNAGAR-R3",
+    "category": "street_robbery",
+    "when": "2026-06-01T17:59:00+05:30",
+    "where": "near Pudhur High School Bus Stop, Ashok Nagar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-14db01e2-37c5-43b3-8bd9-bead25cd8028",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-d57a7ee0-90df-4891-8ad6-7e7e69eb8120",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "id": "PS-02a",
+   "arm": "planted",
+   "plant_kind": "vehicle_identity",
+   "features_source": "generator_truth",
+   "score": 0.5972,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): vehicle_identity (colour): 'maroon' vs 'white'; vehicle_identity (plate): 'TN95V?9951' vs 'TN95V?5268'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "maroon",
+     "b": "white"
+    },
+    {
+     "kind": "vehicle_identity",
+     "field": "plate",
+     "a": "TN95V?9951",
+     "b": "TN95V?5268"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, suspect description, and target profile within the same police station area, but different vehicles and a 38-day gap reduce overall confidence to medium.",
+   "payload_b": {
+    "crime_id": "CHN-AS-2026-000625",
+    "station": "PS-ASHOKNAGAR-R3",
+    "category": "street_robbery",
+    "when": "2026-06-01T17:59:00+05:30",
+    "where": "near Pudhur High School Bus Stop, Ashok Nagar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?5268",
+      "make_model": "Hero Splendor",
+      "colour": "white"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-b51eca87-b94a-4a37-8dbe-f305b9fbef06",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "id": "PS-02b",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.7018,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Strong vehicle, MO, and target profile match within the same police station area, but the 38-day gap and offender count discrepancy reduce confidence to medium.",
+   "payload_b": {
+    "crime_id": "CHN-AS-2026-000625",
+    "station": "PS-ASHOKNAGAR-R3",
+    "category": "street_robbery",
+    "when": "2026-06-01T17:59:00+05:30",
+    "where": "near Pudhur High School Bus Stop, Ashok Nagar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 1,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-499bc91c-ce96-46c5-a166-24dbc9ec740d",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-02",
+   "id": "PS-02c",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7368,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '40-50' vs '18-20'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "40-50",
+     "b": "18-20"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, vehicle (with ANPR confirmation), and target profile within the same police station area, but a 38-day gap and differing suspect age bands reduce overall confidence to medium.",
+   "payload_b": {
+    "crime_id": "CHN-AS-2026-000625",
+    "station": "PS-ASHOKNAGAR-R3",
+    "category": "street_robbery",
+    "when": "2026-06-01T17:59:00+05:30",
+    "where": "near Pudhur High School Bus Stop, Ashok Nagar",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "18-20",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-719094b9-d020-4b84-ac1b-7344d40fb2dc",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "id": "PS-03",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7502,
+   "band": "high",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Exceptional behavioural convergence: identical MO (asked_for_directions approach, helmet disguise, two-wheeler escape, 2 offenders, bus_stop/market, lone pedestrian woman, gold chain, push violence), identical suspect description (2 heavy males 30-40, red helmets), identical target profile, and near-identical vehicle (same partial plate ??8553, Hero Splendor, maroon) across adjacent stations 1.6 k",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match on MO, vehicle, suspect description and target profile across adjacent station areas separated by 1.6 km and 91 days, strongly indicating the same offender pair.",
+   "payload_b": {
+    "crime_id": "CHN-KI-2025-001393",
+    "station": "PS-KILPAUK-G3",
+    "category": "chain_snatching",
+    "when": "2025-12-05T14:21:00+05:30",
+    "where": "near Kilpauk, Kilpauk",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "??8553",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-16c9f304-0f74-4854-96c9-1928f1288606",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-42ac0681-db1a-4dc3-8c3e-4f2869b72f7c",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "id": "PS-03a",
+   "arm": "planted",
+   "plant_kind": "vehicle_identity",
+   "features_source": "generator_truth",
+   "score": 0.5836,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): vehicle_identity (colour): 'maroon' vs 'white'; vehicle_identity (plate): '??8553' vs '??3870'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "maroon",
+     "b": "white"
+    },
+    {
+     "kind": "vehicle_identity",
+     "field": "plate",
+     "a": "??8553",
+     "b": "??3870"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, suspect description and target profile across adjacent station areas, but vehicle details differ (plate and colour) and the 91-day gap reduces spatiotemporal proximity.",
+   "payload_b": {
+    "crime_id": "CHN-KI-2025-001393",
+    "station": "PS-KILPAUK-G3",
+    "category": "chain_snatching",
+    "when": "2025-12-05T14:21:00+05:30",
+    "where": "near Kilpauk, Kilpauk",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "??3870",
+      "make_model": "Hero Splendor",
+      "colour": "white"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-66f40388-a0c5-40e1-afc9-0b65890407fd",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "id": "PS-03b",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.674,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, vehicle, and target profile across adjacent stations with matching suspect descriptions, but 91-day gap and offender count difference reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KI-2025-001393",
+    "station": "PS-KILPAUK-G3",
+    "category": "chain_snatching",
+    "when": "2025-12-05T14:21:00+05:30",
+    "where": "near Kilpauk, Kilpauk",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "??8553",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 1,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-bc7514bb-4292-4fa5-b798-8282fdd2168d",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-03",
+   "id": "PS-03c",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7086,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '30-40' vs '60-70'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "30-40",
+     "b": "60-70"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect MO, vehicle and target-profile match across adjacent station areas, but the 91-day gap and age-band discrepancy (30-40 vs 60-70) reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KI-2025-001393",
+    "station": "PS-KILPAUK-G3",
+    "category": "chain_snatching",
+    "when": "2025-12-05T14:21:00+05:30",
+    "where": "near Kilpauk, Kilpauk",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "??8553",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "60-70",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-c816dc6f-5491-4a77-a39d-ced8e032ae4a",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-6d080e99-84ee-44de-a0d2-c3ac490d7518",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "id": "PS-04",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7609,
+   "band": "high",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Exceptional convergence on every behavioural and descriptive dimension: identical MO (two_wheeler_from_behind, helmet disguise, two_wheeler escape, 2 offenders, bus_stop/market places, lone_pedestrian_woman target, gold_chain item, push violence), identical suspect description (2 heavy males 20-30, white full-face helmet), identical vehicle (grey Honda Activa, partial plate TN04??9622), identical ",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match on MO, vehicle, suspect description, and target profile across two nearby stations, but the 53-day gap and cross-jurisdiction distance keep the space-time factor very low.",
+   "payload_b": {
+    "crime_id": "CHN-NU-2026-000076",
+    "station": "PS-NUNGAMBAKKAM-F3",
+    "category": "chain_snatching",
+    "when": "2026-01-18T08:15:00+05:30",
+    "where": "near a bus stop, Nungambakkam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN04??9622",
+      "make_model": "Honda Activa",
+      "colour": "grey"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-5b0f8737-518c-4fd9-b9ba-6bdc8a9bf43f",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-ba387d74-250c-4958-8322-1d0d87dc5a96",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-21e58e41-c0b9-45c5-a396-860314974171",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "id": "PS-04a",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.6862,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Strong behavioural and vehicle match across two nearby stations, but the 53-day gap and different offender counts reduce the space-time and suspect description scores.",
+   "payload_b": {
+    "crime_id": "CHN-NU-2026-000076",
+    "station": "PS-NUNGAMBAKKAM-F3",
+    "category": "chain_snatching",
+    "when": "2026-01-18T08:15:00+05:30",
+    "where": "near a bus stop, Nungambakkam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN04??9622",
+      "make_model": "Honda Activa",
+      "colour": "grey"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "heavy",
+      "count": 1,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-3f08bfd3-0abc-43f7-9d42-713d382502d7",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "id": "PS-04b",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7192,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '20-30' vs '50-60'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "20-30",
+     "b": "50-60"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, vehicle, and target profile across two nearby stations, but the 53-day gap and differing suspect age bands reduce the space-time and suspect description scores.",
+   "payload_b": {
+    "crime_id": "CHN-NU-2026-000076",
+    "station": "PS-NUNGAMBAKKAM-F3",
+    "category": "chain_snatching",
+    "when": "2026-01-18T08:15:00+05:30",
+    "where": "near a bus stop, Nungambakkam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN04??9622",
+      "make_model": "Honda Activa",
+      "colour": "grey"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "50-60",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-2904872f-e54f-4f7f-b367-9e0f2b6036a5",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-04",
+   "id": "PS-04c",
+   "arm": "planted",
+   "plant_kind": "helmet",
+   "features_source": "generator_truth",
+   "score": 0.7192,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): helmet (helmet): 'white full-face' vs 'black with green stripe'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "helmet",
+     "field": "helmet",
+     "a": "white full-face",
+     "b": "black with green stripe"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, vehicle, and target profile across two nearby stations, but the 53-day gap and differing helmet descriptions reduce the space-time and suspect description scores.",
+   "payload_b": {
+    "crime_id": "CHN-NU-2026-000076",
+    "station": "PS-NUNGAMBAKKAM-F3",
+    "category": "chain_snatching",
+    "when": "2026-01-18T08:15:00+05:30",
+    "where": "near a bus stop, Nungambakkam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN04??9622",
+      "make_model": "Honda Activa",
+      "colour": "grey"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "20-30",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "black with green stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "two_wheeler_from_behind",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-d2019cb1-41b6-4769-9365-eb984d63933a",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "id": "PS-05",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7663,
+   "band": "high",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Near-perfect behavioral convergence: identical MO (including distinctive 'asked_for_directions' ruse), identical suspect description (2 heavy males 30-40, red helmets), identical target profile, same vehicle make/model/color, same station, 0.3 km apart, 15 days apart. Missing plates are a data gap, not a contradiction — both unrecorded is consistent with same offenders evading capture. Score 0.77 ",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-identical MO, suspect description and target profile at the same station just 0.3 km and 15 days apart, but vehicle plate is unrecorded in both cases.",
+   "payload_b": {
+    "crime_id": "CHN-EG-2026-000389",
+    "station": "PS-EGMORE-F2",
+    "category": "chain_snatching",
+    "when": "2026-04-05T13:39:00+05:30",
+    "where": "near Egmore Station, Egmore",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-2d56bf48-ece1-4e71-9e6c-ac70cce80c2c",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-cb89f0d4-5279-4070-a3d6-5f4245a9ff09",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "id": "PS-05a",
+   "arm": "planted",
+   "plant_kind": "vehicle_identity",
+   "features_source": "generator_truth",
+   "score": 0.7316,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): vehicle_identity (colour): 'maroon' vs 'white'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "maroon",
+     "b": "white"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, suspect description and target profile at the same station just 0.3 km and 15 days apart, but vehicle colour differs (maroon vs white) and plates are unrecorded.",
+   "payload_b": {
+    "crime_id": "CHN-EG-2026-000389",
+    "station": "PS-EGMORE-F2",
+    "category": "chain_snatching",
+    "when": "2026-04-05T13:39:00+05:30",
+    "where": "near Egmore Station, Egmore",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Hero Splendor",
+      "colour": "white"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-b07381cb-7b95-49b7-b535-777babfef6ca",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "id": "PS-05b",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.6901,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, vehicle, and target profile at the same station 0.3 km apart within 15 days; only offender count differs (2 vs 1).",
+   "payload_b": {
+    "crime_id": "CHN-EG-2026-000389",
+    "station": "PS-EGMORE-F2",
+    "category": "chain_snatching",
+    "when": "2026-04-05T13:39:00+05:30",
+    "where": "near Egmore Station, Egmore",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "30-40",
+      "build": "heavy",
+      "count": 1,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-fe09f320-18cf-4c75-ac46-5e36677dc960",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-05",
+   "id": "PS-05c",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7246,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '30-40' vs '60-70'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "30-40",
+     "b": "60-70"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, vehicle, and target profile at the same station 0.3 km apart within 15 days; suspect descriptions match on build, count, and helmet but diverge on age band.",
+   "payload_b": {
+    "crime_id": "CHN-EG-2026-000389",
+    "station": "PS-EGMORE-F2",
+    "category": "chain_snatching",
+    "when": "2026-04-05T13:39:00+05:30",
+    "where": "near Egmore Station, Egmore",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "60-70",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "red"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "asked_for_directions",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "bus_stop",
+      "market"
+     ],
+     "target": "lone_pedestrian_woman",
+     "target_item": "gold_chain",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-17a94e10-7916-44af-9c1e-0908c5d5213c",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-5be12542-08fc-4ef9-848b-0a5c2f62f57f",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "id": "PS-06",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7039,
+   "band": "medium",
+   "alert": true,
+   "verdict": "send_back",
+   "critique": "MO, suspect description, and target profile are identical (knife_threat_two_men, two medium males 40-50 in white full-face helmets, lone pedestrian for cash/phone), and both occurred 0.2 km apart in PS-ESPLANADE-B2. However, the 37-day gap (Jun 22 → Jul 29) drives space_time to 0.08, and the vehicle plate is missing in the second crime (TN04H?9564 vs null). Without CCTV/ANPR confirmation or interm",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match on MO, suspect description, and target profile within the same police station area, but different vehicle plates and a 37-day gap reduce overall confidence to medium.",
+   "payload_b": {
+    "crime_id": "CHN-ES-2025-000863",
+    "station": "PS-ESPLANADE-B2",
+    "category": "street_robbery",
+    "when": "2025-07-29T08:35:00+05:30",
+    "where": "10th Street, Esplanade",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-f0349845-8cfc-442a-97e6-ac9863c41fd4",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-7c220ef9-8fe9-415b-99f7-c62febe1d4ed",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "id": "PS-06a",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.5599,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Strong overlap on vehicle type, suspect appearance, target profile, and core MO within the same station area, but a 37-day gap and differing offender count/approach reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-ES-2025-000863",
+    "station": "PS-ESPLANADE-B2",
+    "category": "street_robbery",
+    "when": "2025-07-29T08:35:00+05:30",
+    "where": "10th Street, Esplanade",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 1,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_one_man",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-ab9dad63-23e1-417c-8147-ad22f70e1e2a",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "id": "PS-06b",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.6623,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '40-50' vs '18-20'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "40-50",
+     "b": "18-20"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect MO and target match within the same station area, but a 37-day gap and differing suspect age bands reduce overall confidence.",
+   "payload_b": {
+    "crime_id": "CHN-ES-2025-000863",
+    "station": "PS-ESPLANADE-B2",
+    "category": "street_robbery",
+    "when": "2025-07-29T08:35:00+05:30",
+    "where": "10th Street, Esplanade",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "18-20",
+      "build": "medium",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-9542ee9d-ef77-4516-b449-1c251c1d6a32",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-06",
+   "id": "PS-06c",
+   "arm": "planted",
+   "plant_kind": "helmet",
+   "features_source": "generator_truth",
+   "score": 0.6623,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): helmet (helmet): 'white full-face' vs 'black with green stripe'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "helmet",
+     "field": "helmet",
+     "a": "white full-face",
+     "b": "black with green stripe"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect MO and target match within the same station area, but a 37-day gap and differing helmet descriptions reduce overall confidence.",
+   "payload_b": {
+    "crime_id": "CHN-ES-2025-000863",
+    "station": "PS-ESPLANADE-B2",
+    "category": "street_robbery",
+    "when": "2025-07-29T08:35:00+05:30",
+    "where": "10th Street, Esplanade",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 2,
+      "helmet": "black with green stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-f034fadc-ec6b-4826-ba95-04ab43da6e62",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "id": "PS-07",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.7104,
+   "band": "medium",
+   "alert": true,
+   "verdict": "send_back",
+   "critique": "The MO, suspect description, and target profile are near-identical and highly distinctive (knife_threat_two_men, two medium males 40-50 in white full-face helmets on a green Suzuki Access targeting lone pedestrians for cash/phone). However, the 32-day gap and different station boundaries (PS-FLOWERBAZAAR-C1 vs PS-KOTHAVALCHAVADI-C5) drive space_time to only 0.11. The vehicle plate is partial in on",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match on MO, suspect description, and target profile across adjacent station boundaries, but a 32-day gap and missing plate on one crime reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KO-2025-000761",
+    "station": "PS-KOTHAVALCHAVADI-C5",
+    "category": "street_robbery",
+    "when": "2025-07-04T07:04:00+05:30",
+    "where": "near Loane Square, Kothavalchavadi",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-3186f84d-9b79-4ba9-a735-86230ba5ba13",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-9931246e-ee83-44f2-a071-66939185f4e8",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "id": "PS-07a",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.5664,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Strong overlap on vehicle type, suspect appearance, target profile, and core MO across adjacent station boundaries, but a 32-day gap and differing offender count/approach reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KO-2025-000761",
+    "station": "PS-KOTHAVALCHAVADI-C5",
+    "category": "street_robbery",
+    "when": "2025-07-04T07:04:00+05:30",
+    "where": "near Loane Square, Kothavalchavadi",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 1,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_one_man",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-91b83a16-4125-44e0-8d13-b959b223b9e8",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "id": "PS-07b",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.6688,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '40-50' vs '18-20'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "40-50",
+     "b": "18-20"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, vehicle, and target profile across adjacent stations, but a 32-day gap and different suspect age bands reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KO-2025-000761",
+    "station": "PS-KOTHAVALCHAVADI-C5",
+    "category": "street_robbery",
+    "when": "2025-07-04T07:04:00+05:30",
+    "where": "near Loane Square, Kothavalchavadi",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "18-20",
+      "build": "medium",
+      "count": 2,
+      "helmet": "white full-face"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-66b86bfc-7f85-4679-a8f9-610cccdfc141",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-07",
+   "id": "PS-07c",
+   "arm": "planted",
+   "plant_kind": "helmet",
+   "features_source": "generator_truth",
+   "score": 0.6688,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): helmet (helmet): 'white full-face' vs 'black with green stripe'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "helmet",
+     "field": "helmet",
+     "a": "white full-face",
+     "b": "black with green stripe"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, suspect profile, and target choice across adjacent station boundaries 0.3 km apart, but a 32-day gap and helmet/vehicle-plate differences reduce confidence.",
+   "payload_b": {
+    "crime_id": "CHN-KO-2025-000761",
+    "station": "PS-KOTHAVALCHAVADI-C5",
+    "category": "street_robbery",
+    "when": "2025-07-04T07:04:00+05:30",
+    "where": "near Loane Square, Kothavalchavadi",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": null,
+      "make_model": "Suzuki Access",
+      "colour": "green"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "medium",
+      "count": 2,
+      "helmet": "black with green stripe"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "knife_threat_two_men",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-aaae817b-d8fd-4c3d-96d7-b81b33c014d2",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "id": "PS-08",
+   "arm": "twin",
+   "plant_kind": null,
+   "features_source": "generator_truth",
+   "score": 0.8131,
+   "band": "high",
+   "alert": true,
+   "verdict": "approve",
+   "critique": "Strong match across all five factors; distinctive fake_police_check MO, identical partial plate TN95V?9951, identical suspect description (2 heavy males 40-50, yellow helmets), adjacent stations 1.5 km apart, 16-day interval. No significant weaknesses.",
+   "struck": [],
+   "drop_source": null,
+   "contradictions": [],
+   "model_critique": "applied",
+   "rationale": "Near-perfect match across MO, vehicle, suspect description, and target profile across adjacent stations just 1.5 km apart within 16 days, yielding high confidence of a linked series.",
+   "payload_b": {
+    "crime_id": "CHN-MM-2026-000182",
+    "station": "PS-MAMBALAM-R1",
+    "category": "street_robbery",
+    "when": "2026-02-13T18:33:00+05:30",
+    "where": "near City Union Bank, Mambalam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-97e056fb-198c-46e1-b5fb-b1af1eccf31b",
+     "status": "ok"
+    },
+    {
+     "purpose": "lane=reason critique 1 pairs round 1",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-892da67a-195a-4b42-850e-4d0452a688e2",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "id": "PS-08a",
+   "arm": "planted",
+   "plant_kind": "vehicle_identity",
+   "features_source": "generator_truth",
+   "score": 0.6319,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): vehicle_identity (colour): 'maroon' vs 'white'; vehicle_identity (plate): 'TN95V?9951' vs 'TN95V?5268'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "vehicle_identity",
+     "field": "colour",
+     "a": "maroon",
+     "b": "white"
+    },
+    {
+     "kind": "vehicle_identity",
+     "field": "plate",
+     "a": "TN95V?9951",
+     "b": "TN95V?5268"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect match on MO, suspect description, and target profile across adjacent stations 1.5 km apart, but different vehicles reduce overall confidence to medium.",
+   "payload_b": {
+    "crime_id": "CHN-MM-2026-000182",
+    "station": "PS-MAMBALAM-R1",
+    "category": "street_robbery",
+    "when": "2026-02-13T18:33:00+05:30",
+    "where": "near City Union Bank, Mambalam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?5268",
+      "make_model": "Hero Splendor",
+      "colour": "white"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-3867a149-6130-40fe-b6bd-519757b69533",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "id": "PS-08b",
+   "arm": "planted",
+   "plant_kind": "offender_count",
+   "features_source": "generator_truth",
+   "score": 0.7365,
+   "band": "medium",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_count (count): '2' vs '1'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_count",
+     "field": "count",
+     "a": 2,
+     "b": 1
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-identical MO, vehicle, and suspect description across adjacent stations 1.5 km apart with a 16-day gap; only offender count differs.",
+   "payload_b": {
+    "crime_id": "CHN-MM-2026-000182",
+    "station": "PS-MAMBALAM-R1",
+    "category": "street_robbery",
+    "when": "2026-02-13T18:33:00+05:30",
+    "where": "near City Union Bank, Mambalam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "40-50",
+      "build": "heavy",
+      "count": 1,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 1,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-a2135041-2983-4941-9784-900169dcee56",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "case_id": "PS-08",
+   "id": "PS-08c",
+   "arm": "planted",
+   "plant_kind": "offender_age",
+   "features_source": "generator_truth",
+   "score": 0.7715,
+   "band": "high",
+   "alert": true,
+   "verdict": "drop",
+   "critique": "Hard contradiction (code): offender_age (age_band): '40-50' vs '18-20'. No confirmed forensic or offender_return evidence reconciles it, so the link is not credible.",
+   "struck": [],
+   "drop_source": "contradiction",
+   "contradictions": [
+    {
+     "kind": "offender_age",
+     "field": "age_band",
+     "a": "40-50",
+     "b": "18-20"
+    }
+   ],
+   "model_critique": "not_sent",
+   "rationale": "Near-perfect MO and vehicle match with identical target profile across adjacent stations 1.5 km apart, 16 days apart; suspect age bands differ but build, helmet, and count align.",
+   "payload_b": {
+    "crime_id": "CHN-MM-2026-000182",
+    "station": "PS-MAMBALAM-R1",
+    "category": "street_robbery",
+    "when": "2026-02-13T18:33:00+05:30",
+    "where": "near City Union Bank, Mambalam",
+    "vehicles": [
+     {
+      "role": "used_by_offender",
+      "type": "motorcycle",
+      "plate": "TN95V?9951",
+      "make_model": "Hero Splendor",
+      "colour": "maroon"
+     }
+    ],
+    "described": [
+     {
+      "age_band": "18-20",
+      "build": "heavy",
+      "count": 2,
+      "helmet": "yellow"
+     }
+    ],
+    "weapon": null,
+    "mo": {
+     "approach": "fake_police_check",
+     "disguise": [
+      "helmet"
+     ],
+     "escape": "two_wheeler",
+     "offender_count": 2,
+     "place_type": [
+      "atm",
+      "bar"
+     ],
+     "target": "lone_pedestrian",
+     "target_item": "cash_and_phone",
+     "time_band": null,
+     "violence": "push"
+    },
+    "visual_tags": []
+   },
+   "model_calls": [
+    {
+     "purpose": "lane=reason rationale 1 pairs",
+     "model": "nvidia/nemotron-3-ultra-550b-a55b",
+     "routed": "nvidia/nemotron-3-ultra-550b-a55b",
+     "receipt": "chatcmpl-0426172a-303c-4fa9-a41b-e7a4a4dae0ae",
+     "status": "ok"
+    }
+   ]
+  }
+ ]
+}
