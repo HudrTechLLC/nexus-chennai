@@ -155,6 +155,7 @@ def run_request(
         with engines.use_tracer(tracer):
             deps = AgentDeps(tracer=tracer, zetaris=z, nightshift=n, engines=engines, store=store, deadline=deadline)
             graph = AgentGraph(deps, media_loader=media_loader_for(settings))
+            graph.series_high_only = settings.series_high_only
             output, status = _dispatch(graph, kind, payload, options)
     except Exception as exc:
         tracer.emit("api", "run_failed", output_summary=f"{type(exc).__name__}: {exc}"[:300], status="error")
@@ -224,7 +225,8 @@ def _hotspots(graph: AgentGraph, case_dates: list[str], case_ids: set[str], opti
 
 def _detect_series(graph: AgentGraph, alerts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, str]]:
     """Series among this run's links, without D-033 test FIRs: {crime_id: reason} of the ones left out."""
-    series = detect_series(alerts)
+    high_only = bool(getattr(graph, "series_high_only", False))  # #16, off by default (SERIES_HIGH_ONLY)
+    series = detect_series(alerts, high_only=high_only)
     if not series:
         return series, {}
     try:
@@ -241,7 +243,7 @@ def _detect_series(graph: AgentGraph, alerts: list[dict[str, Any]]) -> tuple[lis
         graph.deps.tracer.emit("Series analyst", "series_member_excluded", input_summary=cid, output_summary=why,
                                status="ok", extra={"crime_id": cid, "reason": why})
     if excluded:
-        series = detect_series(alerts, excluded=set(excluded))
+        series = detect_series(alerts, excluded=set(excluded), high_only=high_only)
     for ser in series:  # a descriptive name from the members' dominant MO (code, no model)
         name = describe_series([rows[cid] for cid in ser["crime_ids"] if cid in rows])
         if name:

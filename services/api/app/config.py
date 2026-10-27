@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     nexus_store: str = ""
     nexus_local_dir: str = ""  # LocalStore directory; default data/local (gitignored)
     max_agent_rounds: int = 3
+    # #16: build series only from HIGH-band or analyst-approved links (SERIES_HIGH_ONLY=true). OFF by default, so
+    # the live app, the demo series and every published number are unchanged; the eval reports it as a side metric.
+    series_high_only: bool = False
     run_deadline_seconds: int = 300
     # Worker (filing) case runs: one case through Planner, Linker and up to two Ultra critique rounds (~90 s each)
     # did not fit 300 s live (run_3d845f76). /run (spec C4) and batch runs keep run_deadline_seconds.
