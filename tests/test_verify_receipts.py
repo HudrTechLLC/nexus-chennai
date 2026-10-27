@@ -125,3 +125,24 @@ def test_fixtures_carry_the_pinned_key_and_another_key_is_reported():
     assert vr.check_envelope(env, vr.PIN) == "key_mismatch"
     out = vr.check_fixtures([*FIXTURES, env], None)
     assert out["signature_valid"] == len(FIXTURES) and len(out["key_mismatch"]) == 1
+
+
+def test_without_cryptography_it_exits_loudly_never_bad_signature(monkeypatch):
+    """No `cryptography`: the scripts stop with the install hint; nothing is ever reported as a bad signature."""
+    from app import receipts
+
+    monkeypatch.setattr(receipts, "Ed25519PublicKey", None)
+    assert vr.check_envelope(FIXTURES[0], vr.PIN) == "unavailable"
+    for call in (lambda: vr.check_fixtures(FIXTURES, None), lambda: vr.check_ids(["x"], {"x": FIXTURES[:1]}),
+                 lambda: vr.main(["--fixtures-only"])):
+        with pytest.raises(SystemExit) as exc:
+            call()
+        assert "requirements-dev.txt" in str(exc.value)
+
+
+def test_unavailable_has_its_own_bucket(monkeypatch):
+    """If a check ever returns 'unavailable' past the guard, the id lands in its own bucket, not bad_signature."""
+    monkeypatch.setattr(vr, "require_verifier", lambda: None)
+    monkeypatch.setattr(vr, "check_envelope", lambda e, pin=None: "unavailable")
+    out = vr.check_ids(["x"], {"x": FIXTURES[:1]})
+    assert out["unavailable"] == ["x"] and out["bad_signature"] == [] and out["verified"] == 0
