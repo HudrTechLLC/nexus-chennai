@@ -56,7 +56,8 @@ describe("navFor", () => {
 
 describe("accessForPath", () => {
   it("maps nested paths to their section", () => {
-    expect(accessForPath("/console/system/trace/run_1")).toBe("admin");
+    expect(accessForPath("/console/system/trace/run_1")).toBe("analyst+");
+    expect(accessForPath("/console/system")).toBe("admin");
     expect(accessForPath("/console/graph")).toBe("analyst+");
     expect(accessForPath("/console/alerts/LA-2026-000913")).toBe("all");
   });
