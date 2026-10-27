@@ -305,11 +305,12 @@ class NightshiftClient:
                     receipt_verified=result.receipt_verified, receipt_check=result.receipt_check)
         return result
 
-    @staticmethod
-    def _check_receipt(result: ModelResult, data: dict[str, Any]) -> None:
-        """Verify the reply's signed receipt (Ed25519). Degraded mode: never raises, never refuses the reply."""
+    def _check_receipt(self, result: ModelResult, data: dict[str, Any]) -> None:
+        """Verify the reply's signed receipt (Ed25519, against the pinned key). Degraded mode: never raises, never
+        refuses the reply."""
+        pin = (getattr(self.settings, "nightshift_receipt_key_sha256", "") or "").strip() or None
         try:
-            check = receipts.verify_response(data)
+            check = receipts.verify_response(data, pin)
         except Exception as exc:  # noqa: BLE001 - verification must never break a model call
             check = f"error: {type(exc).__name__}"
         result.receipt_check = check

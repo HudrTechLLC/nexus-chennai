@@ -11,6 +11,7 @@ Used at call time in degraded mode only: an unverified receipt is labelled, neve
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from typing import Any
 
@@ -21,6 +22,12 @@ except ImportError:  # pragma: no cover - exercised only on a broken install
     InvalidSignature = Ed25519PublicKey = None  # type: ignore[assignment,misc]
 
 VALID, BAD_SIGNATURE, MALFORMED, MISSING, UNAVAILABLE = "valid", "bad_signature", "malformed", "missing", "unavailable"
+KEY_MISMATCH = "key_mismatch"
+
+# The Nightshift receipt-signing public key every receipt seen so far carries: sha256 of the raw 32-byte Ed25519 key
+# (logs/receipts_verification.json, 1023 receipts, one key). A receipt with a valid signature from any other key is
+# reported as KEY_MISMATCH. Override with NIGHTSHIFT_RECEIPT_KEY_SHA256 (empty = no pin), e.g. after a reinstall.
+PINNED_KEY_SHA256 = "c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865"
 
 
 def canonical(body: dict[str, Any]) -> bytes:
@@ -28,8 +35,10 @@ def canonical(body: dict[str, Any]) -> bytes:
     return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
-def check_envelope(env: Any) -> str:
-    """'valid', 'bad_signature' or 'malformed' for one signed receipt envelope ('unavailable' without cryptography)."""
+def check_envelope(env: Any, expected_key_sha256: str | None = None) -> str:
+    """'valid', 'bad_signature' or 'malformed' for one signed receipt envelope ('unavailable' without cryptography).
+
+    With `expected_key_sha256`, a correctly signed receipt from a different key is 'key_mismatch'."""
     if Ed25519PublicKey is None:
         return UNAVAILABLE
     try:
@@ -43,9 +52,11 @@ def check_envelope(env: Any) -> str:
         return MALFORMED
     try:
         key.verify(sig, canonical(body))
-        return VALID
     except InvalidSignature:
         return BAD_SIGNATURE
+    if expected_key_sha256 and hashlib.sha256(pub).hexdigest() != expected_key_sha256.strip().lower():
+        return KEY_MISMATCH
+    return VALID
 
 
 def envelope_of(data: Any) -> dict[str, Any] | None:
@@ -56,8 +67,8 @@ def envelope_of(data: Any) -> dict[str, Any] | None:
     return env if isinstance(env, dict) else None
 
 
-def verify_response(data: Any) -> str:
+def verify_response(data: Any, expected_key_sha256: str | None = None) -> str:
     """Check the receipt carried by one chat-completion response: VALID, BAD_SIGNATURE, MALFORMED, MISSING or
     UNAVAILABLE."""
     env = envelope_of(data)
-    return MISSING if env is None else check_envelope(env)
+    return MISSING if env is None else check_envelope(env, expected_key_sha256)
