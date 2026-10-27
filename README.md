@@ -18,7 +18,20 @@ Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://
 - learns from each analyst decision within a capped ±0.08 (H-MEM).
 
 ## Contents
-[What it does](#what-it-does) · [Architecture](#architecture) · [Agents](#agents) · [Meterless engines](#meterless-engines) · [Sponsor technology](#sponsor-technology) · [Setup](#setup) · [Run](#run) · [Sample mode vs live](#sample-mode-vs-live) · [Examples](#examples) · [Traces and logs](#traces-and-logs) · [Tests](#tests) · [Evaluation](#evaluation) · [Limitations](#limitations) · [Responsible AI](#responsible-ai) · [Live app](#live-app) · [Third-party code and pre-existing work](#third-party-code-and-pre-existing-work) · [Licences](#licences) · [AI and model usage](#ai-and-model-usage)
+[Judge quick check](#judge-quick-check-about-2-minutes-no-credentials) · [What it does](#what-it-does) · [Architecture](#architecture) · [Agents](#agents) · [Meterless engines](#meterless-engines) · [Sponsor technology](#sponsor-technology) · [Setup](#setup) · [Run](#run) · [Sample mode vs live](#sample-mode-vs-live) · [Examples](#examples) · [Traces and logs](#traces-and-logs) · [Tests](#tests) · [Evaluation](#evaluation) · [Limitations](#limitations) · [Responsible AI](#responsible-ai) · [Live app](#live-app) · [Third-party code and pre-existing work](#third-party-code-and-pre-existing-work) · [Licences](#licences) · [AI and model usage](#ai-and-model-usage)
+
+## Judge quick check (about 2 minutes, no credentials)
+
+Use **Docker** (any host) or **Python 3.11–3.13** (3.14+ cannot build the pinned `pydantic-core`).
+
+```bash
+docker build -t oah-submission .
+docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission
+# in a second shell:
+curl -s -X POST localhost:8000/run -H 'content-type: application/json' -d @input_examples/example_1.json
+```
+
+Expected for `example_1`: 3 cross-station links, Adyar ↔ Thiruvanmiyur **high 0.819**, Adyar ↔ Velachery **high 0.789**, Adyar ↔ Thiruvanmiyur medium 0.692, and one series of 4 cases. Every model step in the trace (`logs/trace-<run_id>.jsonl`; committed copies in `logs/trace-demo-00N.jsonl`) shows `replayed` with the recorded Nemotron model id. CI proves the same thing on every push to main with no network at all (`judge-offline`, see [Sample mode vs live](#sample-mode-vs-live)).
 
 ## What it does
 
