@@ -27,7 +27,7 @@ from .local_store import LocalStore, store_kind
 from .store import SupabaseStore
 
 AGENTS = [
-    {"name": "Scout Intent", "role": "routes events and screens tips"},
+    {"name": "Scout Intent", "role": "routes analyst searches and screens tips"},
     {"name": "Tip Guard", "role": "keeps unsafe public input away from agents"},
     {"name": "Extractor", "role": "reads narratives, statements and images into MO features"},
     {"name": "Planner", "role": "plans Zetaris queries"},

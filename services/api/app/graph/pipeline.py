@@ -128,7 +128,9 @@ class AgentGraph:
         route = {"case": "case", "tip": "tip", "search": "search"}.get(kind)
         if route is None:
             raise ValueError(f"unknown input kind {kind!r}")
-        self._trace("Scout Intent", "route", input_summary=f"kind={kind}", output_summary=f"route={route}",
+        # The route is a lookup on the input kind, so this step is traced as "Router" for every kind. The real
+        # Scout Intent work is traced where it happens: search_node classifies the query, and Tip Guard screens tips.
+        self._trace("Router", "route", input_summary=f"kind={kind}", output_summary=f"route={route}",
                     target_agent={"case": "Extractor", "tip": "Tip Guard", "search": "Search tools"}[route],
                     status="ok")
         return {"route": route, "status": "running", "errors": [], "approved": [], "dropped": [], "pending": [],

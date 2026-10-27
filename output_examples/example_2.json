@@ -703,7 +703,7 @@
   "agents": [
     {
       "name": "Scout Intent",
-      "role": "routes events and screens tips"
+      "role": "routes analyst searches and screens tips"
     },
     {
       "name": "Tip Guard",
