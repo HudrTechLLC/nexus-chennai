@@ -266,6 +266,10 @@ class Evaluator:
                       "skeptic_strikes": sum(1 for p in best.values() if p.struck),
                       "series": series_purity([k for k in best if k in positives or k not in dups],
                                               self.truth.series)},
+            # #16 side metric: series grown from HIGH-band links only (SERIES_HIGH_ONLY; the eval has no analyst
+            # approvals). Offline only; the headline "series" above is unchanged.
+            "series_high_only": series_purity([k for k, p in best.items() if p.band == "high"
+                                               and (k in positives or k not in dups)], self.truth.series),
             "baseline_rules_only": {**base, "alerts": len(baseline),
                                     "rule": "same category, <= 2 km, <= 14 days",
                                     "false_alerts_per_100_cases": round(100 * base["fp"] / max(1, len(crime_ids)),

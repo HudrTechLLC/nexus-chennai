@@ -98,6 +98,7 @@ class AgentGraph:
 
     def __init__(self, deps: AgentDeps, media_loader=None) -> None:
         self.deps = deps
+        self.series_high_only = False  # #16: set from Settings.series_high_only by the runner
         self.extractor = Extractor(deps, media_loader=media_loader)
         self.tip_guard = TipGuard(deps)
         self.planner = Planner(deps)

@@ -39,6 +39,8 @@ export type Skeptic = {
   rounds: number; struck: string[]; verdict: "approved" | "needs_revision" | "rejected";
   /** applied | unavailable | skipped; absent on older rows. */
   model_critique?: string;
+  /** #15 degraded mode: how many model replies in this run had no valid signed receipt. Present only when > 0. */
+  receipts_unverified?: number;
 };
 
 export type LinkAlert = {
@@ -236,4 +238,14 @@ export function pct(x: number): string {
 
 export function bandLabel(b: Band): string {
   return b === "high" ? "High" : "Lead · analyst review";
+}
+
+/**
+ * "2 model receipts unverified" when the alert's run had model replies whose signed receipt failed verification
+ * (skeptic.receipts_unverified, written only when it happened); null otherwise, so a fully verified alert shows nothing.
+ */
+export function receiptsUnverifiedLine(skeptic: Pick<Skeptic, "receipts_unverified"> | null | undefined): string | null {
+  const n = skeptic?.receipts_unverified;
+  if (typeof n !== "number" || !Number.isInteger(n) || n < 1) return null;
+  return `${n} model receipt${n === 1 ? "" : "s"} unverified`;
 }
