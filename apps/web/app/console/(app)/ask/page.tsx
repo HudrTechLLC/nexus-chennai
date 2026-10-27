@@ -1,5 +1,6 @@
 import { requireOfficer } from "@/lib/auth";
 import { AskNexus } from "@/components/console/ask/AskNexus";
+import { canOpenTrace } from "@/lib/trace";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Ask Nexus · Nexus Chennai" };
@@ -16,7 +17,7 @@ export default async function AskPage() {
           case it found with the reason it matched. You only see cases your role can open.
         </p>
       </div>
-      <AskNexus canOpenTrace={officer.role === "admin"} />
+      <AskNexus canOpenTrace={canOpenTrace(officer.role, "search")} />
     </div>
   );
 }

@@ -10,7 +10,8 @@ import { fetchCaseFile, fetchCitywide, stationOptions, type CaseFile } from "@/l
 import { fetchSimilar } from "@/lib/similarData";
 import { SimilarList } from "../_components/SimilarList";
 import { fetchGraph } from "@/lib/memoryData";
-import { allows } from "@/lib/roles";
+import { allows, type Role } from "@/lib/roles";
+import { canOpenTrace } from "@/lib/trace";
 import { GraphExplorer } from "@/components/console/graph/GraphExplorer";
 import { BandPill, ScoreRing, StatusPill } from "@/components/console/alerts/AlertBits";
 import { AppealButton } from "../_components/AppealButton";
@@ -79,12 +80,13 @@ export default async function CaseFilePage({ params }: { params: { crimeId: stri
   }
 
   await audit(sb, "view_case", "crime", crimeId);
-  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} isAdmin={officer.role === "admin"} canExplore={allows(officer.role, "analyst+")} />;
+  return <FullCase file={file} canWrite={canWriteCase(officer.role, officer.stationId, file.crime.station_id)} canExplore={allows(officer.role, "analyst+")} role={officer.role} />;
 }
 
-async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFile; canWrite: boolean; isAdmin: boolean; canExplore: boolean }) {
-  // The trace viewer is admin-only (G2 /console/system/**); everyone else sees the run's status.
-  const traceLink = (runId: string) => isAdmin
+async function FullCase({ file, canWrite, canExplore, role }: { file: CaseFile; canWrite: boolean; canExplore: boolean; role: Role }) {
+  // The trace opens for admins, and for analysts and supervisors on case, batch and sweep runs (canOpenTrace);
+  // everyone else sees the run id.
+  const traceLink = (runId: string, kind?: string) => canOpenTrace(role, kind)
     ? <Link href={`/console/system/trace/${encodeURIComponent(runId)}`} className="text-signal hover:underline">trace</Link>
     : <span className="font-mono">{runId}</span>;
   const sb = consoleServerClient();
@@ -258,7 +260,7 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
               <div className="space-y-1">
                 <p>Not extracted yet. The Extractor runs on the local pipeline after a case is filed.</p>
                 {file.run ? (
-                  <p className="text-muted">Latest run: {file.run.status} · {fmt(file.run.started)} · {traceLink(file.run.run_id)}</p>
+                  <p className="text-muted">Latest run: {file.run.status} · {fmt(file.run.started)} · {traceLink(file.run.run_id, file.run.kind)}</p>
                 ) : <p className="text-muted">Processing: no run has picked it up yet.</p>}
               </div>
             ) : (
@@ -290,7 +292,7 @@ async function FullCase({ file, canWrite, isAdmin, canExplore }: { file: CaseFil
                 <p className="text-xs text-muted">
                   {features.model} · {features.extractor_version}{features.confidence !== null ? ` · confidence ${pct(features.confidence)}` : ""}
                   {features.receipt_id ? <> · receipt <span className="font-mono">{features.receipt_id.slice(0, 18)}…</span></> : null}
-                  {file.run ? <> · run {traceLink(file.run.run_id)}</> : null}
+                  {file.run ? <> · run {traceLink(file.run.run_id, file.run.kind)}</> : null}
                 </p>
                 {!latestReview && <p className="text-xs text-muted">Not reviewed by an officer yet.</p>}
                 {canWrite && <MoReview crimeId={crime.crime_id} mo={{ ...features.mo, ...corrected }} />}

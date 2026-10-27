@@ -85,6 +85,8 @@ export function navFor(role: Role | null | undefined): NavItem[] {
 /** Access rule for a console path (longest matching prefix in NAV); unknown paths need any police role. */
 export function accessForPath(pathname: string): Access {
   if (pathname === "/console/cases/new") return ["station_officer", "admin"];
+  // A run trace is analyst+; the page then hides tip and search runs from non-admins (trace.ts traceAccess).
+  if (pathname.startsWith("/console/system/trace/")) return "analyst+";
   if (pathname.startsWith("/console/system")) return "admin";
   const hit = NAV.filter((n) => n.href !== "/console" && (pathname === n.href || pathname.startsWith(n.href + "/")))
     .sort((a, b) => b.href.length - a.href.length)[0];

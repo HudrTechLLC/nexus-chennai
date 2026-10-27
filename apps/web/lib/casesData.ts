@@ -75,7 +75,7 @@ export type Diary = { entry_id: string; at: string; kind: string; text: string; 
 export type Forensic = { forensic_id: string; kind: string; match_code: string | null; reported_at: string | null };
 export type PersonLink = { person_id: string; role: string; persons: { name: string | null; aliases: string[]; descriptors: Record<string, unknown> } | null };
 export type SeriesRef = { series_id: string; name: string; status: string; added_at: string };
-export type RunRef = { run_id: string; status: string; started: string };
+export type RunRef = { run_id: string; status: string; started: string; kind?: string };
 export type TipLink = { tip_id: string; useful: boolean; at: string };
 export type MoReview = { review_id: number; corrections: Record<string, unknown>; note: string | null; reviewed_by: string; reviewed_at: string };
 
@@ -195,7 +195,7 @@ export async function fetchCitywide(sb: SupabaseClient, crimeId: string): Promis
  * Returns null until that column exists, so the page simply shows "processing".
  */
 export async function latestRun(sb: SupabaseClient, crimeId: string): Promise<RunRef | null> {
-  const { data, error } = await sb.from("runs").select("run_id, status, started").eq("subject", crimeId).order("started", { ascending: false }).limit(1).maybeSingle();
+  const { data, error } = await sb.from("runs").select("run_id, status, started, kind").eq("subject", crimeId).order("started", { ascending: false }).limit(1).maybeSingle();
   if (error) return null;
   return (data as RunRef | null) ?? null;
 }
