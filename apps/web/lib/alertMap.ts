@@ -98,3 +98,23 @@ export function trailOf(reads: TrailRead[], crimeIds: string[]): { plate: string
     reads: reads.filter((r) => normPlate(r.plate_text) === plate).sort((a, b) => a.read_at.localeCompare(b.read_at)),
   }));
 }
+
+// =====================
+// Map caption
+// =====================
+
+/** What the pointer is over on the alert map (null = nothing). */
+export type Hover = { kind: "scene"; label: string; exact: boolean } | { kind: "read"; r: TrailRead } | null;
+
+const istTime = (at: string) =>
+  new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+/** Caption under the map: the hovered point, else the legend. The gold-trail part shows only when there are camera reads. */
+export function mapCaption(hover: Hover, hasTrail: boolean): string {
+  if (!hover) {
+    return `Red: scenes (hollow = area cell only)${hasTrail ? " · gold: ANPR camera reads of the matched plate, joined in time order" : ""}`;
+  }
+  return hover.kind === "scene"
+    ? `${hover.label}${hover.exact ? "" : " (area cell centre)"}`
+    : `${hover.r.plate_text} · camera ${hover.r.camera_id} · ${istTime(hover.r.read_at)}`;
+}
