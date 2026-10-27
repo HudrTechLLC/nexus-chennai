@@ -257,8 +257,11 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 |---|---|---|---|
 | **Nexus agents** | **0.59** | **0.86** | **0.70** |
 | Rules-only baseline | 0.09 | 0.30 | 0.13 |
+| Rules + vehicle/plate baseline (pre-registered, #454) | 0.14 | 0.80 | 0.24 |
+| its strict variant (all rules **and** a vehicle match) | 0.71 | 0.15 | 0.25 |
 
 - 60 synthetic truth cases, 98 planted true pairs.
+- **Stronger baseline (pre-registered, #454):** same category **and** (≤ 2 km and ≤ 14 days **or** a vehicle/plate match). The agents beat it on precision, recall and F1. Its strict variant is **more precise than the agents (0.71 vs 0.59)** but finds only 15 of 98 true pairs (recall 0.15). So the agents' edge is recall, not precision against every baseline (`output_examples/eval_report.json` → `baseline_rules_plus_vehicle`; `engg/docs/eval/STRONGER_BASELINE_PREREG.md`).
 - **HIGH-band alerts were correct 10 of 10 times.** MEDIUM-band alerts were correct 56% of the time (74 of 132 scored pairs; 138 medium alerts, including 6 flagged duplicates that are neither right nor wrong; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
 - Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
 - **Series purity is 0.35** (mean over 10 predicted series, `eval_report.json`): on average about a third of a proposed series belongs to its main planted series. Series are proposals an analyst reviews, never verdicts.
