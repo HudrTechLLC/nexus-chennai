@@ -29,7 +29,7 @@ def ids_from(path: Path) -> list[str]:
 def build(ids: list[str], log: dict) -> dict:
     result = v.check_ids(ids, log)
     verified = sorted(set(ids) - set(result["not_in_log"]) - set(result["bad_signature"])
-                      - set(result["malformed"]) - set(result["key_mismatch"]))
+                      - set(result["malformed"]) - set(result["key_mismatch"]) - set(result["unavailable"]))
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "method": "Each id is looked up by request_id in Nightshift's receipts log; every receipt for it must carry a "

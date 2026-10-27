@@ -53,6 +53,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services" / "api"))
 from app.receipts import PINNED_KEY_SHA256, canonical  # noqa: E402,F401  (shared with the live adapter)
 from app.receipts import check_envelope as _check_envelope  # noqa: E402
+from app import receipts as _receipts  # noqa: E402
+
+INSTALL_HINT = ("The `cryptography` package is not installed, so no receipt signature can be checked. Install the dev "
+                "requirements first: pip install -r services/api/requirements-dev.txt")
+
+
+def require_verifier() -> None:
+    """Exit loudly when signatures cannot be checked at all. Without this, every receipt would read as a failure
+    (or, to a caller counting by elimination, as verified) when the real cause is a missing package."""
+    if _receipts.Ed25519PublicKey is None:
+        raise SystemExit(INSTALL_HINT)
 
 # Receipts must carry the pinned key; a valid signature from any other key is reported as key_mismatch.
 PIN = os.environ.get("NIGHTSHIFT_RECEIPT_KEY_SHA256", PINNED_KEY_SHA256).strip() or None
@@ -169,6 +180,7 @@ def load_trace(url: str, key: str) -> list[dict[str, Any]]:
 
 def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     """Each id: found in the Nightshift log, and every receipt for it signature-valid."""
+    require_verifier()
     outcome: dict[str, list[str]] = defaultdict(list)
     receipt_status: Counter = Counter()
     for rid in sorted(set(ids)):
@@ -180,6 +192,8 @@ def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[
         receipt_status.update(str(e["body"]["receipt"].get("status")) for e in envs)
         if results == {"valid"}:
             outcome["verified"].append(rid)
+        elif "unavailable" in results:
+            outcome["unavailable"].append(rid)  # never filed as a bad signature
         elif "malformed" in results:
             outcome["malformed"].append(rid)
         elif "key_mismatch" in results:
@@ -194,11 +208,13 @@ def check_ids(ids: Iterable[str], log: dict[str, list[dict[str, Any]]]) -> dict[
         "bad_signature": outcome["bad_signature"],
         "malformed": outcome["malformed"],
         "key_mismatch": outcome["key_mismatch"],
+        "unavailable": outcome["unavailable"],
         "nightshift_receipt_status": dict(receipt_status),
     }
 
 
 def check_fixtures(envs: list[dict[str, Any]], log: dict[str, list[dict[str, Any]]] | None) -> dict[str, Any]:
+    require_verifier()
     status = defaultdict(list)
     for e in envs:
         status[check_envelope(e, PIN)].append(request_id(e) or "?")
@@ -291,6 +307,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--fixtures-only", action="store_true", help="only the committed fixtures (no log, no Supabase)")
     ap.add_argument("--runtime", default="", help="runtime base URL (e.g. http://127.0.0.1:8088) to compare its key")
     a = ap.parse_args(argv)
+    require_verifier()
     key = token = ""
     try:
         fixtures = load_fixtures(FIXTURES)
