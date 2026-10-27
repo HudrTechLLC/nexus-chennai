@@ -107,11 +107,11 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
             </p>
           ) : (
             <>
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
-                <div><dt className="text-muted">Records · chunks</dt><dd className="font-mono tabular-nums">{dossier.record_count ?? "?"} · {dossier.chunks}</dd></div>
-                <div><dt className="text-muted">Tokens (projected → actual)</dt><dd className="font-mono tabular-nums">{dossier.tokens_projected ?? "?"} → {dossier.tokens_actual ?? "?"}</dd></div>
-                <div><dt className="text-muted">Saving</dt><dd className="font-mono tabular-nums" title={saving?.hint ?? undefined}>{saving?.text ?? "—"}</dd></div>
-                <div><dt className="text-muted">Built</dt><dd>{fmt(dossier.generated_at) ?? "—"}</dd></div>
+              <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg bg-surface-2 px-3 py-2"><dt className="text-xs text-muted">Records · chunks</dt><dd className="mt-0.5 text-lg font-semibold tabular-nums">{dossier.record_count ?? "?"} · {dossier.chunks}</dd></div>
+                <div className="rounded-lg bg-surface-2 px-3 py-2"><dt className="text-xs text-muted">Tokens (projected → actual)</dt><dd className="mt-0.5 text-lg font-semibold tabular-nums">{dossier.tokens_projected ?? "?"} → {dossier.tokens_actual ?? "?"}</dd></div>
+                <div className="rounded-lg bg-surface-2 px-3 py-2"><dt className="text-xs text-muted">Saving</dt><dd className="mt-0.5 text-lg font-semibold tabular-nums text-signal" title={saving?.hint ?? undefined}>{saving?.text ?? "—"}</dd></div>
+                <div className="rounded-lg bg-surface-2 px-3 py-2"><dt className="text-xs text-muted">Built</dt><dd className="mt-0.5 text-sm font-medium">{fmt(dossier.generated_at) ?? "—"}</dd></div>
               </dl>
               {/* The dossier's own markdown title repeats the card heading, so prose headings stay at section size. */}
               <div className="prose prose-sm prose-slate mt-4 max-w-none dark:prose-invert prose-h1:mb-2 prose-h1:text-base prose-h1:font-semibold prose-h2:mt-5 prose-h2:text-base prose-h2:font-semibold prose-li:my-1">
@@ -152,7 +152,7 @@ export default async function SeriesDetail({ params }: { params: { seriesId: str
             <SeriesMapLoader points={points} hull={hull} />
           </section>
 
-          <section className="rounded-xl border border-line bg-surface p-5" aria-labelledby="tf">
+          <section className={`rounded-xl p-5 ${taskforces.length === 0 ? "border border-dashed border-line bg-surface-2" : "border border-line bg-surface shadow-card"}`} aria-labelledby="tf">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 id="tf" className="text-lg font-semibold">Joint task force</h2>
               {canPropose(officer.role) && memberIds.length > 0 && (
