@@ -10,8 +10,9 @@ Published as pre-registered in [[TIMED_TASK_PREREG]] (see its 27 Oct addendum) w
 an agent proxy, not evidence of human analyst value. There were four sessions on one synthetic series, so read them
 as an anecdote, not a statistic.
 
-- **Pre-registration:** the addendum commit `b26c8dd` was made at 21:58:52 IST. That is 4 minutes before the first
-  session started at 22:02:55 IST; the addendum's own heading says "~22:10", which was an estimate.
+- **Pre-registration:** the addendum commit `b26c8dd` was made at 21:58:52 IST and pushed at 21:58:57 IST (the
+  tracking ref's push entry). That is 4 minutes before the first session started at 22:02:55 IST; the addendum's own
+  heading says "~22:10", which was an estimate.
 - **Participants:** four fresh Claude general-purpose subagents, one per session. Each got only the task text and a
   read-only wrapper (`tt.py`) in an empty temp folder outside the repo.
 - **Data:** the sample bundle only. Nothing was written to the live app.
@@ -56,6 +57,8 @@ What each agent said helped or got in the way, in its own words:
      done five break-ins in about 35 minutes across four neighbourhoods. It also judged the shared MO to be
      boilerplate. So it kept only the strongest, corroborated link.
    - That reasoning is defensible on its face; it fails here because the synthetic series has a tight timeline.
+   - Three of the four agents (A1, A2 and B1) independently called that timeline hard to believe. This is a finding
+     about how realistic the synthetic series is, not only an explanation for B1's score.
 2. **Manual search was easy on this case.** The series' MO is distinctive, worded the same way in every case, and
    absent from the other ~125 night house breaks. So a one-word text search ("grille" or "cutter") returns exactly the
    series. This case tests whether an analyst can find a series with a unique keyword, which keyword search does
@@ -71,8 +74,8 @@ What each agent said helped or got in the way, in its own words:
 
 Each agent's full transcript was checked after the run for any file access outside the wrapper: **clean.**
 
-- **Tool calls:** 22 in all, every one a Bash command (A1: 6, A2: 6, B1: 5, B2: 5). Each command `cd`s into the
-  agent's own temp workspace and runs `python tt.py`.
+- **Tool calls:** 23 in all: 22 Bash commands (A1: 6, A2: 6, B1: 5, B2: 5) and 1 `advisor` call by A1. Each Bash
+  command `cd`s into the agent's own temp workspace and runs `python tt.py`.
 - **Paths:** no command names a path outside the workspace. No Read, Glob, Grep or web tool was used.
 - **Pattern hits:** an automatic pattern check hit 5 commands. All 5 are the wrapper's own `--type` flag, or
   `p['type']` inside a stdout filter.

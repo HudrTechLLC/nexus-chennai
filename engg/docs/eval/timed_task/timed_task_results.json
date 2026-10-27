@@ -28,9 +28,10 @@
       "refused_calls": 0,
       "started_ist": "2026-10-27 22:02:55 IST",
       "transcript_audit": {
-        "tool_calls": 6,
+        "tool_calls": 7,
         "by_tool": {
-          "Bash": 6
+          "Bash": 6,
+          "advisor": 1
         },
         "commands": [
           "cd \"<tmp>\\A1\" && python tt.py start && python tt.py case CHN-KU-2025-000078",
@@ -41,7 +42,8 @@
           "cd \"<tmp>\\A1\" && python tt.py answer CHN-KU-2025-000082,CHN-VI-2025-000079,CHN-MG-2025-000077,CHN-MG-2025-000079,CHN-AS-2025-000080,CHN-KA-2025-000077,CHN-PO-2025-000068 --note \"Unique MO (window grille cut with cutter, 2 medium-build 30-40, on foot, ~03:00) matched exactly 8 of ~125 night house breaks; other cases lacked structured MO fields so text search was key\""
         ],
         "pattern_hits": 2,
-        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
+        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout",
+        "note": "advisor appears as a server_tool_use (no file access; it sees only this agent's conversation)"
       }
     },
     "B1": {
@@ -73,7 +75,8 @@
       "transcript_audit": {
         "tool_calls": 5,
         "by_tool": {
-          "Bash": 5
+          "Bash": 5,
+          "advisor": 0
         },
         "commands": [
           "cd \"<tmp>\\B1\" && python tt.py start && python tt.py alerts",
@@ -114,7 +117,8 @@
       "transcript_audit": {
         "tool_calls": 6,
         "by_tool": {
-          "Bash": 6
+          "Bash": 6,
+          "advisor": 0
         },
         "commands": [
           "cd \"<tmp>\\A2\" && python tt.py start",
@@ -156,7 +160,8 @@
       "transcript_audit": {
         "tool_calls": 5,
         "by_tool": {
-          "Bash": 5
+          "Bash": 5,
+          "advisor": 0
         },
         "commands": [
           "cd \"<tmp>\\B2\" && python tt.py start && python tt.py case CHN-KU-2025-000082",
@@ -169,5 +174,11 @@
         "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
       }
     }
+  },
+  "preregistration": {
+    "commit": "b26c8dd",
+    "committed_ist": "2026-10-27 21:58:52",
+    "pushed_ist": "2026-10-27 21:58:57",
+    "first_start_ist": "2026-10-27 22:02:55"
   }
 }
