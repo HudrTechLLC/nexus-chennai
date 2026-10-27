@@ -9,7 +9,8 @@ export function DocPage({ href, eyebrow, source, file }: { href: string; eyebrow
   return (
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_220px] xl:gap-10">
       <article className="min-w-0 max-w-[900px]">
-        <p className="mb-3 font-mono text-xs uppercase tracking-widest text-accent">{eyebrow}</p>
+        {/* [overflow-wrap:anywhere]: a long note path ("engg/docs/eval/…_PREREG.md") must not widen the page on phones */}
+        <p className="mb-3 font-mono text-xs uppercase tracking-widest text-accent [overflow-wrap:anywhere]">{eyebrow}</p>
         <Markdown source={source} from={file} />
         <nav aria-label="Previous and next" className="mt-12 grid gap-3 border-t border-line pt-6 sm:grid-cols-2">
           {prev ? (
