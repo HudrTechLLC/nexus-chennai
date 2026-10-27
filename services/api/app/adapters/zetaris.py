@@ -74,6 +74,9 @@ class NamedQuery:
     # (e.g. mo_overlap "0.5"), while DuckDB returns real numbers, so these are coerced to float on the live path
     # only; blank or non-numeric text becomes None (never a crash downstream). Sample mode is untouched.
     numeric: tuple[str, ...] = ()
+    # boolean: output columns used as flags. REST sends "true"/"false" text, and "false" is truthy in Python, so
+    # these become True/False on the live path ("true"/"t"/"1"/"yes" and "false"/"f"/"0"/"no"; anything else None).
+    boolean: tuple[str, ...] = ()
 
 
 def _to_number(v: Any) -> float | None:
@@ -101,6 +104,34 @@ def coerce_numeric(rows: list[list[Any]], columns: tuple[str, ...], numeric: tup
         for i in idx:
             if i < len(r):
                 r[i] = _to_number(r[i])
+        out.append(r)
+    return out
+
+
+_TRUE = {"true", "t", "1", "yes", "y"}
+_FALSE = {"false", "f", "0", "no", "n"}
+
+
+def _to_bool(v: Any) -> bool | None:
+    if v is None or isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return bool(v)
+    t = str(v).strip().lower()
+    return True if t in _TRUE else False if t in _FALSE else None
+
+
+def coerce_boolean(rows: list[list[Any]], columns: tuple[str, ...], boolean: tuple[str, ...]) -> list[list[Any]]:
+    """Live REST rows with the declared flag columns as bools (None when the text is not a recognised flag)."""
+    idx = [i for i, c in enumerate(columns) if c in boolean]
+    if not idx:
+        return rows
+    out = []
+    for r in rows:
+        r = list(r)
+        for i in idx:
+            if i < len(r):
+                r[i] = _to_bool(r[i])
         out.append(r)
     return out
 
@@ -329,8 +360,9 @@ class ZetarisClient:
             raise ZetarisError(msg)
         self._trace(agent, name, query_id, len(rows), ms, "ok", source, earlier)
         source = source.split(" ", 1)[0]  # the as_of note is for the trace; results say "zetaris" or "sample"
-        if source == "zetaris" and q.numeric:
+        if source == "zetaris" and (q.numeric or q.boolean):
             rows = coerce_numeric(rows, q.columns, q.numeric)
+            rows = coerce_boolean(rows, q.columns, q.boolean)
         if limit and len(rows) >= limit and self.tracer is not None:
             # D-031: Zetaris pushes the REST limit into the JDBC scan before filters it cannot push
             # down, so a full page may be a truncated scan rather than a complete answer. Never silent.

@@ -531,7 +531,7 @@ def _q_cases() -> dict:
     lightning = one.replace("WHERE crime_id = :crime_id", f"WHERE crime_id IN ({slots}) ORDER BY crime_id")
     sample = (f"SELECT * FROM ({_CASE_SAMPLE.strip().replace('crime_id = :crime_id', f'crime_id IN ({slots})')}) q "
               "ORDER BY crime_id")
-    return dict(name="q_cases", lightning=lightning, sample=sample, columns=CASE_COLUMNS,
+    return dict(name="q_cases", lightning=lightning, sample=sample, columns=CASE_COLUMNS, boolean=("synthetic",),
                 description="q_case for up to 25 crimes in one trip (Planner candidates, Skeptic pairs)")
 
 

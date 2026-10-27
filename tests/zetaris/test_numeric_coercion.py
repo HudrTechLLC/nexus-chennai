@@ -56,7 +56,7 @@ def test_live_rest_rows_come_back_numeric(tmp_path):
     d = res.dicts()
     assert d[0]["mo_overlap"] == 0.5 and d[0]["days_since_release"] == 12.0
     assert d[1]["mo_overlap"] is None and d[1]["days_since_release"] is None
-    assert d[0]["person_ref"] == "P-1" and d[0]["near_home"] == "true"
+    assert d[0]["person_ref"] == "P-1" and d[0]["near_home"] is True
 
 
 @pytest.mark.parametrize("a,b,want", [("0.667", "0.5", 0.5),   # both text (the run_2743a75c shape)
@@ -80,3 +80,46 @@ def test_without_coercion_the_factor_raises_exactly_as_in_the_run():
 def test_sample_rows_are_untouched():
     rows = [rest_row("P-1", 0.5)]
     assert Z.coerce_numeric(rows, COLS, ()) is rows
+
+
+# =====================
+# Flags: REST sends "true"/"false" text, and "false" is truthy in Python (nexus-2, chief)
+# =====================
+
+def test_flag_columns_are_declared():
+    assert set(Z.NAMED_QUERIES["q_offender_return"].boolean) == {"near_home", "sheet_active"}
+    assert Z.NAMED_QUERIES["q_case"].boolean == ("synthetic",)
+    assert Z.NAMED_QUERIES["q_cases"].boolean == ("synthetic",)
+    for q in Z.NAMED_QUERIES.values():
+        assert set(q.boolean) <= set(q.columns) and set(q.numeric) <= set(q.columns), q.name
+
+
+@pytest.mark.parametrize("raw,want", [("true", True), ("false", False), ("TRUE", True), (" f ", False), ("t", True),
+                                      ("1", True), ("0", False), (True, True), (False, False), (0, False),
+                                      (None, None), ("", None), ("maybe", None)])
+def test_coerce_boolean_values(raw, want):
+    row = Z.coerce_boolean([rest_row("P-1", "0.5")], COLS, ("near_home",))[0]
+    row[COLS.index("near_home")] = raw
+    assert Z.coerce_boolean([row], COLS, ("near_home",))[0][COLS.index("near_home")] is want
+
+
+def test_live_rows_false_is_false_not_truthy(tmp_path):
+    row = rest_row("P-1", "0.5")
+    row[COLS.index("near_home")] = "false"
+    c = _live_client(tmp_path, [row])
+    d = c.named("q_offender_return", agent="t", mo_tags="x", ward="1", since="2026-10-01").dicts()[0]
+    assert d["near_home"] is False and d["sheet_active"] is True and d["mo_overlap"] == 0.5
+
+
+def test_the_synthetic_flag_consumers_see_false_for_a_live_false(tmp_path):
+    """The real consumer: alert_writer.py and extractor.py do bool(case.get("synthetic", True)). On a raw REST
+    row "false" would be truthy and mark a real FIR's alert synthetic."""
+    from app.agents.base import crime_from_row
+
+    cols = Z.NAMED_QUERIES["q_case"].columns
+    raw = ["" if c not in ("crime_id", "synthetic", "lat", "lon") else "x" for c in cols]
+    raw[cols.index("crime_id")], raw[cols.index("synthetic")] = "CHN-AD-2026-009999", "false"
+    raw[cols.index("lat")], raw[cols.index("lon")] = "13.004", "80.255"
+    assert bool("false") is True  # the bug this prevents
+    case = crime_from_row(_live_client(tmp_path, [raw]).named("q_case", agent="t", crime_id="x").dicts()[0])
+    assert case["synthetic"] is False and bool(case.get("synthetic", True)) is False
