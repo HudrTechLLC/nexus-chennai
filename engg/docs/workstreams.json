@@ -963,16 +963,16 @@
         {
           "id": "WS5-14",
           "phase": "P10",
-          "title": "Video dry-run #2 before recording",
-          "status": "todo",
-          "note": "nexus-4 · Tue morning, read-only"
+          "title": "Video dry-runs #2 and #3 before recording",
+          "status": "in_progress",
+          "note": "nexus-4 · #2 done; UI polish (visual only) to 10:00; dry-run #3 at 10:30 IST finalises the cut-sheet (nexus-7); recording 15:30"
         },
         {
           "id": "WS5-15",
           "phase": "P10",
           "title": "Pre-freeze cleanup of test data (Ravee approves the list)",
-          "status": "todo",
-          "note": "nexus-7 list; audit_log never deleted"
+          "status": "in_progress",
+          "note": "nexus-7 list; Ravee approved 27 Oct; D1-D23 closed (Zetaris file-store leftovers left in place: DROP unsupported via SQL, nothing reads them); one pre-recording sweep after dry-run #3; audit_log never deleted"
         },
         {
           "id": "WS5-16",
