@@ -1,0 +1,18 @@
+{"t": 1793118780.9728699, "cmd": "start", "session": "B1", "condition": "nexus", "case": "CHN-KU-2025-000078"}
+{"t": 1793118781.1598563, "cmd": "alerts", "n": 7}
+{"t": 1793118785.8515148, "cmd": "case", "id": "CHN-KU-2025-000078", "found": true}
+{"t": 1793118786.236135, "cmd": "alert", "id": "LA-2026-0F92ACDAA53B", "found": true}
+{"t": 1793118786.5581763, "cmd": "alert", "id": "LA-2026-6E109F541ADE", "found": true}
+{"t": 1793118786.8830554, "cmd": "alert", "id": "LA-2026-49CD45EE8900", "found": true}
+{"t": 1793118787.3124833, "cmd": "alert", "id": "LA-2026-094729EC3174", "found": true}
+{"t": 1793118793.4322186, "cmd": "case", "id": "CHN-KU-2025-000082", "found": true}
+{"t": 1793118793.7004163, "cmd": "case", "id": "CHN-MG-2025-000079", "found": true}
+{"t": 1793118793.9943426, "cmd": "case", "id": "CHN-MG-2025-000077", "found": true}
+{"t": 1793118794.286398, "cmd": "case", "id": "CHN-AS-2025-000080", "found": true}
+{"t": 1793118796.1103444, "cmd": "case", "id": "CHN-VI-2025-000079", "found": true}
+{"t": 1793118797.3802168, "cmd": "case", "id": "CHN-PO-2025-000068", "found": true}
+{"t": 1793118798.276291, "cmd": "case", "id": "CHN-KA-2025-000077", "found": true}
+{"t": 1793118815.86726, "cmd": "alert", "id": "LA-2026-549161AB4A06", "found": true}
+{"t": 1793118816.14767, "cmd": "alert", "id": "LA-2026-9A777030F6EE", "found": true}
+{"t": 1793118816.4225705, "cmd": "alert", "id": "LA-2026-916017C794CB", "found": true}
+{"t": 1793118823.6566222, "cmd": "answer", "ids": ["CHN-KU-2025-000082"], "note": "All 7 alerts rest on a generic template MO (2 men, cutter, grille, on foot); only KU-82 has 0.2km/72min proximity plus tip/112 corroboration; the same-night MG/AS/VI hits are minutes apart km away on foot, so not one crew", "elapsed_s": 42.7}

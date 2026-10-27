@@ -60,3 +60,5 @@ What changes:
   - correct cases found, and wrong cases listed;
   - one line from the agent on what helped or got in the way.
   - Time is wall clock from the wrapper's `start` to its `answer`, plus the number of wrapper calls.
+
+**Related:** [[TIMED_TASK_RESULTS]]

@@ -1,0 +1,18 @@
+{"t": 1793118775.3960333, "cmd": "start", "session": "A1", "condition": "manual", "case": "CHN-KU-2025-000078"}
+{"t": 1793118775.9682477, "cmd": "case", "id": "CHN-KU-2025-000078", "found": true}
+{"t": 1793118782.528182, "cmd": "search", "args": {"text": "grille", "limit": 60}, "total": 8}
+{"t": 1793118782.736405, "cmd": "search", "args": {"type": "house_break", "text": "cutter", "limit": 60}, "total": 8}
+{"t": 1793118788.0946753, "cmd": "case", "id": "CHN-KU-2025-000082", "found": true}
+{"t": 1793118788.4018955, "cmd": "case", "id": "CHN-AS-2025-000080", "found": true}
+{"t": 1793118788.8847537, "cmd": "case", "id": "CHN-MG-2025-000079", "found": true}
+{"t": 1793118789.343645, "cmd": "case", "id": "CHN-MG-2025-000077", "found": true}
+{"t": 1793118789.7795913, "cmd": "case", "id": "CHN-VI-2025-000079", "found": true}
+{"t": 1793118790.1691234, "cmd": "case", "id": "CHN-KA-2025-000077", "found": true}
+{"t": 1793118790.4803274, "cmd": "case", "id": "CHN-PO-2025-000068", "found": true}
+{"t": 1793118800.8273458, "cmd": "search", "args": {"date_from": "2025-01-01", "date_to": "2025-02-28", "type": "night_house_break", "limit": 100}, "total": 125}
+{"t": 1793118801.0645578, "cmd": "search", "args": {"type": "house_break", "text": "window", "limit": 100}, "total": 8}
+{"t": 1793118808.2304757, "cmd": "search", "args": {"text": "cutting", "limit": 100}, "total": 8}
+{"t": 1793118808.8000655, "cmd": "search", "args": {"text": "bars", "limit": 100}, "total": 0}
+{"t": 1793118809.0941417, "cmd": "search", "args": {"text": "grill", "limit": 100}, "total": 8}
+{"t": 1793118809.3051338, "cmd": "search", "args": {"text": "cut", "limit": 100}, "total": 8}
+{"t": 1793118855.684844, "cmd": "answer", "ids": ["CHN-KU-2025-000082", "CHN-VI-2025-000079", "CHN-MG-2025-000077", "CHN-MG-2025-000079", "CHN-AS-2025-000080", "CHN-KA-2025-000077", "CHN-PO-2025-000068"], "note": "Unique MO (window grille cut with cutter, 2 medium-build 30-40, on foot, ~03:00) matched exactly 8 of ~125 night house breaks; other cases lacked structured MO fields so text search was key", "elapsed_s": 80.3}

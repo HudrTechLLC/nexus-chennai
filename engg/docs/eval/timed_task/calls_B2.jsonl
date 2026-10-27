@@ -1,0 +1,16 @@
+{"t": 1793118897.6029112, "cmd": "start", "session": "B2", "condition": "manual", "case": "CHN-KU-2025-000082"}
+{"t": 1793118897.7605498, "cmd": "case", "id": "CHN-KU-2025-000082", "found": true}
+{"t": 1793118902.112176, "cmd": "search", "args": {"type": "house_break", "limit": 60}, "total": 286}
+{"t": 1793118903.069452, "cmd": "search", "args": {"text": "grille", "limit": 40}, "total": 8}
+{"t": 1793118908.5673475, "cmd": "case", "id": "CHN-AS-2025-000080", "found": true}
+{"t": 1793118908.941489, "cmd": "case", "id": "CHN-MG-2025-000079", "found": true}
+{"t": 1793118909.3116167, "cmd": "case", "id": "CHN-MG-2025-000077", "found": true}
+{"t": 1793118909.5255384, "cmd": "case", "id": "CHN-VI-2025-000079", "found": true}
+{"t": 1793118909.6995063, "cmd": "case", "id": "CHN-KU-2025-000078", "found": true}
+{"t": 1793118909.9803658, "cmd": "case", "id": "CHN-KA-2025-000077", "found": true}
+{"t": 1793118910.1941307, "cmd": "case", "id": "CHN-PO-2025-000068", "found": true}
+{"t": 1793118910.4188488, "cmd": "search", "args": {"date_from": "2025-01-10", "date_to": "2025-01-28", "type": "house_break", "limit": 80}, "total": 88}
+{"t": 1793118915.5095575, "cmd": "search", "args": {"text": "cutting tool", "limit": 40}, "total": 8}
+{"t": 1793118915.7322261, "cmd": "search", "args": {"text": "grill", "limit": 40}, "total": 8}
+{"t": 1793118915.9241636, "cmd": "search", "args": {"text": "cutter", "limit": 40}, "total": 8}
+{"t": 1793118922.5446465, "cmd": "answer", "ids": ["CHN-KU-2025-000078", "CHN-AS-2025-000080", "CHN-MG-2025-000079", "CHN-MG-2025-000077", "CHN-VI-2025-000079", "CHN-KA-2025-000077", "CHN-PO-2025-000068"], "note": "Text search for the distinctive MO (cut window grille / cutting tool / cutter) found a tight 7-case cluster with identical offender descriptions (2, medium build, 30-40, on foot) in adjacent R-division stations, 15-19 Jan; ranked same-night/same-station first. Search output lacks MO/weapon fields, so each case had to be opened.", "elapsed_s": 24.9}

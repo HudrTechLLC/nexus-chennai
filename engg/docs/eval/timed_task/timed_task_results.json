@@ -1,0 +1,173 @@
+{
+  "note": "Agent-proxy run: fresh AI agents stood in for analysts; this is not a human study.",
+  "truth": "data/sample/_truth/pairs.csv (series pairs = correct)",
+  "sessions": {
+    "A1": {
+      "condition": "manual",
+      "case": "CHN-KU-2025-000078",
+      "truth_members": 7,
+      "answer": [
+        "CHN-KU-2025-000082",
+        "CHN-VI-2025-000079",
+        "CHN-MG-2025-000077",
+        "CHN-MG-2025-000079",
+        "CHN-AS-2025-000080",
+        "CHN-KA-2025-000077",
+        "CHN-PO-2025-000068"
+      ],
+      "note": "Unique MO (window grille cut with cutter, 2 medium-build 30-40, on foot, ~03:00) matched exactly 8 of ~125 night house breaks; other cases lacked structured MO fields so text search was key",
+      "correct": 7,
+      "wrong": 0,
+      "wrong_ids": [],
+      "decoys_listed": [],
+      "missed": [],
+      "seconds_to_answer": 80.3,
+      "seconds_to_first_correct_on_screen": 7.1,
+      "first_answer_entry_correct": true,
+      "wrapper_calls": 16,
+      "refused_calls": 0,
+      "started_ist": "2026-10-27 22:02:55 IST",
+      "transcript_audit": {
+        "tool_calls": 6,
+        "by_tool": {
+          "Bash": 6
+        },
+        "commands": [
+          "cd \"<tmp>\\A1\" && python tt.py start && python tt.py case CHN-KU-2025-000078",
+          "cd \"<tmp>\\A1\" && python tt.py search --text \"grille\" --limit 60 && python tt.py search --type house_break --text \"cutter\" --limit 60",
+          "cd \"<tmp>\\A1\" && for c in CHN-KU-2025-000082 CHN-AS-2025-000080 CHN-MG-2025-000079 CHN-MG-2025-000077 CHN-VI-2025-000079 CHN-KA-2025-000077 CHN-PO-2025-000068; do python tt.py case $c | python -c \"import json,sys;d=json.load(sys.stdin);print(d['crime_id'],d['occurred_from'],d['occurred_to'],d['weapon'],d['offenders_described'],d['mo'],d['vehicles'],d['visual_tags']);print(d['narrative']);print()\"; done",
+          "cd \"<tmp>\\A1\" && python tt.py search --type night_house_break --from 2025-01-01 --to 2025-02-28 --limit 100 | python -c \"import json,sys;d=json.load(sys.stdin);print(d['total']);[print(r['crime_id'],r['occurred_from'],r['address']) for r in d['results']]\"; python tt.py search --type house_break --text \"window\" --limit 100 | python -c \"import json,sys;d=json.load(sys.stdin);print(d['total']);[print(r['crime_id'],r['occurred_from'],r['sub_type']) for r in d['results']]\"",
+          "cd \"<tmp>\\A1\" && for t in \"cutting\" \"bars\" \"grill\" \"cut\"; do echo \"== $t\"; python tt.py search --text \"$t\" --limit 100 | python -c \"import json,sys;d=json.load(sys.stdin);print(d['total']);[print(r['crime_id'],r['occurred_from'],r['sub_type']) for r in d['results']]\"; done",
+          "cd \"<tmp>\\A1\" && python tt.py answer CHN-KU-2025-000082,CHN-VI-2025-000079,CHN-MG-2025-000077,CHN-MG-2025-000079,CHN-AS-2025-000080,CHN-KA-2025-000077,CHN-PO-2025-000068 --note \"Unique MO (window grille cut with cutter, 2 medium-build 30-40, on foot, ~03:00) matched exactly 8 of ~125 night house breaks; other cases lacked structured MO fields so text search was key\""
+        ],
+        "pattern_hits": 2,
+        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
+      }
+    },
+    "B1": {
+      "condition": "nexus",
+      "case": "CHN-KU-2025-000078",
+      "truth_members": 7,
+      "answer": [
+        "CHN-KU-2025-000082"
+      ],
+      "note": "All 7 alerts rest on a generic template MO (2 men, cutter, grille, on foot); only KU-82 has 0.2km/72min proximity plus tip/112 corroboration; the same-night MG/AS/VI hits are minutes apart km away on foot, so not one crew",
+      "correct": 1,
+      "wrong": 0,
+      "wrong_ids": [],
+      "decoys_listed": [],
+      "missed": [
+        "CHN-AS-2025-000080",
+        "CHN-KA-2025-000077",
+        "CHN-MG-2025-000077",
+        "CHN-MG-2025-000079",
+        "CHN-PO-2025-000068",
+        "CHN-VI-2025-000079"
+      ],
+      "seconds_to_answer": 42.7,
+      "seconds_to_first_correct_on_screen": 0.2,
+      "first_answer_entry_correct": true,
+      "wrapper_calls": 16,
+      "refused_calls": 0,
+      "started_ist": "2026-10-27 22:03:00 IST",
+      "transcript_audit": {
+        "tool_calls": 5,
+        "by_tool": {
+          "Bash": 5
+        },
+        "commands": [
+          "cd \"<tmp>\\B1\" && python tt.py start && python tt.py alerts",
+          "cd \"<tmp>\\B1\" && python tt.py case CHN-KU-2025-000078 && for a in LA-2026-0F92ACDAA53B LA-2026-6E109F541ADE LA-2026-49CD45EE8900 LA-2026-094729EC3174; do python tt.py alert $a; done",
+          "cd \"<tmp>\\B1\" && for c in CHN-KU-2025-000082 CHN-MG-2025-000079 CHN-MG-2025-000077 CHN-AS-2025-000080 CHN-VI-2025-000079 CHN-PO-2025-000068 CHN-KA-2025-000077; do python tt.py case $c | python -c \"import json,sys;d=json.load(sys.stdin);print(d['crime_id'],d['sub_type'],d['occurred_from'],d['weapon'],d['offenders_described'],[p['type'] for p in d['property']],d['mo'],d['visual_tags'],d['vehicles']);print('  ',d['narrative'])\"; done",
+          "cd \"<tmp>\\B1\" && for a in LA-2026-549161AB4A06 LA-2026-9A777030F6EE LA-2026-916017C794CB; do python tt.py alert $a | python -c \"import json,sys;d=json.load(sys.stdin);print(d['other_case'],d['coverage'],d['skeptic']);[print('  ',f['factor'],f['value'],f['struck_by_skeptic'],f['reason']) for f in d['factors']]\"; done",
+          "cd \"<tmp>\\B1\" && python tt.py answer CHN-KU-2025-000082 --note \"All 7 alerts rest on a generic template MO (2 men, cutter, grille, on foot); only KU-82 has 0.2km/72min proximity plus tip/112 corroboration; the same-night MG/AS/VI hits are minutes apart km away on foot, so not one crew\""
+        ],
+        "pattern_hits": 1,
+        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
+      }
+    },
+    "A2": {
+      "condition": "nexus",
+      "case": "CHN-KU-2025-000082",
+      "truth_members": 7,
+      "answer": [
+        "CHN-KU-2025-000078",
+        "CHN-AS-2025-000080",
+        "CHN-MG-2025-000079",
+        "CHN-MG-2025-000077",
+        "CHN-VI-2025-000079",
+        "CHN-KA-2025-000077",
+        "CHN-PO-2025-000068"
+      ],
+      "note": "Case files helped: same MO (cut window grille, cutter, 2 men 30-40 medium, night, on foot). KU-078 is strongest: same station, same night, has corroboration from a tip and 112 calls. Got in the way: alert factors are generic, with no model rationale or skeptic critique, and the descriptors are boilerplate, so the others are hard to tell apart. Six break-ins in about 72 minutes across 4 areas is implausible for one crew. Excluded AS-141 (daytime, duplicate key, no tool).",
+      "correct": 7,
+      "wrong": 0,
+      "wrong_ids": [],
+      "decoys_listed": [],
+      "missed": [],
+      "seconds_to_answer": 36.9,
+      "seconds_to_first_correct_on_screen": 4.8,
+      "first_answer_entry_correct": true,
+      "wrapper_calls": 19,
+      "refused_calls": 0,
+      "started_ist": "2026-10-27 22:04:53 IST",
+      "transcript_audit": {
+        "tool_calls": 6,
+        "by_tool": {
+          "Bash": 6
+        },
+        "commands": [
+          "cd \"<tmp>\\A2\" && python tt.py start",
+          "cd \"<tmp>\\A2\" && python tt.py alerts",
+          "cd \"<tmp>\\A2\" && python tt.py case CHN-KU-2025-000082 && for a in LA-2026-0F92ACDAA53B LA-2026-A6F2363D3614 LA-2026-A023CB5FF0D7 LA-2026-40AE94754401; do python tt.py alert $a; done",
+          "cd \"<tmp>\\A2\" && for c in CHN-KU-2025-000078 CHN-AS-2025-000080 CHN-MG-2025-000079 CHN-MG-2025-000077 CHN-VI-2025-000079 CHN-PO-2025-000068 CHN-KA-2025-000077 CHN-AS-2025-000141; do python tt.py case $c | grep -E '\"(crime_id|category|sub_type|occurred_from|address|weapon|age_band|build|count|narrative|mo)\"'; echo ---; done",
+          "cd \"<tmp>\\A2\" && python tt.py case CHN-KU-2025-000078 | grep -A12 '\"mo\"'; for a in LA-2026-8CEF57FE0AA9 LA-2026-A570B2F9454C LA-2026-71C8A6B97637 LA-2026-D179C10A2518; do python tt.py alert $a | grep -E '\"(factor|value|struck|verdict|model_critique|recommended_action|rationale)\"'; echo ---; done",
+          "cd \"<tmp>\\A2\" && python tt.py answer CHN-KU-2025-000078,CHN-AS-2025-000080,CHN-MG-2025-000079,CHN-MG-2025-000077,CHN-VI-2025-000079,CHN-KA-2025-000077,CHN-PO-2025-000068 --note \"Case files helped: same MO (cut window grille, cutter, 2 men 30-40 medium, night, on foot). KU-078 is strongest: same station, same night, has corroboration from a tip and 112 calls. Got in the way: alert factors are generic, with no model rationale or skeptic critique, and the descriptors are boilerplate, so the others are hard to tell apart. Six break-ins in about 72 minutes across 4 areas is implausible for one crew. Excluded AS-141 (daytime, duplicate key, no tool).\""
+        ],
+        "pattern_hits": 0,
+        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
+      }
+    },
+    "B2": {
+      "condition": "manual",
+      "case": "CHN-KU-2025-000082",
+      "truth_members": 7,
+      "answer": [
+        "CHN-KU-2025-000078",
+        "CHN-AS-2025-000080",
+        "CHN-MG-2025-000079",
+        "CHN-MG-2025-000077",
+        "CHN-VI-2025-000079",
+        "CHN-KA-2025-000077",
+        "CHN-PO-2025-000068"
+      ],
+      "note": "Text search for the distinctive MO (cut window grille / cutting tool / cutter) found a tight 7-case cluster with identical offender descriptions (2, medium build, 30-40, on foot) in adjacent R-division stations, 15-19 Jan; ranked same-night/same-station first. Search output lacks MO/weapon fields, so each case had to be opened.",
+      "correct": 7,
+      "wrong": 0,
+      "wrong_ids": [],
+      "decoys_listed": [],
+      "missed": [],
+      "seconds_to_answer": 24.9,
+      "seconds_to_first_correct_on_screen": 5.5,
+      "first_answer_entry_correct": true,
+      "wrapper_calls": 14,
+      "refused_calls": 0,
+      "started_ist": "2026-10-27 22:04:57 IST",
+      "transcript_audit": {
+        "tool_calls": 5,
+        "by_tool": {
+          "Bash": 5
+        },
+        "commands": [
+          "cd \"<tmp>\\B2\" && python tt.py start && python tt.py case CHN-KU-2025-000082",
+          "cd \"<tmp>\\B2\" && python tt.py search --type house_break --limit 60 && python tt.py search --text \"grille\" --limit 40",
+          "cd \"<tmp>\\B2\" && for c in CHN-AS-2025-000080 CHN-MG-2025-000079 CHN-MG-2025-000077 CHN-VI-2025-000079 CHN-KU-2025-000078 CHN-KA-2025-000077 CHN-PO-2025-000068; do python tt.py case $c | grep -E '\"crime_id\"|weapon|age_band|build|count|narrative|mo\"|vehicles|occurred_to'; done; python tt.py search --from 2025-01-10 --to 2025-01-28 --type house_break --limit 80",
+          "cd \"<tmp>\\B2\" && python tt.py search --text \"cutting tool\" --limit 40 | grep crime_id; echo ---; python tt.py search --text \"grill\" --limit 40 | grep crime_id; echo ---; python tt.py search --text \"cutter\" --limit 40 | grep crime_id",
+          "cd \"<tmp>\\B2\" && python tt.py answer CHN-KU-2025-000078,CHN-AS-2025-000080,CHN-MG-2025-000079,CHN-MG-2025-000077,CHN-VI-2025-000079,CHN-KA-2025-000077,CHN-PO-2025-000068 --note \"Text search for the distinctive MO (cut window grille / cutting tool / cutter) found a tight 7-case cluster with identical offender descriptions (2, medium build, 30-40, on foot) in adjacent R-division stations, 15-19 Jan; ranked same-night/same-station first. Search output lacks MO/weapon fields, so each case had to be opened.\""
+        ],
+        "pattern_hits": 2,
+        "verdict": "clean: every command cds into its own workspace and runs python tt.py; output piped only to python -c/grep on stdout; no path outside the workspace; pattern hits are the wrapper's --type flag or p['type'] on stdout"
+      }
+    }
+  }
+}
