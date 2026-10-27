@@ -57,13 +57,13 @@ def test_default_slice_never_ties_two_incidents_together():
     # crime's station or ward, inside its window) matches it to at most one crime: no Linker corroboration.
     import duckdb
 
-    from app.adapters.zetaris_queries_n2 import NEWS_DAYS
+    from app.adapters.zetaris_queries_n2 import NEWS_DAYS, NEWS_JSON
 
     con = duckdb.connect()
     con.execute(f"SET file_search_path = '{SAMPLE.as_posix()}'")
     worst = con.execute(f"""
         WITH n AS (SELECT article_id, CAST(published_at AS TIMESTAMPTZ) AS at, unnest(places_mentioned) AS place
-                   FROM read_json_auto('news/articles.jsonl')),
+                   FROM {NEWS_JSON}),
         a AS (SELECT alias, station_id, ward_no FROM read_csv_auto('ref/place_aliases.csv'))
         SELECT n.article_id, count(DISTINCT c.crime_id) AS crimes
         FROM n JOIN a ON lower(trim(n.place)) = lower(trim(a.alias))
