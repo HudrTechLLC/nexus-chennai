@@ -17,7 +17,7 @@ import {
   type TraceRow,
 } from "@/lib/trace";
 import { RunModeBadge } from "@/components/console/runs/RunModeBadge";
-import { receiptCountLine, receiptLabel } from "@/lib/receipts";
+import { receiptCountLine, receiptLabel, receiptNote } from "@/lib/receipts";
 
 const RUN_TONE = {
   good: "border-signal text-signal",
@@ -119,7 +119,7 @@ export default async function TracePage({ params }: { params: { runId: string } 
                   {e.output_summary && <div className="break-words text-xs">out: {e.output_summary}</div>}
                   <div className="flex flex-wrap gap-x-3 font-mono text-xs text-muted">
                     {e.model && <span>model {e.routed_model && e.routed_model !== e.model ? `${e.model} → ${e.routed_model}` : e.model}</span>}
-                    {e.receipt_id && <span>{receiptLabel(e.receipt_id)} {e.receipt_id}</span>}
+                    {e.receipt_id && <span>{receiptLabel(e.receipt_id)} {e.receipt_id}{receiptNote(e.receipt_id) && <span className="text-signal"> · {receiptNote(e.receipt_id)}</span>}</span>}
                     {(e.zetaris_query_ids ?? []).map((q) => <span key={q}>query {q}</span>)}
                     {n !== null && <span>{n} rows{via === "sample" ? " (sample twin)" : ""}</span>}
                     {e.engine && <span>engine {e.engine}</span>}
