@@ -13,7 +13,7 @@ Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://
 **What's new compared with established crime linkage.** Established linkage systems rely on structured case forms and analysts comparing cases by hand. Nexus instead:
 - reads every source where it already lives (case files, legacy station exports, ANPR, 112 calls, tips, feeds) through Zetaris, with no central copy;
 - has agents cite the Zetaris query and row behind every factor in an alert;
-- has a Skeptic that re-queries the data itself and gives a second opinion on each pair (send back or drop); the officer decides;
+- has a Skeptic that re-queries the data itself and gives a second opinion on each pair, which can drop or downgrade a link (or send it back for a narrower search); the officer decides;
 - feeds screened public tips back in as corroborating evidence on a link (the corroboration factor);
 - learns from each analyst decision within a capped ±0.08 (H-MEM).
 
@@ -23,7 +23,7 @@ Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://
 ## What it does
 
 - **Links cases across stations.** For a new case, agents find candidate cases city-wide, score each pair on nine factors in code, and write an alert with per-factor evidence.
-- **Gives a second opinion.** The Skeptic re-queries Zetaris itself, critiques each pair against its own rows, and can send a pair back for a narrower search or drop it. It is not a guarantee: on a planted test its model critique dropped none of 24 look-alike false links. Since ~07:20 IST on 27 Oct a deterministic contradiction check also runs on new cases (Known limitations). The officer decides.
+- **Gives a second opinion.** The Skeptic re-queries Zetaris itself and critiques each pair against its own rows: a second opinion that can drop or downgrade a link, or send it back for a narrower search. It is not a guarantee: on a planted test its model critique dropped none of 24 look-alike false links. Since ~07:20 IST on 27 Oct a deterministic contradiction check also runs on new cases (Known limitations). The officer decides.
 - **Keeps a human in charge.** Every alert waits for an analyst. Approvals and rejections go to H-MEM, so a similar pair scores differently next time.
 - **Lets the public help safely.** Anyone can send an anonymous tip. Tip Guard (Meterless Scout Intent) screens it for injection, threats and spam before any agent reads it.
 - **Groups links into series** and builds a dossier with the Meterless Markovian engine.
@@ -50,7 +50,7 @@ Diagrams and the full design: [engg/docs/ARCHITECTURE.md](engg/docs/ARCHITECTURE
 
 ## Agents
 
-A LangGraph graph routes each input down one of three paths:
+A LangGraph graph sends each input down one of three paths. The **Router** is an input-type lookup in code (`case`, `tip` or `search`; no model and no engine). Scout Intent is used for two separate jobs: it screens tips (Tip Guard) and routes searches.
 
 - **case:** `load_case → extract → plan → link → skeptic → write`; the Skeptic can send pairs back to `plan`.
 - **tip:** `tip_guard → tip_extract` (clean tips only).
@@ -80,12 +80,12 @@ Nexus uses **all four** Meterless engines, each in a product feature with a pass
 
 | Engine | What it does in Nexus | Test evidence |
 |---|---|---|
-| **World Model** | One canonical entity per real-world thing (plate, person, phone, place, FIR), with stable ids and provenance, so agents agree on what a fact refers to | Official conformance **8/8** (`logs/conformance_world_model.txt`) + E4 feature tests |
-| **H-MEM** | Turns analyst decisions into memories that shift a similar pair's score by at most ±0.08; every step goes to an append-only trust ledger | Official conformance **13/13** (`logs/conformance_hmem.txt`) + E4 feature tests |
-| **Markovian** | Reads a whole series in bounded chunks with a capped carryover for the dossier; logs projected vs actual tokens | Official conformance **8/8** (`logs/conformance_markovian.txt`) + E4 feature tests |
+| **World Model** | One canonical entity per real-world thing (plate, person, phone, place, FIR), with stable ids and provenance, so agents agree on what a fact refers to | Official conformance **8/8** on the TS reference (`logs/conformance_world_model.txt`) + E4 feature tests |
+| **H-MEM** | Turns analyst decisions into memories that shift a similar pair's score by at most ±0.08; every step goes to an append-only trust ledger | Official conformance **13/13** on the TS reference (`logs/conformance_hmem.txt`) + E4 feature tests |
+| **Markovian** | Reads a whole series in bounded chunks with a capped carryover for the dossier; logs projected vs actual tokens | Official conformance **8/8** on the TS reference (`logs/conformance_markovian.txt`) + E4 feature tests |
 | **Scout Intent** | Routes analyst searches; Tip Guard quarantines injection, threats, abuse and spam in public tips and flags emergencies | **Independent:** held-out 40 (never tuned on): route accuracy **0.975**, injections **7/7**, 0 false quarantines (0.950 before #144, a routing fix prompted by a console search, not by the held-out set). On the 40 live seeded tips, **0 of 30 genuine tips falsely quarantined** and emergencies **2/2** urgent. **Live misses and the fix:** before #128, injections **3/4** and spam **1/4** quarantined; after rules for those four shapes, **4/4** and **4/4**. That after-number is **not independent recall**, because those four misses shaped the rules (and the labels beyond the four were inferred from the text). Tuned fixture set (153: 66 queries + 87 tips; the rules were tuned on it): route accuracy **1.000** (the old rules scored 0.871 on the first 147), injections **23/23**, emergencies **8/8**. Re-run on a fresh clone in WS5-08 part 2. Sources: `logs/feature_scout_intent.txt`, PR #128. |
 
-World Model, H-MEM and Markovian run as the vendored TypeScript references in a local sidecar (`engines-ts/`), so the official suites run unchanged. Python ports of the same algorithms are the default in-process backend, and a parity test checks that the two backends agree. CI runs the conformance suites and the feature tests on both backends on every PR. Details: [engg/docs/ENGINES.md](engg/docs/ENGINES.md).
+The official conformance suites (8/8, 13/13, 8/8 above) run unchanged against the vendored TypeScript references in a local sidecar (`engines-ts/`). The default in-process backend is Python ports of the same algorithms; the conformance suites do not run on the ports directly. The ports are tied to the references by one parity test, `tests/engines/test_backend_parity.py::test_sample_and_sidecar_backends_agree`. It runs the same inputs through both backends (2 entity graphs, 2 decided pairs, 2 probes, 90 records) and asserts they match: World Model ids, state and context selection; H-MEM memory ids and deltas; the Markovian dossier text, chunks, chunk log and projected/actual tokens. It passed on main `2f9b415` in the `engines` CI job ([run 40523974568](https://github.com/HudrTechLLC/nexus-chennai/actions/runs/40523974568): conformance 8/8, 13/13, 8/8, then 136 passed and 8 skipped). It is one test on fixed inputs, not a large golden corpus. CI runs the conformance suites and the feature tests on every PR. Details: [engg/docs/ENGINES.md](engg/docs/ENGINES.md).
 
 ## Sponsor technology
 
@@ -100,7 +100,7 @@ Full text: [engg/docs/submission/SPONSOR_TECH_FINAL.md](engg/docs/submission/SPO
 
 ## Setup
 
-You need Python 3.11 or newer (3.13 tested on Windows), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
+You need Python 3.11–3.13 (3.13 tested on Windows; 3.14+ fails, because the pinned `pydantic-core` does not install on it; Docker is the safe path), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
 
 ### Option A: Docker (the judge path)
 
@@ -135,6 +135,8 @@ $env:SAMPLE_MODE = "true"
 ```
 
 The install takes a few minutes. On Windows it includes `tzdata`, because Windows Python has no time-zone database of its own.
+
+To run the full test suite as well, also install the development requirements (they add pytest, ruff, `shapely` and `cryptography`, among others): `.venv/bin/pip install -r services/api/requirements-dev.txt` (Windows: `.venv\Scripts\pip install -r services/api/requirements-dev.txt`).
 
 `run.py` sets its own import path, so no `PYTHONPATH` is needed.
 
@@ -190,7 +192,7 @@ Other routes: `POST /api/cases/{id}/process`, `POST /api/batch/link`, `POST /api
 
 Fixtures replay only when Nightshift can't be reached, and they are never keyed to an example id, so different inputs give different outputs. The committed sample bundle (`data/sample/`, see its `MANIFEST.json`) holds 1,275 synthetic crimes around the three judge series, 276 extracted feature rows, 1,895 statements, 689 crime-vehicle rows and 40 tips. A fresh clone with no `.env` and Zetaris and Nightshift unreachable runs all three judge cases end to end. 30 recorded model replies are committed (`data/sample/model_fixtures/`); where no fixture matches a request, the alert carries a code-written reason ("model rationale unavailable") instead of model text.
 
-**The judge path runs fully offline:** the sample-mode container answers all three examples with `--network none` (no network at all) and matches `output_examples/` (CI job `judge-offline`, on every push to main; validated at `b407bd8`).
+**The judge path runs fully offline:** the sample-mode container answers all three examples with `--network none` (no network at all) and matches `output_examples/` (CI job `judge-offline`, on every push to main; validated at `b407bd8`). Latest green run on main `2f9b415`: [run 40523974649](https://github.com/HudrTechLLC/nexus-chennai/actions/runs/40523974649), with jobs `judge-path` and [`judge-offline`](https://github.com/HudrTechLLC/nexus-chennai/actions/runs/40523974649/job/122258343110) (`--network none`, `SAMPLE_MODE=true`, empty env).
 
 ## Examples
 
@@ -221,7 +223,7 @@ Every run writes `logs/trace-<run_id>.jsonl` and echoes each line to stdout. Eac
 ## Tests
 
 ```bash
-pip install -r services/api/requirements-dev.txt
+pip install -r services/api/requirements-dev.txt   # needed for the full suite (adds shapely, cryptography)
 pytest -q                                   # all Python tests
 pytest tests/engines -q                     # engine feature tests (sample backend)
 (cd engines-ts && npm ci && npm run install:references)   # once
@@ -243,7 +245,7 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 - **HIGH-band alerts were correct 10 of 10 times.** MEDIUM-band alerts were correct 56% of the time (74 of 132 scored pairs; 138 medium alerts, including 6 flagged duplicates that are neither right nor wrong; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
 - Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
 - **Series purity is 0.35** (mean over 10 predicted series, `eval_report.json`): on average about a third of a proposed series belongs to its main planted series. Series are proposals an analyst reviews, never verdicts.
-- **Live spot-check (separate from the headline):** 20 cases on live Zetaris and the QA database, default MO mode, code-only scoring, 0 model calls: **precision 0.61 / recall 0.64 / F1 0.62** (code `de8e666`, before #313; `output_examples/live_spot_off.json`). It is not like-for-like with the sample eval: 20 live cases vs 60 sample cases, a different truth set (the live seed's generated truth vs `data/sample/_truth`), and a larger candidate pool (about 14,000 live crimes plus legacy rows vs the 1,275-crime sample). Precision is close (0.61 vs 0.59); the recall gap (0.64 vs 0.86) is not yet explained.
+- **Live spot-check (separate from the headline):** 20 cases on live Zetaris and the QA database, default MO mode, code-only scoring, 0 model calls: **precision 0.61 / recall 0.64 / F1 0.62** (code `de8e666`, before #313; `output_examples/live_spot_off.json`). It is not like-for-like with the sample eval: 20 live cases vs 60 sample cases, a different truth set (the live seed's generated truth vs `data/sample/_truth`), and a larger candidate pool (about 14,000 live crimes plus legacy rows vs the 1,275-crime sample). Precision is close (0.61 vs 0.59). Recall is lower (0.64 vs 0.86). The gap splits roughly evenly between retrieval and scoring: 10 of the live run's 66 true pairs were never returned as candidates by the q_candidates blocking step (3 of 98 in the sample, whose truth is built from crimes inside the widest blocking window (45 days, 10 km), while the live truth covers whole series; all 10 live misses are 47–82 days apart), and of the pairs that were retrieved, 14 of 56 live scored below the 0.55 alert line with low evidence coverage (median 0.31), against 11 of 95 on the sample, giving recall on retrieved pairs of 0.75 live vs 0.88 sample.
 - **Nemotron Ultra alone (pre-registered baseline, #366/#405):** the same 20 headline cases, synthetic data, 182 candidate pairs shown and 178 scored (4 truth-duplicate pairs excluded, as in the headline; 14 true links). On the pairs it is shown, Ultra alone scores a higher F1 than the pipeline (**0.80 vs 0.69**; the 0.69 is the full system on these same pairs, not the 60-case 0.70), but the difference is not significant (paired McNemar p = 0.55 over all disagreements, 7 vs 4; p = 0.25 on true links only, 3 vs 0). We don't claim the agents judge a pair better than the model. The pipeline's advantage is cost and coverage: it scores every candidate with 0 model calls (about 0.83 s per case), while Ultra needed about 3.4 min per case for about 9 pairs, and covering all 5,750 candidate pairs that way would take roughly 26 h. Under this experiment's 10-pairs-per-case budget the model reached 14 of the 49 true links; the system's alerts cover 41 (`output_examples/nemotron_alone.json`, `engg/docs/eval/NEMOTRON_ALONE_RESULTS.md`).
 - Two similar-MO variants were trialled and left off: a feature cosine without IDF (more false positives) and a fixed-IDF TF-IDF (no change on this set).
 
@@ -348,7 +350,7 @@ Versions are pinned in `services/api/requirements*.txt` and `apps/web/package.js
 | pytz | 2024.2 | MIT |
 | tzdata | 2025.2 | Apache-2.0 |
 
-**Python, development and tests** (`services/api/requirements-dev.txt`): pytest 8.3.4 (MIT), ruff 0.8.4 (MIT), psycopg 3.2.3 (LGPL-3.0), shapely 2.2.0 (BSD-3-Clause), pillow 10.4.0 (HPND).
+**Python, development and tests** (`services/api/requirements-dev.txt`): pytest 8.3.4 (MIT), ruff 0.8.4 (MIT), psycopg 3.2.3 (LGPL-3.0), shapely 2.2.0 (BSD-3-Clause), pillow 10.4.0 (HPND), cryptography 45.0.7 (Apache-2.0 OR BSD-3-Clause).
 
 **Web, runtime** (`apps/web/package.json`)
 
