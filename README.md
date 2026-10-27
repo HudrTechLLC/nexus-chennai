@@ -13,7 +13,7 @@ In this repo: [demo video, MP4 1080p, 3:39](submission/media/Nexus_Chennai_demo_
 **What linking finds.** In the live demo data, Nexus proposes one series that no single station's register shows: **"Red two-wheeler chain snatchings · 3 stations"**, 10 chain snatchings across Adyar, Thiruvanmiyur and Velachery (the 10th is the FIR filed on camera on 27 Oct). One of its high cross-station pairs, Adyar ↔ Velachery two days apart, shares a partial plate and the same red Bajaj Pulsar 150 and scores **high (0.789)**; the analyst approved it on camera on 27 Oct. The series and every other alert in it are proposals: each waits for an analyst's decision. On the judge path (a fresh clone, sample data) the same series shows 4 cases (see [Examples](#examples)). All of it is planted synthetic data.
 
 **What's new compared with established crime linkage.** Established linkage systems rely on structured case forms and analysts comparing cases by hand. Nexus instead:
-- reads every source where it already lives (case files, legacy station exports, ANPR, 112 calls, tips, feeds) through Zetaris, with no central copy;
+- reads every source through Zetaris (case files, legacy station exports, ANPR, 112 calls, tips, feeds): federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store;
 - has agents cite the Zetaris query and row behind every factor in an alert;
 - has a Skeptic that re-queries the data itself and gives a second opinion on each pair, which can drop or downgrade a link (or send it back for a narrower search); the officer decides;
 - feeds screened public tips back in as corroborating evidence on a link (the corroboration factor);
@@ -257,13 +257,14 @@ CI runs on every PR: `api` (ruff + pytest), `engines` (conformance + feature tes
 
 | | Precision | Recall | F1 |
 |---|---|---|---|
-| **Nexus agents** | **0.59** | **0.86** | **0.70** |
+| **Code scoring (0 model calls)** | **0.59** | **0.86** | **0.70** |
+| Model in the loop (#21, 10 cases; 4 hit the 300 s deadline) | 0.75 | 0.24 | 0.37 |
 | Rules-only baseline | 0.09 | 0.30 | 0.13 |
 | Rules + vehicle/plate baseline (pre-registered, #454) | 0.14 | 0.80 | 0.24 |
 | its strict variant (all rules **and** a vehicle match) | 0.71 | 0.15 | 0.25 |
 
 - 60 synthetic truth cases, 98 planted true pairs.
-- **Stronger baseline (pre-registered, #454):** same category **and** (≤ 2 km and ≤ 14 days **or** a vehicle/plate match). The agents beat it on precision, recall and F1. Its strict variant is **more precise than the agents (0.71 vs 0.59)** but finds only 15 of 98 true pairs (recall 0.15). So the agents' edge is recall, not precision against every baseline (`output_examples/eval_report.json` → `baseline_rules_plus_vehicle`; `engg/docs/eval/STRONGER_BASELINE_PREREG.md`).
+- **Stronger baseline (pre-registered, #454):** same category **and** (≤ 2 km and ≤ 14 days **or** a vehicle/plate match). Code scoring beats it on precision, recall and F1. Its strict variant is **more precise than code scoring (0.71 vs 0.59)** but finds only 15 of 98 true pairs (recall 0.15). So code scoring's edge is recall, not precision against every baseline (`output_examples/eval_report.json` → `baseline_rules_plus_vehicle`; `engg/docs/eval/STRONGER_BASELINE_PREREG.md`).
 - **HIGH-band alerts were correct 10 of 10 times.** MEDIUM-band alerts were correct 56% of the time (74 of 132 scored pairs; 138 medium alerts, including 6 flagged duplicates that are neither right nor wrong; about one false medium alert per case evaluated). They are leads that need the analyst's decision, which is why every alert has a human gate.
 - Only 13 of the 60 cases had model-extracted MO features when the report was made; the other 47 were scored without them.
 - **Series purity is 0.35** (mean over 10 predicted series, `eval_report.json`): on average about a third of a proposed series belongs to its main planted series. Series are proposals an analyst reviews, never verdicts.

@@ -17,7 +17,7 @@ Final length **3:39** (v2, 27 Oct; narration ElevenLabs voice Adam). Status: ✅
 |---|---|---|---|
 | The problem | seg 1 · 0:03–0:23 | Pulse Map: 70 station silos, one city | ✅ |
 | Main workflow | seg 3 → seg 8 · 0:43–3:00 | live FIR → extraction → Zetaris → Nightshift → Skeptic → analyst → series → task force | ✅ |
-| How the agent solves Track 1 (fragmented sources) | seg 2 · 0:23–0:43, seg 4 · 1:03–1:24, seg 8 · 2:37–3:00 | sources stay in place and are federated by Zetaris; one series across 3 stations | ✅ |
+| How the agent solves Track 1 (fragmented sources) | seg 2 · 0:23–0:43, seg 4 · 1:03–1:24, seg 8 · 2:37–3:00 | sources are federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store; one series across 3 stations | ✅ |
 | Key features | seg 6 · 1:44–2:13, seg 7 · 2:13–2:37, seg 8 · 2:37–3:00 | Skeptic second opinion, analyst decision + H-MEM, map + task force (approved on camera) | ✅ |
 | Agent querying Zetaris | seg 3 · ~0:52–1:03 (Extractor `zetaris_query` rows, `via=zetaris`, query ids); seg 5 · ~1:34–1:45 and seg 6 · ~1:57–2:13 (Skeptic's own `zetaris_query` rows #46–#48, `via=zetaris`, query ids, then the drop citing them); seg 7 · ~2:28–2:37 (Linker `zetaris_query` #59). Context: seg 4 · 1:03–1:24 Data sources ("federated by Zetaris", counts "via Zetaris"); seg 5 card "31 Zetaris queries" | trace lines, not the Zetaris UI (take B skipped) | ✅ |
 | The feature an engine powers | seg 7 · ~2:28–2:37 (`s7_hmem_trace`) | the hero approved on camera (09:00:51 IST), then the trace row #61 `memory_applied` (mem-1 rejected, delta -0.055, within ±0.08) | ✅ landed |

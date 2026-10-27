@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # Sponsor technology explanation: final draft (WS5-04)
 
-This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Claims added tonight carry their PR numbers; the rest trace to [EVIDENCE](EVIDENCE.md). Delete or replace anything still marked as pending before you paste. Nothing pending may be pasted as if it were done.
+This is the text for the HackOS form's sponsor-technology field. Paste everything below the line. Every claim comes from [EVIDENCE](EVIDENCE.md), checked against `origin/main` @ `6b71108` (26 Oct, after the reboot). Claims added tonight carry their PR numbers; the rest trace to [EVIDENCE](EVIDENCE.md). Nothing in it is marked pending.
 Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [README_DRAFT](README_DRAFT.md) · [DECK](DECK.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md)
 
 > **Notes for the chief, not form text:**
@@ -16,7 +16,7 @@ Related: [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH](../SPONSOR_TECH.md) · [READM
 
 ## Zetaris: the data layer
 
-Nexus never builds a central warehouse. Every crime fact an agent reads comes through **Zetaris**, from the source that holds it.
+Every crime fact an agent reads comes through **Zetaris**: federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store.
 
 - **Sources federated today:**
   - **Supabase Postgres**, registered as datasource `sb` under a read-only role (`zetaris_reader`: SELECT only, no RLS bypass). It covers 17 tables (crimes, statements, evidence, forensics, persons, alerts, decisions, series, …) plus 5 datasource views (`stations`, `wards`, `crime_features_v`, `tips_v`, `case_bundle_v`) where JDBC can't map a type or one read needs a join.
@@ -89,7 +89,7 @@ Not used. Nexus was built with Claude Code as a development tool. Claude Code is
 
 ## Measured result
 
-On 60 synthetic cases with planted ground truth, the agents link with **precision 0.59, recall 0.86 (F1 0.70)**, against 0.09 / 0.30 (F1 0.13) for a rules-only baseline (same category, ≤ 2 km, ≤ 14 days). A stronger pre-registered baseline that also matches vehicles and plates (#454) reaches F1 0.24; its strict variant is more precise than the agents (0.71) at recall 0.15. **HIGH-band alerts were correct 10 of 10 times**; MEDIUM 56%, which is why an analyst decides every alert. The eval makes no model calls; 13 of the 60 cases had model-extracted features, and the rest were scored without them (`output_examples/eval_report.json`, #275; reproducible from a fresh clone with the command in the README's Evaluation section).
+On 60 synthetic cases with planted ground truth, code scoring (0 model calls) links with **precision 0.59, recall 0.86 (F1 0.70)** (model in the loop (#21, pre-registered side eval): P 0.75 / R 0.24 / F1 0.37 on 10 cases, 4 of which hit the 300 s run deadline), against 0.09 / 0.30 (F1 0.13) for a rules-only baseline (same category, ≤ 2 km, ≤ 14 days). A stronger pre-registered baseline that also matches vehicles and plates (#454) reaches F1 0.24; its strict variant is more precise than the agents (0.71) at recall 0.15. **HIGH-band alerts were correct 10 of 10 times**; MEDIUM 56%, which is why an analyst decides every alert. The eval makes no model calls; 13 of the 60 cases had model-extracted features, and the rest were scored without them (`output_examples/eval_report.json`, #275; reproducible from a fresh clone with the command in the README's Evaluation section).
 
 ## What was unique about our use of the sponsor technology
 
