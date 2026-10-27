@@ -21,11 +21,13 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+from tenacity import RetryCallState, retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from ..config import FORBIDDEN_MODELS, Settings
 from ..tracing import Tracer
@@ -76,6 +78,52 @@ def _is_retryable(exc: BaseException) -> bool:
     return isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code >= 500
 
 
+RATE_LIMITED = 429
+RETRY_AFTER_CAP_SECONDS = 20.0  # two capped waits stay well inside a live case's deadline
+_backoff = wait_exponential(multiplier=0.5, max=4)
+
+
+def _is_rate_limited(exc: BaseException) -> bool:
+    return isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == RATE_LIMITED
+
+
+def _should_retry(exc: BaseException) -> bool:
+    """Transport errors, 5xx and 429 are retried. 429 is kept out of `_is_retryable`, which also decides the
+    sample-mode replay: being rate-limited is not an outage, so it must not swap a live answer for a fixture."""
+    return _is_retryable(exc) or _is_rate_limited(exc)
+
+
+def retry_after_seconds(value: str | None, now: datetime | None = None) -> float | None:
+    """Retry-After as seconds (RFC 9110: delta-seconds or an HTTP-date), clamped to [0, cap]; None if absent or
+    unparseable."""
+    if value is None or not value.strip():
+        return None
+    v = value.strip()
+    try:
+        secs = float(v)
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(v)
+        except (TypeError, ValueError):
+            return None
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        secs = (when - (now or datetime.now(timezone.utc))).total_seconds()
+    if secs != secs:  # NaN
+        return None
+    return max(0.0, min(RETRY_AFTER_CAP_SECONDS, secs))
+
+
+def _wait(state: RetryCallState) -> float:
+    """Honour a 429's Retry-After when it has one; otherwise the usual exponential backoff."""
+    exc = state.outcome.exception() if state.outcome else None
+    if _is_rate_limited(exc):
+        secs = retry_after_seconds(exc.response.headers.get("Retry-After"))
+        if secs is not None:
+            return secs
+    return _backoff(state)
+
+
 def fixture_key(lane: str, messages: list[dict[str, Any]]) -> str:
     canonical = json.dumps({"lane": lane, "messages": messages}, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:24]
@@ -120,9 +168,9 @@ class NightshiftClient:
         return model
 
     @retry(
-        retry=retry_if_exception(_is_retryable),
+        retry=retry_if_exception(_should_retry),
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=0.5, max=4),
+        wait=_wait,
         reraise=True,
     )
     def _post(self, path: str, body: dict[str, Any]) -> httpx.Response:
