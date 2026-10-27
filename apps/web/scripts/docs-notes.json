@@ -18,6 +18,7 @@
   ["eval/PLANTED_SKEPTIC_PREREG", "Skeptic planted test (pre-registration)"],
   ["eval/SKEPTIC_CONTRADICTION_PREREG", "Skeptic contradiction test (pre-registration)"],
   ["eval/INDEPENDENT_LOOKALIKE_PREREG", "Contradiction rule, independent look-alikes (pre-registration and results)"],
+  ["eval/DUPLICATE_CORROBORATION_PREREG", "Duplicate and derivative corroboration (pre-registration and results)"],
   ["eval/NEMOTRON_ALONE_PREREG", "Nemotron-alone baseline (pre-registration)"],
   ["eval/NEMOTRON_ALONE_RESULTS", "Nemotron-alone baseline (results)"],
   ["eval/STRONGER_BASELINE_PREREG", "Stronger rules + vehicle baseline (pre-registration)"],
