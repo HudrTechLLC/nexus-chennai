@@ -50,7 +50,7 @@ Diagrams and the full design: [engg/docs/ARCHITECTURE.md](engg/docs/ARCHITECTURE
 
 ## Agents
 
-A LangGraph graph sends each input down one of three paths. The **Router** is an input-type lookup in code (`case`, `tip` or `search`; no model and no engine). Scout Intent does two other jobs: it screens tips (Tip Guard) and routes searches. (The Router's trace line is labelled `Scout Intent` / `route`; it records only the input-type lookup.)
+A LangGraph graph sends each input down one of three paths. The **Router** is an input-type lookup in code (`case`, `tip` or `search`; no model and no engine). Scout Intent does two other jobs: it screens tips (Tip Guard) and routes searches.
 
 - **case:** `load_case → extract → plan → link → skeptic → write`; the Skeptic can send pairs back to `plan`.
 - **tip:** `tip_guard → tip_extract` (clean tips only).
