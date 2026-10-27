@@ -51,7 +51,7 @@ Related: [SPEC](SPEC.md) · [DECISIONS](DECISIONS.md) · [SETUP](SETUP.md) · [C
 ![C4 agent graph](diagrams/c4-agent-graph.svg)
 
 - **Not a fixed chain.** The graph has:
-  - a Scout Intent router;
+  - a router (a lookup on the input kind; Scout Intent classifies analyst searches and screens tips);
   - a Planner ↔ Zetaris loop of up to 3 rounds;
   - a Linker that scores in code;
   - a Skeptic that re-queries, strikes or sends back, up to 2 rounds;

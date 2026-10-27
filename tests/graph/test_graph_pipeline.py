@@ -61,7 +61,7 @@ def test_case_run_writes_cross_station_alert(tmp_path):
     assert set(alert["crimes"]) == {ADYAR["crime_id"], VELACHERY["crime_id"]}
     assert alert["rationale"] == "Same two-rider pattern"
     agents = [e["agent_name"] for e in deps.tracer.read()]
-    for name in ("Scout Intent", "Extractor", "Planner", "Linker", "Skeptic", "Alert writer"):
+    for name in ("Router", "Extractor", "Planner", "Linker", "Skeptic", "Alert writer"):
         assert name in agents
     skeptic_reads = [c for c in deps.zetaris.calls if c[1] == "Skeptic"]
     assert skeptic_reads, "Skeptic must re-query Zetaris itself"
@@ -76,6 +76,17 @@ class DriftingHmem:
     def adjust(self, pair):
         self.n += 1
         return {"delta": 0.01 * self.n, "memory_ids": [f"HM-{self.n}"], "reason": "new memory"}
+
+
+@pytest.mark.parametrize("kind,agent", [("case", "Router"), ("tip", "Router"), ("search", "Scout Intent")])
+def test_route_step_is_traced_as_router_except_searches(tmp_path, kind, agent):
+    """#22: routing is a lookup on the input kind, so case/tip routing is "Router"; searches keep "Scout Intent"
+    (search_node classifies the query with the Scout Intent engine)."""
+    g, deps = graph(tmp_path)
+    g.router({"kind": kind, "payload": {}})
+    route = [e for e in deps.tracer.read() if e["action"] == "route"]
+    assert [e["agent_name"] for e in route] == [agent]
+    assert route[0]["output_summary"] == f"route={kind}"
 
 
 def test_send_back_loop_respects_caps(tmp_path):
