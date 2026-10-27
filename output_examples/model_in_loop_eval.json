@@ -1,0 +1,603 @@
+{
+  "prereg": "engg/docs/eval/MODEL_IN_LOOP_PREREG.md",
+  "code_sha": "339c2741cd7ad82a7949e5a7cac6c6a48bd0dd4c",
+  "code_dirty": false,
+  "cases": [
+    "CHN-AD-2026-001071",
+    "CHN-AD-2026-001078",
+    "CHN-AD-2026-001084",
+    "CHN-AD-2026-001182",
+    "CHN-AM-2024-001346",
+    "CHN-AM-2025-000865",
+    "CHN-AM-2025-001042",
+    "CHN-AM-2025-001062",
+    "CHN-AS-2025-000080",
+    "CHN-AV-2026-000609"
+  ],
+  "synthetic": true,
+  "sample_mode": true,
+  "lanes": {
+    "fast": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "vision": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "reason": "nvidia/nemotron-3-ultra-550b-a55b"
+  },
+  "code_only": {
+    "agent": {
+      "tp": 35,
+      "fp": 15,
+      "fn": 2,
+      "precision": 0.7,
+      "recall": 0.9459,
+      "f1": 0.8046,
+      "alerts": 52,
+      "by_band": {
+        "high": {
+          "alerts": 7,
+          "precision": 1.0,
+          "tp": 7,
+          "fp": 0
+        },
+        "medium": {
+          "alerts": 45,
+          "precision": 0.6512,
+          "tp": 28,
+          "fp": 15
+        }
+      },
+      "by_crime_type": {
+        "house_break": {
+          "tp": 7,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.875,
+          "recall": 1.0,
+          "f1": 0.9333
+        },
+        "robbery": {
+          "tp": 28,
+          "fp": 14,
+          "fn": 2,
+          "precision": 0.6667,
+          "recall": 0.9333,
+          "f1": 0.7778
+        },
+        "theft": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "false_alerts_per_100_cases": 150.0,
+      "skeptic_strikes": 0,
+      "series": {
+        "predicted_series": 5,
+        "mean_purity": 0.5292
+      }
+    },
+    "model_calls": 0,
+    "seconds": 13.9
+  },
+  "model_in_loop": {
+    "cases": [
+      {
+        "case_id": "CHN-AD-2026-001071",
+        "status": "success",
+        "errors": [],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AD-2026-001071",
+              "CHN-AD-2026-001078"
+            ],
+            "score": 0.7628,
+            "band": "high"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001071",
+              "CHN-TI-2026-001056"
+            ],
+            "score": 0.7556,
+            "band": "high"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001071",
+              "CHN-TI-2026-001087"
+            ],
+            "score": 0.7221,
+            "band": "medium"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001071",
+              "CHN-VL-2026-001113"
+            ],
+            "score": 0.7121,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 4,
+        "struck": 0,
+        "seconds": 354.3,
+        "model_calls": {
+          "total": 5,
+          "by_status": {
+            "ok": 5
+          },
+          "by_agent": {
+            "Planner": 1,
+            "Linker": 2,
+            "Skeptic": 2
+          },
+          "by_model": {
+            "nvidia/nemotron-3-ultra-550b-a55b": 5
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-1e2cbb3b-1ca2-47fd-ba92-59be843b9709",
+          "chatcmpl-63fe8a10-f6ac-4669-8771-e7cd0b3300f3",
+          "chatcmpl-7da2c42c-3cbf-4eb4-8bcf-02ab4e0973d4",
+          "chatcmpl-b298f840-df6e-4527-9c6b-8af6df4f9e96",
+          "chatcmpl-e3eda178-1446-473a-a155-a1eeff30d6e2"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AD-2026-001078",
+        "status": "deadline",
+        "errors": [
+          "deadline passed in Skeptic"
+        ],
+        "pairs": [],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 0,
+        "struck": 0,
+        "seconds": 314.3,
+        "model_calls": {
+          "total": 4,
+          "by_status": {
+            "ok": 4
+          },
+          "by_agent": {
+            "Planner": 1,
+            "Linker": 3
+          },
+          "by_model": {
+            "nvidia/nemotron-3-ultra-550b-a55b": 4
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-0f13d19d-077c-44c6-86a7-3c2727692908",
+          "chatcmpl-ac9f2e6c-733b-45e1-9bec-f7a2764c17b5",
+          "chatcmpl-d9b52840-8467-4f8a-9450-2e19b65a4fd7",
+          "chatcmpl-dc6af130-09a6-4924-aa28-44b13496f5de"
+        ],
+        "deadline_hit": true
+      },
+      {
+        "case_id": "CHN-AD-2026-001084",
+        "status": "deadline",
+        "errors": [
+          "deadline passed in Planner"
+        ],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AD-2026-001084",
+              "CHN-GU-2026-001094"
+            ],
+            "score": 0.5858,
+            "band": "medium"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001084",
+              "CHN-VL-2026-001035"
+            ],
+            "score": 0.5815,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 2,
+        "send_backs": 1,
+        "dropped": 0,
+        "approved": 0,
+        "struck": 0,
+        "seconds": 313.9,
+        "model_calls": {
+          "total": 5,
+          "by_status": {
+            "ok": 5
+          },
+          "by_agent": {
+            "Planner": 3,
+            "Linker": 1,
+            "Skeptic": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3-ultra-550b-a55b": 5
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-016df275-7732-46cd-8b3b-fdf63047c1bc",
+          "chatcmpl-083e7279-0ad2-4bc4-8e6b-229a7d7281ec",
+          "chatcmpl-62d1fc11-ab42-4e63-a16c-4d8e362b8815",
+          "chatcmpl-badf07b4-52ba-4f03-923a-d9cf51b22da8",
+          "chatcmpl-c5aa2e0c-ec6f-4702-aa25-b0ccb6c68248"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AD-2026-001182",
+        "status": "success",
+        "errors": [],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AD-2026-001182",
+              "CHN-TI-2026-001148"
+            ],
+            "score": 0.819,
+            "band": "high"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001182",
+              "CHN-VL-2026-000877"
+            ],
+            "score": 0.7887,
+            "band": "high"
+          },
+          {
+            "pair": [
+              "CHN-AD-2026-001182",
+              "CHN-TI-2026-001134"
+            ],
+            "score": 0.6194,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 3,
+        "struck": 0,
+        "seconds": 266.2,
+        "model_calls": {
+          "total": 5,
+          "by_status": {
+            "ok": 5
+          },
+          "by_agent": {
+            "Planner": 1,
+            "Linker": 2,
+            "Skeptic": 2
+          },
+          "by_model": {
+            "nvidia/nemotron-3-ultra-550b-a55b": 5
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-2743d819-2486-4e13-a347-359d38240c0a",
+          "chatcmpl-34405049-45be-4f43-b9e5-e5a28a5afd94",
+          "chatcmpl-adb3476c-4a9a-40b9-9cdf-7f52a6853612",
+          "chatcmpl-cd9ea29b-6bd8-46c2-941e-508145a0b3de",
+          "chatcmpl-d0f71f8f-3c5c-47a0-a3b6-a30b8ac6574b"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AM-2024-001346",
+        "status": "success",
+        "errors": [],
+        "pairs": [],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 1,
+        "approved": 0,
+        "struck": 0,
+        "seconds": 140.8,
+        "model_calls": {
+          "total": 4,
+          "by_status": {
+            "ok": 4
+          },
+          "by_agent": {
+            "Extractor": 1,
+            "Planner": 1,
+            "Linker": 1,
+            "Skeptic": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 1,
+            "nvidia/nemotron-3-ultra-550b-a55b": 3
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-34b74f5f-035b-4830-bebd-66090cdccd62",
+          "chatcmpl-35f3e331-cbf2-4fde-92ee-d48c1de0c30b",
+          "chatcmpl-65267581-e4fa-4904-87c5-c010e3d82bec",
+          "chatcmpl-d29c0265-ebc3-43e8-8925-f10c22883064"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AM-2025-000865",
+        "status": "success",
+        "errors": [],
+        "pairs": [],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 0,
+        "struck": 0,
+        "seconds": 65.2,
+        "model_calls": {
+          "total": 2,
+          "by_status": {
+            "ok": 2
+          },
+          "by_agent": {
+            "Extractor": 1,
+            "Planner": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 1,
+            "nvidia/nemotron-3-ultra-550b-a55b": 1
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-0ac3b894-0f38-4697-8825-005246677aef",
+          "chatcmpl-d0b5dda8-9b7d-4528-b832-e4073be4c445"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AM-2025-001042",
+        "status": "deadline",
+        "errors": [
+          "deadline passed in Planner"
+        ],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AM-2025-001042",
+              "CHN-NA-2025-000990"
+            ],
+            "score": 0.6952,
+            "band": "medium"
+          },
+          {
+            "pair": [
+              "CHN-AM-2025-001042",
+              "CHN-ST-2025-001108"
+            ],
+            "score": 0.6179,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 2,
+        "send_backs": 1,
+        "dropped": 0,
+        "approved": 1,
+        "struck": 0,
+        "seconds": 331.4,
+        "model_calls": {
+          "total": 5,
+          "by_status": {
+            "ok": 5
+          },
+          "by_agent": {
+            "Extractor": 1,
+            "Planner": 2,
+            "Linker": 1,
+            "Skeptic": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 1,
+            "nvidia/nemotron-3-ultra-550b-a55b": 4
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-259140a7-674f-4655-bdba-6769550e4fa9",
+          "chatcmpl-27e3112f-c22e-484a-bb48-64ddd551808e",
+          "chatcmpl-5296ff70-c422-44ec-b9ff-9f70d2292cbb",
+          "chatcmpl-e0a00ffb-1d21-4662-973d-c5bd292db540",
+          "chatcmpl-fbe10466-e240-4a15-a4e0-e68849fe92e8"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AM-2025-001062",
+        "status": "success",
+        "errors": [],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AM-2025-001062",
+              "CHN-MI-2025-001070"
+            ],
+            "score": 0.6199,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 2,
+        "send_backs": 1,
+        "dropped": 1,
+        "approved": 1,
+        "struck": 0,
+        "seconds": 184.9,
+        "model_calls": {
+          "total": 7,
+          "by_status": {
+            "ok": 7
+          },
+          "by_agent": {
+            "Extractor": 2,
+            "Planner": 2,
+            "Linker": 2,
+            "Skeptic": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 2,
+            "nvidia/nemotron-3-ultra-550b-a55b": 5
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-22ec9d35-b4d8-4e20-afb6-fd96859de774",
+          "chatcmpl-3019ad0a-2cc4-46e4-b4cb-ae86fd5067df",
+          "chatcmpl-3cac5dc4-c219-4968-b9d8-eebd33df93f8",
+          "chatcmpl-5b90bd48-ab43-477c-8bcf-03c8c0988008",
+          "chatcmpl-ba060f4a-0e2c-4329-b619-b48eb37a43fc",
+          "chatcmpl-cff8475d-53e9-4d1e-98e8-f331f708dafd",
+          "chatcmpl-f1b0296b-090f-484e-871d-d4a83ceacb5a"
+        ],
+        "deadline_hit": false
+      },
+      {
+        "case_id": "CHN-AS-2025-000080",
+        "status": "deadline",
+        "errors": [
+          "deadline passed in Skeptic"
+        ],
+        "pairs": [],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 0,
+        "struck": 0,
+        "seconds": 354.8,
+        "model_calls": {
+          "total": 6,
+          "by_status": {
+            "ok": 6
+          },
+          "by_agent": {
+            "Extractor": 1,
+            "Planner": 1,
+            "Linker": 4
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 1,
+            "nvidia/nemotron-3-ultra-550b-a55b": 5
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-3b348df1-aa1c-4cc4-9e3e-a450e48a8c1c",
+          "chatcmpl-678aee6c-3856-4f07-9289-1b9c5300eb65",
+          "chatcmpl-72664973-99a3-443f-abcb-9fe5ad0932ab",
+          "chatcmpl-80ad77e7-ca52-464d-9112-fb053d1ec544",
+          "chatcmpl-ae9dbfaa-ccd8-4ba5-901d-353e118d8b9c",
+          "chatcmpl-afcea7dd-f81e-46e5-a9d8-55ea6f876f88"
+        ],
+        "deadline_hit": true
+      },
+      {
+        "case_id": "CHN-AV-2026-000609",
+        "status": "success",
+        "errors": [],
+        "pairs": [
+          {
+            "pair": [
+              "CHN-AV-2026-000609",
+              "CHN-PT-2026-000608"
+            ],
+            "score": 0.7603,
+            "band": "medium"
+          }
+        ],
+        "plan_rounds": 1,
+        "send_backs": 0,
+        "dropped": 0,
+        "approved": 1,
+        "struck": 0,
+        "seconds": 173.4,
+        "model_calls": {
+          "total": 4,
+          "by_status": {
+            "ok": 4
+          },
+          "by_agent": {
+            "Extractor": 1,
+            "Planner": 1,
+            "Linker": 1,
+            "Skeptic": 1
+          },
+          "by_model": {
+            "nvidia/nemotron-3.5-lightning-30b-a3b": 1,
+            "nvidia/nemotron-3-ultra-550b-a55b": 3
+          },
+          "replayed": 0
+        },
+        "receipt_ids": [
+          "chatcmpl-30defebd-3111-4cc9-8a9e-52ba57628eba",
+          "chatcmpl-32f8489f-095a-4985-8c1d-19e3f572455a",
+          "chatcmpl-4df83ed1-aba9-4491-96ed-afeb00b3b998",
+          "chatcmpl-64f5e104-64a4-4764-b5a5-e1fa1d4d18f8"
+        ],
+        "deadline_hit": false
+      }
+    ],
+    "unfinished": [],
+    "partial": false,
+    "metrics": {
+      "tp": 9,
+      "fp": 3,
+      "fn": 28,
+      "precision": 0.75,
+      "recall": 0.2432,
+      "f1": 0.3673
+    },
+    "live_cases": [
+      "CHN-AD-2026-001071",
+      "CHN-AD-2026-001078",
+      "CHN-AD-2026-001084",
+      "CHN-AD-2026-001182",
+      "CHN-AM-2024-001346",
+      "CHN-AM-2025-000865",
+      "CHN-AM-2025-001042",
+      "CHN-AM-2025-001062",
+      "CHN-AS-2025-000080",
+      "CHN-AV-2026-000609"
+    ],
+    "totals": {
+      "model_calls": 47,
+      "replayed": 0,
+      "send_backs": 3,
+      "plan_rounds": 13,
+      "dropped": 2,
+      "struck": 0,
+      "seconds": 2499.2,
+      "deadline_hits": 2
+    },
+    "receipts": {
+      "checked": true,
+      "ids": 47,
+      "verified": 47,
+      "not_in_log": [],
+      "bad_signature": [],
+      "malformed": [],
+      "nightshift_receipt_status": {
+        "ok": 47
+      }
+    }
+  }
+}
