@@ -67,4 +67,4 @@ Arm A scored per case by the same code path (no model calls), to see where arm B
 - 10 cases, synthetic data, one run; model output is not deterministic, so a re-run can differ.
 - No significance claim is made, as pre-registered.
 
-**Related:** [[MODEL_IN_LOOP_PREREG]] · [[PLANTED_SKEPTIC_PREREG]]
+**Related:** [[MODEL_IN_LOOP_PREREG]] · [[PLANTED_SKEPTIC_PREREG]] · [[TIMED_TASK_RESULTS]]
