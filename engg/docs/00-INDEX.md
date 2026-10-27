@@ -42,6 +42,7 @@ Entry point for every project document. **Start here, then read the note for you
 - [INDEPENDENT_LOOKALIKE_PREREG](eval/INDEPENDENT_LOOKALIKE_PREREG.md): pre-registered independent test of the contradiction rule on hand-written look-alikes (not from the generator), offline, rule only (no model critique). Primary drop ≥ 0.60 over 24, twin false-drop ≤ 1/8. **Run 27 Oct: FAIL on both, as predicted: 10/24 dropped (S1 8/8, S2 2/8, S3 0/8); twins 2/8 wrongly dropped (both witness-error twins).**
 - [WS5-08 results](validation/WS5-08-2026-10-27.md): the checklist run; part 1 pre-run (secrets incl. full history, hygiene, README, licences, vendored engines), part 2 on Tuesday
 - [NEMOTRON_ALONE_PREREG](eval/NEMOTRON_ALONE_PREREG.md): pre-registered baseline, Nemotron Ultra alone vs the full system on the same 182 headline pairs (case list, prompt, scoring and stop rules fixed before any call)
+- [STRONGER_BASELINE_PREREG](eval/STRONGER_BASELINE_PREREG.md): pre-registered second baseline, rules + vehicle/plate matching (primary: same category AND (≤ 2 km and ≤ 14 days OR vehicle match); secondary: strict AND), P/R/F1 on the same 60 cases, offline, no model calls; fixed before the run
 - [NEMOTRON_ALONE_RESULTS](eval/NEMOTRON_ALONE_RESULTS.md): the run: same 182 pairs, Ultra alone F1 0.80 vs full system 0.69 (14 positives, McNemar n.s.); under the 10-pair budget cap the model reached 14/49 true links vs the system's 41/49
 
 ## Hackathon

@@ -31,6 +31,7 @@ from ..agents import AgentDeps, Candidate, Linker, Skeptic
 from ..agents.base import crime_from_row, features_from_row
 from ..agents.planner import Planner, default_plan
 from ..scoring import WEIGHTS_VERSION, baseline_link
+from ..scoring.baseline import rules_and_vehicle_link, rules_plus_vehicle_link
 
 POSITIVE_LABELS = frozenset({"series", "vehicle_chain", "offender_return"})
 FEATURE_BATCH = 100  # crime ids per q_features call when prefetching candidates
@@ -191,6 +192,11 @@ class Evaluator:
             if crime_b is not None:
                 cands.append(Candidate(crime_b, feats_b))
         baseline = [key(cid, c.crime["crime_id"]) for c in cands if baseline_link(case, c.crime)]
+        # Stronger baseline (STRONGER_BASELINE_PREREG): same candidates, collected beside the rules-only one.
+        extra = getattr(self, "_extra_baselines", None)
+        if extra is not None:
+            extra["primary"].update(key(cid, c.crime["crime_id"]) for c in cands if rules_plus_vehicle_link(case, c.crime))
+            extra["strict"].update(key(cid, c.crime["crime_id"]) for c in cands if rules_and_vehicle_link(case, c.crime))
         pairs = self.linker.score(case, feats, cands, support)
         preds = []
         for sp in pairs:
@@ -206,6 +212,7 @@ class Evaluator:
         cache: dict[str, tuple] = {}
         best: dict[tuple[str, str], Predicted] = {}
         baseline: set[tuple[str, str]] = set()
+        self._extra_baselines: dict[str, set[tuple[str, str]]] = {"primary": set(), "strict": set()}
         times = []
         crime_ids = [c for c in crime_ids if c not in self.exclude]
         for cid in crime_ids:
@@ -263,6 +270,7 @@ class Evaluator:
                                     "rule": "same category, <= 2 km, <= 14 days",
                                     "false_alerts_per_100_cases": round(100 * base["fp"] / max(1, len(crime_ids)),
                                                                         2)},
+            "baseline_rules_plus_vehicle": stronger_baseline(self._extra_baselines, positives, dups, len(crime_ids)),
             "duplicates": {"truth_pairs": len(dups), "flagged_by_agent": len(set(best) & dups),
                            "flagged_by_baseline": len(baseline & dups)},
             "timing": {"median_seconds_per_case": round(statistics.median(times), 3) if times else None},
@@ -271,6 +279,22 @@ class Evaluator:
                 "recall": _gt(agent["recall"], base["recall"]),
             },
         }
+
+
+def stronger_baseline(extra: Mapping[str, set[tuple[str, str]]], positives: set[tuple[str, str]],
+                      dups: set[tuple[str, str]], n_cases: int) -> dict[str, Any]:
+    """The pre-registered rules + vehicle baseline (engg/docs/eval/STRONGER_BASELINE_PREREG.md): primary and strict."""
+    def block(pairs: set[tuple[str, str]], rule: str) -> dict[str, Any]:
+        m = pair_metrics(pairs, positives, dups)
+        return {**m, "alerts": len(pairs), "rule": rule,
+                "false_alerts_per_100_cases": round(100 * m["fp"] / max(1, n_cases), 2)}
+
+    out = block(extra["primary"], "same category AND (<= 2 km and <= 14 days OR vehicle match)")
+    out["strict"] = block(extra["strict"], "same category AND <= 2 km and <= 14 days AND vehicle match")
+    out["vehicle_match"] = ("offender vehicles: both plates present -> >= 4 known characters agree right-aligned, "
+                            "none conflict; else same type and colour; conflicting plates never match")
+    out["prereg"] = "engg/docs/eval/STRONGER_BASELINE_PREREG.md"
+    return out
 
 
 def _gt(a: float | None, b: float | None) -> bool | None:
