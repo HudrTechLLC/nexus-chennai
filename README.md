@@ -24,7 +24,7 @@ In this repo: [demo video, MP4 1080p, 3:39](submission/media/Nexus_Chennai_demo_
 
 ## Judge quick check (about 2 minutes, no credentials)
 
-Use **Docker** (any host) or **Python 3.11–3.13** (3.14+ cannot build the pinned `pydantic-core`).
+Use **Docker** (any host) or **Python 3.11–3.14**.
 
 ```bash
 docker build -t oah-submission .
@@ -117,7 +117,7 @@ Full text: [engg/docs/submission/SPONSOR_TECH_FINAL.md](engg/docs/submission/SPO
 
 ## Setup
 
-You need Python 3.11–3.13 (3.13 tested on Windows; 3.14+ fails, because the pinned `pydantic-core` does not install on it; Docker is the safe path), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
+You need Python 3.11–3.14 (3.13 and 3.14 tested on Windows; on 3.14 the requirements pick the nearest versions with 3.14 wheels of pydantic, duckdb, PyYAML, psycopg and pillow, while 3.11–3.13 and Docker keep the exact pins), Git, and Docker Desktop (for the container path). Live mode also needs Zetaris and Meterless Nightshift running locally. Install both by following the **Participant Setup Guide** in the HackOS Resource Center: <https://hackathon.genai.works/resources>. The guide sits behind the HackOS login, so you need a HackOS account to open it. The Zetaris guides are at <https://zetaris.github.io/getting-started> and Nightshift is at <https://meterless.ai>.
 
 ### Option A: Docker (the judge path)
 
