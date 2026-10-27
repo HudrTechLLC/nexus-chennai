@@ -123,10 +123,14 @@ Run: `cd services/api && SAMPLE_MODE=true python -m app.eval.independent_lookali
 
 **What this means:**
 - The rule does what it says on the fields it reads, when the values come in a form it parses. That held on independent wording too: 8 of 8 in S1, including makes, plates, ages and colours the generator never uses.
-- It is **not** a general look-alike detector. It missed everything outside its four kinds, and in-scope differences worded as an extractor might word them (ages and counts in words).
+- It is **not** a general look-alike detector. It missed everything outside its four kinds, and in-scope values it doesn't parse (ages and counts in words; see the post-run checks on whether the product produces those).
 - It also drops true pairs when witnesses disagree on age or on colours that are not aliases. Real witness descriptions vary like that.
 - So the #422 result (24/24 dropped, 0/8 twin false-drops) shows the rule working on the generator's plants. It does **not** show general catching of false links.
 - **Not tested here:** the Skeptic's model critique, and the Extractor turning FIR narratives into these fields.
+
+**Post-run checks (added after the run, not part of the pre-registered text):**
+- **Where these field values come from in the product.** In the console FIR form the offender age is a fixed dropdown and the count is converted to a number (`apps/web/lib/fir.ts`). The 1,275 sample crimes hold only bands such as "20-30" and only integer counts. So the S2 misses on **ages and counts in words** (S2-01 to S2-04, S2-07) are gaps in the rule's parser that the console form does not produce today. They would matter only for a source that passes such text through (legacy imports, newly onboarded sources), which was **not tested**. The other two S2 misses (helmet wording, colour inside `make_model`, short plate fragment) use free-text fields the form does allow.
+- **The pairs were never scored by the Linker.** Every pair was assumed to be one the Skeptic would approve. Some look-alikes, such as several S3 pairs (02:10 vs 14:10; chain vs phone snatching), might never alert at all. So "0 of 8 out of scope" describes the rule, not which false links would reach an analyst.
 
 ### Overlap with the generator (labelled after the run, as pre-registered)
 
