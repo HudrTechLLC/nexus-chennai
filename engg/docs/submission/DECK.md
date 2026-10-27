@@ -50,7 +50,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   - "Every station sees only its own cases."
   - A chain-snatching gang works Adyar on Monday and Velachery on Friday: two stations each file one robbery, and nobody connects them.
   - The evidence is fragmented too: case files, legacy station exports, ANPR cameras, 112 calls, tips, news.
-  - **What linking finds (live demo data, synthetic):** one proposed series, "Red two-wheeler chain snatchings · 3 stations": 9 cases across Adyar, Thiruvanmiyur and Velachery. Its top pair (Adyar ↔ Velachery) shares a partial plate and the same red Bajaj Pulsar 150, high 0.789, waiting for an analyst. Say "proposed", never "caught".
+  - **What linking finds (live demo data, synthetic):** one proposed series, "Red two-wheeler chain snatchings · 3 stations": 9 cases across Adyar, Thiruvanmiyur and Velachery. Its top pair (Adyar ↔ Velachery) shares a partial plate and the same red Bajaj Pulsar 150, high 0.789. `[AT BUILD: the hero is decided on camera at 15:30; say "approved by the analyst on camera" if so, otherwise "waiting for an analyst"]`. Say "proposed", never "caught".
 - **Users:** crime analysts (find and decide links), station officers (capture cases, act on alerts), supervisors, and the public (send tips safely).
 - **Numbers (synthetic city):** 14,000 FIRs over 24 months across 70 stations, with 30 planted series, decoys and duplicates (`cities/chennai/generator/`). Say "synthetic" on the slide.
 - **Visual:** two station icons with the same red motorcycle, no line between them.
@@ -59,6 +59,10 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 - **On slide:** "Agents read every source through Zetaris, think with Nemotron through Nightshift, and raise link alerts that a Skeptic gives a second opinion on and a human decides."
 - **Three outputs:** a link alert (score, per-factor evidence, Zetaris query id) → a series with a dossier → a public appeal an officer publishes.
+- **Two more ways into fragmented data:**
+  - **Ask Nexus:** an analyst asks in plain words ("chain snatchings on a red Pulsar in the last 90 days"); Nemotron writes only a plan, code checks it, an allow-listed Zetaris query answers. Live: 16 / 4 / 3 cases for the three sample questions, the same count on 5 runs each, and every count equal to an independent SQL count. It refuses what it can't answer.
+  - **New source onboarding:** an unseen station export is profiled in place by Zetaris; Nemotron proposes the column mapping; a person approves; it becomes a Zetaris view. Live: 150 synthetic rows, every planted fault found (incl. 4/4 likely duplicates of existing cases); registered, not linked.
+  - Sources: EVIDENCE rows "Ask Nexus" and "New source onboarding" (#391).
 - **Visual:** alert detail page (`/console/alerts/[alertId]`) showing the factor bars and evidence.
 - **Check no secrets visible:** none on this page beyond the user menu.
 
@@ -95,7 +99,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 - **On slide (engines):**
   - World Model: one entity per plate, person, place. **8/8** official conformance.
-  - H-MEM: human decisions shift the next similar score (±0.08 max) with a trust ledger. **13/13**.
+  - H-MEM: human decisions shift the next similar score (±0.08 max) with a trust ledger, visible in the trace (`run_9e0e99ba`: mem-1, -0.055). **13/13**.
   - Markovian: bounded-chunk series dossier. **8/8**.
   - Scout Intent: search routing + Tip Guard. Held-out **0.975** (never tuned on), injections **7/7**; tuned set injections **23/23** (label it tuned); live: **0/30 genuine tips falsely quarantined**, emergencies **2/2**. Live misses fixed by #128: injections 3/4 → 4/4, spam 1/4 → 4/4 (label it: "not independent; these misses shaped the rules"). Never show the fixture 1.000 alone.
   - Official references vendored unmodified; suites re-run in CI on every PR.
@@ -109,10 +113,11 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 | Lane | Model | Job |
 |---|---|---|
-| fast | Nemotron 3.5 Lightning 30B | MO extraction, appeal drafts, briefings |
-| reason | Nemotron 3 Ultra 550B | query planning, per-factor reasons, the Skeptic |
+| fast | Nemotron 3.5 Lightning 30B | MO extraction, appeal drafts, briefings, Ask Nexus plans, onboarding column mapping |
+| reason | Nemotron 3 Ultra 550B | query planning, per-factor reasons, the Skeptic's second opinion |
+| vision | Nemotron 3.5 Super VL 120B | reading CCTV and evidence stills (one verified live run; rate-limited free route) |
 
-  "Every trace line names the model that handled the request." Footnote: "Vision: Nemotron Super VL through a Nightshift cloud lane (verified 27 Oct). If the lane can't be reached, the Extractor uses the officer's caption, traced as `vision_unavailable`." Verified in live run `reextract_vis_1793040194` (Extractor `model_call`, lane `vision`, receipt `chatcmpl-5dfe68c6-…`). Say "reads CCTV stills"; don't quote a success rate (free route, rate-limited).
+  "Every trace line names the model that handled the request." Receipts: 190 of 193 traced model calls carry a Nightshift receipt, and all 190 signatures verify (the other 3 failed with no reply). Footnote: "Vision: Nemotron Super VL through a Nightshift cloud lane (verified 27 Oct). If the lane can't be reached, the Extractor uses the officer's caption, traced as `vision_unavailable`." Verified in live run `reextract_vis_1793040194` (Extractor `model_call`, lane `vision`, receipt `chatcmpl-5dfe68c6-…`). Say "reads CCTV stills"; don't quote a success rate (free route, rate-limited).
 - **Visual:** trace viewer (`/console/system/trace/[runId]`) with the model column showing `nvidia/nemotron-3-ultra-550b-a55b` on a Skeptic line.
 - **Check no secrets visible:** trace summaries are redacted (D-025), but scan for any token-like string anyway.
 
@@ -122,11 +127,17 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
   1. "The data layer is also the second opinion: the Skeptic re-queries Zetaris itself, and the officer decides."
   2. "Rejected links stay visible and teach the system through H-MEM."
   3. "The public can help without steering it: Scout Intent screens every tip first."
-- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`, demo **admin** login; steps #46–#50) showing the Skeptic's own Zetaris queries and then **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted; a pair that differs on crime type, not a look-alike), next to the "Memory applied" section of an alert detail page (`/console/alerts/[alertId]`). Never show or caption a factor strike: none has occurred.
+- **Visual:** trace crop from `run_da0092da` (`/console/system/trace/run_da0092da`, demo **admin** login; steps #46–#50) showing the Skeptic's own Zetaris queries and then **dropping** CHN-CM-2025-000450 ↔ CHN-CM-2025-000461 (0.694, medium, would have alerted; a pair that differs on crime type, not a look-alike), next to the H-MEM trace row (`/console/system/trace/run_9e0e99ba`, row #61: memory_applied, mem-1 rejected, delta -0.055; no alert was written for that pair, so don't caption it as an alert). Never show or caption a factor strike: none has occurred.
 
 ## Slide 10 · Product visuals (point 7)
 
-- **Four tiles:**
+- **Use the polished screens (#400, f48e92f), all synthetic, all read-only:**
+  - `C:/Apps/Nexus-handover/console-polish-400/hero-detail-1536.png`: alert detail (factor bars, evidence, How this alert was made, Skeptic panel);
+  - `…/alerts-1536.png`: the alert inbox; `…/alerts-375.png`: the same on a phone (responsive);
+  - `…/ask-form-1536.png` + `…/ask-result-1536.png`: Ask Nexus question and answer;
+  - frames from nexus-4's clips in `C:/Apps/Nexus-handover/clips/console/`: `s1_map` (Pulse Map), `s8_series` / `s8_map` (series), `onboard_run` (onboarding), `bk_tipguard` (Tip Guard quarantine).
+  - **At build:** prefer the recorded take's frames for the hero (after the on-camera decision); check every frame for secrets (no settings page, no tokens, no `.env`).
+- **Earlier tile plan (fallback):**
   - **Pulse Map** (`/console/map`): hex layer, crime-type filter, time scrubber.
   - **Alert card** (`/console/alerts/[alertId]`): factors, evidence, Zetaris query ids, approve/reject.
   - **Tip flow** (`/tip/new` → `/tip/sent` → `/tip/status`): anonymous, EXIF stripped, tip code.
@@ -138,8 +149,10 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 
 - **On slide:** precision and recall on the planted truth (60 cases), from `output_examples/eval_report.json`: **Nexus 0.59 / 0.86 (F1 0.70) vs rules-only 0.09 / 0.30 (F1 0.13)**. HIGH alerts 10 of 10 correct; MEDIUM 56%, which is why an analyst decides every alert. No model calls in the eval. Footnote: 13 of 60 cases had model features.
   - **What's new compared with established linkage:** established systems rely on structured case forms and analysts comparing cases by hand. Nexus reads sources in place through Zetaris, cites the query and row behind every factor, lets a Skeptic send back or drop a pair, feeds screened public tips back as corroboration, and learns from analyst decisions within ±0.08. Don't name or characterise any specific outside system on the slide.
-- **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.789**, coverage 0.72, pending until it is decided on camera, with five factors (MO 0.885, vehicle 0.85 on a partial plate, suspect 1, target 1, space–time 0.328). nexus-3 DB read after the re-run, 26 Oct 23:02.
+- **Live result (nexus-qa, label it "live"):** hero alert LA-2026-E38C6B38B865, Adyar ↔ Velachery, **high 0.789**, coverage 0.72, `[AT BUILD: pending → decided on camera?]`, with five factors (MO 0.885, vehicle 0.85 on a partial plate, suspect 1, target 1, space–time 0.328). nexus-3 DB read after the re-run, 26 Oct 23:02.
 - **Judge-path result (confirmed @ `de8e666`; label it "fresh clone, sample mode"):** from a fresh clone with no credentials, the hero case gets **3 cross-station links, 2 of them high** (Adyar ↔ Thiruvanmiyur 0.819, Adyar ↔ Velachery 0.789), and a 3-station series. Use this line even if the eval table doesn't land.
+- **Nemotron Ultra alone (pre-registered, #405), honest framing:** on the 178 scored pairs it was shown, Ultra alone scores a **higher** F1 than the pipeline (0.80 vs 0.69), not a significant difference (McNemar p = 0.55). The pipeline's edge is coverage at zero model cost: it scores every candidate (~0.83 s per case), where the model alone would need ~26 h for all 5,750 pairs; under a 10-pair budget it reached 14 of 49 true links vs the system's 41. **Never "agents beat the LLM".**
+- **Skeptic planted test (pre-registered, #392):** dropped 0 of 24 planted look-alike false links (named the planted fact in 19/24, exploratory). **Re-test of the fix: `[TBD: fresh pre-registered set, nexus-3/nexus-1]`**; publish it either way.
 - **Also:** `/run` takes seconds per example on replay (sample mode); live, a single filed FIR reaches its alert in ~4.6 min (the reasoning lane is Nemotron Ultra 550B); tests: 5 CI jobs green on every PR; conformance 8/8 · 13/13 · 8/8.
 - **Visual:** the eval page or a clean table. No chart without real numbers.
 
@@ -165,7 +178,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 - **Limitations (stated plainly):**
   - synthetic data;
   - vision runs on a rate-limited third-party free route (fine for synthetic stills, not for real evidence);
-  - the Skeptic is a second opinion, not a guarantee: on a pre-registered planted test it dropped 0 of 24 look-alike false links (#392);
+  - the Skeptic is a second opinion, not a guarantee: on a pre-registered planted test it dropped 0 of 24 look-alike false links (#392); fix re-test `[TBD]`;
   - the reasoning lane is Ultra 550B because Super 120B isn't served to our key;
   - bcrypt instead of Argon2id for tip passphrases;
   - model-written explanations can be imperfect, but the numbers can't (code computes them).
