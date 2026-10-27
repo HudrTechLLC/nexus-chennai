@@ -27,6 +27,7 @@ from typing import Any
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
+from .. import receipts
 from ..config import FORBIDDEN_MODELS, Settings
 from ..tracing import Tracer
 
@@ -68,6 +69,10 @@ class ModelResult:
     latency_ms: int
     usage: dict[str, Any] = field(default_factory=dict)
     raw: dict[str, Any] = field(default_factory=dict)
+    # Ed25519 check of the signed receipt in the reply (#15, degraded mode): True verified, False missing or
+    # invalid (the call still counts; it is labelled, never refused), None when the verifier is unavailable.
+    receipt_verified: bool | None = None
+    receipt_check: str | None = None
 
 
 def _is_retryable(exc: BaseException) -> bool:
@@ -96,6 +101,9 @@ class NightshiftClient:
         self.record_fixtures = record_fixtures
         # n-th identical request in this client (one client per run): recorded and replayed in order.
         self._occurrence: dict[str, int] = {}
+        # Live replies whose signed receipt did not verify in this client's run (#15). Read by the alert writer so
+        # an alert from a degraded run says so; replays never count (their receipts were recorded earlier).
+        self.receipts_unverified = 0
         self._client = httpx.Client(
             base_url=settings.meterless_base_url.rstrip("/"),
             timeout=settings.nightshift_timeout_seconds,
@@ -185,9 +193,15 @@ class NightshiftClient:
             usage=data.get("usage") or {},
             raw=data,
         )
+        self._check_receipt(result, data)
         if self.record_fixtures:
             self._save_fixture(lane, messages, data)
-        self._trace(agent, purpose, lane, model, result.routed_model, result.receipt_id, status="ok", note=f"{result.latency_ms} ms")
+        note = f"{result.latency_ms} ms"
+        if result.receipt_verified is False:
+            self.receipts_unverified += 1
+            note += f"; receipt unverified (degraded): {result.receipt_check}"
+        self._trace(agent, purpose, lane, model, result.routed_model, result.receipt_id, status="ok", note=note,
+                    receipt_verified=result.receipt_verified, receipt_check=result.receipt_check)
         return result
 
     # ----- internals -----------------------------------------------------
@@ -235,12 +249,31 @@ class NightshiftClient:
             usage=data.get("usage") or {},
             raw=data,
         )
-        self._trace(agent, purpose, lane, model, result.routed_model, result.receipt_id, status="replayed", note="replayed model output (sample mode)")
+        self._check_receipt(result, data)
+        note = "replayed model output (sample mode)"
+        if result.receipt_verified is not True:
+            note = "replayed, receipt not re-verified"  # never fails the judge path
+        self._trace(agent, purpose, lane, model, result.routed_model, result.receipt_id, status="replayed", note=note,
+                    receipt_verified=result.receipt_verified, receipt_check=result.receipt_check)
         return result
 
-    def _trace(self, agent, purpose, lane, model, routed, receipt, *, status, note="") -> None:
+    @staticmethod
+    def _check_receipt(result: ModelResult, data: dict[str, Any]) -> None:
+        """Verify the reply's signed receipt (Ed25519). Degraded mode: never raises, never refuses the reply."""
+        try:
+            check = receipts.verify_response(data)
+        except Exception as exc:  # noqa: BLE001 - verification must never break a model call
+            check = f"error: {type(exc).__name__}"
+        result.receipt_check = check
+        result.receipt_verified = None if check == receipts.UNAVAILABLE else check == receipts.VALID
+
+    def _trace(self, agent, purpose, lane, model, routed, receipt, *, status, note="", receipt_verified=None,
+               receipt_check=None) -> None:
         if self.tracer is None:
             return
+        fields: dict[str, Any] = {}
+        if receipt_check is not None:
+            fields["extra"] = {"receipt_verified": receipt_verified, "receipt_check": receipt_check}
         self.tracer.emit(
             agent,
             "model_call",
@@ -250,6 +283,7 @@ class NightshiftClient:
             routed_model=routed,
             receipt_id=receipt,
             status=status,
+            **fields,
         )
 
     def close(self) -> None:

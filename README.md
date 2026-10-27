@@ -220,6 +220,8 @@ Every run writes `logs/trace-<run_id>.jsonl` and echoes each line to stdout. Eac
 
 **Receipts verified.** 190 of 193 traced model calls carry a Nightshift receipt, and all 190 signatures verify (Ed25519, one key, fingerprint `c9f71fd6…`); the other 3 calls failed with no reply. 30/30 replayed fixture receipts also verify. Signatures verify against the receipt's embedded Ed25519 key, and every receipt uses the same key (sha256 fingerprint `c9f71fd60dad62bbcb260065a6c4be439dc4997b65785a0e083541b4061c7865`; the runtime's `/v1/meterless/receipts` serves the same key). The replayed fixtures keep synthetic prompt previews inside their signed bodies. Re-run: `python scripts/verify_receipts.py` (needs the Supabase URL and a service-role key file; result in `logs/receipts_verification.json`, #363).
 
+**Checked at call time too (degraded mode).** The Nightshift adapter checks each reply's signed receipt (the same Ed25519 check, `app/receipts.py`). The trace records `receipt_verified=true` when the signature holds. A missing or invalid receipt is not refused: the trace line reads `receipt unverified (degraded)`, and alerts from that run carry `skeptic.receipts_unverified`. Sample-mode replays are checked the same way and never fail the judge path; all committed fixture receipts verify. A valid signature proves the receipt wasn't altered, not that the key is Nightshift's.
+
 ## Tests
 
 ```bash
