@@ -78,14 +78,14 @@ class DriftingHmem:
         return {"delta": 0.01 * self.n, "memory_ids": [f"HM-{self.n}"], "reason": "new memory"}
 
 
-@pytest.mark.parametrize("kind,agent", [("case", "Router"), ("tip", "Router"), ("search", "Scout Intent")])
-def test_route_step_is_traced_as_router_except_searches(tmp_path, kind, agent):
-    """#22: routing is a lookup on the input kind, so case/tip routing is "Router"; searches keep "Scout Intent"
-    (search_node classifies the query with the Scout Intent engine)."""
+@pytest.mark.parametrize("kind", ["case", "tip", "search"])
+def test_route_step_is_traced_as_router(tmp_path, kind):
+    """#22: routing is a lookup on the input kind, so the route step is "Router" for every kind. Scout Intent is
+    traced where the engine runs (search_node's classify, Tip Guard), not on this lookup."""
     g, deps = graph(tmp_path)
     g.router({"kind": kind, "payload": {}})
     route = [e for e in deps.tracer.read() if e["action"] == "route"]
-    assert [e["agent_name"] for e in route] == [agent]
+    assert [e["agent_name"] for e in route] == ["Router"]
     assert route[0]["output_summary"] == f"route={kind}"
 
 
