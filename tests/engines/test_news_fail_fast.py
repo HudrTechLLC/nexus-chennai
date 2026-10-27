@@ -13,8 +13,9 @@ from app.agents.planner import Plan, Planner, PlanStep
 from app.config import Settings
 from app.tracing import Tracer
 
-# sha256 of the q_news DuckDB twin as of #180 (the judge fixtures were recorded against it).
-SAMPLE_SHA = "d42f96edc1f71d5b6cc9bab2a6614f785055a2aa9c9437a43b5d0a4d3360f88b"
+# sha256 of the q_news DuckDB twin as of #180 (the judge fixtures were recorded against it), re-pinned when the
+# news reader was given explicit column types so duckdb >= 1.5 keeps the +05:30 offset (judge_compare stayed EXACT).
+SAMPLE_SHA = "b3f139755765c66eb164fbfd1fc33e0819a5d10017d92950afc95b487eff1045"
 
 
 class Hanging:
