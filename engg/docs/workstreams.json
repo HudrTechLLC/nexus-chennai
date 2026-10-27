@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T02:19:45+05:30",
+  "updated": "2026-10-27T08:00:31+05:30",
   "deadline": "2026-10-27T23:45:00Z",
   "target_submit": "2026-10-27T17:45:00Z",
   "statuses": {
@@ -468,14 +468,14 @@
           "id": "WS2-32",
           "phase": "P6",
           "title": "Planted false-link test for the Skeptic (paired, pre-registered)",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-3 · prereg #370 (review fixes)"
         },
         {
           "id": "WS2-33",
           "phase": "P6",
           "title": "Nemotron-alone baseline vs full system (pre-registered, 182 pairs)",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-2 · prereg #366 merged; run after the planted test"
         },
         {
@@ -913,14 +913,14 @@
           "id": "WS5-07",
           "phase": "P10",
           "title": "ElevenLabs narration + 3:40 demo video",
-          "status": "todo",
+          "status": "in_progress",
           "owner": "nexus-chief"
         },
         {
           "id": "WS5-08",
           "phase": "P10",
           "title": "Fresh-clone validation (L3), incl. sample mode with services stopped",
-          "status": "todo",
+          "status": "done",
           "owner": "nexus-chief"
         },
         {
@@ -964,14 +964,14 @@
           "id": "WS5-14",
           "phase": "P10",
           "title": "Video dry-runs #2 and #3 before recording",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-4 · #2 done; visual freeze ~07:30; dry-run #3 at 08:30 IST finalises the cut-sheet and runbook by 09:45 (nexus-7); recording from ~10:00"
         },
         {
           "id": "WS5-15",
           "phase": "P10",
           "title": "Pre-freeze cleanup of test data (Ravee approves the list)",
-          "status": "in_progress",
+          "status": "done",
           "note": "nexus-7 list; Ravee approved 27 Oct; D1-D23 closed (Zetaris file-store leftovers left in place: DROP unsupported via SQL, nothing reads them); one pre-recording sweep 09:30-09:45 after dry-run #3; audit_log never deleted"
         },
         {
