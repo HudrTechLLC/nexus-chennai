@@ -6,7 +6,7 @@ Each police station in a city sees only its own cases. A gang that snatches chai
 
 > **All crime, person, case and tip data in this repository is synthetic** (`synthetic: true` on every such row). Map, ward, police-station and weather reference data is real public open data ([data/README.md](data/README.md)). No real people, cases or police systems are involved.
 
-Demo video: `[PENDING: video link]` · Live app: <https://nexus-chennai.vercel.app>. Demo sign-ins for judges are in the submission form; see [Live app](#live-app).
+Demo video: <https://www.youtube.com/watch?v=LtisPFLVUwQ> · Live app: <https://nexus-chennai.vercel.app>. Demo sign-ins for judges are in the submission form; see [Live app](#live-app).
 
 **What linking finds.** In the live demo data, Nexus proposes one series that no single station's register shows: **"Red two-wheeler chain snatchings · 3 stations"**, 10 chain snatchings across Adyar, Thiruvanmiyur and Velachery (the 10th is the FIR filed on camera on 27 Oct). Its strongest cross-station pair, Adyar ↔ Velachery two days apart, shares a partial plate and the same red Bajaj Pulsar 150 and scores **high (0.789)**. The series and every alert in it are proposals: each waits for an analyst's decision. The top pair was approved by the analyst on camera on 27 Oct. On the judge path (a fresh clone, sample data) the same series shows 4 cases (see [Examples](#examples)). All of it is planted synthetic data.
 
