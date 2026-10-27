@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { consoleBrowserClient } from "@/lib/supabase/browser";
 import { DemoPanel } from "@/components/console/login/DemoPanel";
@@ -12,14 +12,16 @@ export function LoginForm({ demos = [] }: { demos?: DemoLogin[] }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-  /** Demo account picked: fill both fields; the user still presses Sign in. */
+  /** Demo account picked: fill the form (admin: email only, focus the password); the user still presses Sign in. */
   function pick(d: DemoLogin) {
     const f = fillFrom(d);
     setEmail(f.email);
     setPassword(f.password);
     setError(null);
     setPicked(d.email);
+    if (f.focusPassword) passwordRef.current?.focus();
   }
 
   async function submit(e: React.FormEvent) {
@@ -38,7 +40,7 @@ export function LoginForm({ demos = [] }: { demos?: DemoLogin[] }) {
 
   return (
     <>
-    <form onSubmit={submit} className="mt-6 space-y-3 rounded-xl border border-line bg-surface p-5">
+    <form onSubmit={submit} className="mx-auto mt-6 max-w-sm space-y-3 rounded-xl border border-line bg-surface p-5">
       <label className="block text-sm">
         <span className="text-muted">Email</span>
         <input
@@ -49,7 +51,7 @@ export function LoginForm({ demos = [] }: { demos?: DemoLogin[] }) {
       <label className="block text-sm">
         <span className="text-muted">Password</span>
         <input
-          type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
+          ref={passwordRef} type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
           className="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2"
         />
       </label>
