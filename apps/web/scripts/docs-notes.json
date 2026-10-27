@@ -21,6 +21,8 @@
   ["eval/DUPLICATE_CORROBORATION_PREREG", "Duplicate and derivative corroboration (pre-registration and results)"],
   ["eval/NEMOTRON_ALONE_PREREG", "Nemotron-alone baseline (pre-registration)"],
   ["eval/NEMOTRON_ALONE_RESULTS", "Nemotron-alone baseline (results)"],
+  ["eval/MODEL_IN_LOOP_PREREG", "Model in the loop (pre-registration)"],
+  ["eval/MODEL_IN_LOOP_RESULTS", "Model in the loop (results)"],
   ["eval/STRONGER_BASELINE_PREREG", "Stronger rules + vehicle baseline (pre-registration)"],
   ["validation/README", "Validation runs"],
   ["validation/WS3-06-WS3-10-2026-10-26", "Validation: WS3-06 to WS3-10"],
