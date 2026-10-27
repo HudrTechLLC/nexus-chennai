@@ -17,5 +17,5 @@ export function generateMetadata({ params }: { params: { tab: string } }): Metad
 export default function SpecTabPage({ params }: { params: { tab: string } }) {
   const tab = getIndex().tabs.find((t) => t.id === params.tab);
   if (!tab) notFound();
-  return <DocPage href={`/docs/${tab.id}`} eyebrow={`Spec · ${tab.label}`} source={getSpecTab(tab.id)} />;
+  return <DocPage href={`/docs/${tab.id}`} eyebrow={`Spec · ${tab.label}`} source={getSpecTab(tab.id)} file="SPEC.md" />;
 }

@@ -48,17 +48,16 @@ if (tabs.length !== 16) {
 }
 
 // ---- project notes ----
-const NOTES = [
-  ["00-INDEX", "Index"], ["LANES", "Build lanes"], ["PROGRESS", "Progress log"], ["ARCHITECTURE", "Architecture (as built)"],
-  ["DECISIONS", "Decisions"], ["DELIVERABLES", "Deliverables checklist"], ["PATH2", "Path 2 (after the hackathon)"], ["SETUP", "Setup"],
-  ["CITY_PACKS", "City packs"], ["SPONSOR_TECH", "Sponsor tech (draft)"], ["TOOLING", "Tooling"],
-  ["hackathon/DIGEST", "Hackathon digest"], ["hackathon/RULES_CHECK", "Rules check"], ["ENGINES", "Meterless engines"], ["AGENTS", "Agents and graph"], ["submission/EVIDENCE", "Submission evidence"], ["submission/README_DRAFT", "README draft"],
-  ["submission/SPONSOR_TECH_FINAL", "Sponsor tech (final)"], ["submission/FORM", "Submission form"], ["submission/DECK", "Deck content"], ["submission/VIDEO_SCRIPT", "Video script"],
-];
+// The published notes live in docs-notes.json, which lib/__tests__/docsLinks.test.ts also reads to check
+// that every link between notes lands on a page. A note linked from another note must be listed there.
+const NOTES = JSON.parse(fs.readFileSync(path.join(here, "docs-notes.json"), "utf8"));
 const notes = [];
 for (const [file, label] of NOTES) {
   const src = path.join(docs, `${file}.md`);
-  if (!fs.existsSync(src)) continue;
+  if (!fs.existsSync(src)) {
+    console.error(`sync-docs: ${file}.md is listed in docs-notes.json but not found`);
+    process.exit(1);
+  }
   const slug = file.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   fs.writeFileSync(path.join(outContent, "notes", `${slug}.md`), stripFrontmatter(fs.readFileSync(src, "utf8").replace(/\r\n/g, "\n")));
   notes.push({ slug, file: `${file}.md`, label });
