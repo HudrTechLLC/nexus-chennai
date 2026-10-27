@@ -36,7 +36,7 @@ Code: `services/api/app/agents/`, `app/graph/`, `app/scoring/`, `app/eval/`, `ap
 | Extractor | fast / vision / audio | schema, protected-attribute drop, confidence, World Model ingest | MO labels |
 | Planner | reason | allow-listed queries, forced crime_id, clamps, drops empty parameters, default plan | query order and windows |
 | Linker | code + reason | all factor values, evidence `{view,row,query,query_id}`, H-MEM | one reason per factor, rationale, action |
-| Skeptic | code + reason | own re-query, strikes, drop | may only downgrade: approve → send back or drop |
+| Skeptic | code + reason | own re-query, strikes, drop; **hard-contradiction drop** (stated offender count, non-overlapping age band, helmet, or the offender vehicle's colour/make/plate differ; reconciled only by Skeptic-confirmed forensic or offender_return evidence) | may only downgrade: approve → send back or drop |
 | Alert writer | code | `LinkAlert` (D3.11) with coverage, stable id, notifications | — |
 | Series analyst | Markovian + reason | 3+ connected links → series | chunk notes (citations checked by the engine) |
 | Sanitiser | fast | allowed facts, leak check, template fallback | appeal wording (draft only) |
@@ -56,6 +56,7 @@ Caps:
 
 - the Planner runs at most 3 rounds;
 - the Skeptic sends back at most 2 times (its `requery` days/ring override the model's);
+- a hard contradiction (`agents/contradiction.py`) drops the pair in `Skeptic.review()` before the model sees it, with `drop_source: contradiction` in the alert's `skeptic` block. It is pre-registered and tested in [SKEPTIC_CONTRADICTION_PREREG](eval/SKEPTIC_CONTRADICTION_PREREG.md);
 - the run deadline is `RUN_DEADLINE_SECONDS` (300) for `/run` and batch runs, and `CASE_RUN_DEADLINE_SECONDS` (420) for the worker's per-case (filing) runs. With under 45 s left, the model calls are skipped and the code results stand. Past the deadline, Skeptic-approved pairs are written, and pairs the Skeptic sent back that no later round resolved are written as `needs_revision` (traced `deadline_partial_write`), never as approved.
 
 ## API (Part H)
@@ -93,7 +94,7 @@ Caps:
 
 ## Eval (F3)
 
-`python -m app.eval` runs blocking, then F2 scoring, then the Skeptic's re-check against `_truth/`. It makes no model calls. The output is `output_examples/eval_report.json`.
+`python -m app.eval` runs blocking, then F2 scoring, then the Skeptic's re-check against `_truth/`. It makes no model calls. The output is `output_examples/eval_report.json`. It calls `Skeptic.check()`, so it does **not** include the hard-contradiction step; an offline what-if of that step is in [SKEPTIC_CONTRADICTION_PREREG](eval/SKEPTIC_CONTRADICTION_PREREG.md) (precision 0.5915 → 0.6316, recall unchanged).
 
 - **Precision and recall:** positives are series, vehicle chains and offender returns; decoys are negatives.
 - **Duplicates:** reported separately.
