@@ -56,7 +56,7 @@ Caps:
 
 - the Planner runs at most 3 rounds;
 - the Skeptic sends back at most 2 times (its `requery` days/ring override the model's);
-- a hard contradiction (`agents/contradiction.py`) drops the pair in `Skeptic.review()` before the model sees it, with `drop_source: contradiction` in the alert's `skeptic` block. It is pre-registered and tested in [SKEPTIC_CONTRADICTION_PREREG](eval/SKEPTIC_CONTRADICTION_PREREG.md);
+- a hard contradiction (`agents/contradiction.py`) drops the pair in `Skeptic.review()` before the model sees it. Dropped pairs are not written as alerts, so the record is the **trace**: the Skeptic `drop` row's critique starts "Hard contradiction (code): …" and names the fields. A contradiction that a confirmed forensic or offender_return factor reconciles is traced as `contradiction_reconciled`, and the pair goes on to the critique. It is pre-registered and tested in [SKEPTIC_CONTRADICTION_PREREG](eval/SKEPTIC_CONTRADICTION_PREREG.md);
 - the run deadline is `RUN_DEADLINE_SECONDS` (300) for `/run` and batch runs, and `CASE_RUN_DEADLINE_SECONDS` (420) for the worker's per-case (filing) runs. With under 45 s left, the model calls are skipped and the code results stand. Past the deadline, Skeptic-approved pairs are written, and pairs the Skeptic sent back that no later round resolved are written as `needs_revision` (traced `deadline_partial_write`), never as approved.
 
 ## API (Part H)
