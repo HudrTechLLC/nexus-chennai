@@ -26,6 +26,9 @@ logs/*
 !logs/feature_*.txt
 !logs/.gitkeep
 !logs/receipts_verification.json
+!logs/trace-demo-001.jsonl
+!logs/trace-demo-002.jsonl
+!logs/trace-demo-003.jsonl
 data/out/
 data/local/
 data/_truth/

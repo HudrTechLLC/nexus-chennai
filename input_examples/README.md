@@ -28,6 +28,21 @@ How the outputs were made:
 - `data/sample/model_fixtures/` holds exactly the 30 replies the three examples use. 15 replies that only the
   dropped Skeptic rounds 2–3 used were deleted.
 
+## Traces (`logs/trace-demo-00N.jsonl`)
+
+Each output's `log_file` points to `logs/trace-demo-00N.jsonl`, and those three files are committed. They are the JSONL
+traces of one offline run of each example: `SAMPLE_MODE=true`, no `.env`, no keys, commit `2f9b415`, run with
+`python run.py --once input_examples/example_N.json` (27 Oct). They show every agent step, handoff, named Zetaris
+query (`via=sample`), engine call and replayed model call (lane, pinned model, receipt id) behind the output.
+
+That run's outputs match `output_examples/` on every field (`scripts/judge_compare.py`: EXACT) except two per-run values:
+- `execution_time_seconds`;
+- each evidence item's Zetaris `query_id`: a fresh audit UUID per query, by design.
+
+So the query ids in a trace differ from the ids cited in `output_examples/` (example 1's were minted by its live run).
+Run an example yourself and its new trace's query ids match that run's own output. Traces from your own runs land in
+`logs/` too, and overwrite these files.
+
 ## Live runs (not needed for judging)
 
 With Zetaris and Nightshift running and `.env` set, drop `"sample_mode": true` to run against live services.
