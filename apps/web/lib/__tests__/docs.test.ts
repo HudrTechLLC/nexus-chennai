@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { rewriteHref, type DocsIndex } from "../docs";
+import { REPO_BLOB, rewriteHref, type DocsIndex } from "../docs";
 
 const index: DocsIndex = {
   tabs: [
@@ -40,5 +40,15 @@ describe("rewriteHref", () => {
 
   it("maps SPEC anchors to spec tabs", () => {
     expect(rewriteHref("../SPEC.md#demo", index)).toBe("/docs/demo");
+  });
+
+  it("sends a link that leaves engg/docs to the file on GitHub", () => {
+    expect(rewriteHref("../../data/README.md", index, "PATH2.md")).toBe(`${REPO_BLOB}/data/README.md`);
+    expect(rewriteHref("../../../input_examples/README.md#x", index, "submission/FORM.md")).toBe(`${REPO_BLOB}/input_examples/README.md#x`);
+  });
+
+  it("keeps links inside engg/docs on the site when the source note is known", () => {
+    expect(rewriteHref("../hackathon/RULES_CHECK.md", index, "submission/EVIDENCE.md")).toBe("/docs/notes/hackathon-rules-check");
+    expect(rewriteHref("SPEC.md#demo", index, "00-INDEX.md")).toBe("/docs/demo");
   });
 });

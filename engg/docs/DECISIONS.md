@@ -174,7 +174,7 @@ The team created the project in the dashboard:
   - the `zetaris_reader` role exists (no login yet).
 
 **Where the credentials are:**
-- **Database password:** `C:/Apps/healgrid-app/.secrets/nexus-db.txt` (gitignored there).
+- **Database password:** `~/.secrets/nexus-db.txt` (outside the repo).
 - **Secret key:** `~/.secrets/nexus-service-role.key`.
 
 The backend reads keys through `*_FILE` settings, so no secret sits in a repo `.env`.

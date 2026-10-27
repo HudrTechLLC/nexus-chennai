@@ -4,7 +4,7 @@
  * Signs in as each demo user with the PUBLISHABLE key (exactly what the browser does)
  * and asserts what each role can and cannot see. Also asserts anon sees nothing.
  *
- *   NEXT_PUBLIC_SUPABASE_ANON_KEY="$(tr -d '\r\n' < C:/Apps/healgrid-app/.secrets/nexus-publish.txt)" \
+ *   NEXT_PUBLIC_SUPABASE_ANON_KEY="$(tr -d '\r\n' < ~/.secrets/nexus-publish.txt)" \
  *     node apps/web/scripts/rls-check.mjs [--users ~/.secrets/nexus-demo-users.json]
  *
  * Checks on tables that do not exist yet (e.g. before 0002_core) are reported as SKIP.

@@ -17,5 +17,5 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default function NotePage({ params }: { params: { slug: string } }) {
   const note = getIndex().notes.find((n) => n.slug === params.slug);
   if (!note) notFound();
-  return <DocPage href={`/docs/notes/${note.slug}`} eyebrow={`Project note · engg/docs/${note.file}`} source={getNote(note.slug)} />;
+  return <DocPage href={`/docs/notes/${note.slug}`} eyebrow={`Project note · engg/docs/${note.file}`} source={getNote(note.slug)} file={note.file} />;
 }

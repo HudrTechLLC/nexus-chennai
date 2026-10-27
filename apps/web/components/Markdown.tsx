@@ -4,8 +4,8 @@ import rehypeSlug from "rehype-slug";
 import Link from "next/link";
 import { getIndex, rewriteHref } from "@/lib/docs";
 
-/** Renders an engg/docs Markdown note with repo links mapped to app routes. */
-export function Markdown({ source }: { source: string }) {
+/** Renders an engg/docs Markdown note with repo links mapped to app routes. `from` = the note's path inside engg/docs. */
+export function Markdown({ source, from }: { source: string; from?: string }) {
   const index = getIndex();
   return (
     <div className="prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-32 prose-a:text-signal prose-code:before:content-none prose-code:after:content-none">
@@ -14,7 +14,7 @@ export function Markdown({ source }: { source: string }) {
         rehypePlugins={[rehypeSlug]}
         components={{
           a: ({ href, children }) => {
-            const to = rewriteHref(href, index);
+            const to = rewriteHref(href, index, from);
             if (to?.startsWith("/")) return <Link href={to}>{children}</Link>;
             const external = !!to && !to.startsWith("#");
             return (
@@ -24,7 +24,7 @@ export function Markdown({ source }: { source: string }) {
             );
           },
           img: ({ src, alt }) => {
-            const to = rewriteHref(typeof src === "string" ? src : undefined, index);
+            const to = rewriteHref(typeof src === "string" ? src : undefined, index, from);
             return (
               <a href={to} target="_blank" rel="noreferrer" title="Open full size">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

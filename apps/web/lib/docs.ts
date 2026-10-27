@@ -99,12 +99,31 @@ export function getHeadings(markdown: string): Heading[] {
   return out;
 }
 
-/** Map links written for the repo (SPEC.md#x, DECISIONS.md, diagrams/...) to app routes. */
-export function rewriteHref(href: string | undefined, index: DocsIndex): string | undefined {
+/** The public repository; links from a note to a file outside engg/docs open there. */
+export const REPO_BLOB = "https://github.com/HudrTechLLC/nexus-chennai/blob/main";
+
+/** Resolve a relative link from `from` (a path inside engg/docs) to a repo path, or null if it stays inside engg/docs. */
+function outsideDocs(file: string, from: string): string | null {
+  const parts = ["engg", "docs", ...from.split("/").slice(0, -1)];
+  for (const seg of file.split("/")) {
+    if (seg === "..") parts.pop();
+    else if (seg && seg !== ".") parts.push(seg);
+  }
+  return parts[0] === "engg" && parts[1] === "docs" ? null : parts.join("/");
+}
+
+/**
+ * Map links written for the repo (SPEC.md#x, DECISIONS.md, diagrams/...) to app routes.
+ * `from` is the note's path inside engg/docs (e.g. "PATH2.md", "submission/FORM.md"); with it, a link
+ * that leaves engg/docs (../../data/README.md) goes to that file on GitHub instead of a 404.
+ */
+export function rewriteHref(href: string | undefined, index: DocsIndex, from?: string): string | undefined {
   if (!href || /^(https?:|mailto:)/.test(href)) return href;
   const tabIds = new Set(index.tabs.map((t) => t.id));
   const [file, hash] = href.split("#");
   if (!file && hash) return tabIds.has(hash) ? `/docs/${hash}` : `#${hash}`;
+  const repoPath = from ? outsideDocs(file, from) : null;
+  if (repoPath) return `${REPO_BLOB}/${repoPath}${hash ? `#${hash}` : ""}`;
   const base = file.replace(/^(\.\.\/|\.\/)+/, "");
   if (/diagrams\/[^/]+\.svg$/.test(base)) return `/engg-docs/diagrams/${base.split("/").pop()}`;
   if (/(^|\/)SPEC\.md$/.test(base)) return hash && tabIds.has(hash) ? `/docs/${hash}` : "/docs/overview";
