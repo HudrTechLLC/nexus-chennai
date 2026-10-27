@@ -69,19 +69,20 @@ export function AlertMap({ scenes, trail }: AlertMapProps) {
       ? `${hover.label}${hover.exact ? "" : " (area cell centre)"}`
       : `${hover.r.plate_text} · camera ${hover.r.camera_id} · ${istTime(hover.r.read_at)}`;
   return (
-    <div className="relative h-72 overflow-hidden rounded-xl border border-line">
-      <MapCanvas
-        view={view}
-        layers={layers}
-        theme={theme}
-        onHover={(i: PickingInfo) => {
-          const o = i.object as (Scene & { label: string }) | TrailRead | undefined;
-          setHover(!o ? null : "read_id" in o ? { kind: "read", r: o } : { kind: "scene", label: o.label, exact: o.exact });
-        }}
-      />
-      <div className="pointer-events-none absolute bottom-2 left-2 right-2 rounded-md bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-2 py-1 text-xs text-muted">
-        {caption}
+    <div>
+      <div className="relative h-72 overflow-hidden rounded-xl border border-line">
+        <MapCanvas
+          view={view}
+          layers={layers}
+          theme={theme}
+          onHover={(i: PickingInfo) => {
+            const o = i.object as (Scene & { label: string }) | TrailRead | undefined;
+            setHover(!o ? null : "read_id" in o ? { kind: "read", r: o } : { kind: "scene", label: o.label, exact: o.exact });
+          }}
+        />
       </div>
+      {/* Caption sits under the map, not over it, so it can never hide a scene or camera point. */}
+      <p className="mt-2 min-h-[2.5rem] text-xs leading-snug text-muted">{caption}</p>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function PageHeader({ title, description, icon: Icon, back, actions, chil
             {description && <div className="mt-1 max-w-3xl text-[15px] leading-relaxed text-muted">{description}</div>}
           </div>
         </div>
-        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>
       {children}
     </header>
