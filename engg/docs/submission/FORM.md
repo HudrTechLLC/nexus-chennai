@@ -4,7 +4,7 @@ tags: [nexus, deliverables]
 
 # HackOS submission form answers
 
-Paste-ready answers for the HackOS submission form. Every claim comes from [EVIDENCE](EVIDENCE.md). Before pasting, replace each `<…>` placeholder, and resolve or delete any sentence still marked as pending.
+Paste-ready answers for the HackOS submission form. Every claim comes from [EVIDENCE](EVIDENCE.md). No placeholders remain; the demo-account credentials are entered in the form only.
 Related: [COMPLIANCE](COMPLIANCE.md) · [EVIDENCE](EVIDENCE.md) · [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md) · [README_DRAFT](README_DRAFT.md) · [RULES_CHECK](../hackathon/RULES_CHECK.md) · [DELIVERABLES](../DELIVERABLES.md)
 
 > **Notes for the chief, not form text:**
@@ -24,7 +24,7 @@ Track 1 · Solving Fragmented Intelligence
 
 ## Team
 
-Heisenbugs · members: `<names as on HackOS>`
+Heisenbugs (members as listed on the HackOS team roster)
 
 ## One-line description
 
@@ -42,7 +42,7 @@ Each police station sees only its own cases, so a gang working across a city loo
 
 **A second opinion, and a human decides.** A Skeptic agent runs its own Zetaris queries and critiques each pair: a second opinion that can drop or downgrade a link, or send it back for a narrower search. It is not a guarantee: in a pre-registered test its model critique dropped none of 24 planted look-alike false links, and we publish that. We then shipped a deterministic contradiction check (live on new cases since 27 Oct): it dropped 24 of 24 planted false links on a fresh pre-registered set, which it passes largely by construction, and it failed an independent hand-written set (dropped 10 of 24; wrongly dropped 2 of 8 true twins); in an offline re-run of the synthetic sample eval it removed 9 false alerts and no true link. An analyst approves or rejects every alert. That decision goes to the Meterless H-MEM engine, so the next similar pair is scored with it, within a hard ±0.08 bound, and the alert says "memory applied".
 
-**New sources and plain questions.** Fragmented data keeps arriving in new shapes. An admin uploads an unseen station export; Zetaris profiles and checks it in place, Nemotron Lightning proposes the column mapping, a person approves it, and it becomes a Zetaris view. In a live run on 150 synthetic rows, the data-quality checks found every planted fault (for example 4 of 4 likely duplicates of existing cases). Analysts can also ask **Ask Nexus** a question in plain words ("chain snatchings on a red Pulsar in the last 90 days"): Nemotron writes only a plan, code checks it, and an allow-listed Zetaris query answers. Its counts matched independent SQL counts every time we checked, and it refuses questions it can't answer from the data.
+**New sources and plain questions.** Fragmented data keeps arriving in new shapes. An admin uploads an unseen station export; it is staged in Zetaris's file store, Zetaris profiles and checks it, Nemotron Lightning proposes the column mapping, a person approves it, and it becomes a Zetaris view. In a live run on 150 synthetic rows, the data-quality checks found every planted fault (for example 4 of 4 likely duplicates of existing cases). Analysts can also ask **Ask Nexus** a question in plain words ("chain snatchings on a red Pulsar in the last 90 days"): Nemotron writes only a plan, code checks it, and an allow-listed Zetaris query answers. Its counts matched independent SQL counts every time we checked, and it refuses questions it can't answer from the data.
 
 **The public can help safely.** Anyone can send an anonymous tip through the public portal. Photos are stripped of metadata, and the tipster gets a tip code. The Meterless Scout Intent engine (Tip Guard) screens every tip for injection, threats and spam before any agent reads it, and fails closed.
 
@@ -59,26 +59,22 @@ Each police station sees only its own cases, so a gang working across a city loo
 
 | Field | Value |
 |---|---|
-| Public GitHub repository | https://github.com/HudrTechLLC/nexus-chennai (make public first: WS5-09) |
-| Demo video (1–4 min) | `<YouTube unlisted URL>`; backup `<Drive URL>`. Test both logged out, in a private window |
-| Slide deck | `<deck URL or upload>` (content: [DECK](DECK.md)) |
+| Public GitHub repository | https://github.com/HudrTechLLC/nexus-chennai |
+| Demo video (1–4 min) | https://www.youtube.com/watch?v=FOUdFGT-GHY (3:39); the same video is in the repo: `submission/media/Nexus_Chennai_demo_v2_1080p.mp4` |
+| Slide deck | upload `submission/media/Nexus_Chennai_Heisenbugs_deck.pdf` (15 slides; content: [DECK](DECK.md)) |
 | Live app (optional) | Portal https://nexus-chennai.vercel.app · console https://nexus-chennai.vercel.app/console/login |
 
 ## Demo police accounts (judges only)
 
 **Form only, never in the README or any repo file**, because the repo is public and these accounts can decide alerts. nexus-chief fills these in with Ravee at submit time. Officer, analyst and supervisor only: **the admin account is never shared** (Ravee, 27 Oct).
 
-| Role | Login | Password |
-|---|---|---|
-| Station officer (Adyar) | `<email>` | `<password>` |
-| Analyst | `<email>` | `<password>` |
-| Supervisor | `<email>` | `<password>` |
+Three accounts: station officer (Adyar), analyst and supervisor. Their logins and passwords are typed into the form at submit time and are deliberately not written in this public repo.
 
 Sign in at https://nexus-chennai.vercel.app/console/login.
 
 ## Sponsor technology explanation
 
-Paste the text of [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), from the line down. Resolve or delete anything still marked as pending first.
+Paste the text of [SPONSOR_TECH_FINAL](SPONSOR_TECH_FINAL.md), from the line down. Nothing in it is marked pending.
 
 ## Cursor
 

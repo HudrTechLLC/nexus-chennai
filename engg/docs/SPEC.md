@@ -51,7 +51,7 @@ The information that would link these cases exists. It is scattered across stati
 **Nexus** is a city-wide crime-linking system for Chennai.
 
 -   **Capture.** Stations record crimes, evidence, witness statements, CCTV and investigation progress in one place.
--   **Federate.** Zetaris joins every source where it already lives (Supabase, S3 files, live public APIs) without copying.
+-   **Federate.** Zetaris joins every source: federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store.
 -   **Link.** A team of agents, running on NVIDIA Nemotron through Meterless Nightshift, extracts each case's modus operandi (MO), compares it across the whole city, and raises **link alerts**: "these crimes are probably related, here is a weighted confidence and the evidence for each reason".
 -   **Challenge.** A Skeptic agent re-checks every claimed link against the source rows before any human sees it.
 -   **Decide.** Analysts approve or reject each alert, with a reason. Rejected alerts and their reasons stay visible to every police role. Each decision is remembered and changes future scoring.
@@ -123,7 +123,7 @@ Each product below has one job in Nexus that would be hard to do without it. Thi
 
 **What it is.** A federated data layer: it connects to databases, CSV and Parquet files and web APIs, and lets you query all of them with one SQL dialect (Lightning SQL) without copying data. Its Unified Semantic Layer builds one business view across sources.
 
-**Its unique job in Nexus.** Crime data in a real city is fragmented by design: each station's system, legacy CCTNS exports, ANPR cameras, the 112 centre, prison releases and the press. Nexus never builds a central warehouse. Zetaris queries every source where it lives and turns them into a few views every agent can trust.
+**Its unique job in Nexus.** Crime data in a real city is fragmented by design: each station's system, legacy CCTNS exports, ANPR cameras, the 112 centre, prison releases and the press. Zetaris queries every source (federated live from Postgres and REST feeds; station file exports staged in Zetaris's file store) and turns them into a few views every agent can trust.
 
 | Capability used | Where in Nexus |
 | --- | --- |
