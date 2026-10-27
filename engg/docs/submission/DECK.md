@@ -60,7 +60,7 @@ Slides 11 (results) and 12 (responsible AI) are extra. Judges score Impact 30 ·
 - **On slide:** "Agents read every source through Zetaris, think with Nemotron through Nightshift, and raise link alerts that a Skeptic gives a second opinion on and a human decides."
 - **Three outputs:** a link alert (score, per-factor evidence, Zetaris query id) → a series with a dossier → a public appeal an officer publishes.
 - **Two more ways into fragmented data:**
-  - **Ask Nexus:** an analyst asks in plain words ("chain snatchings on a red Pulsar in the last 90 days"); Nemotron writes only a plan, code checks it, an allow-listed Zetaris query answers. Live: 16 / 4 / 3 cases for the three sample questions, the same count on 5 runs each, and every count equal to an independent SQL count. It refuses what it can't answer.
+  - **Ask Nexus:** an analyst asks in plain words ("chain snatchings on a red Pulsar in the last 90 days"); Nemotron writes only a plan, code checks it, an allow-listed Zetaris query answers. Live: 16 / 4 / 3 cases for the three sample questions (27 Oct, before the recorded FIR; the counts are live and grow as FIRs are filed), the same count on 5 runs each, and every count equal to an independent SQL count. It refuses what it can't answer.
   - **New source onboarding:** an unseen station export is profiled in place by Zetaris; Nemotron proposes the column mapping; a person approves; it becomes a Zetaris view. Live: 150 synthetic rows, every planted fault found (incl. 4/4 likely duplicates of existing cases); registered, not linked.
   - Sources: EVIDENCE rows "Ask Nexus" and "New source onboarding" (#391).
 - **Visual:** alert detail page (`/console/alerts/[alertId]`) showing the factor bars and evidence.
