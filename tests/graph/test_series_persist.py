@@ -105,3 +105,64 @@ def test_new_fir_runs_before_dossiers_and_skips_them_that_pass(tmp_path):
     sb.tables["crime_features"].append({"crime_id": "FIR-1"})  # extracted now
     out = w.run_once()
     assert order[-1] == ("dossier",) and out["dossiers"] == 1 and out["cases"] == 0
+
+
+# =====================
+# Growing a stored series names it from ALL members (run_0a2af3e9, 27 Oct): a new FIR linked to 3 of the
+# 10-case Red Pulsar series renamed it "… · 2 stations" from the run's subset.
+# =====================
+
+def _grown_store(tmp_path, stored_ids):
+    sb = FakeSB({"series": [{"series_id": "SER-RP", "name": "Red two-wheeler chain snatchings · 3 stations"}],
+                 "series_members": [{"series_id": "SER-RP", "crime_id": c} for c in stored_ids]})
+    return sb, SupabaseStore(sb, Tracer("r", tmp_path, echo=False))
+
+
+def test_a_grown_series_is_named_from_all_members_not_the_runs_subset(tmp_path):
+    sb, store = _grown_store(tmp_path, ["A1", "A2", "T1", "T2", "V1"])
+    seen = []
+
+    def name_for(ids):
+        seen.append(ids)
+        return f"Red two-wheeler chain snatchings · 3 stations ({len(ids)})"
+
+    run_view = {"series_id": "SER-HASH", "crime_ids": ["A1", "NEW", "V1"],
+                "name": "Red two-wheeler chain snatchings · 2 stations"}  # what the run saw
+    assert store.write_series(run_view, "run_x", name_for=name_for) == "SER-RP"
+    assert seen == [["A1", "A2", "NEW", "T1", "T2", "V1"]]
+    assert sb.tables["series"][0]["name"] == "Red two-wheeler chain snatchings · 3 stations (6)"
+
+
+def test_unreadable_members_keep_the_stored_name(tmp_path):
+    sb, store = _grown_store(tmp_path, ["A1", "T1", "V1"])
+    run_view = {"series_id": "SER-HASH", "crime_ids": ["A1", "NEW", "V1"], "name": "… · 2 stations"}
+    store.write_series(run_view, "run_x", name_for=lambda ids: None)
+    assert sb.tables["series"][0]["name"] == "Red two-wheeler chain snatchings · 3 stations"
+
+
+def test_test_firs_do_not_count_toward_the_name(tmp_path):
+    class SB(FakeSB):
+        def delete(self, table, params):
+            cid = params["crime_id"].split(".", 1)[1]
+            self.tables[table] = [r for r in self.tables[table] if r.get("crime_id") != cid]
+
+    sb = SB({"series": [{"series_id": "SER-RP", "name": "old"}],
+             "series_members": [{"series_id": "SER-RP", "crime_id": c} for c in ["A1", "T1", "TEST", "V1"]]})
+    store = SupabaseStore(sb, Tracer("r", tmp_path, echo=False))
+    seen = []
+    store.write_series({"series_id": "SER-HASH", "crime_ids": ["A1", "NEW", "V1"], "name": "x"}, "run_x",
+                       exclude=lambda ids: {c: "test FIR" for c in ids if c == "TEST"},
+                       name_for=lambda ids: seen.append(ids) or "n")
+    assert seen == [["A1", "NEW", "T1", "V1"]]
+
+
+def test_a_new_series_or_a_full_view_keeps_the_runs_name(tmp_path):
+    sb, store = _grown_store(tmp_path, ["A1", "V1"])
+    calls = []
+    store.write_series({"series_id": "SER-HASH", "crime_ids": ["A1", "V1", "NEW"], "name": "run name"}, "run_x",
+                       name_for=lambda ids: calls.append(ids) or "other")
+    assert calls == [] and sb.tables["series"][0]["name"] == "run name"  # the run saw every member
+    sb2, store2 = _grown_store(tmp_path, [])
+    store2.write_series({"series_id": "SER-FRESH", "crime_ids": ["X1", "X2", "X3"], "name": "fresh"}, "run_y",
+                        name_for=lambda ids: "never")
+    assert any(r.get("name") == "fresh" for r in sb2.tables["series"])

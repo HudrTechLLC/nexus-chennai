@@ -33,6 +33,8 @@ class DeadlineExceeded(AgentError):
 # Given stored members of the series being rewritten that this run did not place in it, return
 # {crime_id: reason} for those that must leave it (D-033). Members not returned are kept.
 ExcludeFn = Callable[[list[str]], Mapping[str, str]]
+# name_for(all member ids) -> the series name over ALL its members (stored + this run), or None if unreadable.
+NameFn = Callable[[list[str]], "str | None"]
 
 
 class Store(Protocol):
@@ -44,7 +46,8 @@ class Store(Protocol):
 
     def notify(self, notifications: list[dict[str, Any]]) -> None: ...
 
-    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str: ...
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None,
+                     name_for: NameFn | None = None) -> str: ...
 
     def write_dossier(self, series_id: str, dossier: dict[str, Any]) -> bool: ...
 
@@ -98,7 +101,8 @@ class MemoryStore:
     def notify(self, notifications: list[dict[str, Any]]) -> None:
         self.notifications.extend(notifications)
 
-    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None) -> str:
+    def write_series(self, series: dict[str, Any], run_id: str, exclude: ExcludeFn | None = None,
+                     name_for: NameFn | None = None) -> str:
         existing = {cid: sid for sid, s in self.series.items() for cid in s["crime_ids"]}
         sid = choose_series_id(series, existing)
         row = self.series.setdefault(sid, {"series_id": sid, "crime_ids": [], "dossier": None, "status": "candidate"})
