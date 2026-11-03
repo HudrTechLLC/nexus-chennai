@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # sha256 of zetaris/20_dq.sql and 40_feeds.sql on main before the {{src:...}} placeholders (WS1-19): rendered
 # for supabase, the files must stay byte-identical to what is registered live today.
-SUPABASE_SHA = {"20_dq.sql": "d4d64a3bbac4aa575b3f3c7dd82f0afcd1543d65f2a8fccc964d3cd2a68a36b5",
+# 20_dq.sql re-pinned for dq_impossible_travel (post-submission, Zetaris Demo Challenge): register it live after merge.
+SUPABASE_SHA = {"20_dq.sql": "173e290a9fc0630b1f22d94d7ae9c0cdf620c9937077abff00aaae74287fca9a",
                 "40_feeds.sql": "c67eb214df729ae66cd1b5c505471286a9355a34b2e69019dd877545fc40dc74"}
 
 
