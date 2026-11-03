@@ -346,8 +346,23 @@ def test_an_identical_rescore_ends_the_send_back_loop_with_the_cap_verdict(tmp_p
     critiques = [c for c in deps.nightshift.calls if c[2].startswith("critique")]
     assert len(critiques) == 1  # round 1 only
     assert state["send_backs"] == 1 and state["status"] == "success"
-    assert len(state["alerts"]) == 1 and state["alerts"][0]["skeptic"]["verdict"] == "approved"
+    # Fail closed (re-score review): a sent-back pair with no new evidence is written as needs_revision, never
+    # approved without a fresh Skeptic approval.
+    assert len(state["alerts"]) == 1 and state["alerts"][0]["skeptic"]["verdict"] == "needs_revision"
     ev = [e for e in deps.tracer.read() if e["action"] == "sendback_no_new_evidence"]
     assert len(ev) == 1 and ev[0]["agent_name"] == "Skeptic"
     assert ev[0]["input_summary"].startswith("pair ") and "round 2" in ev[0]["input_summary"]
-    assert "identical" in ev[0]["output_summary"] and "revision cap" in ev[0]["output_summary"]
+    assert "identical" in ev[0]["output_summary"] and "needs_revision" in ev[0]["output_summary"]
+    assert [e for e in deps.tracer.read() if e["action"] == "sendback_unresolved_write"]
+
+
+def test_at_the_send_back_cap_a_still_alerting_pair_is_never_approved(tmp_path, monkeypatch):
+    """Cap reached with the Skeptic still sending the pair back: needs_revision, not approved (fail closed)."""
+    from app.graph import pipeline as P
+
+    monkeypatch.setattr(P, "MAX_SEND_BACKS", 0)  # the first send-back already hits the cap
+    g, deps = graph(tmp_path, reply=responder("send_back"))
+    state = g.run("case", {"crime_id": ADYAR["crime_id"]})
+    assert state["status"] == "success"
+    assert [a["skeptic"]["verdict"] for a in state["alerts"]] == ["needs_revision"]
+    assert "approved" not in {a["skeptic"]["verdict"] for a in state["alerts"]}
