@@ -1,5 +1,6 @@
 """WS1-14 data-quality views: q_dq_flags (DuckDB twin run for real) and zetaris/20_dq.sql (generated, same rules)."""
 
+import math
 from pathlib import Path
 
 import duckdb
@@ -97,7 +98,7 @@ def test_zetaris_file_is_generated_from_the_same_rules():
     assert raw == dq_rules.dq_file(), "regenerate: cd services/api && python -m app.adapters.dq_rules"
     committed = rendered(raw)
     for view in ("dq_duplicate_firs", "dq_bad_geo", "dq_time_inconsistent", "dq_unmapped_sections", "dq_flags",
-                 "dq_orphan_evidence", "dq_tip_without_incident", "dq_stale_cameras"):
+                 "dq_orphan_evidence", "dq_tip_without_incident", "dq_stale_cameras", "dq_impossible_travel"):
         assert f"CREATE OR REPLACE SCHEMASTORE VIEW {view} WITH CONTAINER nexus AS" in committed
     assert "{{city:map.bounds.0}}" in committed and "80.05" not in committed
     # Same rule text in both dialects, modulo the dialect substitutions.
@@ -114,7 +115,7 @@ def test_zetaris_file_is_generated_from_the_same_rules():
 def test_live_views_are_sorted_and_dq_flags_reads_the_rule_views():
     # D-031: without a sort Zetaris applies the REST limit / count(*) before filters it cannot push down.
     views = [s for s in rendered(dq_rules.dq_file()).split(";\n") if "SCHEMASTORE VIEW" in s]
-    assert len(views) == 8 and all("\nORDER BY " in v for v in views)
+    assert len(views) == 9 and all("\nORDER BY " in v for v in views)
     flags = next(v for v in views if "VIEW dq_flags " in v)
     # Zetaris rejects a query that references one schema-store view twice; the rule views are four different views.
     assert "v_crime_unified" not in flags
@@ -169,3 +170,77 @@ def test_files_rendering_reads_only_the_file_store_and_its_own_container(name):
         assert "nexus_fs.crimes" in code and "nexus_fs.evidence_media" in code and "nexus_fs.tips_v" in code
     else:
         assert "nexus_feeds.rest_news" in code  # the REST feed tables are shared by both modes
+
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    """Same R = 6371 expression as the SQL, so the test checks the query rather than a second formula."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lon2 - lon1)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * 6371 * math.asin(math.sqrt(h))
+
+
+def test_impossible_travel_view_matches_its_duckdb_twin_and_standalone_select():
+    spark = dq_rules.impossible_travel_sql(sample=False)
+    duck = dq_rules.impossible_travel_sql(sample=True)
+    assert spark.replace("unix_timestamp", "epoch").replace("s3pq.anpr_reads", "anpr_reads").replace(
+        "s3csv.anpr_cameras", "anpr_cameras") == duck
+    assert "LAG(camera_id) OVER (PARTITION BY plate_text ORDER BY read_at)" in spark
+    assert "CAST(c.lat AS DOUBLE)" in spark and "CAST(c.lon AS DOUBLE)" in spark
+    assert f"WHERE implied_kmh > {dq_rules.IMPOSSIBLE_KMH}" in spark
+    raw = (ROOT / "zetaris" / "20_dq.sql").read_text(encoding="utf-8").replace("\r\n", "\n")
+    assert f"SCHEMASTORE VIEW dq_impossible_travel WITH CONTAINER {{{{src:nexus}}}} AS\n{spark}\n" in raw
+    assert raw.rstrip().endswith(f"ORDER BY {dq_rules.TRAVEL_ORDER};")
+    # The other rule views are untouched: dq_flags still unions only the four crime-level checks.
+    flags = next(s for s in raw.split("CREATE OR REPLACE SCHEMASTORE VIEW ") if s.startswith("dq_flags "))
+    assert "dq_impossible_travel" not in flags and "anpr_reads" not in flags
+    standalone = (ROOT / "impossible_travel.sql").read_text(encoding="utf-8").replace("\r\n", "\n")
+    assert standalone == dq_rules.impossible_travel_file()
+    body = "\n".join(line for line in standalone.splitlines() if line.strip() and not line.startswith("--"))
+    assert body == f"{spark}\nORDER BY {dq_rules.TRAVEL_ORDER}"
+    assert "s3pq.anpr_reads" in body and "s3csv.anpr_cameras" in body
+
+
+def test_impossible_travel_flags_only_pairs_over_150_kmh():
+    # C1 and C2 are 1 degree of latitude apart: 6371 * pi/180 km, about 111.2 km.
+    # 30 min → ~222 km/h (flag). 40 min → ~167 km/h (flag). 45 min → ~148 km/h (not).
+    # Cameras are strings, as the CSV source is. Reads of one plate are inserted out of time order.
+    con = duckdb.connect(":memory:")
+    con.execute("CREATE TABLE anpr_reads (plate_text VARCHAR, camera_id VARCHAR, read_at TIMESTAMP)")
+    con.execute("CREATE TABLE anpr_cameras (camera_id VARCHAR, lat VARCHAR, lon VARCHAR)")
+    con.executemany("INSERT INTO anpr_cameras VALUES (?, ?, ?)", [
+        ("C1", "13.0", "80.0"), ("C2", "14.0", "80.0"), ("C3", "13.01", "80.01"),
+    ])
+    con.executemany("INSERT INTO anpr_reads VALUES (?, ?, ?)", [
+        ("BACK", "C1", "2026-10-01 08:30:00"),   # later read inserted first
+        ("BACK", "C2", "2026-10-01 08:00:00"),   # 111 km in 30 min → ~222 km/h
+        ("FAST", "C2", "2026-10-01 10:40:00"),
+        ("FAST", "C1", "2026-10-01 10:00:00"),   # 111 km in 40 min → ~167 km/h
+        ("FAST", "C1", "2026-10-01 14:40:00"),   # back again in 4 h → ~28 km/h, not a second flag
+        ("SLOW", "C1", "2026-10-01 12:00:00"),
+        ("SLOW", "C2", "2026-10-01 12:45:00"),   # 111 km in 45 min → ~148 km/h
+        ("NEAR", "C1", "2026-10-01 15:00:00"),
+        ("NEAR", "C3", "2026-10-01 15:10:00"),
+        ("SAME", "C1", "2026-10-01 16:00:00"),
+        ("SAME", "C1", "2026-10-01 16:05:00"),
+        ("ONCE", "C2", "2026-10-01 17:00:00"),
+        ("GAP", "C1", "2026-10-01 18:00:00"),
+        ("GAP", "MISSING", "2026-10-01 18:10:00"),  # unresolved camera stays in the sequence
+        ("GAP", "C2", "2026-10-01 18:20:00"),       # so C1 and C2 are not one hop
+        (None, "C1", "2026-10-01 19:00:00"),
+        (None, "C2", "2026-10-01 19:10:00"),
+    ])
+    sql = f"{dq_rules.impossible_travel_sql(sample=True)}\nORDER BY {dq_rules.TRAVEL_ORDER}"
+    cur = con.execute(sql)
+    assert [d[0] for d in cur.description] == list(dq_rules.TRAVEL_COLUMNS)
+    rows = cur.fetchall()
+    assert [(r[0], r[1], r[2]) for r in rows] == [("BACK", "C2", "C1"), ("FAST", "C1", "C2")]
+    km = _haversine_km(13.0, 80.0, 14.0, 80.0)
+    by_plate = {r[0]: r for r in rows}
+    assert by_plate["BACK"][5] == pytest.approx(km, rel=1e-9)
+    assert by_plate["BACK"][6] == pytest.approx(km * 3600 / 1800, rel=1e-9)
+    assert by_plate["FAST"][5] == pytest.approx(km, rel=1e-9)
+    assert by_plate["FAST"][6] == pytest.approx(km * 3600 / 2400, rel=1e-9)
+    assert str(by_plate["FAST"][3]).startswith("2026-10-01 10:00:00")
+    assert str(by_plate["FAST"][4]).startswith("2026-10-01 10:40:00")
+    assert by_plate["BACK"][6] > 150 and by_plate["FAST"][6] > 150
