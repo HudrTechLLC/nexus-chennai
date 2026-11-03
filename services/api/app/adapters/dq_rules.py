@@ -13,8 +13,12 @@ twin of q_dq_flags apply exactly the same checks:
 Not crime-level (Zetaris views only): dq_orphan_evidence, dq_tip_without_incident, dq_stale_cameras
 (camera registry not updated in STALE_CAMERA_DAYS days).
 
+dq_impossible_travel is also not crime-level and is not part of dq_flags. The same plate read by two
+ANPR cameras implies more than IMPOSSIBLE_KMH km/h (haversine, LAG over the plate ordered by read_at).
+impossible_travel_sql() is that view: Spark for zetaris/20_dq.sql, DuckDB for the offline twin.
+
 City bounds come from cities/<city>/city.yaml `map.bounds` (D-004): nothing city-specific in code.
-Every rule returns (crime_id, rule, other_id, detail).
+Every crime-level rule returns (crime_id, rule, other_id, detail).
 
 Threshold note: DUP_WINDOW_MIN and DUP_MAX_DEG were chosen against the generator's planted duplicates
 (_truth/duplicates.json, seed 42): recall 15/15, precision 15/15. Exact-cell matching scored 11/15.
@@ -27,6 +31,7 @@ from typing import Any
 DUP_WINDOW_MIN = 30
 DUP_MAX_DEG = 0.0025
 STALE_CAMERA_DAYS = 180
+IMPOSSIBLE_KMH = 150
 RULES = ("duplicate_fir", "bad_geo", "time_inconsistent", "unmapped_section")
 # Severity stored with each flag in the live snapshot (0007_14): a mapping gap is informational, the rest need a look.
 SEVERITY = {"duplicate_fir": "warn", "bad_geo": "warn", "time_inconsistent": "warn", "unmapped_section": "info"}
@@ -102,6 +107,74 @@ def flags_sql(d: dict[str, str], bounds: dict[str, float]) -> str:
     return " UNION ALL ".join(rule_sql(r, d, bounds) for r in RULES)
 
 
+# ---------------------------------------------------------------------------- dq_impossible_travel
+# Not a crime-level flag: different columns, so it is not in RULES, flags_sql or dq_flags.
+# Reads are Parquet. Cameras are CSV (every column a string), so lat/lon are cast. LEFT JOIN keeps an
+# unresolved camera in the plate sequence: LAG must not skip it and treat the reads on either side as one hop.
+# R = 6371 km, the same haversine the named queries use. A zero elapsed time makes the speed null, not infinite.
+
+TRAVEL_COLUMNS = ("plate_text", "camera_id_1", "camera_id_2", "read_at_1", "read_at_2", "distance_km", "implied_kmh")
+TRAVEL_ORDER = "plate_text, read_at_2, camera_id_2"
+_TRAVEL_KM = (
+    "2 * 6371 * asin(sqrt(pow(sin(radians(lat - prev_lat) / 2), 2) + cos(radians(prev_lat)) "
+    "* cos(radians(lat)) * pow(sin(radians(lon - prev_lon) / 2), 2)))"
+)
+
+
+def impossible_travel_sql(*, sample: bool) -> str:
+    """Consecutive ANPR reads of one plate whose implied speed is over IMPOSSIBLE_KMH.
+
+    camera_id_1 / read_at_1 is the earlier read, camera_id_2 / read_at_2 the later one.
+    `sample` is the DuckDB twin (epoch, local table names); otherwise Spark (unix_timestamp, live tables).
+    """
+    if sample:
+        epoch, reads, cameras = DUCK["epoch"], "anpr_reads", "anpr_cameras"
+    else:
+        epoch, reads, cameras = SPARK["epoch"], "s3pq.anpr_reads", "s3csv.anpr_cameras"
+
+    def ep(x: str) -> str:
+        return epoch.format(x=x)
+
+    secs = f"({ep('read_at')} - {ep('prev_read_at')})"
+    cols = ", ".join(TRAVEL_COLUMNS)
+    return (
+        f"SELECT {cols} FROM (\n"
+        "  SELECT plate_text, prev_camera_id AS camera_id_1, camera_id AS camera_id_2,\n"
+        "         prev_read_at AS read_at_1, read_at AS read_at_2, distance_km,\n"
+        f"         distance_km * 3600.0 / NULLIF({secs}, 0) AS implied_kmh\n"
+        "  FROM (\n"
+        "    SELECT plate_text, prev_camera_id, camera_id, prev_read_at, read_at,\n"
+        f"           {_TRAVEL_KM} AS distance_km\n"
+        "    FROM (\n"
+        "      SELECT plate_text, camera_id, read_at, lat, lon,\n"
+        "             LAG(camera_id) OVER (PARTITION BY plate_text ORDER BY read_at) AS prev_camera_id,\n"
+        "             LAG(read_at) OVER (PARTITION BY plate_text ORDER BY read_at) AS prev_read_at,\n"
+        "             LAG(lat) OVER (PARTITION BY plate_text ORDER BY read_at) AS prev_lat,\n"
+        "             LAG(lon) OVER (PARTITION BY plate_text ORDER BY read_at) AS prev_lon\n"
+        "      FROM (\n"
+        "        SELECT r.plate_text, r.camera_id, r.read_at,\n"
+        "               CAST(c.lat AS DOUBLE) AS lat, CAST(c.lon AS DOUBLE) AS lon\n"
+        f"        FROM {reads} r\n"
+        f"        LEFT JOIN {cameras} c ON c.camera_id = r.camera_id\n"
+        "        WHERE r.plate_text IS NOT NULL) located\n"
+        "    ) sequenced\n"
+        "    WHERE prev_camera_id IS NOT NULL AND prev_camera_id <> camera_id) hopped\n"
+        ") speeds\n"
+        f"WHERE implied_kmh > {IMPOSSIBLE_KMH}"
+    )
+
+
+def impossible_travel_file() -> str:
+    """The Spark SELECT, for the Zetaris SQL editor (one statement, no trailing semicolon)."""
+    return (
+        "-- Impossible travel: the same plate read by two ANPR cameras too far apart for the time between\n"
+        "-- reads (implied speed over 150 km/h). Standalone form of nexus.dq_impossible_travel, for the\n"
+        "-- Zetaris SQL editor. Cameras are CSV, so lat/lon are cast. One statement.\n"
+        f"{impossible_travel_sql(sample=False)}\n"
+        f"ORDER BY {TRAVEL_ORDER}\n"
+    )
+
+
 # ---------------------------------------------------------------------------- zetaris/20_dq.sql
 
 # register.py fills these from the city pack (D-004), like {{since}} / {{until}}.
@@ -115,6 +188,8 @@ _HEADER = """-- zetaris/20_dq.sql · Data-quality views (spec E5, WS1-14). Owner
 -- cities/<city>/city.yaml. Views live in schema-store container `nexus` (queried as nexus.<view>), created
 -- first here; there is no IF NOT EXISTS, and register.py skips "already exists", so other files may repeat it.
 -- Crime-level rules read nexus.v_crime_unified (SPARK_VIEW in dq_rules.py).
+-- dq_impossible_travel is not crime-level and is not part of dq_flags: consecutive reads of one plate
+-- on s3pq.anpr_reads joined to s3csv.anpr_cameras, haversine speed over 150 km/h.
 """
 CONTAINER = f"CREATE SCHEMASTORE CONTAINER {NX};\n"
 
@@ -139,11 +214,12 @@ def dq_file() -> str:
                   "concat('camera registry not updated for ', "
                   "CAST(datediff(current_date(), CAST(last_updated AS DATE)) AS STRING), ' days') AS detail "
                   f"FROM s3csv.cctv_cameras WHERE {stale}"))
+    views.append(("dq_impossible_travel", impossible_travel_sql(sample=False)))
     # ORDER BY on every view (D-031): Zetaris pushes the REST row limit, and count(*), into the JDBC scan ahead
     # of any filter it cannot push to Postgres, so an unsorted view returns the first N rows filtered, or the
     # unfiltered count. A sort above the filter blocks that pushdown.
     order = {"dq_flags": "crime_id, rule", "dq_orphan_evidence": "evidence_id", "dq_tip_without_incident": "tip_id",
-             "dq_stale_cameras": "camera_id"}
+             "dq_stale_cameras": "camera_id", "dq_impossible_travel": TRAVEL_ORDER}
     body = "\n".join(f"CREATE OR REPLACE SCHEMASTORE VIEW {name} WITH CONTAINER {NX} AS\n{sql}\n"
                      f"ORDER BY {order.get(name, 'crime_id')};\n" for name, sql in views)
     return _HEADER + "\n" + CONTAINER + "\n" + body
@@ -152,7 +228,11 @@ def dq_file() -> str:
 if __name__ == "__main__":
     from pathlib import Path
 
-    out = Path(__file__).resolve().parents[4] / "zetaris" / "20_dq.sql"
+    root = Path(__file__).resolve().parents[4]
+    out = root / "zetaris" / "20_dq.sql"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(dq_file(), encoding="utf-8", newline="\n")
+    stand = root / "impossible_travel.sql"
+    stand.write_text(impossible_travel_file(), encoding="utf-8", newline="\n")
     print(f"wrote {out}")
+    print(f"wrote {stand}")
